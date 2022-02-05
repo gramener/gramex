@@ -28,12 +28,12 @@ class Task(object):
         self.thread = schedule.get('thread', False)
         startup = schedule.get('startup')
         if 'function' not in schedule:
-            raise ValueError('schedule %s has no function:' % name)
+            raise ValueError(f'schedule {name} has no function:')
         if callable(schedule['function']):
             self.function = schedule['function']
         else:
             self.function = build_transform(schedule, vars={}, iter=False,
-                                            filename='schedule:%s' % name,)
+                                            filename=f'schedule:{name}')
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
         self.every = None       # If set, Task runs every self.every seconds
         self.cron = None        # If set, Task runs on cron.next()
@@ -46,7 +46,7 @@ class Task(object):
             def on_done(future):
                 exception = future.exception(timeout=0)
                 if exception:
-                    app_log.error('schedule:%s: %s', name, exception)
+                    app_log.error(f'schedule:{name}: {exception}')
 
             def run_function(*args, **kwargs):
                 future = threadpool.submit(fn, *args, **kwargs)
@@ -74,7 +74,7 @@ class Task(object):
                 $
             ''', every, re.IGNORECASE + re.VERBOSE)
             if match is None:
-                app_log.error('schedule:%s has invalid every: %s', name, every)
+                app_log.error(f'schedule:{name} has invalid every: {every}')
             else:
                 w, d, h, m, s = (float(v or 0) for v in match.groups())
                 self.every = s + 60 * (m + 60 * (h + 24 * (d + 7 * w)))
@@ -83,7 +83,7 @@ class Task(object):
         if self.every or self.cron:
             self.call_later()
         elif startup is None:
-            app_log.error('schedule:%s has no schedule nor startup', name)
+            app_log.error(f'schedule:{name} has no schedule nor startup')
 
         # Run now if the task is to be run on startup. Don't re-run if the config was reloaded
         if startup == '*' or (startup is True and not ioloop_running(self.ioloop)):
@@ -91,7 +91,7 @@ class Task(object):
 
     def run(self, *args, **kwargs):
         '''Run task. Then set up next callback.'''
-        app_log.info('Running %s', self.name)
+        app_log.info(f'Running {self.name}')
         try:
             self.result = self.function(*args, **kwargs)
         finally:
@@ -102,7 +102,7 @@ class Task(object):
     def stop(self):
         '''Suspend task, clearing any pending callbacks'''
         if self.callback is not None:
-            app_log.debug('Stopping %s', self.name)
+            app_log.debug(f'Stopping {self.name}')
             self.ioloop.remove_timeout(self.callback)
             self._schedule_next_run(None)
 
@@ -110,8 +110,8 @@ class Task(object):
         '''Schedule next run automatically. Clears any previous scheduled runs'''
         if self.every:
             if self.cron:
-                app_log.warning('scheduler:%s has BOTH schedule & every:. Running every: %ss',
-                                self.name, self.every)
+                app_log.warning(f'scheduler:{self.name} has BOTH schedule & every:. '
+                                f'Running every: {self.every}s')
             # Run "every" seconds after last scheduled time
             delay = (self.next or time.time()) + self.every - time.time()
             while delay < 0:
@@ -122,9 +122,9 @@ class Task(object):
             delay = None
         self._schedule_next_run(delay)
         if delay is not None:
-            app_log.debug('schedule:%s: Next run in %.1fs', self.name, delay)
+            app_log.debug(f'schedule:{self.name}: Next run in {delay:.1f}s')
         else:
-            app_log.debug('schedule:%s: No more runs', self.name)
+            app_log.debug(f'schedule:{self.name}: No more runs')
 
     def _schedule_next_run(self, delay):
         '''Schedule next run after delay seconds. If delay is None, no more runs.'''

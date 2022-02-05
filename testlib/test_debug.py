@@ -1,4 +1,4 @@
-import os
+import re
 import inspect
 import unittest
 from io import StringIO
@@ -51,21 +51,14 @@ class TestDebug(unittest.TestCase):
         with LogCapture() as logs:
             timer('start')
             timer('middle')
-        args = [rec.args for rec in logs.records
-                if len(rec.args) > 2 and 'test_debug.py:test_timer' in rec.args[2]]
+        args = [rec.msg for rec in logs.records if 'test_debug.py:test_timer' in rec.msg]
         eq_(len(args), 2)
-        eq_([arg[1] for arg in args], ['start', 'middle'])
-        eq_(
-            [arg[2].split(os.sep)[-1].rsplit(':', 1)[0] for arg in args],
-            ['test_debug.py:test_timer', 'test_debug.py:test_timer'])
+        ok_(re.search(r'start.*test_debug.py:test_timer', args[0]))
+        ok_(re.search(r'middle.*test_debug.py:test_timer', args[1]))
 
         with LogCapture() as logs:
             with Timer('msg'):
                 pass
-        args = [rec.args for rec in logs.records
-                if len(rec.args) > 2 and 'test_debug.py:test_timer' in rec.args[2]]
+        args = [rec.msg for rec in logs.records if 'test_debug.py:test_timer' in rec.msg]
         eq_(len(args), 1)
-        eq_([arg[1] for arg in args], ['msg'])
-        eq_(
-            [arg[2].split(os.sep)[-1].rsplit(':', 1)[0] for arg in args],
-            ['test_debug.py:test_timer'])
+        ok_(re.search(r'msg.*test_debug.py:test_timer', args[0]))

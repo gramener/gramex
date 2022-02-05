@@ -31,7 +31,7 @@ class FunctionHandler(BaseHandler):
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
-                                               filename='url: %s' % cls.name)
+                                               filename=f'url:{cls.name}')
         cls.headers = headers
         cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
@@ -41,7 +41,7 @@ class FunctionHandler(BaseHandler):
             self.save_redirect_page()
 
         if 'function' not in self.info:
-            raise ValueError('Invalid function definition in url:%s' % self.name)
+            raise ValueError(f'Invalid function definition in url:{self.name}')
         result = self.info['function'](handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
@@ -80,8 +80,8 @@ class FunctionHandler(BaseHandler):
                 if multipart:
                     self.flush()
             else:
-                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
-                                self.name, type(item), repr(item))
+                app_log.warning(f'url:{self.name}: FunctionHandler can write scalars/list/dict, '
+                                f'not {type(item)}: {item!r}')
 
         if self.redirects:
             self.redirect_next()

@@ -102,7 +102,7 @@ def opener(callback, read=False, **open_kwargs):
                 return callback(result, **kwargs) if callable(callback) else result
     else:
         if not callable(callback):
-            raise ValueError('opener callback %s not a function', repr(callback))
+            raise ValueError(f'opener callback {callback!r} not a function')
 
         # Pass handle to callback
         def method(path, **kwargs):
@@ -345,11 +345,11 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
-                raise TypeError('gramex.cache.open: path "%s" has unknown extension' % path)
+                raise TypeError(f'gramex.cache.open: path "{path}" has unknown extension')
             else:
-                raise TypeError('gramex.cache.open(callback="%s") is not a known type' % callback)
+                raise TypeError(f'gramex.cache.open(callback="{callback}") is not a known type')
         else:
-            raise TypeError('gramex.cache.open(callback=) must be a function, not %r' % callback)
+            raise TypeError(f'gramex.cache.open(callback=) must be a function, not {callback!r}')
         if callable(transform):
             data = transform(data)
         cached = {'data': data, 'stat': fstat}
@@ -360,7 +360,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
                               'Increase cache.memory.size in gramex.yaml')
         except Exception:
-            app_log.exception('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
+            app_log.exception(f'gramex.cache.open: {type(_cache)} cannot cache {data!r}')
 
     result = cached['data']
     return (result, reloaded) if _reload_status else result
@@ -406,7 +406,7 @@ def save(data, url, callback=None, **kwargs):
         method = getattr(data, _SAVE_CALLBACKS[callback])
         return method(url, **(used_kwargs(method, kwargs)[0]))
     else:
-        raise TypeError('gramex.cache.save(callback="%s") is unknown' % callback)
+        raise TypeError(f'gramex.cache.save(callback="{callback}") is unknown')
 
 
 # gramex.cache.query() stores its cache here
@@ -443,10 +443,10 @@ def _table_status(engine, tables):
     db = engine.url.database
     if _STATUS_METHODS.get(key, None) is None:
         if len(tables) == 0:
-            raise ValueError('gramex.cache.query table list is empty: %s', repr(tables))
+            raise ValueError(f'gramex.cache.query table list is empty: {tables!r}')
         for name in tables:
             if not name or not isinstance(name, str):
-                raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
+                raise ValueError(f'gramex.cache.query invalid table list: {tables!r}')
         # bandit security note: We use string substitution for DB and table names.
         # But these are validated via gramex.data._sql_safe, so we're fine.
         if dialect == 'mysql':
@@ -464,10 +464,10 @@ def _table_status(engine, tables):
                  _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
-                raise KeyError('gramex.cache.query does not support memory sqlite "%s"' % dialect)
+                raise KeyError(f'gramex.cache.query does not support memory sqlite "{dialect}"')
             q = db
         else:
-            raise KeyError('gramex.cache.query cannot cache dialect "%s" yet' % dialect)
+            raise KeyError(f'gramex.cache.query cannot cache dialect "{dialect}" yet')
         if dialect == 'sqlite':
             _STATUS_METHODS[key] = lambda: stat(q)
         else:
@@ -507,15 +507,14 @@ def query(sql, engine, state=None, **kwargs):
         status = object()
         store_cache = False
     else:
-        raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
-                        repr(state))
+        raise TypeError(f'gramex.cache.query(state=) must be a table list/query/fn, not {state!r}')
 
     key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
     if key in _cache and _cache[key]['status'] == status:
         result = _cache[key]['data']
     else:
-        app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
-                      state, kwargs)
+        app_log.debug(
+            f'gramex.cache.query: {sql}. engine: {engine}. state: {state}. kwargs: {kwargs}')
         result = pd.read_sql(sql, engine, **kwargs)
         if store_cache:
             _cache[key] = {
@@ -552,12 +551,12 @@ def reload_module(*modules):
         if name in {'sys'}:
             continue
         if name is None or path is None or not os.path.exists(path):
-            app_log.warning('Cannot locate path for module "%s". Got path: %s', name, path)
+            app_log.warning(f'Cannot locate path for module "{name}". Got path: {path}')
             continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
         fstat = stat(path)
         if fstat != _MODULE_CACHE.get(name, fstat):
-            app_log.info('Reloading module %s', name)
+            app_log.info(f'Reloading module {name}')
             import importlib
             importlib.reload(module)
         _MODULE_CACHE[name] = fstat
@@ -764,7 +763,7 @@ class Subprocess(object):
                             setattr(self, method, log)
                             callbacks[index] = log.put
                     else:
-                        raise ValueError('Invalid stream_%s: %s', stream, method)
+                        raise ValueError(f'Invalid stream_{stream}: {method}')
             self.future[stream] = future = Future()
             # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
@@ -834,9 +833,9 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
         restart -= 1
         proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec: developer-initiated
     if proc.proc.returncode is not None:
-        raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
+        raise RuntimeError(f'Error {proc.proc.returncode} starting {arg_str}')
     if started:
-        app_log.info('Started: %s', arg_str)
+        app_log.info(f'Started: {arg_str}')
 
     future = Future()
     # If process was started, wait until it has initialized. Else just return the proc
@@ -845,13 +844,12 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if first_line not in actual:
-                    raise AssertionError('%s: wrong first line: %s (no "%s")' %
-                                         (arg_str, actual, first_line))
+                    raise AssertionError(f'{arg_str}: first line is "{actual}" not "{first_line}"')
         elif isinstance(first_line, _regex_type):
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if not first_line.search(actual):
-                    raise AssertionError('%s: wrong first line: %s' % (arg_str, actual))
+                    raise AssertionError(f'{arg_str}: wrong first line: {actual}')
         elif callable(first_line):
             check = first_line
         loop = _get_current_ioloop()
@@ -896,7 +894,7 @@ def get_store(type, **kwargs):
     elif type == 'hdf5':
         return HDF5Store(**kwargs)
     else:
-        raise NotImplementedError('Store type: %s not implemented' % type)
+        raise NotImplementedError(f'Store type: {type} not implemented')
 
 
 class KeyStore(object):
@@ -1009,8 +1007,7 @@ class RedisStore(KeyStore):
             return json.loads(
                 result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
-            app_log.error('RedisStore("%s").load("%s") is not JSON ("%r..."")',
-                          self.store, key, result)
+            app_log.error(f'RedisStore("{self.store}").load("{key}") is not JSON "{result!r}"')
             return default
 
     def dump(self, key, value):
@@ -1028,7 +1025,7 @@ class RedisStore(KeyStore):
         pass
 
     def purge(self):
-        app_log.debug('Purging %s', self.store)
+        app_log.debug(f'Purging {self.store}')
         # TODO: optimize item retrieval
         items = {key: self.load(key, None) for key in self.store.keys()}
         for key in self.purge_keys(items):
@@ -1070,7 +1067,7 @@ class SQLiteStore(KeyStore):
         return (self._escape(key) for key in self.store.keys())
 
     def purge(self):
-        app_log.debug('Purging %s', self.path)
+        app_log.debug(f'Purging {self.path}')
         super(SQLiteStore, self).purge()
 
 
@@ -1107,8 +1104,7 @@ class HDF5Store(KeyStore):
         try:
             return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
-            app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, result)
+            app_log.error(f'HDF5Store("{self.path}").load("{key}") is not JSON ("{result!r}")')
             return default
 
     def dump(self, key, value):
@@ -1139,7 +1135,7 @@ class HDF5Store(KeyStore):
     def flush(self):
         super(HDF5Store, self).flush()
         if self.changed:
-            app_log.debug('Flushing %s', self.path)
+            app_log.debug(f'Flushing {self.path}')
             self.store.flush()
             self.changed = False
 
@@ -1157,7 +1153,7 @@ class HDF5Store(KeyStore):
             del self.store[key]
             changed = True
         if changed:
-            app_log.debug('Purging %s', self.path)
+            app_log.debug(f'Purging {self.path}')
             self.store.flush()
 
     def close(self):
@@ -1168,7 +1164,7 @@ class HDF5Store(KeyStore):
         # import h5py may fil. If so, self.store is a dict, and has no .close().
         #   This raises an AttributeError. Log & ignore
         except (AttributeError, ValueError) as e:
-            app_log.debug('HDF5Store("%s").close() error (%s) ignored', self.path, e)
+            app_log.debug(f'HDF5Store("{self.path}").close() error ({e}) ignored')
 
 
 class JSONStore(KeyStore):
@@ -1220,7 +1216,7 @@ class JSONStore(KeyStore):
     def flush(self, purge=False):
         super(JSONStore, self).flush()
         if self.changed or purge:
-            app_log.debug('%s %s', 'Purging' if purge else 'Flushing', self.path)
+            app_log.debug(f"{'Purging' if purge else 'Flushing'} {self.path}")
             # Don't dump contents. That can overwrite other instances' updates.
             # Instead: read, apply updates, and save.
             store = self._read_json()
@@ -1238,7 +1234,7 @@ class JSONStore(KeyStore):
             self.flush()
         # This has happened when the directory was deleted. Log & ignore.
         except OSError:
-            app_log.exception('Cannot flush %s', self.path)
+            app_log.exception(f'Cannot flush {self.path}')
 
 
 def _create_path(path):

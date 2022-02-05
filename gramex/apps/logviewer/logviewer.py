@@ -160,7 +160,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
     if table_exists(table(levels[-1]), conn):
         query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec: table() is safe
         max_date = pd.read_sql(query, conn).iloc[0, 0]
-        app_log.info('logviewer: last processed till %s', max_date)
+        app_log.info(f'logviewer: last processed till {max_date}')
         this_month = max_date[:8] + '01'
         log_files = [f for f in log_files if filesince(f, this_month)]
         max_date = pd.to_datetime(max_date)
@@ -171,7 +171,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
     # Create dataframe from log files
     columns = conf.log.handlers.requests['keys']
     # TODO: avoid concat?
-    app_log.info('logviewer: files to process %s', log_files)
+    app_log.info(f'logviewer: files to process {log_files}')
     data = pd.concat([
         pd.read_csv(f, names=columns, encoding='utf-8').fillna('-')
         for f in log_files
@@ -295,7 +295,7 @@ def apply_transform(data, spec):
     if spec['type'] == 'function':
         fn = build_transform(
             {'function': spec['expr']}, vars={'data': None},
-            filename='lv: %s' % spec.get('name'))
+            filename=f'lv: {spec.get("name")}')
         fn(data)  # applies on copy
         return data
     expr = spec['expr']

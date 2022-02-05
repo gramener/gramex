@@ -14,6 +14,8 @@
   .content { margin: 0 auto; max-width: 40rem; }
   pre { white-space: pre-wrap; background-color: #f8f8f8; padding: 0.5em; overflow-x: auto; }
   pre code { white-space: pre; }
+  table { margin: 0 auto; }
+  th, td { text-align: left; border-bottom: 1px solid #eee; padding: 0.5rem 0.5rem 0.5rem 0; vertical-align: top; }
   #traceback { display: none; }
   #show-traceback { position: fixed; bottom: 0; width: 100%; text-align: center; cursor: pointer; opacity: 0.4; }
   </style>
@@ -23,12 +25,15 @@
   <section class="content">
     <h1>Application error</h1>
     <p>This application made a mistake.</p>
-    {% set exception = kwargs['exc_info'][1] %}
-    {% if hasattr(exception, 'reason') %}
-      <p><strong>Reason:</strong> {{ exception.reason }}</p>
-    {% end %}
-    <pre>{{ repr(exception) }}</pre>
     <p>Details are on the server log.</p>
+    {% set exception = kwargs['exc_info'][1] %}
+    <table><tbody>
+      {% for key, val in vars(exception).items() %}
+        {% if val %}
+          <tr><th>{{ key.replace('_', ' ').title() }}</th><td>{{ val }}</td></tr>
+        {% end %}
+      {% end %}
+    </tbody></table>
   </section>
 
   {% from gramex import conf %}
@@ -40,7 +45,6 @@
     </div>
     <p id="show-traceback">Show traceback</p>
     <script>
-      /* eslint-env browser */
       var $show = document.getElementById('show-traceback')
       var $traceback = document.getElementById('traceback')
       $show.addEventListener('click', function() {

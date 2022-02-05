@@ -578,10 +578,10 @@ class DBAuthBase(AuthBase):
             # for valid but non-existent username, password
             if user and password:
                 eq_(r.status_code, UNAUTHORIZED)
-                eq_(r.reason, 'Cannot log in')
+                self.assertIn('Cannot log in', r.text)
                 continue
             eq_(r.status_code, BAD_REQUEST)
-            eq_(r.reason, 'User name or password is empty')
+            self.assertIn('User name or password is empty', r.text)
 
 
 class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
@@ -660,7 +660,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User cannot be empty')
+        self.assertIn('User cannot be empty', r.text)
 
         # POST an existing username. Raises HTTP 400: User exists
         r = session.post(self.url + '?signup', data={
@@ -669,7 +669,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User exists')
+        self.assertIn('User exists', r.text)
 
         # POST a new username. That should send a email to our service
         r = session.post(self.url + '?signup', data={
@@ -697,7 +697,7 @@ class TestDBAuthSignup(DBAuthBase):
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)
-        users = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users = users.set_index(self.config.user.column)
         user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
@@ -719,7 +719,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, OK)
-        users2 = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users2 = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users2 = users2.set_index(self.config.user.column)
         user2 = users2.loc['newuser']
         ok_(user2[self.config.password.column] != user[self.config.password.column])

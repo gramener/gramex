@@ -32,7 +32,7 @@ class TestJSONHandler(TestGramex):
         if 'data' in kwargs and isinstance(kwargs['data'], dict):
             kwargs['data'] = dump(kwargs['data'])
         r = getattr(requests, method)(server.base_url + url, timeout=1, **kwargs)
-        self.assertEqual(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+        self.assertEqual(r.status_code, code, f'{url}: code {r.status_code} != {code}')
         if compare != 'nocompare':
             self.assertEqual(json.loads(r.text), compare)
         return r
@@ -59,8 +59,8 @@ class TestJSONHandler(TestGramex):
         self.json('get', '/json/get/z/na', None)
 
     def test_write(self):
-        key, val = u'\u2013', -1
-        key2, val2 = u'\u00A3', None
+        key, val = '\u2013', -1
+        key2, val2 = '\u00A3', None
         data = {key: val}
 
         # put writes on root element, delete deletes it
@@ -81,7 +81,7 @@ class TestJSONHandler(TestGramex):
         # write into sub-keys
         self.json('get', '/json/write/', None)
         self.json('put', '/json/write/', data, data=data)
-        self.json('put', u'/json/write/%s/1' % key, data, data=data)
+        self.json('put', f'/json/write/{key}/1', data, data=data)
         self.json('get', '/json/write/', {key: {'1': data}})
         self.json('delete', '/json/write/', None)
 
@@ -119,8 +119,8 @@ class TestJSONHandler(TestGramex):
         # At this point, jsonfile ought to be created, but the server thread may
         # not be done. So we'll test it later.
 
-        key, val = u'\u2013', -1
-        key2, val2 = u'\u00A3', None
+        key, val = '\u2013', -1
+        key2, val2 = '\u00A3', None
         data = {key: val}
 
         # test put
@@ -133,7 +133,7 @@ class TestJSONHandler(TestGramex):
         tempfiles.jsonfile = self.jsonfile
 
         # test put at a non-existent deep node
-        self.json('put', u'/json/path/%s/1' % key, data, data=data)
+        self.json('put', f'/json/path/{key}/1', data, data=data)
         self.match_jsonfile({key: {'1': data}})
 
         # test delete

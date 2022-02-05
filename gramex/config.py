@@ -133,7 +133,7 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
             if warn is not None:
                 for pattern in warn:
                     if fnmatch(path_key, pattern):
-                        app_log.warning('Duplicate key: %s', path_key)
+                        app_log.warning(f'Duplicate key: {path_key}')
                         break
             merge(old=old[key], new=new[key], mode=mode, warn=warn, _path=path_key)
         elif mode == 'overwrite' or key not in old:
@@ -202,8 +202,7 @@ def setup_variables():
                 '~/Library/Application Support/Gramex Data')
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
-            app_log.warning('$GRAMEXDATA set to %s for OS %s', variables['GRAMEXDATA'],
-                            sys.platform)
+            app_log.warning(f'$GRAMEXDATA set to {variables["GRAMEXDATA"]} for OS {sys.platform}')
 
     return variables
 
@@ -228,7 +227,7 @@ def _substitute_variable(val):
         try:
             return string.Template(val).substitute(variables)
         except ValueError:
-            raise ValueError('Use $$ instead of $ in %s' % val)
+            raise ValueError(f'Use $$ instead of $ in {val}')
 
 
 def _calc_value(val, key):
@@ -244,7 +243,7 @@ def _calc_value(val, key):
     '''
     if hasattr(val, 'get') and val.get('function'):
         from .transforms import build_transform
-        function = build_transform(val, vars={'key': None}, filename='config:%s' % key)
+        function = build_transform(val, vars={'key': None}, filename=f'config:{key}')
         for result in function(key):
             if result is not None:
                 return result
@@ -273,7 +272,7 @@ def _from_yaml(loader, node):
     yield attrdict
     if not isinstance(node, MappingNode):
         raise ConstructorError(
-            None, None, 'expected a mapping node, but found %s' % node.id, node.start_mark)
+            None, None, f'expected a mapping node, but found {node.id}', node.start_mark)
     loader.flatten_mapping(node)
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=False)
@@ -286,11 +285,11 @@ def _from_yaml(loader, node):
         except TypeError as exc:
             raise ConstructorError(
                 'while constructing a mapping', node.start_mark,
-                'found unacceptable key (%s)' % exc, key_node.start_mark)
+                f'found unacceptable key ({exc})', key_node.start_mark)
         if key in attrdict:
             raise ConstructorError(
                 'while constructing a mapping', node.start_mark,
-                'found duplicate key (%s)' % key, key_node.start_mark)
+                f'found duplicate key ({key})', key_node.start_mark)
         attrdict[key] = loader.construct_object(value_node, deep=False)
 
 
@@ -304,8 +303,8 @@ class ConfigYAMLLoader(SafeLoader):
     '''
     def __init__(self, *args, **kwargs):
         super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
-        self.add_constructor(u'tag:yaml.org,2002:map', _from_yaml)
-        self.add_constructor(u'tag:yaml.org,2002:omap', _from_yaml)
+        self.add_constructor('tag:yaml.org,2002:map', _from_yaml)
+        self.add_constructor('tag:yaml.org,2002:omap', _from_yaml)
 
 
 def _yaml_open(path, default=AttrDict(), **kwargs):
@@ -324,19 +323,19 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     path = path.absolute()
     if not path.exists():
         if path not in _warned_paths:
-            app_log.warning('Missing config: %s', path)
+            app_log.warning(f'Missing config: {path}')
             _warned_paths.add(path)
         return default
-    app_log.debug('Loading config: %s', path)
+    app_log.debug(f'Loading config: {path}')
     with path.open(encoding='utf-8') as handle:
         try:
             result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec: SafeLoader
         except Exception:
-            app_log.exception('Config error: %s', path)
+            app_log.exception(f'Config error: {path}')
             return default
     if not isinstance(result, AttrDict):
         if result is not None:
-            app_log.warning('Config is not a dict: %s', path)
+            app_log.warning(f'Config is not a dict: {path}')
         return default
 
     # Variables based on YAML file location
@@ -382,7 +381,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
                 condition = eval(expr, globals(), frozen_vars)  # nosec: developer-initiated
             except Exception:
                 condition = False
-                app_log.exception('Failed condition evaluation: %s', key)
+                app_log.exception(f'Failed condition evaluation: {key}')
             if condition:
                 replace.append((node, key, base))
             else:
@@ -516,8 +515,7 @@ def load_imports(config, source, warn=None):
                 for name, conf in value.items():
                     node[name] = conf
             elif value:
-                raise ValueError('import.merge: must be dict, not %s at %s' % (
-                    repr(value), source))
+                raise ValueError(f'import.merge: must be dict, not {value!r} at {source}')
             # Delete the import key
             del node[key]
         elif key == 'import':
@@ -526,11 +524,10 @@ def load_imports(config, source, warn=None):
                 value = {'apps': value}
             # Allow "import: [path, path]" to "import: {app0: path, app1: path}"
             elif isinstance(value, list):
-                value = OrderedDict((('app%d' % i, conf) for i, conf in enumerate(value)))
+                value = OrderedDict(((f'app{i}', conf) for i, conf in enumerate(value)))
             # By now, import: should be a dict
             elif not isinstance(value, dict):
-                raise ValueError('import: must be string/list/dict, not %s at %s' % (
-                    repr(value), source))
+                raise ValueError(f'import: must be string/list/dict, not {value!r} at {source}')
             # If already a dict with a single import via 'path', convert to dict of apps
             if 'path' in value:
                 value = {'app': value}
@@ -538,7 +535,7 @@ def load_imports(config, source, warn=None):
                 if not isinstance(conf, dict):
                     conf = AttrDict(path=conf)
                 if 'path' not in conf:
-                    raise ValueError('import: has no conf at %s' % source)
+                    raise ValueError(f'import: has no conf at {source}')
                 paths = conf.pop('path')
                 paths = paths if isinstance(paths, list) else [paths]
                 globbed_paths = []
@@ -613,12 +610,12 @@ class PathConfig(AttrDict):
             exists = imp.path.exists()
             if not exists and imp.stat is not None:
                 reload = True
-                app_log.info('No config found: %s', imp.path)
+                app_log.info(f'No config found: {imp.path}')
                 break
             if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
                            imp.path.stat().st_size != imp.stat.st_size):
                 reload = True
-                app_log.info('Updated config: %s', imp.path)
+                app_log.info(f'Updated config: {imp.path}')
                 break
         if reload:
             self.clear()
@@ -648,7 +645,7 @@ def locate(path, modules=[], forceload=0):
                 return getattr(module, path)
         return _locate(path, forceload)
     except ErrorDuringImport:
-        app_log.exception('Exception when importing %s', path)
+        app_log.exception(f'Exception when importing {path}')
         return None
 
 
@@ -849,7 +846,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         return
     # If it's non-empty, it must be a dict
     if not isinstance(result, dict):
-        raise ValueError('%s: must be a YAML file with a single dict' % path)
+        raise ValueError(f'{path}: must be a YAML file with a single dict')
     # Clear secrets if we are re-initializing. Not if we're importing recursively.
     if clear:
         secrets.clear()
@@ -860,7 +857,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
     if secrets_url and secrets_key:
         from urllib.request import urlopen
         from tornado.web import decode_signed_value
-        app_log.info('Fetching remote secrets from %s', secrets_url)
+        app_log.info(f'Fetching remote secrets from {secrets_url}')
         # Load string from the URL -- but ignore comments. file:// URLs are fine too
         value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)   # nosec: SafeLoader
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)

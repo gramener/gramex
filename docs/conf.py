@@ -53,8 +53,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Gramex'
-copyright = u'2015-2018, Gramener'
+project = 'Gramex'
+copyright = '2015, Gramener'
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -105,7 +105,7 @@ pygments_style = 'sphinx'
 #keep_warnings = False
 
 # Gramex variables
-Gramex = 'https://learn.gramener.com/downloads/release/gramex-%s.zip' % version
+Gramex = f'https://learn.gramener.com/downloads/release/gramex-{version}.zip'
 
 
 # -- Options for HTML output -------------------------------------------
@@ -212,8 +212,8 @@ latex_elements = {
 # [howto/manual]).
 latex_documents = [
     ('index', 'gramex.tex',
-     u'Gramex Documentation',
-     u'Gramener', 'manual'),
+     'Gramex Documentation',
+     'Gramener', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -243,8 +243,8 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'gramex',
-     u'Gramex Documentation',
-     [u'Gramener'], 1)
+     'Gramex Documentation',
+     ['Gramener'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -258,8 +258,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'gramex',
-     u'Gramex Documentation',
-     u'Gramener',
+     'Gramex Documentation',
+     'Gramener',
      'gramex',
      'One line description of project.',
      'Miscellaneous'),

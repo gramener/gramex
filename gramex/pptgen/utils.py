@@ -373,19 +373,17 @@ def fill_color(**kwargs):
     srgbclr = srgbclr.rsplit('#')[-1].lower()
     srgbclr = srgbclr + ('0' * (6 - len(srgbclr)))
     if schemeclr:
-        s = '<a:schemeClr %s val="%s"/>' % (ns, schemeclr)
+        s = f'<a:schemeClr {ns} val="{schemeclr}"/>'
     elif srgbclr:
-        s = '<a:srgbClr %s val="%s"/>' % (ns, srgbclr)
+        s = f'<a:srgbClr {ns} val="{srgbclr}"/>'
     elif prstclr:
-        s = '<a:prstClr %s val="%s"/>' % (ns, prstclr)
+        s = f'<a:prstClr {ns} val="{prstclr}"/>'
     elif hslclr:
-        s = '<a:hslClr %s hue="%.0f" sat="%.2f%%" lum="%.2f%%"/>' % (
-            (ns,) + tuple(hslclr))
+        s = f'<a:hslClr {ns} hue="%.0f" sat="%.2f%%" lum="%.2f%%"/>' % tuple(hslclr)
     elif sysclr:
-        s = '<a:sysClr %s val="%s"/>' % (ns, sysclr)
+        s = f'<a:sysClr {ns} val="{sysclr}"/>'
     elif scrgbclr:
-        s = '<a:scrgbClr %s r="%.0f" g="%.0f" b="%.0f"/>' % ((ns,) + tuple(
-            scrgbclr))
+        s = f'<a:scrgbClr {ns} r="%.0f" g="%.0f" b="%.0f"/>' % tuple(scrgbclr)
     color = objectify.fromstring(s)
     return color
 
@@ -393,7 +391,7 @@ def fill_color(**kwargs):
 def xmlns(*prefixes):
     '''XML ns.'''
     elem_schema = make_element()
-    return ' '.join('xmlns:%s="%s"' % (pre, elem_schema['nsmap'][pre]) for pre in prefixes)
+    return ' '.join(f'xmlns:{pre}="{elem_schema["nsmap"][pre]}"' for pre in prefixes)
 
 
 def call(val, g, group, default):
@@ -405,16 +403,17 @@ def call(val, g, group, default):
 
 def cust_shape(x, y, w, h, _id):
     '''Custom shapes.'''
-    _cstmshape = '<p:sp ' + xmlns('p', 'a') + '>'
-    _cstmshape = _cstmshape + '''<p:nvSpPr>
-            <p:cNvPr id='%s' name='%s'/>
+    return objectify.fromstring(f'''
+        <p:sp {xmlns("p", "a")}>
+          <p:nvSpPr>
+            <p:cNvPr id='{_id}' name='Freeform {_id}'/>
             <p:cNvSpPr/>
             <p:nvPr/>
           </p:nvSpPr>
           <p:spPr>
             <a:xfrm>
-              <a:off x='%s' y='%s'/>
-              <a:ext cx='%s' cy='%s'/>
+              <a:off x='{x}' y='{y}'/>
+              <a:ext cx='{w}' cy='{h}'/>
             </a:xfrm>
             <a:custGeom>
               <a:avLst/>
@@ -424,9 +423,7 @@ def cust_shape(x, y, w, h, _id):
               <a:rect l='0' t='0' r='0' b='0'/>
             </a:custGeom>
           </p:spPr>
-        </p:sp>'''
-    shp = _cstmshape % (_id, 'Freeform %d' % _id, x, y, w, h)
-    return objectify.fromstring(shp)
+        </p:sp>''')
 
 
 def draw_sankey(data, spec):

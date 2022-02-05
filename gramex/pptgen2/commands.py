@@ -19,6 +19,7 @@ import re
 import requests
 from PIL import Image
 from functools import partial
+from gramex import console
 from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
@@ -96,7 +97,7 @@ def length_class(unit_str: str):
     elif not unit:
         return length_unit
     else:
-        raise ValueError('Invalid unit: %s' % unit_str)
+        raise ValueError(f'Invalid unit: {unit_str}')
 
 
 def length(val: Union[str, int, float]) -> pptx.util.Length:
@@ -170,7 +171,7 @@ def fill_opacity(fill: FillFormat, val: Union[int, float, None]) -> None:
     if fill.type != MSO_FILL.SOLID:
         raise ValueError('Cannot set opacity: %r on non-solid fill type %r' % (val, fill.type))
     for tag in ('hslClr', 'sysClr', 'srgbClr', 'prstClr', 'scrgbClr', 'schemeClr'):
-        color = fill._xPr.find('.//' + qn('a:%s' % tag))
+        color = fill._xPr.find('.//' + qn(f'a:{tag}'))
         if color is not None:
             alpha = color.find(qn('a:alpha'))
             if alpha is None:
@@ -196,7 +197,7 @@ def alignment(enum, val: str) -> EnumValue:
     alignment = getattr(enum, val.upper(), None)
     if alignment is not None:
         return alignment
-    raise ValueError('Invalid alignment: %s' % val)
+    raise ValueError(f'Invalid alignment: {val}')
 
 
 # Basic command methods
@@ -210,7 +211,7 @@ def name(shape, spec, data: dict):
 def print_command(shape, spec, data: dict):
     spec = spec if isinstance(spec, (list, tuple)) else [spec]
     for item in spec:
-        print('    %s: %s' % (item, expr(item, data)))      # noqa
+        console(f'    {item}: {expr(item, data)}')
 
 
 # Position & style commands
@@ -297,9 +298,9 @@ def get_or_add_link(shape, type, event):
     # parent is the container inside which we insert the link. Can be p:cNvPr or a:rPr
     parent = el.find('.//' + conf['link-attrs'][type]['tag'], _nsmap)
     # Create link if required. (Else preserve all attributes one existing link, like tooltip)
-    link = parent.find(qn('a:%s' % event))
+    link = parent.find(qn(f'a:{event}'))
     if link is None:
-        link = OxmlElement('a:%s' % event)
+        link = OxmlElement(f'a:{event}')
         parent.insert(0, link)
     return link
 
@@ -400,7 +401,7 @@ def get_text_frame(shape):
     try:
         return shape.text_frame
     except AttributeError:
-        raise ValueError('Cannot set text on shape %s that has no text frame' % shape.name)
+        raise ValueError(f'Cannot set text on shape {shape.name} that has no text frame')
 
 
 para_methods = {
@@ -610,7 +611,7 @@ table_col_commands = {
 
 def table(shape, spec, data: dict):
     if not shape.has_table:
-        raise ValueError('Cannot run table commands on shape %s that is not a table' % shape.name)
+        raise ValueError(f'Cannot run table commands on shape {shape.name} that is not a table')
     table = shape.table
 
     # Set or get table first/last row/col attributes
@@ -623,7 +624,7 @@ def table(shape, spec, data: dict):
     # table data must be a DataFrame if specified. Else, create a DataFrame from existing text
     table_data = expr(spec.get('data', None), data)
     if table_data is not None and not isinstance(table_data, pd.DataFrame):
-        raise ValueError('data on table %s must be a DataFrame, not %r' % (shape.name, table_data))
+        raise ValueError(f'data on table {shape.name} must be a DataFrame, not {table_data!r}')
     # Extract data from table text if no data is specified.
     if table_data is None:
         table_data = pd.DataFrame([[cell.text for cell in row.cells] for row in table.rows])
@@ -675,7 +676,7 @@ def table(shape, spec, data: dict):
                         table_cell_commands[key](cell, cmdspec[column], data)
             for column in cmdspec:
                 if column not in columns:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
         # Apply commands that run on each column
         elif key in table_col_commands:
             for column, colspec in cmdspec.items():
@@ -686,7 +687,7 @@ def table(shape, spec, data: dict):
                         pos=AttrDict(row=-1, column=col_index))
                     table_col_commands[key](table, col_index, colspec, data)
                 else:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
 
 
 def chart(shape, spec, data: dict):

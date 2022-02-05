@@ -163,9 +163,9 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
             return json.dumps(handler, key="abc", name=handler.name)
     '''
     # Ensure that the transform is a dict. This is a common mistake. We forget
-    # the pattern: prefix
+    # the function: under it.
     if not hasattr(conf, 'items'):
-        raise ValueError('%s: needs {function: name}. Got %s' % (filename, repr(conf)))
+        raise ValueError(f'{filename}: needs "function:". Got {conf!r}')
 
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
 
@@ -174,7 +174,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         vars = {'_val': None}
 
     if 'function' not in conf or not conf['function']:
-        raise KeyError('%s: No function in conf %s' % (filename, conf))
+        raise KeyError(f'{filename}: No function in conf {conf}')
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
@@ -182,8 +182,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     expr = conf['function']
     tree = ast.parse(expr)
     if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Expr):
-        raise ValueError('%s: function: must be an Python function or expression, not %s',
-                         (filename, expr))
+        raise ValueError(f'{filename}: function: must be Python function or expr, not {expr}')
 
     # Check whether to use the expression as is, or construct the expression
     # If expr is like "x" or "module.x", construct it if it's callable
@@ -199,7 +198,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         function = locate(function_name, modules=['gramex.transforms'])
         doc = function.__doc__
         if function is None:
-            app_log.error('%s: Cannot load function %s' % (filename, function_name))
+            app_log.error(f'{filename}: Cannot load function {function_name}')
         # This section converts the function into an expression.
         # We do this only if the original expression was a *callable* function.
         # But if we can't load the original function (e.g. SyntaxError),
@@ -210,13 +209,13 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
                 args = conf['args'] if isinstance(conf['args'], list) else [conf['args']]
             else:
                 # If args is not specified, use vars' keys as args
-                args = ['=%s' % var for var in vars.keys()]
+                args = [f'={var}' for var in vars.keys()]
             # Add the function, arguments, and kwargs
             expr = function_name + '('
             for arg in args:
-                expr += '%s, ' % _arg_repr(arg)
+                expr += f'{_arg_repr(arg)}, '
             for key, val in conf.get('kwargs', {}).items():
-                expr += '%s=%s, ' % (key, _arg_repr(val))
+                expr += f'{key}={_arg_repr(val)}, '
             expr += ')'
     # If expr starts with a function call (e.g. module.func(...)), use it's docs
     elif isinstance(tree.body[0].value, ast.Call):
@@ -228,9 +227,9 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     modulestr = ', '.join(sorted(modules))
     body = [
         'def transform(', ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items()), '):\n',
-        '\timport %s\n' % modulestr if modulestr else '',
-        '\treload_module(%s)\n' % modulestr if modulestr and not cache else '',
-        '\tresult = %s\n' % expr,
+        f'\timport {modulestr}\n' if modulestr else '',
+        f'\treload_module({modulestr})\n' if modulestr and not cache else '',
+        f'\tresult = {expr}\n',
         # If the result is a generator object, return it. Else, create a list and
         # return that. This ensures that the returned value is always an iterable
         '\treturn result if isinstance(result, GeneratorType) else [result,]' if iter else
@@ -281,7 +280,7 @@ def condition(*args):
     from string import Template
     var_defaults = {}
     for var in variables:
-        var_defaults[var] = "variables.get('%s', '')" % var
+        var_defaults[var] = f"variables.get('{var}', '')"
     # could use iter, range(.., 2)
     if len(args) == 1 and isinstance(args[0], dict):
         pairs = args[0].items()
@@ -326,21 +325,21 @@ def flattener(fields, default=None, filename='flatten'):
     ``default=''`` or any other default value.
     '''
     body = [
-        'def %s(obj):\n' % filename,
+        f'def {filename}(obj):\n',
         '\tr = AttrDict()\n',
     ]
 
     def assign(field, target, catch_errors=False):
         field = repr(field)
         if catch_errors:
-            body.append('\ttry: r[%s] = %s\n' % (field, target))
-            body.append('\texcept (KeyError, TypeError, IndexError): r[%s] = default\n' % field)
+            body.append(f'\ttry: r[{field}] = {target}\n')
+            body.append(f'\texcept (KeyError, TypeError, IndexError): r[{field}] = default\n')
         else:
-            body.append('\tr[%s] = %s\n' % (field, target))
+            body.append(f'\tr[{field}] = {target}\n')
 
     for field, source in fields.items():
         if not isinstance(field, str):
-            app_log.error('flattener:%s: key %s is not a str', filename, field)
+            app_log.error(f'flattener:{filename}: key {field} is not a str')
             continue
         if isinstance(source, str):
             target = 'obj'
@@ -351,12 +350,12 @@ def flattener(fields, default=None, filename='flatten'):
         elif source is True:
             assign(field, 'obj')
         elif isinstance(source, int) and not isinstance(source, bool):
-            assign(field, 'obj[%d]' % source, catch_errors=True)
+            assign(field, f'obj[{source}]', catch_errors=True)
         else:
-            app_log.error('flattener:%s: value %s is not a str/int', filename, source)
+            app_log.error(f'flattener:{filename}: value {source} is not a str/int')
             continue
     body.append('\treturn r')
-    code = compile(''.join(body), filename='flattener:%s' % filename, mode='exec')
+    code = compile(''.join(body), filename=f'flattener:{filename}', mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
     # eval() is safe here since the code is constructed entirely in this function
     eval(code, context)     # nosec: developer-initiated
@@ -581,7 +580,7 @@ def build_log_info(keys, *vars):
             if prefix in object_vars:
                 vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
                 continue
-        app_log.error('Skipping unknown key %s', key)
+        app_log.error(f'Skipping unknown key {key}')
     code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
                    filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}

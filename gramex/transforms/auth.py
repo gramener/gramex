@@ -29,5 +29,5 @@ def ensure_single_session(handler):
             other_session = dict(other_session)
             other_session.pop(handler.session_user_key)
             handler._session_store.dump(key, other_session)
-            app_log.debug('ensure_single_session: dropped user %s from session %s',
-                          user_id, other_session['id'])
+            app_log.debug(f'ensure_single_session: dropped user {user_id} '
+                          f'from session {other_session["id"]}')

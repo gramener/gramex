@@ -38,7 +38,7 @@ def get_cachefile(store):
     elif isinstance(store, RedisCache):
         return RedisCacheFile
     else:
-        app_log.warning('cache: ignoring unknown store %s', store)
+        app_log.warning(f'cache: ignoring unknown store {store}')
         return CacheFile
 
 

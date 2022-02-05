@@ -20,7 +20,7 @@ def write(path, text):
 
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
-    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode–file.txt')
+    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', 'unicode–file.txt')
     write(tempfiles.unicode_file, str(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
@@ -62,7 +62,7 @@ class TestFileHandler(TestGramex):
         # Check unicode filenames only if pathlib supports them
         try:
             pathlib.Path(tempfiles.unicode_file)
-            self.check(u'/dir/noindex/subdir/unicode–file.txt')
+            self.check('/dir/noindex/subdir/unicode–file.txt')
         except UnicodeError:
             pass
 

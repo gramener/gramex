@@ -148,7 +148,7 @@ def callback_commandline(commands):
             if 'help' in kwargs:
                 return console, {'msg': gramex.install.show_usage(method)}
             return getattr(gramex.install, method), {'args': args, 'kwargs': kwargs}
-        raise NotImplementedError('Unknown gramex command: %s' % base_command)
+        raise NotImplementedError(f'Unknown gramex command: {base_command}')
     elif kwargs.get('help') is True:
         return console, {'msg': __doc__.strip().format(**globals())}
 
@@ -157,8 +157,8 @@ def callback_commandline(commands):
         return console, {'msg': 'No gramex.yaml. See https://gramener.com/gramex/guide/'}
 
     # Run gramex.init(cmd={command line arguments like YAML variables})
-    app_log.info('Gramex %s | %s | Python %s', __version__, os.getcwd(),
-                 sys.version.replace('\n', ' '))
+    pyver = sys.version.replace('\n', ' ')
+    app_log.info(f'Gramex {__version__} | {os.getcwd()} | Python {pyver}')
     return init, {'cmd': AttrDict(app=kwargs)}
 
 
@@ -205,13 +205,11 @@ def gramex_update(url):
     update = r.json()
     server_version = update['version']
     if version.parse(server_version) > version.parse(__version__):
-        app_log.error('Gramex %s is available. See https://gramener.com/gramex/guide/',
-                      server_version)
+        app_log.error(f'Gramex {server_version} is available. https://gramener.com/gramex/guide/')
     elif version.parse(server_version) < version.parse(__version__):
-        app_log.warning('Gramex update: your version %s is ahead of the stable %s',
-                        __version__, server_version)
+        app_log.warning(f'Gramex {__version__} is ahead of stable {server_version}')
     else:
-        app_log.debug('Gramex version %s is up to date', __version__)
+        app_log.debug(f'Gramex {__version__} is up to date')
     services.info.eventlog.add('update', update)
     return {'logs': logs, 'response': update}
 
@@ -290,18 +288,18 @@ def init(force_reload=False, **kwargs):
     for key, val in appconfig.items():
         if key not in conf or conf[key] != val or force_reload:
             if hasattr(services, key):
-                app_log.debug('Loading service: %s', key)
+                app_log.debug(f'Loading service: {key}')
                 conf[key] = prune_keys(val, {'comment'})
                 callback = getattr(services, key)(conf[key])
                 if callable(callback):
                     callbacks[key] = callback
             else:
-                app_log.error('No service named %s', key)
+                app_log.error(f'No service named {key}')
 
     # Run the callbacks. Specifically, the app service starts the Tornado ioloop
     for key in (+config_layers).keys():
         if key in callbacks:
-            app_log.debug('Running callback: %s', key)
+            app_log.debug(f'Running callback: {key}')
             callbacks[key]()
 
 

@@ -520,7 +520,7 @@ def test_function(
     if code == OK:
         return json.dumps([li1, li2, li3, lf1, lf2, lf3, l1, i1, i2, s1, h])
     else:
-        raise HTTPError(code, reason='Something')
+        raise HTTPError(code)
 
 
 if __name__ == '__main__':

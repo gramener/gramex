@@ -31,7 +31,7 @@ class Node(object):
         self.cwd = os.path.join(variables['GRAMEXDATA'], 'pynode') if cwd is None else cwd
         # node_path is where the node executable is. Autodetect from PATH by default
         self.node_path = node_path or which('node')
-        self.url = 'ws://127.0.0.1:%s' % port
+        self.url = f'ws://127.0.0.1:{port}'
         self.timeout = timeout
         self.proc, self.conn = None, None
         self.count = 0
@@ -49,7 +49,7 @@ class Node(object):
                     [
                         self.node_path,
                         os.path.join(self._source, 'index.js'),
-                        '--port=%s' % self.port
+                        f'--port={self.port}'
                     ],
                     first_line=re.compile(r'pynode: 1.\d+.\d+ port: %s' % self.port),
                     cwd=self.cwd,

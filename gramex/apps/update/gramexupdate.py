@@ -26,7 +26,7 @@ def gramexupdate(handler):
         if not isinstance(logs, list):
             raise ValueError()
     except (ValueError, AssertionError):
-        raise HTTPError(BAD_REQUEST, reason='Invalid POST data. Expecting JSON array')
+        raise HTTPError(BAD_REQUEST, 'Invalid POST data. Expecting JSON array')
     logger = logging.getLogger('gramexupdate')
     for log in logs:
         log['ip'] = handler.request.remote_ip
@@ -59,7 +59,7 @@ def consolidate():
         src = os.path.split(path)[-1]
         if src in merged and not force:
             return
-        app_log.info('consolidating %s', src)
+        app_log.info(f'consolidating {src}')
 
         result = []
         for line in io.open(path, 'r', encoding='utf-8'):

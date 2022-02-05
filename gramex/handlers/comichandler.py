@@ -32,6 +32,6 @@ class ComicHandler(BaseHandler):
                 self.set_header(key, val)
             self.write(result['result'])
         elif isinstance(result, dict) and 'message' in result['error']:
-            raise HTTPError(BAD_REQUEST, reason=result['error']['message'])
+            raise HTTPError(BAD_REQUEST, result['error']['message'])
         else:
-            raise HTTPError(INTERNAL_SERVER_ERROR, reason=json.dumps(result))
+            raise HTTPError(INTERNAL_SERVER_ERROR, json.dumps(result))

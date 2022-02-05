@@ -54,7 +54,7 @@ class SMTPMailer(object):
         self.password = password
         self.stub = stub
         if type not in self.clients:
-            raise ValueError('Unknown email type: %s' % type)
+            raise ValueError(f'Unknown email type: {type}')
         self.client = self.clients[type]
         self.client.update(kwargs)
         if 'host' not in self.client:
@@ -83,8 +83,7 @@ class SMTPMailer(object):
             server.login(self.email, self.password)
         server.sendmail(sender, to, msg.as_string())
         server.quit()
-        app_log.info('Email sent via %s (%s) to %s', self.client['host'], self.email,
-                     ', '.join(to))
+        app_log.info(f'Email sent via {self.client["host"]} ({self.email}) to {", ".join(to)}')
 
 
 def recipients(**kwargs):
@@ -144,7 +143,7 @@ def message(body=None, html=None, attachments=[], images={}, **kwargs):
             for name, path in images.items():
                 with open(path, 'rb') as handle:
                     img = MIMEImage(handle.read())
-                    img.add_header('Content-ID', '<%s>' % name)
+                    img.add_header('Content-ID', f'<{name}>')
                     html_part.attach(img)
     if body and html:
         msg = MIMEMultipart('alternative')
@@ -215,6 +214,6 @@ class SMTPStub(object):
     def quit(self):
         self.info.update(quit=True)
         if self.options == 'log':
-            console('From: %s' % self.info['from_addr'])
-            console('To: %s' % self.info['to_addrs'])
+            console(f'From: {self.info["from_addr"]}')
+            console(f'To: {self.info["to_addrs"]}')
             console(self.info['msg'])

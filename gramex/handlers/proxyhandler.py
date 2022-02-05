@@ -70,7 +70,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         for key, fn in (('prepare', prepare), ('modify', modify)):
             if fn:
                 cls.info[key] = build_transform(
-                    {'function': fn}, filename='url:%s.%s' % (cls.name, key),
+                    {'function': fn}, filename=f'url:{cls.name}.{key}',
                     vars={'handler': None, 'request': None, 'response': None})
         cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
 
@@ -129,7 +129,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         if 'prepare' in self.info:
             self.info['prepare'](handler=self, request=request, response=None)
 
-        app_log.debug('%s: proxying %s', self.name, url)
+        app_log.debug(f'{self.name}: proxying {url}')
         response = yield self.browser().fetch(request, raise_error=False)
 
         if response.code in (MOVED_PERMANENTLY, FOUND):

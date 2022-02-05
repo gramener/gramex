@@ -32,7 +32,7 @@ def _indent(text, prefix, predicate=None):
 def _caller():
     '''_caller() returns the "file:function:line" of the calling function'''
     parent = inspect.getouterframes(inspect.currentframe())[2]
-    return '[%s:%s:%d]' % (parent[1], parent[3], parent[2])
+    return f'[{parent[1]}:{parent[3]}:{parent[2]}]'
 
 
 class Timer(object):
@@ -56,7 +56,7 @@ class Timer(object):
         end = timeit.default_timer()
         if self.gc_old:
             gc.enable()
-        app_log.log(self.level, '%0.3fs %s %s', end - self.start, self.msg, _caller())
+        app_log.log(self.level, f'{end - self.start:0.3f}s {self.msg} {_caller()}')
 
 
 def _write(obj, prefix=None, stream=sys.stdout):
@@ -218,7 +218,7 @@ def _make_timer():
 
     def timer(msg, level=logging.WARNING):
         end = timeit.default_timer()
-        app_log.log(level, '%0.3fs %s %s', end - Context.start, msg, _caller())
+        app_log.log(level, f'{end - Context.start:0.3f}s {msg} {_caller()}')
         Context.start = end
 
     timer.__doc__ = _make_timer.__doc__

@@ -25,7 +25,7 @@ class TestWatcher(TestGramex):
             if got_event:
                 break
             time.sleep(delay)
-        self.assertTrue(got_event, 'Watch event %s not fired' % event)
+        self.assertTrue(got_event, f'Watch event {event} not fired')
         if url:
             self.check(url, **kwargs)
 

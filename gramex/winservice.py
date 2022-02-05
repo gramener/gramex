@@ -70,10 +70,10 @@ class GramexService(win32serviceutil.ServiceFramework):
         try:
             port = self._svc_port_
             import gramex
-            gramex.commandline(None if port is None else ['--listen.port=%d' % port])
+            gramex.commandline(None if port is None else [f'--listen.port={port}'])
         except Exception:
             typ = servicemanager.EVENTLOG_ERROR_TYPE
-            msg = ''.join(traceback.format_exc())
+            msg = '\n' + ''.join(traceback.format_exc())
             servicemanager.LogMsg(typ, servicemanager.PYS_SERVICE_STOPPED, (self._svc_name_, msg))
 
     @classmethod
@@ -86,8 +86,7 @@ class GramexService(win32serviceutil.ServiceFramework):
             cwd = os.getcwd()
         exe = sys.executable
         gramexpath = os.path.dirname(gramex.__file__)
-        info = (name, f'Path: {cwd}. Python: {exe}. Gramex: {gramexpath}',
-                'Port %s' % port if port is not None else '')
+        path = f'Path: {cwd}. Python: {exe}. Gramex: {gramexpath}. Port {port or "NA"}'
         service_class = win32serviceutil.GetServiceClassString(cls)
         startup = cls.startup_map[startup]
         running = win32service.SERVICE_RUNNING
@@ -98,7 +97,7 @@ class GramexService(win32serviceutil.ServiceFramework):
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'cwd', cwd)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'exe', exe)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'py', gramexpath)
-            app_log.info('Installed service. %s will run from %s %s' % info)
+            app_log.info(f'Installed service. {name} will run from {path}')
         elif cmd[0] in {'update', 'change'}:
             win32serviceutil.ChangeServiceConfig(
                 service_class, service_name, displayName=name, description=cls._svc_description_,
@@ -106,7 +105,7 @@ class GramexService(win32serviceutil.ServiceFramework):
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'cwd', cwd)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'exe', exe)
             win32serviceutil.SetServiceCustomOption(cls._svc_name_, 'py', gramexpath)
-            app_log.info('Updated service. %s will run from %s %s' % info)
+            app_log.info(f'Updated service. {name} will run from {path}')
         elif cmd[0] in {'remove', 'uninstall'}:
             try:
                 win32serviceutil.StopService(service_name)
@@ -114,17 +113,17 @@ class GramexService(win32serviceutil.ServiceFramework):
                 if e.args[0] != winerror.ERROR_SERVICE_NOT_ACTIVE:
                     raise
             win32serviceutil.RemoveService(service_name)
-            app_log.info('Removed service. %s ran from %s %s' % info)
+            app_log.info(f'Removed service. {name} ran from {path}')
         elif cmd[0] == 'start':
-            app_log.info('Starting service %s at %s %s' % info)
+            app_log.info(f'Starting service {name} at {path}')
             win32serviceutil.StartService(service_name, cmd[1:])
             if wait:
                 win32serviceutil.WaitForServiceStatus(service_name, running, wait)
         elif cmd[0] == 'stop':
-            app_log.info('Stopping service %s at %s %s' % info)
+            app_log.info(f'Stopping service {name} at {path}')
             if wait:
                 win32serviceutil.StopServiceWithDeps(service_name, waitSecs=wait)
             else:
                 win32serviceutil.StopService(service_name)
         elif cmd[0]:
-            app_log.error('Unknown command: %s' % cmd[0])
+            app_log.error(f'Unknown command: {cmd[0]}')

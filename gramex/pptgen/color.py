@@ -30,13 +30,13 @@ Thatch, Trek, Urban, Verve, Waveform
 A palette's colours can be accessed as an array or as an attribute. For e.g.:
 
 >>> Office[0]               # The first element
-u'#4f81bd'
+'#4f81bd'
 >>> Office.accent_1         # ... is called .accent_1
-u'#4f81bd'
+'#4f81bd'
 >>> Office[1]               # The next element
-u'#c0504d'
+'#c0504d'
 >>> Office.accent_2         # ... is called .accent_2
-u'#c0504d'
+'#c0504d'
 
 The following 10 attributes are available (in order):
 
@@ -493,7 +493,7 @@ def rgba(color):
         result.append(float(BASE_1))
 
     if len(result) != BASE_4:
-        raise ValueError('%s: invalid color' % color)
+        raise ValueError(f'{color}: invalid color')
 
     return tuple(
         float(BASE_0) if val < BASE_0 else float(

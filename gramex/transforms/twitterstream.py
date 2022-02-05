@@ -60,7 +60,7 @@ class TwitterStream(object):
             fields = kwargs['fields']
             for field in list(fields.keys()):
                 if field not in table.columns:
-                    app_log.error('TwitterStream field %s not in table' % field)
+                    app_log.error(f'TwitterStream field {field} not in table')
                     fields.pop(field)
             flatten = flattener(fields=fields)
             self.process_json = lambda tweet: engine.execute(table.insert(flatten(tweet)))
@@ -108,27 +108,26 @@ class TwitterStream(object):
             # For rate limiting, start with 1 minute and double each attempt
             if e.code in {RATE_LIMITED, TOO_MANY_REQUESTS}:
                 self.delay = self.delay * 2 if self.delay else 60
-                app_log.error('TwitterStream HTTP %d (rate limited): %s. Retry: %ss',
-                              e.code, e.response, self.delay)
+                app_log.error(f'TwitterStream HTTP {e.code} (rate limited): {e.response}. '
+                              f'Retry: {self.delay}s')
             # For Tornado timeout errors, reconnect immediately
             elif e.code == CLIENT_TIMEOUT:
                 self.delay = 0
-                app_log.error('TwitterStream HTTP %d (timeout): %s. Retry: %ss',
-                              e.code, e.response, self.delay)
+                app_log.error(f'TwitterStream HTTP {e.code} (timeout): {e.response}. '
+                              f'Retry: {self.delay}s')
             # For server errors, start with 5 seconds and double until 320 seconds
             elif INTERNAL_SERVER_ERROR <= e.code <= GATEWAY_TIMEOUT:
                 self.delay = min(320, self.delay * 2 if self.delay else 1)      # noqa: 320 seconds
-                app_log.error('TwitterStream HTTP %d: %s. Retry: %ss',
-                              e.code, e.response, self.delay)
+                app_log.error(f'TwitterStream HTTP {e.code}: {e.response}. Retry: {self.delay}s')
             # For client errors (e.g. wrong params), disable connection
             else:
                 self.delay, self.enabled = 5, False
-                app_log.error('TwitterStream HTTP %d: %s. Disabling', e.code, e.response)
+                app_log.error(f'TwitterStream HTTP {e.code}: {e.response}. Disabling')
         except Exception as e:
             # Other errors are possible, such as IOError.
             # Increase the delay in reconnects by 250ms each attempt, up to 16 seconds.
             self.delay = min(16, self.delay + 0.25)         # noqa: 16 seconds, 0.25 seconds
-            app_log.error('TwitterStream exception %s. Retry: %ss', e, self.delay)
+            app_log.error(f'TwitterStream exception {e}. Retry: {self.delay}s')
 
     def header_callback(self, line):
         try:
@@ -139,7 +138,7 @@ class TwitterStream(object):
             else:
                 self.headers.parse_line(line)
         except Exception:
-            app_log.exception('Cannot parse header %s' % line)
+            app_log.exception(f'Cannot parse header {line}')
 
     def _stream(self, data):
         buf = self.buf
@@ -156,24 +155,24 @@ class TwitterStream(object):
             try:
                 self.process_bytes(data)
             except Exception:
-                app_log.exception('TwitterStream could not process: %s' % data)
+                app_log.exception(f'TwitterStream could not process: {data}')
 
     def process_bytes(self, data):
         try:
             text = six.text_type(data, encoding='utf-8')
             message = json.loads(text)
         except UnicodeError:
-            app_log.error('TwitterStream unicode error: %s', data)
+            app_log.error(f'TwitterStream unicode error: {data}')
             return
         except ValueError:
             # When rate limited, text="Exceeded connection limit for user"
-            app_log.error('TwitterStream non-JSON data: %s', text)
+            app_log.error(f'TwitterStream non-JSON data: {text}')
             return
         # Process the message (which is usually, but not always, a tweet)
         try:
             self.process_json(message)
         except Exception:
-            app_log.exception('TwitterStream could not process message: %s' % text)
+            app_log.exception(f'TwitterStream could not process message: {text}')
 
     def process_json(self, message):
         '''Subclass this to process tweets differently'''
@@ -190,7 +189,7 @@ class StreamWriter(object):
             self.flush_loop = PeriodicCallback(self.flush, flush * 1000)
             self.flush_loop.start()
         else:
-            raise ValueError('flush=%r is not int/bool' % flush)
+            raise ValueError(f'flush={flush!r} is not int/bool')
         self.rotate()
 
     def flush(self):
@@ -223,7 +222,7 @@ class StreamWriter(object):
             if not os.path.exists(folder):
                 os.makedirs(folder)
             self.stream = open(path, 'ab')
-            app_log.debug('StreamWriter writing to %s', path)
+            app_log.debug(f'StreamWriter writing to {path}')
 
         # Schedule the next call after a minute
         IOLoop.current().call_later(60, self.rotate)

@@ -53,7 +53,7 @@ class AuthHandler(BaseHandler):
         default_delay = [1, 1, 5]
         cls.delay = delay
         if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
-            app_log.warning('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
+            app_log.warning(f'{cls.name}: Ignoring invalid delay: {cls.delay!r}')
             cls.delay = default_delay
         elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
@@ -71,7 +71,7 @@ class AuthHandler(BaseHandler):
             if isinstance(lookup, dict):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
             else:
-                app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
+                app_log.error(f'{cls.name}: lookup must be a dict, not {cls.lookup}')
 
         cls.rules = gramex.data.filter(**rules) if rules else gramex.data.pd.DataFrame()
         cls.rules.fillna(value='', inplace=True)
@@ -82,14 +82,14 @@ class AuthHandler(BaseHandler):
             cls.auth_methods['prepare'] = build_transform(
                 conf={'function': prepare},
                 vars={'handler': None, 'args': None},
-                filename='url:%s:prepare' % cls.name,
+                filename=f'url:{cls.name}:prepare',
                 iter=False)
         # Prepare recaptcha
         if recaptcha is not None:
             if 'key' not in recaptcha:
-                app_log.error('%s: recaptcha.key missing', cls.name)
+                app_log.error(f'{cls.name}: recaptcha.key missing')
             elif 'key' not in recaptcha:
-                app_log.error('%s: recaptcha.secret missing', cls.name)
+                app_log.error(f'{cls.name}: recaptcha.secret missing')
             else:
                 recaptcha.setdefault('action', 'login')
                 cls.auth_methods['recaptcha'] = cls.check_recaptcha
@@ -102,7 +102,7 @@ class AuthHandler(BaseHandler):
             for conf in action:
                 cls.actions.append(build_transform(
                     conf, vars=AttrDict(handler=None),
-                    filename='url:%s:%s' % (cls.name, conf.function)))
+                    filename=f'url:{cls.name}:{conf.function}'))
 
     @coroutine
     def prepare(self):
@@ -216,7 +216,7 @@ class AuthHandler(BaseHandler):
         response = yield http.fetch(self._RECAPTCHA_VERIFY_URL, method='POST', body=body)
         result = json.loads(response.body)
         if not result['success']:
-            raise HTTPError(FORBIDDEN, 'recaptcha failed: %s' % ', '.join(result['error-codes']))
+            raise HTTPError(FORBIDDEN, f'recaptcha failed: {", ".join(result["error-codes"])}')
 
     def authorize(self):
         '''AuthHandlers don't have authorization. They're meant to log users in.'''

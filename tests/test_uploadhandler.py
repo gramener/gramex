@@ -22,7 +22,7 @@ class TestUploadHandler(TestGramex):
 
     def check_upload(self, url, files, names=[], data={}, code=OK):
         r = requests.post(url, files=files, data=data)
-        eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+        eq_(r.status_code, code, f'{url}: code {r.status_code} != {code}')
         json = r.json()
         meta = self.info.info()
         for index, name in enumerate(names):
@@ -75,8 +75,7 @@ class TestUploadHandler(TestGramex):
         for path in ['../actors.csv', '/actors.csv', '../upload/../β']:
             r = requests.post(url, files={'text': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
-            ok_('outside' in msg)
+            ok_('outside' in r.text)
 
     def test_upload_error(self):
         url = server.base_url + conf.url['upload-error'].pattern
@@ -87,8 +86,7 @@ class TestUploadHandler(TestGramex):
             eq_(r.status_code, FORBIDDEN)
             r = requests.post(url, files={'file': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
-            ok_('file exists' in msg)
+            ok_('file exists' in r.text)
 
     def test_upload_overwrite(self):
         url = server.base_url + conf.url['upload-overwrite'].pattern

@@ -107,7 +107,7 @@ class ProcessHandler(BaseHandler):
                 callbacks.append(handle.write)
             # warn on unknown parameters (e.g. numbers, True, etc)
             else:
-                app_log.warning('ProcessHandler: %s: %s is not implemented' % (name, target))
+                app_log.warning(f'ProcessHandler: {name}: {target} is not implemented')
         return callbacks
 
     def initialize(self, stdout=None, stderr=None, stdin=None, **kwargs):

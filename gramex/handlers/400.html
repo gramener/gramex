@@ -9,26 +9,31 @@
   <style>
   * { box-sizing: border-box; }
   html { width: 100%; height: 100%; }
+  h1, p { text-align: center; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 18px; }
-  .content { margin: 0 auto; width: 20rem;}
+  .content { margin: 0 auto; max-width: 40rem; }
   pre { white-space: pre-wrap; background-color: #f8f8f8; padding: 0.5em; overflow-x: auto; }
-  th, td { border-bottom: 1px solid #eee; padding: 0.5rem 0.25rem; vertical-align: top; }
-  th { text-align: left; }
+  pre code { white-space: pre; }
+  table { margin: 0 auto; }
+  th, td { text-align: left; border-bottom: 1px solid #eee; padding: 0.5rem 0.5rem 0.5rem 0; vertical-align: top; }
+  #traceback { display: none; }
+  #show-traceback { position: fixed; bottom: 0; width: 100%; text-align: center; cursor: pointer; opacity: 0.4; }
   </style>
   <!-- htmllint tag-bans="$previous" -->
 </head>
-<body class="content">
-  <h1>Bad request</h1>
-  {% set exception = kwargs['exc_info'][1] %}
-  <table>
-    <tbody>
+<body>
+  <section class="content">
+    <h1>Bad request</h1>
+    <p>Something in your request is invalid.</p>
+    {% set exception = kwargs['exc_info'][1] %}
+    <table><tbody>
       {% for key, val in vars(exception).items() %}
-        <tr>
-          <th>{{ key.replace('_', ' ').title() }}</th>
-          <td>{{ val }}</td>
-        </tr>
+        {% if val %}
+          <tr><th>{{ key.replace('_', ' ').title() }}</th><td>{{ val }}</td></tr>
+        {% end %}
       {% end %}
-    </tbody>
-  </table>
+    </tbody></table>
+  </section>
+  </section>
 </body>
 </html>

@@ -34,7 +34,7 @@ def get_auth_conf(kwargs):
         if key == authhandler or key.endswith(':' + authhandler):
             break
     else:
-        raise ValueError('Missing url.%s (cannot find authhandler)' % authhandler)
+        raise ValueError(f'Missing url.{authhandler} (cannot find authhandler)')
     auth_kwargs = auth_conf.get('kwargs', {})
     if 'lookup' in auth_kwargs:
         data_conf = auth_kwargs['lookup'].copy()
@@ -48,7 +48,7 @@ def get_auth_conf(kwargs):
         data_conf['id'] = user_column
         return authhandler, auth_conf, data_conf
     else:
-        raise ValueError('Missing lookup: in url.%s (authhandler)' % authhandler)
+        raise ValueError(f'Missing lookup: in url.{authhandler} (authhandler)')
 
 
 class AdminFormHandler(gramex.handlers.FormHandler):
@@ -112,8 +112,8 @@ class AdminFormHandler(gramex.handlers.FormHandler):
                 data_conf['id'] = ['selector', 'pattern']
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
-            app_log.warning('%s: %s', cls.name, e.args[0])
-            cls.reason = e.args[0]
+            app_log.warning(f'{cls.name}: {e.args[0]}')
+            cls.error = e.args[0]
             cls.get = cls.post = cls.put = cls.delete = cls.send_response
             return
         # Get the FormHandler configuration from lookup:
@@ -122,7 +122,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         cls._on_finish_methods.append(cls.send_welcome_email)
 
     def send_response(self, *args, **kwargs):
-        raise HTTPError(INTERNAL_SERVER_ERROR, reason=self.reason)
+        raise HTTPError(INTERNAL_SERVER_ERROR, self.error)
 
 
 def evaluate(handler, code):

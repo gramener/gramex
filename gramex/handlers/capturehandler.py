@@ -78,10 +78,10 @@ class Capture(object):
         self.engine = self.engines['phantomjs' if engine is None else engine]
         port = self.default_port if port is None else port
         if url is None:
-            url = 'http://localhost:%d/' % port
+            url = f'http://localhost:{port}/'
             if cmd is None:
                 script = os.path.join(variables.GRAMEXPATH, 'apps', 'capture', self.engine.script)
-                cmd = '%s "%s" --port=%d' % (self.engine.cmd, script, port)
+                cmd = f'"{self.engine.cmd}" "{script}" --port={port}'
         self.url = url
         self.first_line_re = re.compile(self.engine.first_line)
         self.cmd = cmd
@@ -114,16 +114,16 @@ class Capture(object):
         script = self.engine.script
         try:
             # Check if capture.js is at the url specified
-            app_log.info('Pinging %s at %s', script, self.url)
+            app_log.info(f'Pinging {script} at {self.url}')
             r = requests.get(self.url, timeout=self.timeout)
             self._validate_server(r)
             self.started = True
         except requests.ReadTimeout:
             # If capture.js doesn't respond immediately, we haven't started
-            app_log.error('url: %s timed out', self.url)
+            app_log.error(f'url: {self.url} timed out')
         except requests.ConnectionError:
             # Try starting the process again
-            app_log.info('Starting %s via %s', script, self.cmd)
+            app_log.info(f'Starting {script} via {self.cmd}')
             self.close()
             # self.cmd is taken from the YAML configuration. Safe to run
             self.proc = Popen(shlex.split(self.cmd),        # nosec: frozen input
@@ -133,26 +133,26 @@ class Capture(object):
             # TODO: what if readline() does not return quickly?
             line = self.proc.stdout.readline().strip()
             if not self.first_line_re.search(line):
-                return app_log.error('cmd: %s invalid. Returned "%s"', self.cmd, line)
-            app_log.info('Pinging %s at %s', script, self.url)
+                return app_log.error(f'cmd: {self.cmd} invalid. Returned "{line}"')
+            app_log.info(f'Pinging {script} at {self.url}')
             try:
                 r = requests.get(self.url, timeout=self.timeout)
                 self._validate_server(r)
                 pid = self.proc.pid
-                app_log.info(line.decode('utf-8') + ' live (pid=%s)', pid)
+                app_log.info(line.decode('utf-8') + f' live (pid={pid})')
                 self.started = True
                 # Keep logging capture.js output until proc is killed by another thread
                 while hasattr(self, 'proc'):
                     line = self.proc.stdout.readline().strip()
                     if len(line) == 0:
-                        app_log.info('%s terminated: pid=%d', script, pid)
+                        app_log.info(f'{script} terminated: pid={pid}')
                         self.started = False
                         break
                     # Capture won't print anything, unless there's a problem, or if debug is on.
                     # So log it at warning level not info.
                     app_log.warning(line.decode('utf-8'))
             except Exception:
-                app_log.exception('Ran %s. But %s not at %s', self.cmd, script, self.url)
+                app_log.exception(f'Ran {self.cmd}. But {script} not at {self.url}')
         except Exception:
             app_log.exception('Cannot start Capture')
 
@@ -165,7 +165,7 @@ class Capture(object):
                     proc.kill()
                 process.kill()
             except psutil.NoSuchProcess:
-                app_log.info('%s PID %d already killed', self.engine.script, self.proc.pid)
+                app_log.info(f'{self.engine.script} PID {self.proc.pid} already killed')
                 pass
             delattr(self, 'proc')
 
@@ -175,7 +175,7 @@ class Capture(object):
         parts = server.split('/', 2)
         script = self.engine.script
         if not len(parts) == 2 or parts[0] != self.engine.name or parts[1] < self.engine.version:
-            raise RuntimeError('Server: %s at %s is not %s' % (server, self.url, script))
+            raise RuntimeError(f'Server: {server} at {self.url} is not {script}')
 
     @tornado.gen.coroutine
     def capture_async(self, headers=None, **kwargs):
@@ -190,7 +190,7 @@ class Capture(object):
             while not self.started and time.time() < end_time:
                 yield tornado.gen.sleep(self.check_interval)
         if not self.started:
-            raise RuntimeError('%s not started. See logs' % self.engine.script)
+            raise RuntimeError(f'{self.engine.script} not started. See logs')
         r = yield self.browser.fetch(
             self.url, method='POST', body=urlencode(kwargs, doseq=True), raise_error=False,
             connect_timeout=self.timeout, request_timeout=self.timeout, headers=headers)
@@ -227,14 +227,14 @@ class Capture(object):
             while not self.started and time.time() < end_time:
                 time.sleep(self.check_interval)
             if not self.started:
-                raise RuntimeError('%s not started. See logs' % self.engine.script)
+                raise RuntimeError(f'{self.engine.script} not started. See logs')
         kwargs['url'] = url
         r = requests.post(self.url, data=kwargs, timeout=self.timeout)
         if r.status_code == OK:
             self._validate_server(r)
             return r.content
         else:
-            raise RuntimeError('%s error: %s' % (self.engine.script, r.content))
+            raise RuntimeError(f'{self.engine.script} error: {r.content}')
 
     def pdf(self, url, **kwargs):
         '''An alias for :meth:`Capture.capture` with ``ext='pdf'``.'''
@@ -323,7 +323,7 @@ class CaptureHandler(BaseHandler):
             margins={},
         )
         if args['url'] is None:
-            raise HTTPError(BAD_REQUEST, reason='%s: CaptureHandler needs ?url=' % self.name)
+            raise HTTPError(BAD_REQUEST, f'{self.name}: CaptureHandler needs ?url=')
 
         # ?url= can be a relative URL. Use the full X-Request URL as the base
         args['url'] = urljoin(self.xrequest_full_url, args['url'])
@@ -341,7 +341,7 @@ class CaptureHandler(BaseHandler):
             response = yield self.capture.capture_async(**args)
         except RuntimeError as e:
             # capture.js could not fetch the response
-            raise HTTPError(BAD_GATEWAY, reason=e.args[0])
+            raise HTTPError(BAD_GATEWAY, e.args[0])
 
         if response.code == OK:
             self.set_header('Content-Type', info['mime'])
@@ -349,11 +349,11 @@ class CaptureHandler(BaseHandler):
                             'attachment; filename="{file}.{ext}"'.format(**args))
             self.write(response.body)
         elif response.code == CLIENT_TIMEOUT:
-            self.set_status(GATEWAY_TIMEOUT, reason='Capture is busy')
+            self.set_status(GATEWAY_TIMEOUT, 'Capture is busy')
             self.set_header('Content-Type', 'application/json')
             self.write({'status': 'fail', 'msg': [
-                'Capture did not respond within timeout: %ds' % self.capture.timeout]})
+                f'Capture did not respond within timeout: {self.capture.timeout}s']})
         else:
-            self.set_status(response.code, reason='capture.js error')
+            self.set_status(response.code, 'capture.js error')
             self.set_header('Content-Type', 'application/json')
             self.write(response.body)

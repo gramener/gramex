@@ -21,7 +21,7 @@ from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these
 from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore    # noqa
 
-server_header = 'Gramex/%s' % __version__
+server_header = f'Gramex/{__version__}'
 session_store_cache = {}
 _missing = object()
 _arg_default = object()
@@ -79,7 +79,7 @@ class BaseMixin(object):
         if isinstance(methods, (list, tuple)):
             methods = ' '.join(methods)
         if not isinstance(methods, str):
-            raise ValueError('methods: %r invalid -- use a string/list, e.g. [GET, PUT]')
+            raise ValueError(f'methods: {methods!r} invalid -- use a string/list, e.g. [GET, PUT]')
         if methods:
             cls._http_methods = set(methods.upper().replace(',', ' ').split())
             cls._on_init_methods.append(cls.check_http_method)
@@ -103,7 +103,7 @@ class BaseMixin(object):
             cls.transform[pattern] = {
                 'function': build_transform(
                     trans, vars=AttrDict((('content', None), ('handler', None))),
-                    filename='url:%s' % cls.name),
+                    filename=f'url:{cls.name}'),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
@@ -139,7 +139,7 @@ class BaseMixin(object):
                 elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
                     keys.append(key)
             else:
-                app_log.warning('Store key: %s has value type %s (not dict)', key, type(val))
+                app_log.warning(f'Store key: {key} has value type {type(val)} (not dict)')
         return keys
 
     @classmethod
@@ -204,8 +204,7 @@ class BaseMixin(object):
         if isinstance(redirect, str):
             redirect = {'url': redirect}
         if not isinstance(redirect, dict):
-            app_log.error('url:%s.redirect must be a URL or a dict, not %s',
-                          cls.name, repr(redirect))
+            app_log.error(f'url:{cls.name}.redirect must be a URL or a dict, not {redirect!r}')
             return
 
         cls.redirects = []
@@ -230,7 +229,7 @@ class BaseMixin(object):
                         req = handler.request
                         if req.protocol == target.scheme and req.host == target.netloc:
                             return next_uri
-                        app_log.error('Not redirecting to external url: %s', next_uri)
+                        app_log.error(f'Not redirecting to external url: {next_uri}')
                 return redirect_method
             cls.redirects = [no_external(method) for method in cls.redirects]
 
@@ -251,7 +250,7 @@ class BaseMixin(object):
             if auth.get('condition'):
                 cls.permissions.append(
                     build_transform(auth['condition'], vars=AttrDict(handler=None),
-                                    filename='url:%s.auth.permission' % cls.name))
+                                    filename=f'url:{cls.name}.auth.permission'))
             # Add check for membership
             memberships = auth.get('membership', [])
             if not isinstance(memberships, list):
@@ -259,7 +258,7 @@ class BaseMixin(object):
             if len(memberships):
                 cls.permissions.append(check_membership(memberships))
         elif auth:
-            app_log.error('url:%s.auth is not a dict', cls.name)
+            app_log.error(f'url:{cls.name}.auth is not a dict')
 
     def authorize(self):
         '''BaseMixin assumes every handler has an authorize() function'''
@@ -282,7 +281,7 @@ class BaseMixin(object):
             if not error_config['autoescape']:
                 template_kwargs['autoescape'] = None
             else:
-                app_log.error('url:%s.error.%d.autoescape can only be false', cls.name, error_code)
+                app_log.error(f'url:{cls.name}.error.{error_code}.autoescape can only be false')
         if 'whitespace' in error_config:
             template_kwargs['whitespace'] = error_config['whitespace']
 
@@ -311,7 +310,7 @@ class BaseMixin(object):
         if not error:
             return
         if not isinstance(error, dict):
-            return app_log.error('url:%s.error is not a dict', cls.name)
+            return app_log.error(f'url:{cls.name}.error is not a dict')
         # Compile all errors handlers
         cls.error = {}
         for error_code, error_config in error.items():
@@ -320,23 +319,22 @@ class BaseMixin(object):
                 if error_code < 100 or error_code > 1000:
                     raise ValueError()
             except ValueError:
-                app_log.error('url.%s.error code %s is not a number (100 - 1000)',
-                              cls.name, error_code)
+                app_log.error(f'url.{cls.name}.error code {error_code} is not a number (100-1000)')
                 continue
             if not isinstance(error_config, dict):
-                return app_log.error('url:%s.error.%d is not a dict', cls.name, error_code)
+                return app_log.error(f'url:{cls.name}.error.{error_code} is not a dict')
             # Make a copy of the original. When we add headers, etc, it shouldn't affect original
             error_config = AttrDict(error_config)
             error_path, error_function = error_config.get('path'), error_config.get('function')
             if error_function:
                 if error_path:
                     error_config.pop('path')
-                    app_log.warning('url.%s.error.%d has function: AND path:. Ignoring path:',
-                                    cls.name, error_code)
+                    app_log.warning(
+                        f'url.{cls.name}.error.{error_code} has function:. Ignoring path:')
                 cls.error[error_code] = {'function': build_transform(
                     error_config,
                     vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
-                    filename='url:%s.error.%d' % (cls.name, error_code)
+                    filename=f'url:{cls.name}.error.{error_code}'
                 )}
             elif error_path:
                 encoding = error_config.get('encoding', 'utf-8')
@@ -345,8 +343,7 @@ class BaseMixin(object):
                 if mime_type:
                     error_config.setdefault('headers', {}).setdefault('Content-Type', mime_type)
             else:
-                app_log.error('url.%s.error.%d must have a path or function key',
-                              cls.name, error_code)
+                app_log.error(f'url.{cls.name}.error.{error_code} must have path: or function:')
             # Add the error configuration for reference
             if error_code in cls.error:
                 cls.error[error_code]['conf'] = error_config
@@ -457,8 +454,7 @@ class BaseMixin(object):
                         self.write(item)
                 return
             except Exception:
-                app_log.exception('url:%s.error.%d error handler raised an exception:',
-                                  self.name, status_code)
+                app_log.exception(f'url:{self.name}.error.{status_code} raised an exception')
         # If error was not written, use the default error
         self._write_error(status_code, **kwargs)
 
@@ -579,22 +575,19 @@ class BaseMixin(object):
                     conf.app.settings['cookie_secret'], 'user', cipher,
                     max_age_days=self._session_expiry))
             except Exception:
-                reason = '%s: invalid X-Gramex-User: %s' % (self.name, cipher)
-                raise HTTPError(BAD_REQUEST, reason=reason)
+                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-User: {cipher}')
             else:
-                app_log.debug('%s: Overriding user to %r', self.name, user)
+                app_log.debug(f'{self.name}: Overriding user to {user!r}')
                 self.session['user'] = user
                 return
         otp = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
         if otp:
             otp_data = self._session_store.load('otp:' + otp, None)
             if not isinstance(otp_data, dict) or '_t' not in otp_data or 'user' not in otp_data:
-                reason = '%s: invalid X-Gramex-OTP: %s' % (self.name, otp)
-                raise HTTPError(BAD_REQUEST, reason=reason)
+                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-OTP: {otp}')
             elif otp_data['_t'] < time.time():
-                reason = '%s: expired X-Gramex-OTP: %s' % (self.name, otp)
-                raise HTTPError(BAD_REQUEST, reason=reason)
-            self._session_store.dump('otp:' + otp, None)
+                raise HTTPError(BAD_REQUEST, f'{self.name}: expired X-Gramex-OTP: {otp}')
+            self._session_store.dump(f'otp:{otp}', None)
             self.session['user'] = otp_data['user']
         # ToDo: apikey = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
 
@@ -629,7 +622,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             try:
                 self.args[key] = self.get_arguments(k)
             except HTTPError:
-                app_log.exception('Invalid URL argument %s' % k)
+                app_log.exception(f'Invalid URL argument {k}')
 
         self._session, self._session_json = None, 'null'
         if self.cache:
@@ -815,7 +808,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         for key in args:
             result[key] = self.get_argument(key, None)
             if result[key] is None:
-                raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, key))
+                raise HTTPError(BAD_REQUEST, f'{key}: missing ?{key}=')
         for key, config in kwargs.items():
             name = config.get('name', key)
             val = self.args.get(name, [])
@@ -827,7 +820,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                     result[key] = config['default']
                     continue
                 if config.get('required', False):
-                    raise HTTPError(BAD_REQUEST, reason='%s: missing ?%s=' % (key, name))
+                    raise HTTPError(BAD_REQUEST, f'{key}: missing ?{name}=')
 
             # nargs: select the subset of items
             nargs = config.get('nargs', None)
@@ -836,7 +829,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                 if len(val) < nargs:
                     val += [''] * (nargs - len(val))
             elif nargs not in ('*', '+', None):
-                raise ValueError('%s: invalid nargs %s' % (key, nargs))
+                raise ValueError(f'{key}: invalid nargs {nargs}')
 
             # convert to specified type
             newtype = config.get('type', None)
@@ -846,8 +839,8 @@ class BaseHandler(RequestHandler, BaseMixin):
                     try:
                         newval.append(newtype(v))
                     except ValueError:
-                        reason = "%s: type error ?%s=%s to %r" % (key, name, v, newtype)
-                        raise HTTPError(BAD_REQUEST, reason=reason)
+                        raise HTTPError(
+                            BAD_REQUEST, f'{key}: type error ?{name}={v} to {newtype!r}')
                 val = newval
 
             # choices: check valid items
@@ -856,8 +849,7 @@ class BaseHandler(RequestHandler, BaseMixin):
                 choices = set(choices)
                 for v in val:
                     if v not in choices:
-                        reason = '%s: invalid choice ?%s=%s' % (key, name, v)
-                        raise HTTPError(BAD_REQUEST, reason=reason)
+                        raise HTTPError(BAD_REQUEST, f'{key}: invalid choice ?{name}={v}')
 
             # Set the final value
             if nargs is None:

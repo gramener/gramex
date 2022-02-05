@@ -151,9 +151,9 @@ class FileHandler(BaseHandler):
         result = set(value) if isinstance(value, (list, tuple, set)) else set([value])
         for pattern in result:
             if not pattern:
-                app_log.warning('%s: Ignoring empty pattern "%r"', cls.name, pattern)
+                app_log.warning(f'{cls.name}: Ignoring empty pattern "{pattern!r}"')
             elif not isinstance(pattern, (str, bytes)):
-                app_log.warning('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
+                app_log.warning(f'{cls.name}: pattern "{pattern!r}" is not a string. Ignoring.')
             result.add(pattern)
         return result
 
@@ -179,11 +179,11 @@ class FileHandler(BaseHandler):
                     q.update({k: v[0] for k, v in self.args.items() if len(v) > 0})
                     q.update(match.groupdict())
                     p = Path(filestr.format(*match.groups(), **q)).absolute()
-                    app_log.debug('%s: %s renders %s', self.name, self.request.path, p)
+                    app_log.debug(f'{self.name}: {self.request.path} renders {p}')
                     yield self._get_path(p)
                     break
             else:
-                raise HTTPError(NOT_FOUND, '%s matches no path key', self.request.path)
+                raise HTTPError(NOT_FOUND, f'{self.request.path} matches no path key')
         elif not args:
             # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
@@ -207,7 +207,7 @@ class FileHandler(BaseHandler):
                 for allow in self.allow:
                     if _match(path, allow):
                         return True
-                app_log.debug('%s: Disallow "%s". It matches "%s"', self.name, path, ignore)
+                app_log.debug(f'{self.name}: Disallow "{path}". It matches "{ignore}"')
                 return False
         return True
 
@@ -217,13 +217,13 @@ class FileHandler(BaseHandler):
         try:
             path = path.resolve()
         except OSError:
-            raise HTTPError(NOT_FOUND, '%s missing', path)
+            raise HTTPError(NOT_FOUND, f'{path} missing')
 
         self.path = path
         if self.path.is_dir():
             self.file = self.path / self.default_filename if self.default_filename else self.path
             if not (self.default_filename and self.file.exists()) and not self.index:
-                raise HTTPError(NOT_FOUND, '%s missing index', self.file)
+                raise HTTPError(NOT_FOUND, f'{self.file} missing index')
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 p = urlsplit(self.xrequest_uri)
@@ -233,18 +233,18 @@ class FileHandler(BaseHandler):
         else:
             self.file = self.path
             if not self.file.exists():
-                raise HTTPError(NOT_FOUND, '%s missing', self.file)
+                raise HTTPError(NOT_FOUND, f'{self.file} missing')
             elif not self.file.is_file():
-                raise HTTPError(FORBIDDEN, '%s is not a file', self.path)
+                raise HTTPError(FORBIDDEN, f'{self.path} is not a file')
 
         if not self.allowed(self.file):
-            raise HTTPError(FORBIDDEN, '%s not permitted', self.file)
+            raise HTTPError(FORBIDDEN, f'{self.file} not allowed')
 
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html; charset=UTF-8')
             content = []
-            file_template = string.Template(u'<li><a href="$path">$name</a></li>')
+            file_template = string.Template('<li><a href="$path">$name</a></li>')
             for path in self.path.iterdir():
                 if path.is_symlink():
                     name_suffix, path_suffix = ' &#x25ba;', ''
@@ -262,11 +262,11 @@ class FileHandler(BaseHandler):
                     ))
                 except UnicodeDecodeError:
                     app_log.warning("FileHandler can't show unicode file {!r:s}".format(path))
-            content.append(u'</ul>')
+            content.append('</ul>')
             try:
                 tmpl = gramex.cache.open(self.index_template, _tmpl_opener)
             except OSError:
-                app_log.exception('%s: index_template: %s failed', self.name, self.index_template)
+                app_log.exception(f'{self.name}: index_template: {self.index_template} failed')
                 tmpl = gramex.cache.open(_default_index_template, _tmpl_opener)
             self.content = tmpl.substitute(path=self.path, body=''.join(content))
 

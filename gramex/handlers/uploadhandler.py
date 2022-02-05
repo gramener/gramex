@@ -30,7 +30,7 @@ class FileUpload(object):
                 if isinstance(keys[cat], (str, bytes)):
                     keys[cat] = [keys[cat]]
                 else:
-                    app_log.error('FileUpload: cat: %r must be a list or str', keys[cat])
+                    app_log.error(f'FileUpload: cat: {keys[cat]!r} must be a list or str')
         self.keys = keys
         self.path = os.path.abspath(path)
         if not os.path.exists(self.path):
@@ -100,27 +100,27 @@ class FileUpload(object):
         filepath = os.path.join(self.path, filename)
         # Security check: don't allow files to be written outside path:
         if not os.path.realpath(filepath).startswith(os.path.realpath(self.path)):
-            raise HTTPError(FORBIDDEN, reason='FileUpload: filename %s is outside path: %s' % (
-                filename, self.path))
+            raise HTTPError(
+                FORBIDDEN, f'FileUpload: filename {filename} is outside path: {self.path}')
         if os.path.exists(filepath):
             if if_exists == 'error':
-                raise HTTPError(FORBIDDEN, reason='FileUpload: file exists: %s' % filename)
+                raise HTTPError(FORBIDDEN, f'FileUpload: file exists: {filename}')
             elif if_exists == 'unique':
                 # Rename to file.1.ext or file.2.ext etc -- whatever's available
                 name, ext = os.path.splitext(filepath)
-                name_pattern = name + '.%s' + ext
+                name_pattern = f'{name}.%s{ext}'
                 i = 1
                 while os.path.exists(name_pattern % i):
                     i += 1
                 filepath = name_pattern % i
             elif if_exists == 'backup':
                 name, ext = os.path.splitext(filepath)
-                backup = '{}.{:%Y%m%d-%H%M%S}{}'.format(name, datetime.now(), ext)
+                backup = f'{name}.{datetime.now():%Y%m%d-%H%M%S}{ext}'
                 shutil.copyfile(filepath, backup)
                 filemeta['backup'] = os.path.relpath(backup, self.path).replace(os.path.sep, '/')
             elif if_exists != 'overwrite':
                 raise HTTPError(INTERNAL_SERVER_ERROR,
-                                reason='FileUpload: if_exists: %s invalid' % if_exists)
+                                f'FileUpload: if_exists: {if_exists} invalid')
         # Create the directory to write in, if reuqired
         folder = os.path.dirname(filepath)
         if not os.path.exists(folder):
@@ -184,10 +184,10 @@ class UploadHandler(BaseHandler):
             if isinstance(transform, dict) and 'function' in transform:
                 cls.transform.append(build_transform(
                     transform, vars=AttrDict((('content', None), ('handler', None))),
-                    filename='url:%s' % cls.name))
+                    filename=f'url:{cls.name}'))
             else:
-                app_log.error('UploadHandler %s: no function: in transform: %r',
-                              cls.name, transform)
+                app_log.error(
+                    f'UploadHandler {cls.name}: no function: in transform: {transform!r}')
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):
@@ -212,6 +212,6 @@ class UploadHandler(BaseHandler):
                 if isinstance(value, dict):
                     content = value
                 elif value is not None:
-                    app_log.error('UploadHandler %s: transform returned %r, not dict',
-                                  self.name, value)
+                    app_log.error(
+                        f'UploadHandler {self.name}: transform returned {value!r}, not dict')
         return content

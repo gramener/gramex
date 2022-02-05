@@ -238,7 +238,7 @@ class MLHandler(FormHandler):
         both = nums.intersection(cats)
         if len(both) > 0:
             raise HTTPError(BAD_REQUEST,
-                            reason=f"Columns {both} cannot be both numerical and categorical.")
+                            f"Columns {both} cannot be both numerical and categorical.")
         to_guess = set(data.columns.tolist()) - nums.union(cats) - {cls.get_opt('target_col')}
         numericals = list(nums)
         categoricals = list(cats)

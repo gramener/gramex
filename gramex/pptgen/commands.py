@@ -39,7 +39,7 @@ def template(tmpl, data):
 def text(shape, spec, data):
     '''Replace entire text of shape with spec['text']'''
     if not shape.has_text_frame:
-        logging.error('"%s" is not a TextShape to apply text:', shape.name)
+        logging.error(f'"{shape.name}" is not a TextShape to apply text:')
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}
@@ -103,7 +103,7 @@ def text(shape, spec, data):
 def replace(shape, spec, data):
     '''Replace keywords in shape using the dictionary at spec['replace']'''
     if not shape.has_text_frame:
-        logging.error('"%s" is not a TextShape to apply text:', shape.name)
+        logging.error(f'"{shape.name}" is not a TextShape to apply text:')
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}

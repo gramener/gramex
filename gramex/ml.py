@@ -472,9 +472,9 @@ def languagetool_download():
     if not os.path.isdir(target):
         os.makedirs(target)
     src = _languagetool['defaults']['LT_SRC'].format(**_languagetool['defaults'])
-    app_log.info('Downloading languagetools from %s', src)
+    app_log.info(f'Downloading languagetools from {src}')
     stream = io.BytesIO(requests.get(src).content)
-    app_log.info('Unzipping languagetools to %s', target)
+    app_log.info(f'Unzipping languagetools to {target}')
     zipfile.ZipFile(stream).extractall(target)
     _languagetool['installed'] = True
 

@@ -114,7 +114,7 @@ class SocialHandler(BaseHandler):
         if token is None:
             token = session_token                       # Use session token
         if token is None:                               # Ensure token is present
-            raise HTTPError(BAD_REQUEST, reason='token %s missing' % key)
+            raise HTTPError(BAD_REQUEST, f'token {key} missing')
         return token
 
 

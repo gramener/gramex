@@ -30,7 +30,7 @@ class TestArgs(TestGramex):
         r = self.get('/func/argparse' + query, params=params)
         if isinstance(result, str):
             self.assertEqual(r.status_code, BAD_REQUEST)
-            self.assertIn(result, r.reason)
+            self.assertIn(result, r.text)
         else:
             result = r.json()
             result.pop('_q', None)

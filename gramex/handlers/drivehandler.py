@@ -60,7 +60,7 @@ class DriveHandler(FormHandler):
             'date': sa.Column('date', sa.Integer),          # Uploaded date
         }
         for s in cls.user_fields:
-            cls._db_cols['user_%s' % s] = sa.Column('user_%s' % s, sa.String)
+            cls._db_cols[f'user_{s}'] = sa.Column(f'user_{s}', sa.String)
         for s in cls.tags:
             cls._db_cols.setdefault(s, sa.Column(s, sa.String))
         if table in meta.tables:
@@ -68,7 +68,7 @@ class DriveHandler(FormHandler):
                 with conn.begin():
                     for col, coltype in cls._db_cols.items():
                         if col not in meta.tables[table].columns:
-                            conn.execute('ALTER TABLE %s ADD COLUMN %s TEXT' % (table, col))
+                            conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
         else:
             sa.Table(table, meta, *cls._db_cols.values()).create(engine)
 
@@ -79,14 +79,14 @@ class DriveHandler(FormHandler):
             if len(ids) != 1 or '_download' not in handler.args:
                 return data
             if len(data) == 0:
-                raise HTTPError(NOT_FOUND, 'No file record with id=%s' % ids[0])
+                raise HTTPError(NOT_FOUND, f'No file record with id={ids[0]}')
             path = os.path.join(handler.path, data['path'][0])
             if not os.path.exists(path):
-                raise HTTPError(NOT_FOUND, 'Missing file for id=%s' % ids[0])
+                raise HTTPError(NOT_FOUND, f'Missing file for id={ids[0]}')
             handler.set_header('Content-Type', data['mime'][0])
             handler.set_header('Content-Length', os.stat(path).st_size)
             handler.set_header(
-                'Content-Disposition', 'attachment; filename="%s"' % data['file'][0])
+                'Content-Disposition', f'attachment; filename="{data["file"][0]}"')
             with open(path, 'rb') as handle:
                 return handle.read()
 
@@ -98,8 +98,7 @@ class DriveHandler(FormHandler):
         ignore = set(ext.lower() for ext in self.ignore)
         for name, ext, size in zip(self.args['file'], self.args['ext'], self.args['size']):
             if self.max_file_size and size > self.max_file_size:
-                raise HTTPError(REQUEST_ENTITY_TOO_LARGE, '%s: %d > %d' % (
-                    name, size, self.max_file_size))
+                raise HTTPError(REQUEST_ENTITY_TOO_LARGE, f'{name}: {size} > {self.max_file_size}')
             if ext in ignore or (allow and ext not in allow):
                 raise HTTPError(UNSUPPORTED_MEDIA_TYPE, name)
 
@@ -132,7 +131,7 @@ class DriveHandler(FormHandler):
                 self.args['mime'][i] = guess_type(file, strict=False)[0]
             # Append user attributes
             for s in self.user_fields:
-                self.args['user_%s' % s.replace('.', '_')][i] = objectpath(user, s)
+                self.args[f'user_{s.replace(".", "_")}'][i] = objectpath(user, s)
         self.check_filelimits()
         yield super().post(*path_args, **path_kwargs)
         for upload, path in zip(uploads, self.args['path']):
@@ -161,14 +160,14 @@ class DriveHandler(FormHandler):
         for s in ('path', 'size', 'date'):
             self.args.pop(s, None)
         for s in self.user_fields:
-            self.args.pop('user_%s' % s, None)
+            self.args.pop(f'user_{s}', None)
         # These are updated only when a file is uploaded
         if len(uploads):
             user = self.current_user or {}
             self.args.setdefault('size', []).append(len(uploads[0]['body']))
             self.args.setdefault('date', []).append(int(time.time()))
             for s in self.user_fields:
-                self.args.setdefault('user_%s' % s.replace('.', '_'), []).append(
+                self.args.setdefault(f'user_{s.replace(".", "_")}', []).append(
                     objectpath(user, s))
         conf = self.datasets.data
         files = gramex.data.filter(conf.url, table=conf.table, args={'id': id})
@@ -189,4 +188,4 @@ class DriveHandler(FormHandler):
             return {values: 'str'}
         if not values:
             return {}
-        raise TypeError('%s: %s should be a dict, not %s' % (cls.name, field, values))
+        raise TypeError(f'{cls.name}: {field} should be a dict, not {values}')

@@ -79,7 +79,7 @@ class TestSetupErrors(TestGramex):
 
     def test_invalid_setup(self):
         self.check('/invalid-setup', code=INTERNAL_SERVER_ERROR,
-                   text='url: invalid-setup: No function in conf {}')
+                   text='url:invalid-setup: No function in conf {}')
 
     def test_invalid_function(self):
         self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')

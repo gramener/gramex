@@ -6,6 +6,7 @@ import tornado.web
 import tornado.escape
 from .basehandler import BaseHandler
 from gramex.config import app_log
+from gramex.http import BAD_REQUEST
 
 # JSONHandler data is stored in store. Each handler is specified with a path.
 # store[path] holds the full data for that handler. It is saved in path at the
@@ -36,7 +37,7 @@ class JSONHandler(BaseHandler):
         try:
             return tornado.escape.json_decode(self.request.body)
         except ValueError:
-            raise tornado.web.HTTPError(status_code=400, log_message='Bad JSON', reason='Bad JSON')
+            raise tornado.web.HTTPError(BAD_REQUEST, 'Bad JSON')
 
     def jsonwalk(self, jsonpath, create=False):
         '''Return a parent, key, value from the JSON store where parent[key] == value'''
@@ -55,7 +56,7 @@ class JSONHandler(BaseHandler):
                             _jsonstores[path] = json.load(handle)
                             _loaded[path] = time.time()
                         except ValueError:
-                            app_log.warning('Invalid JSON in %s', path)
+                            app_log.warning(f'Invalid JSON in {path}')
                             self.changed = True
             else:
                 self.changed = True

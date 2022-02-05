@@ -228,7 +228,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         return _filter_frame(data, meta=meta, controls=controls, args=args)
     elif engine in {'file', 'http', 'https'}:
         if engine == 'file' and not os.path.exists(url):
-            raise OSError('url: %s not found' % url)
+            raise OSError(f'url: {url} not found')
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         return _filter_frame(data, meta=meta, controls=controls, args=args)
@@ -250,7 +250,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
                 elif isinstance(table, (list, tuple)):
                     state = [t for t in table]
                 elif table is not None:
-                    raise ValueError('table: must be string or list of strings, not %r' % table)
+                    raise ValueError(f'table: must be string or list of strings, not {table!r}')
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
             data = gramex.cache.query(sa.text(query), engine, state, params=all_params)
             data = transform(data) if callable(transform) else data
@@ -264,7 +264,7 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         else:
             raise ValueError('No table: or query: specified')
     else:
-        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+        raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
@@ -311,7 +311,7 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='delete', id=id)
     else:
-        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+        raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
@@ -357,7 +357,7 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         return _filter_db(engine, table, meta=meta, controls=controls, args=args,
                           source='update', id=id)
     else:
-        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+        raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
@@ -389,8 +389,8 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         rows = len(val)
         if 0 < rows < rowcount:
             val += [val[-1]] * (rowcount - rows)
-            app_log.warning('data.insert: column %s has %d rows not %d. Extended last value %s',
-                            key, rows, rowcount, val[-1])
+            app_log.warning(f'data.insert: column {key} has {rows} rows not {rowcount}. '
+                            f'Extended last value {val[-1]}')
     rows = pd.DataFrame.from_dict(args)
     url, table, ext, query, queryfile, kwargs = _replace(
         engine, args, url, table, ext, query, queryfile, **kwargs)
@@ -478,7 +478,7 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
 
         return len(rows)
     else:
-        raise ValueError('engine: %s invalid. Can be sqlalchemy|file|dataframe' % engine)
+        raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def get_engine(url):
@@ -744,13 +744,13 @@ def _filter_offset_limit(controls, meta):
         try:
             offset = min(int(v) for v in controls['_offset'])
         except ValueError:
-            raise ValueError('_offset not integer: %r' % controls['_offset'])
+            raise ValueError(f'_offset not integer: {controls["_offset"]!r}')
         meta['offset'] = offset
     if '_limit' in controls:
         try:
             limit = min(int(v) for v in controls['_limit'])
         except ValueError:
-            raise ValueError('_limit not integer: %r' % controls['_limit'])
+            raise ValueError(f'_limit not integer: {controls["_limit"]!r}')
         meta['limit'] = limit
     return offset, limit
 
@@ -1058,12 +1058,12 @@ def download(data, format='json', template=None, args={}, **kwargs):
     if isinstance(data, dict):
         for key, val in data.items():
             if not isinstance(val, pd.DataFrame):
-                raise ValueError('download({"%s": %r}) invalid type' % (key, type(val)))
+                raise ValueError(f'download: {key} type is {type(val)}, not a DataFrame')
         if not len(data):
             raise ValueError('download() data requires at least 1 DataFrame')
         multiple = True
     elif not isinstance(data, pd.DataFrame):
-        raise ValueError('download(%r) invalid type' % type(data))
+        raise ValueError(f'download: type is {type(data)}, not a DataFrame')
     else:
         data = {'data': data}
         multiple = False
@@ -1093,7 +1093,7 @@ def download(data, format='json', template=None, args={}, **kwargs):
         kw(index=False)
         for key, val in data.items():
             if multiple:
-                out.write('<h1>%s</h1>' % key)
+                out.write(f'<h1>{key}</h1>')
             val.to_html(out, **kwargs)
         return out.getvalue().encode('utf-8')
     elif format in {'xlsx', 'xls'}:
@@ -1196,13 +1196,13 @@ def dirstat(url, timeout=10, **kwargs):
     except sa.exc.ArgumentError:
         target = url
     if not os.path.isdir(target):
-        raise OSError('dirstat: %s is not a directory' % target)
+        raise OSError(f'dirstat: {target} is not a directory')
     target = os.path.normpath(target)
     result = []
     start_time = time.time()
     for dirpath, dirnames, filenames in os.walk(target):
         if timeout and time.time() - start_time > timeout:
-            app_log.debug('dirstat: %s timeout (%.1fs)', url, timeout)
+            app_log.debug(f'dirstat: {url} timeout ({timeout:.1f}s)')
             break
         for name in dirnames:
             path = os.path.join(dirpath, name)
@@ -1315,7 +1315,7 @@ def filtercols(url, args={}, meta={}, engine=None, ext=None,
     try:
         limit = min(int(v) for v in limit)
     except ValueError:
-        raise ValueError('_limit not integer: %r' % limit)
+        raise ValueError(f'_limit not integer: {limit!r}')
     for col in args.get('_c', []):
         # col_args takes _sort, _c and all filters from args
         col_args = {}

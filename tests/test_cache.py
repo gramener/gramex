@@ -262,7 +262,7 @@ class TestCacheFileHandler(TestGramex):
     def test_cache(self):
 
         def check_value(content):
-            r = self.get('/cache/filehandler/%s' % self.filename)
+            r = self.get(f'/cache/filehandler/{self.filename}')
             eq_(r.status_code, OK)
             eq_(r.content, content)
 

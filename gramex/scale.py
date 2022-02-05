@@ -30,7 +30,7 @@ def color(domain, range, bin=False, to='hex', name='Gramex color'):
     if isinstance(range, str):
         cmap = getattr(cm, range, None)
         if cmap is None:
-            raise ValueError('color(range=%s) invalid color map. See https://bit.ly/3lsdun6')
+            raise ValueError(f'color(range={range}) invalid color map. See https://bit.ly/3lsdun6')
         if bin:
             n = len(domain) - 1
             cmap = colors.ListedColormap(cmap(np.linspace(0, 1, n)), name)

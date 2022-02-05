@@ -197,7 +197,7 @@ else:
             # Delete these using win32com and try again.
             elif (exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and
                   func in {os.listdir, os.scandir}):
-                app_log.error('Cannot delete %s', path)
+                app_log.error(f'Cannot delete {path}')
                 from win32com.shell import shell, shellcon  # type:ignore
                 options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
                 code, err = shell.SHFileOperation((0, shellcon.FO_DELETE, path, None, options))
@@ -238,7 +238,7 @@ def safe_rmtree(target, retries=100, delay=0.05, gramexdata=True):
             _try_remove(target, retries, delay, func, **kwargs)
             return True
         else:
-            app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
+            app_log.warning(f'Not removing directory {target} (outside $GRAMEXDATA)')
             return False
     else:
         _try_remove(target, retries, delay, func, **kwargs)
@@ -281,7 +281,7 @@ def run_install(config):
                     return
         if url != target:
             shutil.copytree(url, target)
-            app_log.info('Copied %s into %s', url, target)
+            app_log.info(f'Copied {url} into {target}')
         config.url = url
         return
 
@@ -290,7 +290,7 @@ def run_install(config):
         handle = url
     else:
         # Otherwise, assume that it's a URL containing a ZIP file
-        app_log.info('Downloading: %s', url)
+        app_log.info(f'Downloading: {url}')
         response = requests.get(url)
         response.raise_for_status()
         handle = io.BytesIO(response.content)
@@ -306,7 +306,7 @@ def run_install(config):
     # Extract relevant files from ZIP file
     if safe_rmtree(target):
         zipfile.extractall(target, files)
-        app_log.info('Extracted %d files into %s', len(files), target)
+        app_log.info(f'Extracted {len(files)} files into {target}')
 
 
 def run_command(config):
@@ -332,9 +332,9 @@ def run_command(config):
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
     else:
         appcmd.append(target)
-    app_log.info('Running %s', ' '.join(appcmd))
+    app_log.info(f'Running {" ".join(appcmd)}')
     if not safe_rmtree(config.target):
-        app_log.error('Cannot delete target %s. Aborting installation', config.target)
+        app_log.error(f'Cannot delete target {config.target}. Aborting installation')
         return
     proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec: developer-initiated
     proc.communicate()
@@ -371,10 +371,10 @@ def run_setup(target):
     if not os.path.exists(target):
         app_target = os.path.join(variables['GRAMEXPATH'], 'apps', target)
         if not os.path.exists(app_target):
-            raise OSError('No directory %s' % target)
+            raise OSError(f'No directory {target}')
         target = app_target
     target = os.path.abspath(target)
-    app_log.info('Setting up %s', target)
+    app_log.info(f'Setting up {target}')
     for configs in setup_paths:
         config_match, ran_cmd = None, False
         for config in configs:
@@ -384,12 +384,12 @@ def run_setup(target):
                 config_match = config
             if config_match and exe_path is not None:
                 cmd = config['cmd'].format(file=setup_file, exe=exe_path)
-                app_log.info('Running %s', cmd)
+                app_log.info(f'Running {cmd}')
                 _run_console(cmd, cwd=target)
                 ran_cmd = True
                 break
         if config_match and not ran_cmd:
-            app_log.warning('Skipping %s. No %s found', config_match['file'], config_match['exe'])
+            app_log.warning(f'Skipping {config_match["file"]}. No {config_match["exe"]} found')
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
@@ -467,7 +467,7 @@ def install(args, kwargs):
         return
 
     appname = args[0]
-    app_log.info('Installing: %s', appname)
+    app_log.info(f'Installing: {appname}')
     app_config = get_app_config(appname, kwargs)
     if len(args) == 2:
         app_config.url = args[1]
@@ -477,17 +477,17 @@ def install(args, kwargs):
     elif 'cmd' in app_config:
         returncode = run_command(app_config)
         if returncode != 0:
-            app_log.error('Command failed with return code %d. Aborting installation', returncode)
+            app_log.error(f'Command failed with return code {returncode}. Aborting installation')
             return
     else:
-        app_log.error('Use --url=... or --cmd=... to specific source of %s', appname)
+        app_log.error(f'Use --url=... or --cmd=... to specific source of {appname}')
         return
 
     # Post-installation
     app_config.target = run_setup(app_config.target)
     app_config['installed'] = {'time': datetime.datetime.utcnow()}
     save_user_config(appname, app_config)
-    app_log.info('Installed. Run `gramex run %s`', appname)
+    app_log.info(f'Installed. Run `gramex run {appname}`')
 
 
 def setup(args, kwargs):
@@ -510,18 +510,18 @@ def uninstall(args, kwargs):
         app_log.error(show_usage('uninstall'))
         return
     if len(args) > 1 and kwargs:
-        app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(args[1:]))
+        app_log.errorf(f'Arguments allowed only with single app. Ignoring {", ".join(args[1:])}')
         args = args[:1]
 
     for appname in args:
-        app_log.info('Uninstalling: %s', appname)
+        app_log.info(f'Uninstalling: {appname}')
 
         # Delete the target directory if it exists
         app_config = get_app_config(appname, kwargs)
         if os.path.exists(app_config.target):
             safe_rmtree(app_config.target)
         else:
-            app_log.error('No directory %s to remove', app_config.target)
+            app_log.error(f'No directory {app_config.target} to remove')
         save_user_config(appname, None)
 
 
@@ -530,7 +530,7 @@ def run(args, kwargs):
         app_log.error(show_usage('run'))
         return
     if len(args) > 1:
-        app_log.error('Can only run one app. Ignoring %s', ', '.join(args[1:]))
+        app_log.error(f'Can only run one app. Ignoring {", ".join(args[1:])}')
 
     appname = args.pop(0)
     app_config = get_app_config(appname, kwargs)
@@ -554,10 +554,10 @@ def run(args, kwargs):
         gramex.init(args=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
-        app_log.error('%s: no directory %s', appname, app_config.target)
-        app_log.error('Run "gramex uninstall %s" and try again.', appname)
+        app_log.error(f'{appname}: no target path {app_config.target}. '
+                      f'Run "gramex uninstall {appname}" and try again.', )
     else:
-        app_log.error('%s: no directory %s', appname, app_config.target)
+        app_log.error(f'{appname}: no target path {app_config.target}')
 
 
 def service(args, kwargs):
@@ -588,7 +588,7 @@ def _run_console(cmd, **kwargs):
     try:
         proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)
     except OSError:
-        app_log.error('Cannot find command: %s', cmd[0])
+        app_log.error(f'Cannot find command: {cmd[0]}')
         raise
     proc.communicate()
 
@@ -611,7 +611,7 @@ def init(args, kwargs):
         app_log.error(f'Unknown init template {args[0]}')
 
     kwargs.setdefault('target', os.getcwd())
-    app_log.info('Initializing Gramex project at %s', kwargs.target)
+    app_log.info(f'Initializing Gramex project at {kwargs.target}')
     data = {
         'appname': os.path.basename(kwargs.target),
         'author': _check_output('git config user.name', default='Author'),
@@ -650,11 +650,11 @@ def init(args, kwargs):
                 targetname, template_data = name.replace('.template.', '.'), data
             target = os.path.join(kwargs.target, relpath, targetname)
             if os.path.exists(target):
-                app_log.warning('Skip existing %s', target)
+                app_log.warning(f'Skip existing {target}')
             elif os.path.isdir(source):
                 _mkdir(target)
             elif os.path.isfile(source):
-                app_log.info('Copy file %s', source)
+                app_log.info(f'Copy file {source}')
                 with io.open(source, 'rb') as handle:
                     result = handle.read()
                     if template_data is not None:
@@ -662,7 +662,7 @@ def init(args, kwargs):
                 with io.open(target, 'wb') as handle:
                     handle.write(result)
             else:
-                app_log.warning('Skip unknown file %s', source)
+                app_log.warning(f'Skip unknown file {source}')
 
     run_setup(kwargs.target)
 
@@ -704,11 +704,11 @@ def mail(args, kwargs):
         if 'init' in kwargs:
             with io.open(confpath, 'w', encoding='utf-8') as handle:
                 handle.write(default_mail_config.format(confpath=confpath))
-            app_log.info('Initialized %s', confpath)
+            app_log.info(f'Initialized {confpath}')
         elif not args and not kwargs:
             app_log.error(show_usage('mail'))
         else:
-            app_log.error('Missing config %s. Use --init to generate skeleton', confpath)
+            app_log.error(f'Missing config {confpath}. Use --init to generate skeleton')
         return
 
     conf = PathConfig(confpath)
@@ -721,7 +721,7 @@ def mail(args, kwargs):
         return
 
     if 'init' in kwargs:
-        app_log.error('Config already exists at %s', confpath)
+        app_log.error(f'Config already exists at {confpath}')
         return
 
     if len(args) < 1:
@@ -735,7 +735,7 @@ def mail(args, kwargs):
     sys.path += os.path.dirname(confpath)
     for key in args:
         if key not in alert_conf:
-            app_log.error('Missing key %s in %s', key, confpath)
+            app_log.error(f'Missing key {key} in {confpath}')
             continue
         alert = create_alert(key, alert_conf[key])
         alert()
@@ -753,4 +753,4 @@ def license(args, kwargs):
     elif args[0] == 'reject':
         gramex.license.reject()
     else:
-        app_log.error('Invalid command license %s', args[0])
+        app_log.error(f'Invalid command license {args[0]}')

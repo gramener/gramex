@@ -33,7 +33,7 @@ class WebSocketHandler(BaseWebSocketHandler):
                 setattr(cls, method, build_transform(
                     kwargs[method],
                     vars=OrderedDict((arg, None) for arg in override_methods[method]),
-                    filename='url:%s.%s' % (cls.name, method),
+                    filename=f'url:{cls.name}.{method}',
                     iter=False))
 
     @classmethod
