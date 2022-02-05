@@ -4,11 +4,11 @@ variables:
     SUBDIR_DEFAULT: {default: subdir}
     YAMLURL_VAR: $YAMLURL
     FUNCTION:
-        function: six.text_type
+        function: str
         args: ['subdir']
     DEFAULT_FUNCTION:
         default:
-            function: six.text_type
+            function: str
             args: ['subdir']
     FUNCTION_VAR:
         function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']

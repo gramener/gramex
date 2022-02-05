@@ -4,12 +4,12 @@ variables:
     BASE_DEFAULT: {default: base}
     YAMLURL_VAR: $YAMLURL
     FUNCTION:
-        function: six.text_type
+        function: str
         args: ['base']
         default: ignored-value
     DEFAULT_FUNCTION:
         default:
-            function: six.text_type
+            function: str
             args: ['base']
     FUNCTION_VAR:
         function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']

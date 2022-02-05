@@ -9,7 +9,7 @@ import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
 from gramex.cache import hashfn
-from gramex.config import variables, str_utf8
+from gramex.config import variables
 from markdown import markdown
 from collections import OrderedDict
 from orderedattrdict import AttrDict
@@ -468,7 +468,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.url = dbutils.sqlite_create_db('test_cache.db', t1=cls.data, t2=cls.data)
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
@@ -544,7 +544,7 @@ class TestMySQLCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_cache',
                                           t1=cls.data, t2=cls.data)
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
@@ -558,7 +558,7 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
                                              **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     def test_schema(self):
         afe(

@@ -17,7 +17,7 @@ from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
 from gramex.http import UNAUTHORIZED, FORBIDDEN
-from gramex.config import app_log, objectpath, str_utf8, merge
+from gramex.config import app_log, objectpath, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
 
@@ -408,7 +408,7 @@ class OTP(object):
         # create database at GRAMEXDATA
         path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
         url = 'sqlite:///{}'.format(path)
-        self.engine = gramex.data.create_engine(url, encoding=str_utf8)
+        self.engine = gramex.data.create_engine(url, encoding='utf-8')
         conn = self.engine.connect()
         conn.execute('CREATE TABLE IF NOT EXISTS users '
                      '(user TEXT, email TEXT, token TEXT, expire REAL)')

@@ -565,10 +565,10 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
         'beta.html':
           encoding: utf-8
-          function: six.text_type.title(content)
+          function: str.title(content)
   dir/merge.html:
     pattern: /dir/merge.html
     handler: FileHandler
@@ -579,10 +579,10 @@ url:
       transform:
         'beta.html':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.title(content)
+          function: str.title(content)
   dir/map:
     pattern: /dir/map/(.*)
     handler: FileHandler
@@ -601,7 +601,7 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
   dir/map2:
     pattern: /dir/map2/
     handler: FileHandler
@@ -1512,7 +1512,7 @@ url:
       path: $YAMLPATH/uploads
       xsrf_cookies: false
       transform:
-        function: six.text_type('')
+        function: str('')
 
   upload-transform-invalid-transform:
     pattern: /upload-transform

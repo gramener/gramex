@@ -3,8 +3,6 @@ import re
 import ast
 import copy
 import platform
-import six
-from six import iteritems
 import numpy as np
 import pandas as pd
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
@@ -39,7 +37,7 @@ def is_slide_allowed(change, slide, number):
         slide_number = change['slide-number']
         if isinstance(slide_number, (list, dict)):
             match = match and number in slide_number
-        elif isinstance(slide_number, six.integer_types):
+        elif isinstance(slide_number, int):
             match = match and number == slide_number
 
     # Restrict to specific slide title(s), if specified
@@ -50,7 +48,7 @@ def is_slide_allowed(change, slide, number):
         if isinstance(slide_title, (list, dict)):
             match = match and any(
                 re.search(expr, title, re.IGNORECASE) for expr in slide_title)
-        elif isinstance(slide_title, six.string_types):
+        elif isinstance(slide_title, str):
             match = match and re.search(slide_title, title, re.IGNORECASE)
     return match
 
@@ -141,7 +139,7 @@ def add_new_slide(dest, source_slide):
     '''Function to add a new slide to presentation.'''
     if dest is None:
         return
-    for key, value in six.iteritems(source_slide.part.rels):
+    for value in source_slide.part.rels.values():
         # Make sure we don't copy a notesSlide relation as that won't exist
         if "notesSlide" in value.reltype:
             continue
@@ -177,7 +175,7 @@ def manage_slides(prs, config):
     '''
     slide_numbers = config.pop('only', None)
     if slide_numbers:
-        if isinstance(slide_numbers, six.integer_types):
+        if isinstance(slide_numbers, int):
             slide_numbers = set([int(slide_numbers) - 1])
         elif isinstance(slide_numbers, list):
             slide_numbers = set([int(i) - 1 for i in slide_numbers])
@@ -451,7 +449,7 @@ def draw_sankey(data, spec):
     result = call(text, g, group, '')
     frame['text'] = result
     # Add all attrs to the frame as well
-    for key, val in iteritems(attrs):
+    for key, val in attrs.items():
         frame[key] = call(val, g, group, None)
     if 'stroke' not in attrs:
         frame['stroke'] = default_stroke

@@ -59,10 +59,6 @@ app_log = logging.getLogger('gramex')
 app_log_extra = {'port': 'PORT'}
 app_log = logging.LoggerAdapter(app_log, app_log_extra)
 
-# sqlalchemy.create_engine requires an encoding= that must be an str across
-# Python 2 and Python 3. Expose this for other modules to use
-str_utf8 = str('utf-8')             # noqa
-
 # Common slug patterns
 slug = AttrDict(
     # Python modules must be lowercase, with letters, numbers or _, separated by _

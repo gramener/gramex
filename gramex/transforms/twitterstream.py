@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import time
 import datetime
@@ -8,7 +7,7 @@ import gramex
 from oauthlib import oauth1
 from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.httputil import HTTPHeaders, parse_response_start_line
-from six.moves.urllib_parse import urlencode
+from urllib.parse import urlencode
 from gramex.config import app_log
 from gramex.transforms import flattener, build_transform
 from gramex.http import (RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT,
@@ -159,7 +158,7 @@ class TwitterStream(object):
 
     def process_bytes(self, data):
         try:
-            text = six.text_type(data, encoding='utf-8')
+            text = str(data, encoding='utf-8')
             message = json.loads(text)
         except UnicodeError:
             app_log.error(f'TwitterStream unicode error: {data}')

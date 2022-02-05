@@ -10,7 +10,7 @@ etc.) The parent CacheFile implements the no-caching behaviour.
 
 See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
-from six.moves import cPickle
+import pickle
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 from .rediscache import RedisCache
@@ -61,7 +61,7 @@ class CacheFile(object):
 class MemoryCacheFile(CacheFile):
     def get(self):
         result = self.store.get(self.key)
-        return None if result is None else cPickle.loads(result)
+        return None if result is None else pickle.loads(result)
 
     def wrap(self, handler):
         self._finish = handler.finish
@@ -80,11 +80,11 @@ class MemoryCacheFile(CacheFile):
             if status in self.statuses:
                 self.store.set(
                     key=self.key,
-                    value=cPickle.dumps({
+                    value=pickle.dumps({
                         'status': OK if status == NOT_MODIFIED else status,
                         'headers': headers,
                         'body': body,
-                    }, cPickle.HIGHEST_PROTOCOL),
+                    }, pickle.HIGHEST_PROTOCOL),
                     expire=self.expire,
                 )
 

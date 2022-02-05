@@ -1,6 +1,5 @@
 import os
 import smtplib
-from six import string_types
 from email import encoders
 from mimetypes import guess_type
 from email.mime.multipart import MIMEMultipart
@@ -98,7 +97,7 @@ def recipients(**kwargs):
     for key in kwargs:
         if key.lower() in {'to', 'cc', 'bcc'}:
             to = kwargs[key]
-            if isinstance(to, string_types):
+            if isinstance(to, str):
                 to = [to]
             recipients += [formataddr(pair) for pair in getaddresses(to)]
     return recipients

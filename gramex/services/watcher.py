@@ -4,7 +4,6 @@ monitor files, and run functions when the file changes.
 '''
 
 import os
-import six
 import atexit
 from fnmatch import fnmatch
 from orderedattrdict import AttrDict
@@ -24,9 +23,6 @@ atexit.register(observer.stop)
 
 handlers = {}               # (handler, watch) -> (folder, name)
 watches = AttrDict()        # watches[folder] = ObservedWatch
-
-if six.PY2:
-    PermissionError = RuntimeError
 
 
 class FileEventHandler(FileSystemEventHandler):

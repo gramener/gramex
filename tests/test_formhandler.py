@@ -232,8 +232,6 @@ class TestFormHandler(TestGramex):
         by_growth.index = range(len(by_growth))
 
         out = self.get('/formhandler/file?_format=html')
-        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
-        # instead of unicde. So check column type only in PY3 not PY2
         afe(pd.read_html(out.content, encoding='utf-8')[0], self.sales, check_column_type=True)
         eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
         eq_(out.headers.get('Content-Disposition'), None)
@@ -604,7 +602,6 @@ class TestFormHandler(TestGramex):
         afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
 
         # url: and table: accept query formatting for SQLAlchemy
-        # TODO: In Python 2, unicode keys don't work well on Tornado. So use safe keys
         key, val = 'देश', 'भारत'
         url = '/formhandler/arg-query?db=formhandler&col=%s&val=%s' % (key, val)
         actual = pd.DataFrame(self.get(url).json())

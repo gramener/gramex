@@ -55,7 +55,6 @@ The following 10 attributes are available (in order):
 
 import os
 import re
-import six
 import json
 import operator
 import colorsys
@@ -580,15 +579,15 @@ def _add_gradients(target, data):
     """Add gradients to the module"""
     mid_val = 0.5
     min_val = -1.0
-    for grad, colors in six.iteritems(data['sequential']):
+    for grad, colors in data['sequential'].items():
         target[grad] = [[float(BASE_0), colors[BASE_0]],
                         [mid_val, colors[BASE_1]],
                         [float(BASE_1), colors[BASE_2]]]
-    for grad, colors in six.iteritems(data['divergent']):
+    for grad, colors in data['divergent'].items():
         target[grad] = [[min_val, colors[BASE_0]],
                         [float(BASE_0), colors[BASE_1]],
                         [float(BASE_1), colors[BASE_2]]]
-    for grad, colors in six.iteritems(data['office']):
+    for grad, colors in data['office'].items():
         target[grad] = _MSO(*colors)
 
 

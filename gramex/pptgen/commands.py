@@ -1,6 +1,5 @@
 '''Python-PPTX customized module.'''
 import os
-import six
 import copy
 import logging
 import requests
@@ -949,7 +948,7 @@ def css(shape, spec, data):
         if setprop:
             if not isinstance(style[prop], (dict,)):
                 style[prop] = {'function': '{}'.format(style[prop]) if not isinstance(
-                               style[prop], (str, six.string_types,)) else style[prop]}
+                    style[prop], str) else style[prop]}
             setprop = compile_function(style, prop, data, handler)
             setprop = setprop * pxl_to_inch
         else:

@@ -661,8 +661,6 @@ class TestDownload(unittest.TestCase):
         afe(result['sales'], self.sales)
 
     def test_download_html(self):
-        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
-        # instead of unicde. So check column type only in PY3 not PY2
         out = gramex.data.download(self.dummy, format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')[0]
         afe(result, self.dummy, check_column_type=True)

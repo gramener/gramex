@@ -10,23 +10,12 @@ import inspect
 import logging
 import functools
 from trace import Trace
+from textwrap import indent
 try:
     import line_profiler
 except ImportError:
     line_profiler = None
 from gramex.config import app_log
-
-
-def _indent(text, prefix, predicate=None):
-    '''Backport of textwrap.indent for Python 2.7'''
-    if predicate is None:
-        def predicate(line):
-            return line.strip()
-
-    def prefixed_lines():
-        for line in text.splitlines(True):
-            yield (prefix + line if predicate(line) else line)
-    return ''.join(prefixed_lines())
 
 
 def _caller():
@@ -62,9 +51,9 @@ class Timer(object):
 def _write(obj, prefix=None, stream=sys.stdout):
     text = pprint.pformat(obj, indent=4)
     if prefix is None:
-        stream.write(_indent(text, ' .. '))
+        stream.write(indent(text, ' .. '))
     else:
-        text = _indent(text, ' .. ' + ' ' * len(prefix) + '   ')
+        text = indent(text, ' .. ' + ' ' * len(prefix) + '   ')
         stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix):])
     stream.write('\n')
 

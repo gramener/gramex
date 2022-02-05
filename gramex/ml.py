@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import inspect
 import threading
@@ -8,6 +7,7 @@ import numpy as np
 import pandas as pd
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
+from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
 
 # Expose joblob.load via gramex.ml
@@ -435,7 +435,7 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
     '''
     client = AsyncHTTPClient()
     url = kwargs['LT_URL'].format(**kwargs)
-    query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
+    query = urlencode({'language': lang, 'text': text})
     url = url + query
     tries = 2  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
     while tries:

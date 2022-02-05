@@ -252,16 +252,11 @@ class FileHandler(BaseHandler):
                     name_suffix = path_suffix = '/'
                 else:
                     name_suffix = path_suffix = ''
-                # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
-                # https://bitbucket.org/pitrou/pathlib/issues/25
-                try:
-                    path = str(path.relative_to(self.path))
-                    content.append(file_template.substitute(
-                        path=path + path_suffix,
-                        name=path + name_suffix,
-                    ))
-                except UnicodeDecodeError:
-                    app_log.warning("FileHandler can't show unicode file {!r:s}".format(path))
+                path = str(path.relative_to(self.path))
+                content.append(file_template.substitute(
+                    path=path + path_suffix,
+                    name=path + name_suffix,
+                ))
             content.append('</ul>')
             try:
                 tmpl = gramex.cache.open(self.index_template, _tmpl_opener)
