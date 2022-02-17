@@ -1467,9 +1467,36 @@ def _mongodb_query(args, table, id=[], **kwargs):
 def _mongodb_collection(url, database, collection, **kwargs):
     import pymongo
 
-    # Create MongoClient
-    create_kwargs = {key: val for key, val in kwargs.items() if key in
-                     {'port', 'document_class', 'tz_aware', 'connect'}}
+    # Support all MongoDB client arguments
+    # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
+    mongo_kwargs = {
+        'host', 'port', 'document_class', 'tz_aware', 'connect', 'type_registry',
+        # Other optional parameters can be passed as keyword arguments
+        'directConnection', 'maxPoolSize', 'minPoolSize', 'maxIdleTimeMS', 'maxConnecting',
+        'socketTimeoutMS', 'connectTimeoutMS', 'server_selector', 'serverSelectionTimeoutMS',
+        'waitQueueTimeoutMS', 'heartbeatFrequencyMS', 'appname', 'driver', 'event_listeners',
+        'retryWrites', 'retryReads', 'compressors', 'zlibCompressionLevel', 'uuidRepresentation',
+        'unicode_decode_error_handler', 'srvServiceName',
+        # Write Concern options
+        'w', 'wTimeoutMS', 'journal', 'fsync',
+        # Read Concern options
+        'readConcernLevel',
+        # Replica set keyword arguments
+        'replicaSet',
+        # Read Preference
+        'readPreference', 'readPreferenceTags', 'maxStalenessSeconds',
+        # Authentication
+        'username', 'password', 'authSource', 'authMechanism', 'authMechanismProperties',
+        # TLS/SSL configuration
+        'tls', 'tlsInsecure', 'tlsAllowInvalidCertificates', 'tlsAllowInvalidHostnames',
+        'tlsCAFile', 'tlsCertificateKeyFile', 'tlsCRLFile', 'tlsCertificateKeyFilePassword',
+        'tlsDisableOCSPEndpointCheck', 'ssl',
+        # Client side encryption options
+        'auto_encryption_opts',
+        # Versioned API options
+        'server_api',
+    }
+    create_kwargs = {key: val for key, val in kwargs.items() if key in mongo_kwargs}
     client = create_engine(url, create=pymongo.MongoClient, **create_kwargs)
     db = client[database]
     return db[collection]
