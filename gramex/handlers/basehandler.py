@@ -9,6 +9,7 @@ import tornado.gen
 import gramex.cache
 from typing import Union
 from binascii import b2a_base64, hexlify
+from http.cookies import Morsel
 from orderedattrdict import AttrDict
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urljoin, urlencode
 from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_signed_value
@@ -23,8 +24,11 @@ from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore
 
 server_header = f'Gramex/{__version__}'
 session_store_cache = {}
-_missing = object()
 _arg_default = object()
+
+# Python 3.8+ supports SameSite cookie attribute. Monkey-patch it for Python 3.7
+# https://stackoverflow.com/a/50813092/100904
+Morsel._reserved.setdefault('samesite', 'SameSite')
 
 
 class BaseMixin(object):
@@ -161,7 +165,9 @@ class BaseMixin(object):
         cls._session_expiry = session_conf.get('expiry')
         cls._session_cookie_id = session_conf.get('cookie', 'sid')
         cls._session_cookie = {
-            key: session_conf[key] for key in ('domain', 'httponly', 'secure')
+            # Note: We cannot use path: to specify the Cookie path attribute.
+            # session.path is used for the session (JSONStore) file location.
+            key: session_conf[key] for key in ('httponly', 'secure', 'samesite', 'domain')
             if key in session_conf
         }
         cls._on_init_methods.append(cls.override_user)

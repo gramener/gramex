@@ -279,8 +279,6 @@ app:
         path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
         expiry: 31              # Session cookies expiry in days
         httponly: true          # Only HTTP access, no JS access
-        # domain: .example.org  # Cookies are set across *.example.org
-        # secure: true          # Cookies enabled only for HTTPS, not HTTP
 
 
 # The `schedule:` section defines when specific code is to run.

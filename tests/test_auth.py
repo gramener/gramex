@@ -64,6 +64,7 @@ class TestSession(TestGramex):
         cookie = r.headers['Set-Cookie'].lower()
         self.assertIn('sid2', cookies)
         self.assertIn('httponly', cookie)
+        self.assertIn('samesite=strict', cookie)
         self.assertIn('domain=.localhost.local', cookie)
         # HTTP requests should not have a secure flag
         # TODO: HTTPS requests SHOULD have a secure flag
