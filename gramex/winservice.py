@@ -55,17 +55,30 @@ class GramexService(win32serviceutil.ServiceFramework):
         cwd = win32serviceutil.GetServiceCustomOption(self, 'cwd')
         exe = win32serviceutil.GetServiceCustomOption(self, 'exe')
         gramexpath = win32serviceutil.GetServiceCustomOption(self, 'py')
+        # Run the app in the cwd (source directory)
         if os.path.exists(cwd):
             typ, err = servicemanager.EVENTLOG_INFORMATION_TYPE, ''
         else:
             typ, err = servicemanager.EVENTLOG_WARNING_TYPE, f'Missing directory: {cwd}.'
             cwd = os.getcwd()
         os.chdir(cwd)
+        # Write all print / log messages to service.log in the source directory.
         servicelogfile = os.path.join(cwd, 'service.log')
         sys.stdout = sys.stderr = io.open(servicelogfile, 'a', encoding='utf-8')
         # Log start of service
         servicemanager.LogMsg(typ, servicemanager.PYS_SERVICE_STARTING, (
             self._svc_name_, f'\n{err}Path: {cwd}. Python: {exe}. Gramex: {gramexpath}'))
+        # See https://github.com/tornadoweb/tornado/issues/2608
+        if sys.version_info.minor >= 8:
+            import asyncio
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        # On Conda, we can't import NumPy because Library\bin is not in PATH. Add it
+        try:
+            import numpy    # noqa
+        except ImportError:
+            import re
+            conda_path = re.sub(r'\\lib\\site-packages\\win32\\.*', '', sys.executable)
+            os.environ['PATH'] = f'{conda_path}\\Library\\bin;{os.environ["PATH"]}'
         # Run Gramex
         try:
             port = self._svc_port_
