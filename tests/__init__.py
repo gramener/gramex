@@ -6,7 +6,7 @@ from lxml import etree      # nosec: lxml is safe   # noqa: F401 - other modules
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
-from pandas.util.testing import assert_frame_equal as afe   # noqa: F401 - other modules use this
+from pandas.testing import assert_frame_equal as afe   # noqa: F401 - other modules use this
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))
