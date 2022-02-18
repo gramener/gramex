@@ -51,11 +51,11 @@ class AuthHandler(BaseHandler):
         cls.failed_logins = Counter()
         # Set delay for failed logins from the delay: parameter which can be a number or list
         default_delay = [1, 1, 5]
-        cls.delay = delay
-        if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
+        cls.delay = default_delay if delay is None else delay
+        if not isinstance(cls.delay, list):
+            cls.delay = [cls.delay]
+        if not all(isinstance(n, (int, float)) for n in cls.delay):
             app_log.warning(f'{cls.name}: Ignoring invalid delay: {cls.delay!r}')
-            cls.delay = default_delay
-        elif isinstance(cls.delay, (int, float)) or cls.delay is None:
             cls.delay = default_delay
 
         # Set up session user key, session expiry and inactive expiry
