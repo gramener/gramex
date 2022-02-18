@@ -11,7 +11,7 @@
     "bootstrap-select": "1.13",
     "bootstrap5": "npm:bootstrap@^5.1.3",
     "bootswatch": "^4.6.1",
-    "comicgen": "^1.6.2",
+    "comicgen": "^1.6.3",
     "d3": "4",
     "d3-scale-chromatic": "*",
     "d3v5": "npm:d3@5",
