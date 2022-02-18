@@ -4,9 +4,9 @@
   "description": "Download web pages as PDF, image or PPTX.",
   "main": "capture.js",
   "dependencies": {
-    "body-parser": "1",
+    "body-parser": "^1.19.2",
     "cookie": "0.3",
-    "express": "4",
+    "express": "^4.17.3",
     "fast-image-size": "0.1",
     "lodash": "4",
     "minimist": "1.2",

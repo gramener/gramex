@@ -6,7 +6,7 @@
   "info#": "Release info for setup.py to package on pypi, and gramex/__init__.py for version info",
   "info": {
     "name": "gramex",
-    "version": "1.76.0",
+    "version": "1.76.1",
     "description": "Gramex: Low Code Data Solutions Platform",
     "author": "Gramener",
     "author_email": "s.anand@gramener.com",
