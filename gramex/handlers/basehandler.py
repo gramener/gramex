@@ -516,6 +516,8 @@ class BaseMixin(object):
         '''
         if expires_days is None:
             expires_days = self._session_expiry
+        # If the expiry time is None, keep in the session store for 1 day
+        store_expires = time.time() + (1 if expires_days is None else expires_days) * 24 * 60 * 60
         created_new_sid = False
         if getattr(self, '_session', None) is None:
             # Populate self._session based on the sid. If there's no sid cookie,
@@ -528,8 +530,7 @@ class BaseMixin(object):
             # Convert bytes session to unicode before using
             session_id = session_id.decode('ascii')
             # If there's no stored session associated with it, create it
-            expires = time.time() + expires_days * 24 * 60 * 60
-            self._session = self._session_store.load(session_id, {'_t': expires})
+            self._session = self._session_store.load(session_id, {'_t': store_expires})
             # Overwrite id to the session ID even if a handler has changed it
             self._session['id'] = session_id
         # At this point, the "sid" cookie and self._session exist and are synced
@@ -542,7 +543,7 @@ class BaseMixin(object):
         if new and not created_new_sid:
             new_sid = self._set_new_session_id(expires_days).decode('ascii')
             # Update expiry and new SID on session
-            s.update(id=new_sid, _t=time.time() + expires_days * 24 * 60 * 60)
+            s.update(id=new_sid, _t=store_expires)
             # Delete old contents. No _t also means expired
             self._session_store.dump(old_sid, {})
 
