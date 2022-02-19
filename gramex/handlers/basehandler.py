@@ -478,6 +478,9 @@ class BaseMixin(object):
         session_id = b2a_base64(os.urandom(24))[:-1]
         kwargs = dict(self._session_cookie)
         kwargs['expires_days'] = expires_days
+        # Treat expiry: false as None, since expiry: null won't set null, it clears YAML
+        if kwargs['expires_days'] is False:
+            kwargs['expires_days'] = None
         # Use Secure cookies on HTTPS to prevent leakage into HTTP
         if self.request.protocol == 'https':
             kwargs['secure'] = True
