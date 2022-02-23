@@ -95,8 +95,8 @@ def mongodb_create_db(url, database, **tables):
     client = pymongo.MongoClient(url)
     db = client[database]
     for collection, data in tables.items():
-        db[collection].insert_many(data.to_dict('records'))
-    pass
+        if len(data):
+            db[collection].insert_many(data.to_dict('records'))
 
 
 def mongodb_drop_db(url, database):

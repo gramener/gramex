@@ -1427,18 +1427,19 @@ _mongodb_op_map = {
 def _mongodb_query(args, table, id=[], **kwargs):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
-    # TODO: ?_id= is not working
-    results = table.find().limit(1)
+    row = table.find_one()
+    if not row:
+        return {}
     conditions = []
     for key, vals in args.items():
         if len(id) and key not in id:
             continue
-        col_names = [k for k in results[0].keys()]
+        col_names = [k for k in row.keys()]
         col, agg, op = _filter_col(key, col_names)
-        add = lambda v: conditions.append({col: v})     # noqa
-        convert = _convertor(type(results[0][col])) if results else lambda v: v
-        if not col or not results:
+        if not col:
             continue
+        add = lambda v: conditions.append({col: v})  # noqa
+        convert = _convertor(type(row[col])) if col in row else lambda v: v
         if op in {'', '!'}:
             add({_mongodb_op_map[op]: [convert(val) for val in vals if val]})
             if any(not val for val in vals):
@@ -1518,7 +1519,10 @@ def _filter_mongodb(url, controls, args, meta, database=None, collection=None, q
     '''TODO: Document function and usage'''
     table = _mongodb_collection(url, database, collection, **kwargs)
     # TODO: If data is missing, identify columns using columns:
-    cols = [k for k in table.find().limit(1)[0].keys()]
+    row = table.find_one(query)
+    if not row:
+        return pd.DataFrame()
+    cols = [k for k in row.keys()]
 
     query = dict(query) if query else _mongodb_query(args, table)
 
@@ -1559,13 +1563,13 @@ def _update_mongodb(url, controls, args, meta, database=None, collection=None, q
                     id=[], **kwargs):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
-    results = list(table.find(query).limit(1))
-    if not results:
+    row = table.find_one(query)
+    if not row:
         return 0
 
     values = {key: val[-1] for key, val in dict(args).items() if key not in id}
     for key in values.keys():
-        convert = _convertor(type(results[0].get(key, ''))) if results else lambda v: v
+        convert = _convertor(type(row[key])) if key in row else lambda v: v
         values[key] = convert(values[key])
 
     result = table.update_many(query, {'$set': _mongodb_json(values)})

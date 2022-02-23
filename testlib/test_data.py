@@ -398,7 +398,7 @@ class TestFilter(unittest.TestCase):
         url = f'mongodb://{server.mongodb}'
         db = 'test_filter'
         try:
-            dbutils.mongodb_create_db(url, db, **{'sales': self.sales})
+            dbutils.mongodb_create_db(url, db, **{'sales': self.sales, 'empty': pd.DataFrame()})
         except pymongo.errors.ServerSelectionTimeoutError:
             raise SkipTest(f'MongoDB not set up at {server.mongodb}')
         self.db.add('mongodb')
@@ -423,14 +423,19 @@ class TestFilter(unittest.TestCase):
         size(args={'city!~': ['Newport']}, b=20)
         size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
         size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
+        # TODO: NOT NULL
+        # size(args={'sales!': []}, b=2)
+        # size(args={'sales': []}, b=22)
 
         size(query={'sales': {'$lt': 100}}, b=11)
         size(query={'देश': {'$in': ['भारत', 'Singapore']}}, b=16)
         size(query={'देश': {'$in': ['भारत', '{country}']}}, args={'country': ['Singapore']}, b=16)
 
-        # TODO: NOT NULL
-        # size(args={'sales!': []}, b=2)
-        # size(args={'sales': []}, b=22)
+        size(args={'sales<': ['100'], 'missing': ['ignored']}, b=11)
+
+        kwargs['collection'] = 'empty'
+        size(args={}, b=0)
+        size(args={'missing': ['ignored']}, b=0)
 
     @classmethod
     def tearDownClass(cls):
