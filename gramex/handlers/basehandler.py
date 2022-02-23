@@ -557,24 +557,28 @@ class BaseMixin(object):
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
 
-    def otp(self, expire=60):
-        '''
-        Return a one-time password valid for ``expire`` seconds. When the
-        X-Gramex-OTP header
-        '''
+    def otp(self, expire=60, prefix='otp'):
+        '''Return one-time password valid for ``expire`` seconds. Use with X-Gramex-OTP header'''
         user = self.current_user
         if not user:
             raise HTTPError(UNAUTHORIZED)
         nbits = 16
         otp = hexlify(os.urandom(nbits)).decode('ascii')
-        self._session_store.dump('otp:' + otp, {'user': user, '_t': time.time() + expire})
+        key_data = {'user': user}
+        if expire is not None:
+            key_data['_t'] = time.time() + expire
+        self._session_store.dump(f'{prefix}:{otp}', key_data)
         return otp
+
+    def apikey(self):
+        '''Return new API Key. To be used with the X-Gramex-Key header.'''
+        return self.otp(expire=None, prefix='key')
 
     def override_user(self):
         '''
         Use ``X-Gramex-User`` HTTP header to override current user for the session.
-        Use ``X-Gramex-OTP`` HTTP header to set user based on OTP.
-        ``?gramex-otp=`` is a synonym for X-Gramex-OTP.
+        Use ``X-Gramex-OTP`` HTTP header to set user based on OTP, or ``?gramex-otp=``.
+        Use ``X-Gramex-Key`` HTTP header to set user based on API key, or ``?gramex-key=``.
         '''
         headers = self.request.headers
         cipher = headers.get('X-Gramex-User')
@@ -590,6 +594,7 @@ class BaseMixin(object):
                 app_log.debug(f'{self.name}: Overriding user to {user!r}')
                 self.session['user'] = user
                 return
+        # If valid OTP is specified, set the user from the API key
         otp = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
         if otp:
             otp_data = self._session_store.load('otp:' + otp, None)
@@ -599,7 +604,13 @@ class BaseMixin(object):
                 raise HTTPError(BAD_REQUEST, f'{self.name}: expired X-Gramex-OTP: {otp}')
             self._session_store.dump(f'otp:{otp}', None)
             self.session['user'] = otp_data['user']
-        # ToDo: apikey = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
+        # If API Key is specified, set the user from the API key
+        key = headers.get('X-Gramex-Key') or self.get_argument('gramex-key', None)
+        if key:
+            key_data = self._session_store.load('key:' + key, None)
+            if not isinstance(key_data, dict) or 'user' not in key_data:
+                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-Key: {key}')
+            self.session['user'] = key['user']
 
     def set_last_visited(self):
         '''
