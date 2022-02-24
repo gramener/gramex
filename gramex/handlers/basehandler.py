@@ -564,15 +564,12 @@ class BaseMixin(object):
             raise HTTPError(UNAUTHORIZED)
         nbits = 16
         otp = hexlify(os.urandom(nbits)).decode('ascii')
-        key_data = {'user': user}
-        if expire is not None:
-            key_data['_t'] = time.time() + expire
-        self._session_store.dump(f'{prefix}:{otp}', key_data)
+        self._session_store.dump(f'{prefix}:{otp}', {'user': user, '_t': time.time() + expire})
         return otp
 
-    def apikey(self):
+    def apikey(self, expire=1e9):
         '''Return new API Key. To be used with the X-Gramex-Key header.'''
-        return self.otp(expire=None, prefix='key')
+        return self.otp(expire=expire, prefix='key')
 
     def override_user(self):
         '''
@@ -610,7 +607,7 @@ class BaseMixin(object):
             key_data = self._session_store.load('key:' + key, None)
             if not isinstance(key_data, dict) or 'user' not in key_data:
                 raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-Key: {key}')
-            self.session['user'] = key['user']
+            self.session['user'] = key_data['user']
 
     def set_last_visited(self):
         '''
