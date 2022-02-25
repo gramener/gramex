@@ -1,40 +1,66 @@
 import pandas as pd
+import numpy as np
 from gramex.config import app_log
 from statsmodels import api as sm
 from sklearn.metrics import mean_absolute_error
 
 
-class BaseStatsModel(object):
-    mclass = None
+class SARIMAX(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self, order=(1, 0, 0), **kwargs):
+        self.stl_kwargs = kwargs.pop('stl', False)
         self.params = kwargs
-
-    def _coerce_1d(self, y, target_col=None):
-        if isinstance(y, pd.DataFrame) and len(y.columns) > 1:
-            app_log.warning("Autoregressive models support only univariate data.")
-            if target_col is None:
-                raise ValueError("Please specify a target column.")
-            app_log.warning(f"Looking for target column {target_col} in dataset.")
-            y = y[target_col]
-        return y.squeeze()
 
     def _timestamp_data(self, data, index_col):
         if data.index.name != index_col:
-            data[index_col] = pd.to_datetime(data[index_col])
-            return data.set_index(index_col, verify_integrity=True)
+            data.set_index(index_col, verify_integrity=True, inplace=True)
+        if not isinstance(data.index, pd.DatetimeIndex):
+            data.index = pd.to_datetime(data.index)
         return data
 
+    def _get_stl(self, endog):
+        if not self.stl_kwargs:
+            return endog
+        stl_components = self.stl_kwargs.get('components', [])
+        if stl_components and (not set(stl_components) < {'seasonal', 'trend', 'resid'}):
+            app_log.warning(f'Invalid STL components {stl_components}. Ignoring STL.')
+            return endog
+        kwargs = self.stl_kwargs.get('kwargs', {})
+
+        app_log.critical(endog.index.freq)
+        app_log.critical(endog.index.dtype)
+        decomposed = sm.tsa.STL(endog, **kwargs).fit()
+        result = np.zeros_like(endog)
+        for comp in stl_components:
+            result += getattr(decomposed, comp)
+        return pd.Series(result, index=endog.index)
+
+    def fit(self, X, y=None, index_col=None, target_col=None):
+        """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
+        params = self.params.copy()
+        if y is None:
+            y = X[target_col]
+            X = X.drop([target_col], axis=1)
+        endog = y
+        exog = X.drop([target_col], axis=1) if target_col in X else X
+        params["exog"] = exog
+        endog = self._timestamp_data(endog, index_col)
+        endog.index.freq = self.params.pop("freq", pd.infer_freq(endog.index))
+        endog = self._get_stl(endog)
+        exog.index = endog.index
+        missing = self.params.pop("missing", "drop")
+        self.model = sm.tsa.SARIMAX(endog, missing=missing, **params)
+        self.res = self.model.fit()
+        return self.res.summary().as_html()
+
     def predict(self, data, index_col=None, start=None, end=None, target_col=None, **kwargs):
-        if not self.is_univariate:
-            data = self._timestamp_data(data, index_col)
-            start = data.index.min() if start is None else start
-            end = data.index.max() if end is None else end
-            exog = data
-            if target_col in data:
-                exog = data.drop(target_col, axis=1)
-            return self.res.predict(start, end, exog=exog, **kwargs)
-        return self.res.predict(start, end, **kwargs)
+        data = self._timestamp_data(data, index_col)
+        start = data.index.min() if start is None else start
+        end = data.index.max() if end is None else end
+        exog = data
+        if target_col in data:
+            exog = data.drop(target_col, axis=1)
+        return self.res.predict(start, end, exog=exog, **kwargs)
 
     def score(self, data, y_pred, score_col):
         y_true = data[score_col].values
@@ -51,51 +77,3 @@ class BaseStatsModel(object):
 
     def get_params(self):
         return self.params
-
-
-class AutoReg(BaseStatsModel):
-    mclass = sm.tsa.AutoReg
-    is_univariate = True
-
-    def __init__(self, lags: int, missing="drop", **kwargs):
-        self.params = {"lags": lags, "missing": missing}
-        self.params.update(kwargs)
-
-    def fit(self, X, y=None, index_col=None, target_col=None):
-        """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
-        params = self.params.copy()
-        if y is None:
-            y = X[target_col]
-            X = X.drop([target_col], axis=1)
-        if self.is_univariate:
-            endog = self._coerce_1d(y, target_col)
-            if X is not None:
-                app_log.warning(f'{self.mclass.__name__} is univariate. Exog data is ignored.')
-        else:
-            endog = y
-            exog = X.drop([target_col], axis=1) if target_col in X else X
-            params["exog"] = exog
-        endog = self._timestamp_data(endog, index_col)
-        endog.index.freq = self.params.pop("freq", pd.infer_freq(endog.index))
-        missing = self.params.pop("missing", "drop")
-        self.model = self.mclass(endog, missing=missing, **params)
-        self.res = self.model.fit()
-        return self.res.summary().as_html()
-
-
-class ARIMA(AutoReg):
-    mclass = sm.tsa.ARIMA
-
-    def __init__(self, order=(1, 0, 0), **kwargs):
-        self.params = {"order": order}
-        self.params.update(kwargs)
-
-
-class SARIMAX(ARIMA):
-    mclass = sm.tsa.SARIMAX
-    is_univariate = False
-
-
-class ARDL(AutoReg):
-    mclass = sm.tsa.ARDL
-    is_univariate = False
