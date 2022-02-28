@@ -557,9 +557,9 @@ class BaseMixin(object):
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
 
-    def otp(self, expire=60, prefix='otp'):
+    def otp(self, expire=60, prefix='otp', user=None):
         '''Return one-time password valid for ``expire`` seconds. Use with X-Gramex-OTP header'''
-        user = self.current_user
+        user = self.current_user if user is None else user
         if not user:
             raise HTTPError(UNAUTHORIZED)
         nbits = 16
@@ -567,9 +567,9 @@ class BaseMixin(object):
         self._session_store.dump(f'{prefix}:{otp}', {'user': user, '_t': time.time() + expire})
         return otp
 
-    def apikey(self, expire=1e9):
+    def apikey(self, expire=1e9, user=None):
         '''Return new API Key. To be used with the X-Gramex-Key header.'''
-        return self.otp(expire=expire, prefix='key')
+        return self.otp(expire=expire, prefix='key', user=user)
 
     def override_user(self):
         '''
