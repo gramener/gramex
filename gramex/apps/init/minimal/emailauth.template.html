@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Auth</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container col-md-6 col-lg-4 col-xl-3">
+    <h1 class="text-center mt-5">Email Auth</h1>
+
+    {%! if error %}
+      <div class="alert alert-danger">
+        <strong>Error</strong>: {{! msg }}
+      </div>
+    {%! end %}
+
+    {%! if email is None and otp is None %}
+      <form method="POST">
+        <input type="hidden" name="_xsrf" value="{{! handler.xsrf_token }}">
+        <p class="row">
+          <label for="user" class="form-label">E-mail</label>
+          <input type="email" class="form-control" name="user" id="user" value="{{! email or '' }}" autofocus>
+        </p>
+        <button type="submit" class="btn btn-primary">Send OTP via E-mail</button>
+      </form>
+      <p class="mt-5"><a href="?user&{{! url_escape(redirect['name']) }}={{! url_escape(redirect['value']) }}">I already have the OTP</a></p>
+    {%! else %}
+      {%! if handler.request.method == 'POST' %}
+        <p>We sent an email to <code>{{! email }}</code> with an OTP and link to log in.</p>
+        <p>Once you receive the OTP, enter it below.</p>
+      {%! end %}
+      <form>
+        <p class="row">
+          <input type="hidden" name="{{! redirect['name'] }}" value="{{! redirect['value'] }}">
+          <input type="hidden" name="user" value="">
+          <input type="hidden" name="_" value="">
+          <label for="password" class="form-label">OTP</label>
+          <input class="form-control" name="password" id="password" value="{{! otp or '' }}" autofocus autocomplete="off">
+        </p>
+        <button type="submit" class="btn btn-primary">Submit OTP</button>
+      </form>
+      <p class="mt-5"><a href="?{{! url_escape(redirect['name']) }}={{! url_escape(redirect['value']) }}">Request new OTP</a></p>
+    {%! end %}
+  </div>
+</body>
+</html>
