@@ -229,8 +229,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
-    def get_session(self, headers=None):
-        return self.session.get(server.base_url + '/auth/session', headers=headers).json()
+    def get_session(self, headers=None, params={}):
+        return self.session.get(server.base_url + '/auth/session',
+                                headers=headers, params=params).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -297,24 +298,24 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             eq_(r.status_code, BAD_REQUEST)
 
     def test_apikey(self):
+        # Get an API key as the user "alpha"
         self.session = requests.Session()
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
-        apikey1 = self.session.get(server.base_url + '/auth/apikey').json()
-        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+        apikey = self.session.get(server.base_url + '/auth/apikey').json()
 
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
-        session_data = self.get_session(headers={'X-Gramex-Key': apikey1})
+        session_data = self.get_session(params={'gramex-key': apikey})
         in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
 
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
         self.session = requests.Session()
-        test_cases = {apikey1: OK, 'nan': BAD_REQUEST}
-        # TODO: Assert if User object is correctly populated
-        for key, expected_resp in test_cases.items():
-            r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-Key': key})
-            eq_(r.status_code, expected_resp)
-            r = self.session.get(server.base_url + '/auth/session', params={'gramex-key': key})
-            eq_(r.status_code, expected_resp)
+        self.assertTrue('user' not in self.get_session())
+        session_data = self.get_session(headers={'X-Gramex-Key': apikey})
+        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
 
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open

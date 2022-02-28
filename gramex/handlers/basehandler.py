@@ -596,9 +596,9 @@ class BaseMixin(object):
         if otp:
             otp_data = self._session_store.load('otp:' + otp, None)
             if not isinstance(otp_data, dict) or '_t' not in otp_data or 'user' not in otp_data:
-                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-OTP: {otp}')
+                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid Gramex OTP: {otp}')
             elif otp_data['_t'] < time.time():
-                raise HTTPError(BAD_REQUEST, f'{self.name}: expired X-Gramex-OTP: {otp}')
+                raise HTTPError(BAD_REQUEST, f'{self.name}: expired Gramex OTP: {otp}')
             self._session_store.dump(f'otp:{otp}', None)
             self.session['user'] = otp_data['user']
         # If API Key is specified, set the user from the API key
@@ -606,7 +606,7 @@ class BaseMixin(object):
         if key:
             key_data = self._session_store.load('key:' + key, None)
             if not isinstance(key_data, dict) or 'user' not in key_data:
-                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-Key: {key}')
+                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid Gramex Key: {key}')
             self.session['user'] = key_data['user']
 
     def set_last_visited(self):
