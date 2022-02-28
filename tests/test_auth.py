@@ -296,6 +296,26 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
 
+    def test_apikey(self):
+        self.session = requests.Session()
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        apikey1 = self.session.get(server.base_url + '/auth/apikey').json()
+        in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
+
+        self.session = requests.Session()
+        self.assertTrue('user' not in self.get_session())
+        session_data = self.get_session(headers={'X-Gramex-Key': apikey1})
+        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+
+        self.session = requests.Session()
+        test_cases = {apikey1: OK, 'nan': BAD_REQUEST}
+        # TODO: Assert if User object is correctly populated
+        for key, expected_resp in test_cases.items():
+            r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-Key': key})
+            eq_(r.status_code, expected_resp)
+            r = self.session.get(server.base_url + '/auth/session', params={'gramex-key': key})
+            eq_(r.status_code, expected_resp)
+
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open
         self.check('/auth/authorize')
