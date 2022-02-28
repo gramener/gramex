@@ -257,6 +257,11 @@ def otp(handler):
     return json.dumps(handler.otp(expire=expire))
 
 
+def apikey(handler):
+    user = {key: val[-1] for key, val in handler.args.items()}
+    return json.dumps(handler.apikey(user=user or None))
+
+
 def increment(handler):
     '''
     This function is used to check the cache. Suppose we fetch a page, then

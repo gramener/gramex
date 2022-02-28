@@ -229,8 +229,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
-    def get_session(self, headers=None):
-        return self.session.get(server.base_url + '/auth/session', headers=headers).json()
+    def get_session(self, headers=None, params={}):
+        return self.session.get(server.base_url + '/auth/session',
+                                headers=headers, params=params).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -295,6 +296,37 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             eq_(r.status_code, BAD_REQUEST)
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
+
+    def test_apikey(self):
+        # Get an API key as the user "alpha"
+        self.session = requests.Session()
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        apikey = self.session.get(server.base_url + '/auth/apikey').json()
+
+        def check_key(user, **kwargs):
+            self.session = requests.Session()
+            # Initially, a session does not have a logged in user
+            self.assertTrue('user' not in self.get_session())
+            # But when we call self.get_session() with the specified params / headers
+            session_data = self.get_session(**kwargs)
+            # it should return the user object we expect
+            in_(user, session_data['user'])
+            # ... and it should log the user in with that user object for that session
+            in_(user, self.get_session()['user'])
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'alpha', 'id': 'alpha'}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'alpha', 'id': 'alpha'}, headers={'X-Gramex-Key': apikey})
+
+        # Get an API key as the user "new"
+        self.session = requests.Session()
+        apikey = self.session.get(server.base_url + '/auth/apikey?user=new&role=x').json()
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'new', 'role': 'x'}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'new', 'role': 'x'}, headers={'X-Gramex-Key': apikey})
 
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open

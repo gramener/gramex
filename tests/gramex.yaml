@@ -1559,6 +1559,14 @@ url:
       headers:
         Content-Type: application/json
 
+  auth/apikey:
+    pattern: /auth/apikey
+    handler: FunctionHandler
+    kwargs:
+      function: utils.apikey
+      headers:
+        Content-Type: application/json
+
   auth/authorize:
     pattern: /auth/authorize
     handler: SimpleAuth

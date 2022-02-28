@@ -13,12 +13,11 @@ def ensure_single_session(handler):
         return
     # Go through every session and drop user from every other session
     for key in handler._session_store.keys():
-        # Ignore current session or OTP sessions
+        # Ignore current session or OTP / API key sessions
         if key == handler.session.get('id'):
             continue
-        if isinstance(key, str) and key.startswith('otp:'):
-            continue
-        if isinstance(key, bytes) and key.startswith(b'otp:'):
+        bytekey = key.encode('utf-8') if isinstance(key, str) else key
+        if bytekey.startswith(b'otp:') or bytekey.startswith(b'key:'):
             continue
         # Remove user from all other sessions
         other_session = handler._session_store.load(key)
@@ -29,5 +28,4 @@ def ensure_single_session(handler):
             other_session = dict(other_session)
             other_session.pop(handler.session_user_key)
             handler._session_store.dump(key, other_session)
-            app_log.debug(f'ensure_single_session: dropped user {user_id} '
-                          f'from session {other_session["id"]}')
+            app_log.debug(f'ensure_single_session: dropped user {user_id} from session {key}')
