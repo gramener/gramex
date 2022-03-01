@@ -13,12 +13,12 @@ import subprocess       # nosec: only enabled via app developer
 import sys
 import tempfile
 import time
+import tornado.ioloop
 import tornado.template
 from threading import Thread
 from queue import Queue
 from orderedattrdict import AttrDict
 from tornado.concurrent import Future
-from tornado.ioloop import IOLoop, PeriodicCallback
 from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
 from gramex.config import PathConfig
 from urllib.parse import urlparse
@@ -876,10 +876,12 @@ def _get_current_ioloop():
     object that mimics add_callback() by running the method immediately.
     This allows daemon() to be run without Tornado / asyncio.
     '''
-    loop = IOLoop.current(instance=False)
-    if loop is None:
-        loop = AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
-    return loop
+    from gramex.services import info
+    return (
+        info.main_ioloop or
+        tornado.ioloop.IOLoop.current() or
+        AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
+    )
 
 
 def get_store(type, **kwargs):
@@ -928,9 +930,9 @@ class KeyStore(object):
                 purge_keys)
         # Periodically flush and purge buffers
         if flush is not None:
-            PeriodicCallback(self.flush, callback_time=flush * 1000).start()
+            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
         if purge is not None:
-            PeriodicCallback(self.purge, callback_time=purge * 1000).start()
+            tornado.ioloop.PeriodicCallback(self.purge, callback_time=purge * 1000).start()
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
@@ -1215,7 +1217,7 @@ class JSONStore(KeyStore):
 
     def flush(self, purge=False):
         super(JSONStore, self).flush()
-        if self.changed or purge:
+        if getattr(self, 'changed') or purge:
             app_log.debug(f"{'Purging' if purge else 'Flushing'} {self.path}")
             # Don't dump contents. That can overwrite other instances' updates.
             # Instead: read, apply updates, and save.

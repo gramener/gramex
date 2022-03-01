@@ -58,8 +58,8 @@ info = AttrDict(
     sms=AttrDict(),
     gramexlog=AttrDict(apps=AttrDict()),
     url=AttrDict(),
+    main_ioloop=None,
     _md=None,
-    _main_ioloop=None,
 )
 _cache, _tmpl_cache = AttrDict(), AttrDict()
 atexit.register(info.threadpool.shutdown)
@@ -129,7 +129,7 @@ class GramexApp(tornado.web.Application):
 
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
-    ioloop = tornado.ioloop.IOLoop.current()
+    ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
         app_log.warning('Ignoring app config change when running')
     else:
@@ -218,7 +218,7 @@ def app(conf):
                 else:
                     tornado.ioloop.PeriodicCallback(check_exit, callback_time=500).start()
 
-            info._main_ioloop = ioloop
+            info.main_ioloop = ioloop
             ioloop.start()
 
         return callback
@@ -244,7 +244,7 @@ def schedule(conf):
         try:
             app_log.info(f'Initialising schedule:{name}')
             _cache[_key] = scheduler.Task(name, sched, info.threadpool,
-                                          ioloop=info._main_ioloop)
+                                          ioloop=info.main_ioloop)
             info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
@@ -515,7 +515,7 @@ def alert(conf):
         if schedule['function'] is not None:
             try:
                 _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
-                                              ioloop=info._main_ioloop)
+                                              ioloop=info.main_ioloop)
                 info.alert[name] = _cache[_key]
             except Exception:
                 app_log.exception(f'Failed to initialize alert: {name}')
@@ -929,7 +929,7 @@ def gramexlog(conf):
 
     # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
     flush = conf.pop('flush', 5)
-    ioloop = info._main_ioloop or tornado.ioloop.IOLoop.current()
+    ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
     # Set the defaultapp to the first config key under gramexlog:
     if len(conf):
         info.gramexlog.defaultapp = next(iter(conf.keys()))

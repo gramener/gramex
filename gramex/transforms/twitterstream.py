@@ -3,9 +3,9 @@ import json
 import time
 import datetime
 import tornado.httpclient
+import tornado.ioloop
 import gramex
 from oauthlib import oauth1
-from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.httputil import HTTPHeaders, parse_response_start_line
 from urllib.parse import urlencode
 from gramex.config import app_log
@@ -185,7 +185,7 @@ class StreamWriter(object):
         if isinstance(flush, bool):
             self.flush_on_write = flush
         elif isinstance(flush, (int, float)):
-            self.flush_loop = PeriodicCallback(self.flush, flush * 1000)
+            self.flush_loop = tornado.ioloop.PeriodicCallback(self.flush, flush * 1000)
             self.flush_loop.start()
         else:
             raise ValueError(f'flush={flush!r} is not int/bool')
@@ -224,7 +224,8 @@ class StreamWriter(object):
             app_log.debug(f'StreamWriter writing to {path}')
 
         # Schedule the next call after a minute
-        IOLoop.current().call_later(60, self.rotate)
+        ioloop = gramex.service.info.main_ioloop or tornado.ioloop.IOLoop.current()
+        ioloop.call_later(60, self.rotate)
 
     def write(self, data):
         self.stream.write(data)

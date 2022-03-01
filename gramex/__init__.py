@@ -306,7 +306,7 @@ def init(force_reload=False, **kwargs):
 def shutdown():
     '''Shut down this instance'''
     from . import services
-    ioloop = services.info._main_ioloop
+    ioloop = services.info.main_ioloop
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
         # Shut down Gramex in a thread-safe way. add_callback is the ONLY thread-safe method
