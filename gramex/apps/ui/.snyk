@@ -89,6 +89,11 @@ ignore:
         reason: No fix available. Await @vue/cli upgrade
         expires: 2022-03-31T00:00:00.000Z
         created: 2022-02-01T00:00:00.000Z
+  SNYK-JS-UNSETVALUE-2400660:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-03-31T00:00:00.000Z
+        created: 2022-03-01T00:00:00.000Z
   SNYK-JS-SIMPLEGET-2361683:
     - '*':
         reason: No fix available. Await comicgen > sharp upgrade

@@ -1,6 +1,6 @@
 {
   "name": "gramex-apps-ui",
-  "version": "1.76.1",
+  "version": "1.77.0",
   "author": "Bhanu K <bhanu.kamapantula@gramener.com>",
   "license": "MIT",
   "dependencies": {
@@ -17,7 +17,7 @@
     "d3v5": "npm:d3@5",
     "daterangepicker": "2",
     "daterangepickerv3": "npm:daterangepicker@3",
-    "dayjs": "1",
+    "dayjs": "^1.10.8",
     "dropzone": "5",
     "file-saver": "2",
     "font-awesome": "*",
@@ -31,7 +31,7 @@
     "noty": "3",
     "numeral": "2",
     "popper.js": "1",
-    "sass": "^1.49.8",
+    "sass": "^1.49.9",
     "select2": "4",
     "tether-shepherd": "1",
     "topojson": "3",

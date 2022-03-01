@@ -8,7 +8,7 @@ D:\site\gramener.com\viz\async-gramex\.gitlab-ci.yml: OK
 D:\site\gramener.com\viz\async-gramex\.htmllintrc: OK
 D:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 D:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
-D:\site\gramener.com\viz\async-gramex\dist\gramex-1.75.2.tar.gz: OK
+D:\site\gramener.com\viz\async-gramex\dist\gramex-1.76.1.tar.gz: OK
 D:\site\gramener.com\viz\async-gramex\docs\conf.py: OK
 D:\site\gramener.com\viz\async-gramex\docs\design.rst: OK
 D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.languagetool.rst: OK
@@ -388,7 +388,6 @@ D:\site\gramener.com\viz\async-gramex\gramex.egg-info\PKG-INFO: OK
 D:\site\gramener.com\viz\async-gramex\gramex.egg-info\requires.txt: OK
 D:\site\gramener.com\viz\async-gramex\gramex.egg-info\SOURCES.txt: OK
 D:\site\gramener.com\viz\async-gramex\gramex.egg-info\top_level.txt: OK
-D:\site\gramener.com\viz\async-gramex\killme.pptx: OK
 D:\site\gramener.com\viz\async-gramex\LICENSE: OK
 D:\site\gramener.com\viz\async-gramex\Makefile: OK
 D:\site\gramener.com\viz\async-gramex\MANIFEST.in: OK
@@ -507,6 +506,7 @@ D:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
+D:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\dir\.hidden: Empty file
@@ -555,6 +555,7 @@ D:\site\gramener.com\viz\async-gramex\tests\dir\template-handler.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\template.sub.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\template.txt: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\text.txt: OK
+D:\site\gramener.com\viz\async-gramex\tests\drive\.meta.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\error-404.json: OK
 D:\site\gramener.com\viz\async-gramex\tests\events.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\filetest.template.html: OK
@@ -566,6 +567,7 @@ D:\site\gramener.com\viz\async-gramex\tests\index.template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\install-test-flat.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\install-test.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\lookup.xlsx: OK
+D:\site\gramener.com\viz\async-gramex\tests\model.pkl: OK
 D:\site\gramener.com\viz\async-gramex\tests\openapiresponse.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\processtest.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\README.md: OK
@@ -628,6 +630,7 @@ D:\site\gramener.com\viz\async-gramex\tests\test_uploadhandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_watcher.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\test_websockethandler.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\throwerror.py: OK
+D:\site\gramener.com\viz\async-gramex\tests\uploads\.meta.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\userdata.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\utils.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\vega-lite.yaml: OK
@@ -641,13 +644,13 @@ D:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8605205
+Known viruses: 8607123
 Engine version: 0.103.3
-Scanned directories: 80
-Scanned files: 593
+Scanned directories: 82
+Scanned files: 596
 Infected files: 0
-Data scanned: 17.13 MB
-Data read: 5.21 MB (ratio 3.28:1)
-Time: 37.195 sec (0 m 37 s)
-Start Date: 2022:02:01 14:15:52
-End Date:   2022:02:01 14:16:29
+Data scanned: 15.93 MB
+Data read: 4.97 MB (ratio 3.20:1)
+Time: 41.894 sec (0 m 41 s)
+Start Date: 2022:03:01 18:03:00
+End Date:   2022:03:01 18:03:42
