@@ -24,7 +24,6 @@ from gramex.config import PathConfig
 from urllib.parse import urlparse
 
 
-_undef = object()
 MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
@@ -131,7 +130,7 @@ def _template(path, **kwargs):
     return tornado.template.Loader(root, **kwargs).load(name)
 
 
-def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_undef, **kwargs):
+def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=..., **kwargs):
     '''
     Read data from an XLSX as a DataFrame using ``openpyxl``.
 
@@ -150,7 +149,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
     if not any((range, name, table)):
         # Pandas defaults to xlrd, but we prefer openpyxl
         kwargs.setdefault('engine', 'openpyxl')
-        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
+        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is ... else header,
                              **kwargs)
 
     import openpyxl
@@ -161,7 +160,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
     if table is not None:
         range = ws.tables[table].ref
         # Tables themselves specify whether they have a column header. Use this as default
-        if header is _undef:
+        if header is ...:
             header = list(builtin_range(ws.tables[table].headerRowCount))
     elif name is not None:
         # If the name is workbook-scoped, get it directly
@@ -179,7 +178,7 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_unde
 
     data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
     # Header defaults to 0 if undefined. If it's not None, apply the header
-    header = 0 if header is _undef else header
+    header = 0 if header is ... else header
     if header is not None:
         data = (data.T.set_index(header).T      # Set header rows as column names
                     .reset_index(drop=True)     # Drop index with "holes" where headers were

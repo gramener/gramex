@@ -24,7 +24,6 @@ from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore
 
 server_header = f'Gramex/{__version__}'
 session_store_cache = {}
-_arg_default = object()
 
 # Python 3.8+ supports SameSite cookie attribute. Monkey-patch it for Python 3.7
 # https://stackoverflow.com/a/50813092/100904
@@ -657,7 +656,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         elif 'X-HTTP-Method-Override' in self.request.headers:
             self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
 
-    def get_arg(self, name, default=_arg_default, first=False):
+    def get_arg(self, name, default=..., first=False):
         '''
         Returns the value of the argument with the given name. Similar to
         ``.get_argument`` but uses ``self.args`` instead.
@@ -671,7 +670,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         ``self.args`` is always UTF-8 decoded unicode. Whitespaces are stripped.
         '''
         if name not in self.args:
-            if default is _arg_default:
+            if default is ...:
                 raise MissingArgumentError(name)
             return default
         return self.args[name][0 if first else -1]
