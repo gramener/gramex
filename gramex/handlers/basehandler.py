@@ -75,16 +75,21 @@ class BaseMixin(object):
             kwargs.pop(special_key, None)
         return kwargs
 
-    @classmethod
-    def setup_httpmethods(cls, methods: Union[list, tuple, str]):
-        if methods is None:
-            return
+    @staticmethod
+    def get_method_list(methods: Union[list, tuple, str]) -> set:
         if isinstance(methods, (list, tuple)):
             methods = ' '.join(methods)
+        elif not methods:
+            methods = ''
         if not isinstance(methods, str):
             raise ValueError(f'methods: {methods!r} invalid -- use a string/list, e.g. [GET, PUT]')
+        return set(methods.upper().replace(',', ' ').split())
+
+    @classmethod
+    def setup_httpmethods(cls, methods: Union[list, tuple, str]):
+        methods = cls.get_method_list(methods)
         if methods:
-            cls._http_methods = set(methods.upper().replace(',', ' ').split())
+            cls._http_methods = methods
             cls._on_init_methods.append(cls.check_http_method)
 
     @classmethod
@@ -249,6 +254,7 @@ class BaseMixin(object):
         # Set up the auth
         if isinstance(auth, dict):
             cls._auth = auth
+            cls._auth_methods = cls.get_method_list(auth.get('methods', ''))
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
@@ -716,6 +722,10 @@ class BaseHandler(RequestHandler, BaseMixin):
         self._exception = traceback.format_exception_only(typ, value)[0].strip()
 
     def authorize(self):
+        # If specific methods are mentioned, authorize only if a mentioed method is used
+        auth_methods = getattr(self, '_auth_methods', None)
+        if auth_methods and self.request.method not in auth_methods:
+            return
         if not self.current_user:
             # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)
             ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
