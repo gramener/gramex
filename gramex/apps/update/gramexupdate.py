@@ -22,7 +22,7 @@ def gramexupdate(handler):
             version=gramex.__version__, handler=handler)
     # Log all messages
     try:
-        logs = json.loads(handler.request.body, encoding='utf-8')
+        logs = json.loads(handler.request.body)
         if not isinstance(logs, list):
             raise ValueError()
     except (ValueError, AssertionError):
