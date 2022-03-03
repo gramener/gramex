@@ -158,8 +158,12 @@ async function render(q) {
   if (q.cookie) {
     let cookieList = []
     let cookieObj = cookie.parse(q.cookie)
-    for (let key in cookieObj)
-      cookieList.push({name: key, value: cookieObj[key], url: q.url})
+    for (let key in cookieObj) {
+      let cookie = { name: key, value: cookieObj[key], url: q.url }
+      if (q.domain)
+        cookie.domain = q.domain
+      cookieList.push(cookie)
+    }
     await page.setCookie(...cookieList)
     delete headers.cookie
   }
