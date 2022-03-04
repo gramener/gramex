@@ -8,7 +8,7 @@ D:\site\gramener.com\viz\async-gramex\.gitlab-ci.yml: OK
 D:\site\gramener.com\viz\async-gramex\.htmllintrc: OK
 D:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 D:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
-D:\site\gramener.com\viz\async-gramex\dist\gramex-1.76.1.tar.gz: OK
+D:\site\gramener.com\viz\async-gramex\dist\gramex-1.77.0.tar.gz: OK
 D:\site\gramener.com\viz\async-gramex\docs\conf.py: OK
 D:\site\gramener.com\viz\async-gramex\docs\design.rst: OK
 D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.languagetool.rst: OK
@@ -501,6 +501,8 @@ D:\site\gramener.com\viz\async-gramex\testlib\test_watch.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\__init__.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db: OK
+D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-shm: OK
+D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-wal: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\.secrets.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
@@ -644,13 +646,13 @@ D:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8607123
+Known viruses: 8607373
 Engine version: 0.103.3
 Scanned directories: 82
-Scanned files: 596
+Scanned files: 597
 Infected files: 0
-Data scanned: 15.93 MB
-Data read: 4.97 MB (ratio 3.20:1)
-Time: 41.894 sec (0 m 41 s)
-Start Date: 2022:03:01 18:03:00
-End Date:   2022:03:01 18:03:42
+Data scanned: 15.39 MB
+Data read: 5.00 MB (ratio 3.08:1)
+Time: 40.229 sec (0 m 40 s)
+Start Date: 2022:03:04 10:10:32
+End Date:   2022:03:04 10:11:12
