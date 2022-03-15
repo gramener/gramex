@@ -33,7 +33,9 @@ class FunctionHandler(BaseHandler):
         cls.info['function'] = build_transform(kwargs, vars={'handler': None},
                                                filename=f'url:{cls.name}')
         cls.headers = headers
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @tornado.gen.coroutine
     def get(self, *path_args):

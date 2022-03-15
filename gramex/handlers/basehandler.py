@@ -9,6 +9,7 @@ import tornado.gen
 import gramex.cache
 from typing import Union
 from binascii import b2a_base64, hexlify
+from fnmatch import fnmatch
 from http.cookies import Morsel
 from orderedattrdict import AttrDict
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urljoin, urlencode
@@ -32,8 +33,11 @@ Morsel._reserved.setdefault('samesite', 'SameSite')
 
 class BaseMixin(object):
     @classmethod
-    def setup(cls, transform={}, redirect={}, methods=None, auth=None, log=None, set_xsrf=None,
-              error=None, xsrf_cookies=None, **kwargs):
+    def setup(cls, transform={}, redirect={}, methods=None,
+              auth: Union[None, bool, dict] = None,
+              log=None, set_xsrf=None, error=None, xsrf_cookies=None,
+              cors: Union[None, bool, dict] = None,
+              **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -54,6 +58,7 @@ class BaseMixin(object):
         cls.setup_xsrf(xsrf_cookies)
         cls.setup_log()
         cls.setup_httpmethods(methods)
+        cls.setup_cors(cors, auth=auth)
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -61,7 +66,7 @@ class BaseMixin(object):
 
     # A list of special keys for BaseHandler. Can be extended by other classes.
     special_keys = ['transform', 'redirect', 'methods', 'auth', 'log', 'set_xsrf',
-                    'error', 'xsrf_cookies', 'headers']
+                    'error', 'xsrf_cookies', 'cors', 'headers']
 
     @classmethod
     def clear_special_keys(cls, kwargs, *args):
@@ -75,22 +80,143 @@ class BaseMixin(object):
             kwargs.pop(special_key, None)
         return kwargs
 
-    @staticmethod
-    def get_method_list(methods: Union[list, tuple, str]) -> set:
-        if isinstance(methods, (list, tuple)):
-            methods = ' '.join(methods)
-        elif not methods:
-            methods = ''
-        if not isinstance(methods, str):
-            raise ValueError(f'methods: {methods!r} invalid -- use a string/list, e.g. [GET, PUT]')
-        return set(methods.upper().replace(',', ' ').split())
+    @classmethod
+    def get_list(cls, val: Union[list, tuple, str], key: str = '', eg: str = '', caps=True) -> set:
+        '''
+        Convert val="GET, PUT" into {"GET", "PUT"}.
+        If val is not a string or list/tuple, raise ValueError("url.{key} invalid. e.g. {eg}")
+        '''
+        if isinstance(val, (list, tuple)):
+            val = ' '.join(val)
+        elif not val:
+            val = ''
+        if not isinstance(val, str):
+            err = f'url:{cls.name}.{key}: {val!r} not a string/list'
+            err = err + f', e.g. {eg}' if eg else err
+            raise ValueError(err)
+        if caps:
+            val = val.upper()
+        return set(val.replace(',', ' ').split())
 
     @classmethod
     def setup_httpmethods(cls, methods: Union[list, tuple, str]):
-        methods = cls.get_method_list(methods)
+        methods = cls.get_list(methods, key='methods', eg='[GET, POST]', caps=True)
         if methods:
             cls._http_methods = methods
             cls._on_init_methods.append(cls.check_http_method)
+
+    def check_http_method(self):
+        '''If method: [...] is specified, reject all methods not in the allowed methods set'''
+        if self.request.method not in self._http_methods:
+            raise HTTPError(METHOD_NOT_ALLOWED, f'{self.name}: method {self.request.method} ' +
+                            f'not in allowed methods {self._http_methods}')
+
+    @classmethod
+    def setup_cors(cls, cors: Union[None, bool, dict], auth):
+        if cors is None:
+            return
+        if cors is True:
+            cors = {
+                'auth': bool(auth),
+                'methods': '*',
+                'headers': '*',
+                'origins': '*',
+            }
+        if not isinstance(cors, dict):
+            app_log.error(f'url:{cls.name}.cors is not a dict/True')
+            return
+        cls._cors = cors
+        # Set default CORS values as a set
+        for key in ('origins', 'methods', 'headers'):
+            cors[key] = cls.get_list(cors.get(key, '*'), f'cors.{key}', '"*"', caps=False)
+        print('CORS', cls.name, cors)
+        cls._on_init_methods.append(cls.check_cors)
+        cls.options = cls._cors_options
+
+    def check_cors(self):
+        '''
+        For simple CORS requests, send Access-Control-Allow-Origin: <origin>.
+        If request needs credentials, allow it.'''
+        origin, cred = self.cors_origin()
+        if origin:
+            self.set_header('Access-Control-Allow-Origin', origin)
+            if cred:
+                self.set_header('Access-Control-Allow-Credentials', 'true')
+
+    def cors_origin(self):
+        '''
+        Returns the origin to set in Access-Control-Allow-Origin header.
+        '''
+        # If CORS is not enabled, it fails
+        if not self._cors:
+            return None, False
+        # Assume credentials are passed if handler requires Auth or Cookie is passed
+        cred = self._cors['auth'] or self.request.headers.get('Cookie')
+        # If origin: *, then allow all origins
+        origin = self.request.headers.get('Origin', '').lower()
+        if self._cors['origins'] == set('*'):
+            return (origin if cred else '*', cred)
+        # If it matches any of the wildcards, return specific origin
+        for pattern in self._cors['origins']:
+            if fnmatch(origin, pattern.lower()):
+                return origin, cred
+        # If none of the patterns match, it fails
+        return None, cred
+
+    def _cors_options(self, *args, **kwargs):
+        # Check if origin is in cors.origin
+        origin, cred = self.cors_origin()
+        if not origin:
+            origin = self.request.headers.get('Origin', '')
+            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS origin {origin} '
+                                         f'not in {self._cors["origins"]}')
+
+        # Check if method is in cors.methods
+        method = self.request.headers.get('Access-Control-Request-Method', '').upper()
+        for pattern in self._cors['methods']:
+            if fnmatch(method, pattern.upper()):
+                break
+        else:
+            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS method {method} '
+                                         f'not in {self._cors["methods"]}')
+
+        # Check if headers is in cors.headers
+        headers = self.request.headers.get('Access-Control-Request-Headers', '')
+        headers = self.get_list(headers, 'headers', '', caps=False)
+        allowed_headers = set([h.lower() for h in self._cors['headers']])
+        diff = set()
+        if '*' not in allowed_headers:
+            for header in headers:
+                if header.lower() not in allowed_headers:
+                    diff.add(header)
+        if diff:
+            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS headers {diff} '
+                                         f'not in {self._cors["headers"]}')
+
+        # If it succeeds, set relevant headers
+        self.set_header('Access-Control-Allow-Origin', origin)
+        methods = (self._all_methods if '*' in self._cors['methods']
+                   else ', '.join(self._cors['methods']))
+        self.set_header('Access-Control-Allow-Methods', methods)
+        headers |= self._cors['headers']
+        if '*' in headers:
+            headers.remove('*')
+            headers.update(self._all_headers)
+        self.set_header('Access-Control-Allow-Headers', ', '.join(headers))
+        # TODO: Access-Control-Max-Age
+        # TODO: Access-Control-Expose-Headers
+
+    _all_methods = 'GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH, CONNECT, TRACE'
+    _all_headers = [
+        'Accept',
+        'Cache-Control',
+        'Content-Type',
+        'If-None-Match',
+        'Origin',
+        'Pragma',
+        'Upgrade-Insecure-Requests',
+        'X-Requested-With',
+    ]
 
     @classmethod
     def setup_default_kwargs(cls):
@@ -244,7 +370,7 @@ class BaseMixin(object):
             cls.redirects = [no_external(method) for method in cls.redirects]
 
     @classmethod
-    def setup_auth(cls, auth):
+    def setup_auth(cls, auth: Union[None, bool, dict]):
         # auth: if there's no auth: in handler, default to app.auth
         if auth is None:
             auth = conf.app.get('auth')
@@ -254,7 +380,8 @@ class BaseMixin(object):
         # Set up the auth
         if isinstance(auth, dict):
             cls._auth = auth
-            cls._auth_methods = cls.get_method_list(auth.get('methods', ''))
+            cls._auth_methods = cls.get_list(auth.get('methods', ''), 'auth.methods',
+                                             '[GET, POST, OPTIONS]')
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
@@ -369,12 +496,6 @@ class BaseMixin(object):
             xsrf_cookies: true          # or anything other than false keeps it enabled
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
-
-    def check_http_method(self):
-        '''If method: [...] is specified, reject all methods not in the allowed methods set'''
-        if self.request.method not in self._http_methods:
-            raise HTTPError(METHOD_NOT_ALLOWED, f'{self.name}: method {self.request.method} ' +
-                            f'not in allowed methods {self._http_methods}')
 
     def xsrf_ajax(self):
         '''
@@ -494,6 +615,11 @@ class BaseMixin(object):
             self.set_secure_cookie(self._session_cookie_id, session_id, **kwargs)
         except RuntimeError:
             pass
+        # Warn if app.session.domain is x.com but request comes from y.com.
+        host = self.request.host_name
+        if 'domain' in kwargs and not host.endswith(kwargs['domain']):
+            app_log.warning(f'{self.name}: session.domain={kwargs["domain"]} '
+                            f'but cookie sent to {host}')
         return session_id
 
     def get_session(self, expires_days=None, new=False):
@@ -722,9 +848,12 @@ class BaseHandler(RequestHandler, BaseMixin):
         self._exception = traceback.format_exception_only(typ, value)[0].strip()
 
     def authorize(self):
-        # If specific methods are mentioned, authorize only if a mentioed method is used
+        # If specific methods are mentioned, authorize only if a mentioned method is used
         auth_methods = getattr(self, '_auth_methods', None)
         if auth_methods and self.request.method not in auth_methods:
+            return
+        # If CORS auth is specified, don't authorize for OPTIONS (pre-flight request)
+        if self.request.method == 'OPTIONS' and getattr(self, '_cors', {}).get('auth'):
             return
         if not self.current_user:
             # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)

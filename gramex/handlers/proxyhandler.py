@@ -72,7 +72,9 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
                 cls.info[key] = build_transform(
                     {'function': fn}, filename=f'url:{cls.name}.{key}',
                     vars={'handler': None, 'request': None, 'response': None})
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     def browser(self):
         # Create the browser when required. Don't create it in setup(), because:

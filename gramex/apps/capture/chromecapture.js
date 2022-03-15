@@ -146,7 +146,7 @@ async function render(q) {
     .on('pageerror', error => console.log(`ERROR: ${error.message}`))
     .on('response', response => {
       if (response.status() >= 400)
-        console.log(`HTTP ${response.status()}: ${response.url()}`)
+        console.log(`HTTP ${response.status()}: ${response.request().method()} ${response.url()}`)
     })
     .on('requestfailed', request => console.log(`${request.failure().errorText}: ${request.url()}`))
 

@@ -22,7 +22,9 @@ class SocialHandler(BaseHandler):
         # Session key that stores the user info
         cls.user_info = user_info
         # Set up methods
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @tornado.gen.coroutine
     def social_response(self, response):

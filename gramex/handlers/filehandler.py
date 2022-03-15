@@ -140,7 +140,9 @@ class FileHandler(BaseHandler):
         cls.index_template = index_template or _default_index_template
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @classmethod
     def set(cls, value):
