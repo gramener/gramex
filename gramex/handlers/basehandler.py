@@ -129,7 +129,6 @@ class BaseMixin(object):
         # Set default CORS values as a set
         for key in ('origins', 'methods', 'headers'):
             cors[key] = cls.get_list(cors.get(key, '*'), f'cors.{key}', '"*"', caps=False)
-        print('CORS', cls.name, cors)
         cls._on_init_methods.append(cls.check_cors)
         cls.options = cls._cors_options
 

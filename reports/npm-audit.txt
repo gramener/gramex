@@ -14,13 +14,15 @@
 # This only impacts developer-controlled code, which is acceptable risk.
 # Wait for @vue/cli to fix.
 /d/site/gramener.com/viz/async-gramex/gramex/apps/ui
-install	merge	high	npm install @vue/cli@5.0.1	Prototype Pollution in merge	https://github.com/advisories/GHSA-7wpw-2hjm-89gp	@vue/cli>@vue/cli-ui>watch>exec-sh>merge	Y
-install	glob-parent	high	npm install @vue/cli@5.0.1	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>globby>fast-glob>glob-parent	Y
-install	glob-parent	high	npm install @vue/cli@5.0.1	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>@vue/cli-ui>globby>fast-glob>glob-parent	Y
-review	ansi-html	high	No patch available	Uncontrolled Resource Consumption in ansi-html	https://github.com/advisories/GHSA-whgm-jr23-g3j9	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>ansi-html
+install	glob-parent	high	npm install @vue/cli@5.0.3	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>globby>fast-glob>glob-parent	Y
+install	glob-parent	high	npm install @vue/cli@5.0.3	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli>@vue/cli-ui>globby>fast-glob>glob-parent	Y
+install	merge	high	npm install @vue/cli@5.0.3	Prototype Pollution in merge	https://github.com/advisories/GHSA-7wpw-2hjm-89gp	@vue/cli>@vue/cli-ui>watch>exec-sh>merge	Y
 review	glob-parent	high	>=5.1.2	Regular expression denial of service	https://github.com/advisories/GHSA-ww39-953v-wcq6	@vue/cli-service-global>@vue/cli-plugin-babel>webpack>watchpack>watchpack-chokidar2>chokidar>glob-parent
-install	ansi-regex	moderate	npm install @vue/cli@5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex	Y
-install	ansi-regex	moderate	npm install @vue/cli@5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-ui>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex	Y
+install	ansi-regex	moderate	npm install @vue/cli@5.0.3	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex	Y
+install	ansi-regex	moderate	npm install @vue/cli@5.0.3	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli>@vue/cli-ui>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex	Y
+review	nanoid	moderate	>=3.1.31	Exposure of Sensitive Information to an Unauthorized Actor in nanoid	https://github.com/advisories/GHSA-qrpm-p2h7-hrv2	@vue/cli>shortid>nanoid
+review	nanoid	moderate	>=3.1.31	Exposure of Sensitive Information to an Unauthorized Actor in nanoid	https://github.com/advisories/GHSA-qrpm-p2h7-hrv2	@vue/cli>@vue/cli-ui>shortid>nanoid
+review	node-forge	moderate	>=1.0.0	Open Redirect in node-forge	https://github.com/advisories/GHSA-8fr3-hfg3-gpgp	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>selfsigned>node-forge
 review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>@vue/cli-plugin-router>@vue/cli-shared-utils>ora>strip-ansi>ansi-regex
 review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>string-width>strip-ansi>ansi-regex
 review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>yargs>cliui>string-width>strip-ansi>ansi-regex
@@ -32,9 +34,6 @@ review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in
 review	ansi-regex	moderate	>=5.0.1	 Inefficient Regular Expression Complexity in chalk/ansi-regex	https://github.com/advisories/GHSA-93q8-gq69-wqmw	@vue/cli-service-global>eslint>inquirer>strip-ansi>ansi-regex
 review	nth-check	moderate	>=2.0.1	Inefficient Regular Expression Complexity in nth-check	https://github.com/advisories/GHSA-rp65-9cf3-cjxr	@vue/cli-service-global>@vue/cli-service>cssnano>cssnano-preset-default>postcss-svgo>svgo>css-select>nth-check
 review	nth-check	moderate	>=2.0.1	Inefficient Regular Expression Complexity in nth-check	https://github.com/advisories/GHSA-rp65-9cf3-cjxr	@vue/cli-service-global>@vue/cli-service>@intervolga/optimize-cssnano-plugin>cssnano>cssnano-preset-default>postcss-svgo>svgo>css-select>nth-check
-review	node-forge	moderate	>=1.0.0	Open Redirect in node-forge	https://github.com/advisories/GHSA-8fr3-hfg3-gpgp	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>selfsigned>node-forge
-review	nanoid	moderate	>=3.1.31	Exposure of Sensitive Information to an Unauthorized Actor in nanoid	https://github.com/advisories/GHSA-qrpm-p2h7-hrv2	@vue/cli>shortid>nanoid
-review	nanoid	moderate	>=3.1.31	Exposure of Sensitive Information to an Unauthorized Actor in nanoid	https://github.com/advisories/GHSA-qrpm-p2h7-hrv2	@vue/cli>@vue/cli-ui>shortid>nanoid
 review	node-forge	low	>=1.0.0	Prototype Pollution in node-forge debug API.	https://github.com/advisories/GHSA-5rrq-pxf6-6jx5	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>selfsigned>node-forge
 review	node-forge	low	>=1.0.0	URL parsing in node-forge could lead to undesired behavior.	https://github.com/advisories/GHSA-gf8q-jrpm-jvxq	@vue/cli-service-global>@vue/cli-service>webpack-dev-server>selfsigned>node-forge
 
