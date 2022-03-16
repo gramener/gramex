@@ -1159,7 +1159,6 @@ url:
       data:
         url: $YAMLPATH/../testlib/iris.csv
       model:
-        path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
       xsrf_cookies: false
@@ -1171,7 +1170,6 @@ url:
       data:
         url: $YAMLPATH/../testlib/iris.csv
       model:
-        path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
         cats: [species]

@@ -3,7 +3,6 @@ import os
 
 import joblib
 import gramex
-from gramex.config import variables
 from gramex.http import OK, NOT_FOUND
 import numpy as np
 import pandas as pd
@@ -26,12 +25,14 @@ class TestMLHandler(TestGramex):
     @classmethod
     def setUpClass(cls):
         cls.df = pd.read_csv(op.join(folder, '..', 'testlib', 'iris.csv'), encoding='utf8')
-        root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
-        paths = [op.join(root, f) for f in [
+        cls.root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
+        cls.model_path = op.join(cls.root, 'mlhandler-config', 'mlhandler-config.pkl')
+        paths = [op.join(cls.root, f) for f in [
             'mlhandler-nopath/config.json',
             'mlhandler-nopath/data.h5',
             'mlhandler-blank/config.json',
             'mlhandler-blank/data.h5',
+            'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-config/config.json',
             'mlhandler-config/data.h5',
             'mlhandler-incr/config.json',
@@ -40,7 +41,6 @@ class TestMLHandler(TestGramex):
             'mlhandler-xform/config.json',
             'mlhandler-xform/data.h5',
             'mlhandler-xform/mlhandler-xform.pkl',
-            'mlhandler-blank/mlhandler-blank.pkl',
             'mlhandler-nopath/mlhandler-nopath.pkl',
             'mlhandler-badcol/config.json',
             'mlhandler-badcol/data.h5',
@@ -107,7 +107,7 @@ class TestMLHandler(TestGramex):
 
     def test_blank_slate(self):
         # Assert that a model doesn't have to exist
-        model_path = op.join(variables['GRAMEXDATA'], 'apps', 'mlhandler', 'mlhandler-blank.pkl')
+        model_path = op.join(self.root, 'mlhandler-blank', 'mlhandler-blank.pkl')
         self.assertFalse(op.exists(model_path))
         r = self.get('/mlblank?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8')
         self.assertEqual(r.status_code, NOT_FOUND)
@@ -149,7 +149,7 @@ class TestMLHandler(TestGramex):
 
     def test_change_model(self):
         # back up the original model
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         try:
             # put a new model
             r = self.get(
@@ -166,9 +166,7 @@ class TestMLHandler(TestGramex):
             })
             # Train the model on the cache
             self.get('/mlhandler?_action=retrain&target_col=species', method='post')
-            model = joblib.load(op.join(folder, 'model.pkl'))
-            self.assertIsInstance(model, Pipeline)
-            model = model.named_steps['DecisionTreeClassifier']
+            model = joblib.load(self.model_path)
             self.assertIsInstance(model, DecisionTreeClassifier)
             self.assertEqual(model.criterion, 'entropy')
             self.assertEqual(model.splitter, 'random')
@@ -177,7 +175,7 @@ class TestMLHandler(TestGramex):
             self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
         finally:
             # restore the backup
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
 
     def test_clear_cache(self):
         try:
@@ -191,33 +189,29 @@ class TestMLHandler(TestGramex):
 
     def test_default(self):
         # Check if model has been trained on iris, and exists at the right path.
-        clf = joblib.load(op.join(folder, 'model.pkl'))
-        self.assertIsInstance(clf, Pipeline)
-        self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
-        self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
+        clf = joblib.load(self.model_path)
+        self.assertIsInstance(clf, LogisticRegression)
         score = clf.score(self.df[[c for c in self.df if c != 'species']], self.df['species'])
         self.assertGreaterEqual(score, self.ACC_TOL)
 
     def test_delete(self):
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         try:
             r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
-            self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
+            self.assertFalse(op.exists(self.model_path))
             # check if the correct error message is shown
             r = self.get('/mlhandler?_model')
             self.assertEqual(r.status_code, NOT_FOUND)
         finally:
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
 
     def test_download(self):
         r = self.get('/mlhandler?_download')
         buff = BytesIO(r.content)
         buff.seek(0)
         clf = joblib.load(buff)
-        self.assertIsInstance(clf, Pipeline)
-        self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
-        self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
+        self.assertIsInstance(clf, LogisticRegression)
 
     def test_filtercols(self):
         buff = StringIO()
@@ -225,7 +219,7 @@ class TestMLHandler(TestGramex):
 
         # Train excluding two columns:
         buff.seek(0)
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         try:
             resp = self.get('/mlhandler?class=LogisticRegression&target_col=species'
                             '&exclude=sepal_width&exclude=petal_length',
@@ -241,8 +235,8 @@ class TestMLHandler(TestGramex):
                 set(pd.DataFrame.from_records(r).columns),
                 {'sepal_length', 'petal_width', 'petal_length', 'sepal_width', 'species'})
             # But the model has only two
-            pipe = joblib.load(op.join(folder, 'model.pkl'))
-            self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 2))
+            pipe = joblib.load(self.model_path)
+            self.assertEqual(pipe.coef_.shape, (3, 2))
 
             # Train including one column:
             buff.seek(0)
@@ -251,11 +245,11 @@ class TestMLHandler(TestGramex):
                             method='post', files={'file': ('iris.csv', buff.read())})
             self.assertGreaterEqual(resp.json()['score'], 0.5)
             # check coefficients shape
-            pipe = joblib.load(op.join(folder, 'model.pkl'))
-            self.assertEqual(pipe.named_steps['LogisticRegression'].coef_.shape, (3, 1))
+            pipe = joblib.load(self.model_path)
+            self.assertEqual(pipe.coef_.shape, (3, 1))
         finally:
             self.get('/mlhandler?delete=opts&_opts=include&_opts=exclude', method='delete')
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
 
     def test_get_bulk_predictions(self, target_col='species'):
         df = self.df.drop_duplicates()
@@ -347,22 +341,20 @@ class TestMLHandler(TestGramex):
 
     def test_model_default_path(self):
         clf = joblib.load(
-            op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+            op.join(self.root,
                     'mlhandler-nopath', 'mlhandler-nopath.pkl'))
-        self.assertIsInstance(clf, Pipeline)
-        self.assertIsInstance(clf.named_steps['transform'], ColumnTransformer)
-        self.assertIsInstance(clf.named_steps['LogisticRegression'], LogisticRegression)
+        self.assertIsInstance(clf, LogisticRegression)
         resp = self.get(
             '/mlnopath?_action=score', method='post',
             headers={'Content-Type': 'application/json'})
         self.assertGreaterEqual(resp.json()['score'], self.ACC_TOL)
 
     def test_post_after_delete_custom_model(self):
-        org_clf = joblib.load(op.join(folder, 'model.pkl'))
+        org_clf = joblib.load(self.model_path)
         try:
             r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
-            self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
+            self.assertFalse(op.exists(self.model_path))
             # recreate the model
             X, y = make_classification()  # NOQA: N806
             xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
@@ -375,17 +367,17 @@ class TestMLHandler(TestGramex):
                          headers={'Content-Type': 'application/json'})
             self.assertEqual(r.status_code, OK)
             self.assertGreaterEqual(r.json()['score'], 0.8)  # NOQA: E912
-            clf = joblib.load(op.join(folder, 'model.pkl'))
-            self.assertIsInstance(clf.named_steps['GaussianNB'], GaussianNB)
+            clf = joblib.load(self.model_path)
+            self.assertIsInstance(clf, GaussianNB)
         finally:
-            joblib.dump(org_clf, op.join(folder, 'model.pkl'))
+            joblib.dump(org_clf, self.model_path)
 
     def test_post_after_delete_default_model(self):
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         try:
             r = self.get('/mlhandler?delete=model', method='delete')
             self.assertEqual(r.status_code, OK)
-            self.assertFalse(op.exists(op.join(folder, 'model.pkl')))
+            self.assertFalse(op.exists(self.model_path))
             # recreate the model
             X, y = make_classification()  # NOQA: N806
             xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
@@ -397,7 +389,7 @@ class TestMLHandler(TestGramex):
             self.assertEqual(r.status_code, OK)
             self.assertGreaterEqual(r.json()['score'], 0.8)  # NOQA: E912
         finally:
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
 
     def test_retrain(self):
         # Make some data
@@ -407,7 +399,7 @@ class TestMLHandler(TestGramex):
         df['target'] = ytrain
         test_df = pd.DataFrame(xtest)
         test_df['target'] = ytest
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         try:
             # clear the cache
             resp = self.get('/mlhandler?delete=cache', method='delete')
@@ -431,28 +423,32 @@ class TestMLHandler(TestGramex):
             self.get('/mlhandler?_action=append', method='post',
                      data=self.df.to_json(orient='records'),
                      headers={'Content-Type': 'application/json'})
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
 
     def test_single_line_train_fetch_model(self):
-        clf = joblib.load(op.join(folder, 'model.pkl'))
-        try:
-            resp = self.get('/mlblank?class=DecisionTreeClassifier&target_col=species',
-                            method='put')
-            self.assertEqual(resp.status_code, OK)
-            # train
-            line = StringIO()
-            self.df.head(1).to_csv(line, index=False, encoding='utf8')
-            line.seek(0)
-            resp = self.get('/mlblank?_action=train', method='post',
-                            files={'file': ('iris.csv', line.read())})
-            self.assertEqual(resp.status_code, OK)
-            self.assertGreaterEqual(resp.json()['score'], 0.0)
+        resp = self.get('/mlblank?class=DecisionTreeClassifier&target_col=species',
+                        method='put')
+        self.assertEqual(resp.status_code, OK)
+        # train
+        line = StringIO()
+        self.df.head(1).to_csv(line, index=False, encoding='utf8')
+        line.seek(0)
+        resp = self.get('/mlblank?_action=train', method='post',
+                        files={'file': ('iris.csv', line.read())})
+        self.assertEqual(resp.status_code, OK)
+        self.assertGreaterEqual(resp.json()['score'], 0.0)
 
-            # get the model
-            resp = self.get('/mlblank')
-            self.assertEqual(resp.status_code, OK)
-        finally:
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+        # get the model
+        resp = self.get('/mlblank')
+        self.assertEqual(resp.status_code, OK)
+
+        # Assert that the model is a pipeline
+        model = joblib.load(op.join(self.root, 'mlhandler-blank', 'mlhandler-blank.pkl'))
+        self.assertIsInstance(model, Pipeline)
+        self.assertIsInstance(model.named_steps['transform'], ColumnTransformer)
+        self.assertIsInstance(
+            model.named_steps['DecisionTreeClassifier'], DecisionTreeClassifier
+        )
 
     def test_template(self):
         """Check if viewing the template works fine."""
@@ -464,7 +460,7 @@ class TestMLHandler(TestGramex):
 
     def test_train(self):
         # backup the original model
-        clf = joblib.load(op.join(folder, 'model.pkl'))
+        clf = joblib.load(self.model_path)
         X, y = make_classification()  # NOQA: N806
         xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
         df = pd.DataFrame(xtrain)
@@ -475,7 +471,7 @@ class TestMLHandler(TestGramex):
                             headers={'Content-Type': 'application/json'})
             self.assertGreaterEqual(resp.json()['score'], 0.8)  # NOQA: E912
         finally:
-            joblib.dump(clf, op.join(folder, 'model.pkl'))
+            joblib.dump(clf, self.model_path)
             # TODO: The target_col has to be reset to species for a correct teardown.
             # But any PUT deletes an existing model and causes subsequent tests to fail.
             # Find an atomic way to reset configurations.
@@ -500,8 +496,8 @@ class TestMLHandler(TestGramex):
         r = self.get('/mldecompose?_action=train', method='post')
         attributes = r.json()
         sv1, sv2 = attributes['singular_values_']
-        self.assertEqual(round(sv1), 17)  # NOQA: E912
-        self.assertEqual(round(sv2), 10)
+        self.assertEqual(round(sv1), 20)  # NOQA: E912
+        self.assertEqual(round(sv2), 5)
         # Check if test data is transformed
         r = self.get('/mldecompose?_action=predict', method='post',
                      data=xts.to_json(orient='records'),
@@ -512,5 +508,5 @@ class TestMLHandler(TestGramex):
         # Check that the fitted attributes are available from GET ?_params too
         params = self.get('/mldecompose?_params').json()
         sv1, sv2 = params['attrs']['singular_values_']
-        self.assertEqual(round(sv1), 17)  # NOQA: E912
-        self.assertEqual(round(sv2), 10)
+        self.assertEqual(round(sv1), 20)  # NOQA: E912
+        self.assertEqual(round(sv2), 5)
