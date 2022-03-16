@@ -176,6 +176,6 @@ class TopCause(BaseEstimator):
 
             results = pd.DataFrame(results).T
             results.loc[results['p'] > self.max_p, ('value', 'gain')] = np.nan
-            self.result_ = results.sort_values('gain', ascending=False)
+            self.result_ = results.sort_values('gain', ascending=False).reset_index()
 
         return self
