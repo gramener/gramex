@@ -449,9 +449,13 @@ def _table_status(engine, tables):
         # bandit security note: We use string substitution for DB and table names.
         # But these are validated via gramex.data._sql_safe, so we're fine.
         if dialect == 'mysql':
-            # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
+            # https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html
             # Works only on MySQL 5.7 and above
             q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
+                 _wheres('table_schema', 'table_name', db, tables))
+        elif dialect == 'snowflake':
+            # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
+            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec
                  _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
@@ -463,10 +467,10 @@ def _table_status(engine, tables):
                  _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
-                raise KeyError(f'gramex.cache.query does not support memory sqlite "{dialect}"')
+                raise KeyError(f'gramex.cache.query: does not support memory sqlite "{dialect}"')
             q = db
         else:
-            raise KeyError(f'gramex.cache.query cannot cache dialect "{dialect}" yet')
+            raise KeyError(f'gramex.cache.query: cannot cache dialect "{dialect}" yet')
         if dialect == 'sqlite':
             _STATUS_METHODS[key] = lambda: stat(q)
         else:
@@ -496,15 +500,20 @@ def query(sql, engine, state=None, **kwargs):
     store_cache = True
 
     if isinstance(state, (list, tuple)):
-        status = _table_status(engine, tuple(state))
+        try:
+            status = _table_status(engine, tuple(state))
+        except KeyError as e:
+            # Unknown SQLAlchemy dialects raise a KeyError.
+            # Warn and don't cache the table. (Otherwise, no new dialects can be used.)
+            app_log.warning(e.args[0] if len(e.args) > 0 else 'gramex.cache.query: state failed')
+            status, store_cache = object(), False
     elif isinstance(state, str):
         status = pd.read_sql(state, engine).to_dict(orient='list')
     elif callable(state):
         status = state()
     elif state is None:
         # Create a new status every time, so that the query is always re-run
-        status = object()
-        store_cache = False
+        status, store_cache = object(), False
     else:
         raise TypeError(f'gramex.cache.query(state=) must be a table list/query/fn, not {state!r}')
 
