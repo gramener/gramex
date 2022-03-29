@@ -35,6 +35,7 @@
     "select2": "4",
     "tether-shepherd": "1",
     "topojson": "3",
+    "typescript": "^4.6.3",
     "uifactory": "^1.23.0",
     "url-search-params": "npm:@ungap/url-search-params@0.1",
     "vega": "^5.22.0",

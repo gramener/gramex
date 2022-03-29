@@ -98,6 +98,7 @@ class FileHandler(BaseHandler):
         ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
     :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS (new in Gramex 1.66).
     :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS (new in Gramex 1.66).
+    :arg string ts: ``ts="*.ts"`` renders all TypeScript files as JS (new in Gramex 1.78).
 
     .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
 
@@ -114,10 +115,10 @@ class FileHandler(BaseHandler):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
-        for key in ('template', 'sass', 'scss', 'vue'):
+        for key in ('template', 'sass', 'scss', 'ts', 'vue'):
             val = kwargs.pop(key, None)
             if val:
-                # template/sass: true is the same as template: '*'
+                # template/sass/...: true is the same as template: '*'
                 val = '*' if val is True else val if isinstance(val, (list, tuple)) else [val]
                 kwargs.setdefault('transform', AttrDict()).update({
                     v: AttrDict(function=key) for v in val})

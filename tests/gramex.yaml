@@ -529,6 +529,22 @@ url:
     kwargs:
       path: $YAMLPATH/vue/
       vue: '*.vue'
+  dir/transform-ts:
+    pattern: /dir/transform-ts/(.*)
+    handler: FileHandler
+    kwargs:
+      path: ts
+      transform:
+        # Multiple globs can be separated by spaces or commas
+        " missing.ts,a.ts, b.ts":
+          encoding: utf-8
+          function: ts
+  dir/ts-file:
+    pattern: /dir/ts-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/ts/
+      ts: '*.ts'
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler

@@ -5,9 +5,11 @@ import os
 import json
 import gramex
 import gramex.cache
+import string
 import subprocess       # nosec: only for JS compilation
 from hashlib import md5
 from tornado.gen import coroutine, Return
+from functools import partial
 from gramex.config import variables, app_log, merge
 
 
@@ -19,6 +21,7 @@ ui_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = join(ui_dir, 'config.yaml')
 cache_dir = join(variables['GRAMEXDATA'], 'apps', 'ui')
 sass_bin = join(ui_dir, 'node_modules', 'sass', 'sass.js')
+ts_path = join(ui_dir, 'node_modules', 'typescript', 'bin', 'tsc')
 vue_path = join(ui_dir, 'node_modules', '@vue', 'cli', 'bin', 'vue')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
@@ -149,42 +152,44 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
 
 
 @coroutine
-def vue(handler, path: str):
-    '''Compile a .vue file'''
+def jscompiler(handler, path: str, ext: str, target_ext: str, exe: str, cmd: str):
+    '''Compile a file (Vue, TypeScript), etc into a JS file with source mapping'''
     # Get valid variables from URL query parameters
     # Create cache key based on state = path. Output to <cache-key>.js
     path = os.path.normpath(path).replace('\\', '/')
     cache_key = get_cache_key([path])
-    target_dir = join(cache_dir, f'vue-{cache_key}')
+    target_dir = join(cache_dir, f'{ext}-{cache_key}')
 
     # Recompile if output cache_file is missing, or path has been updated
     if not os.path.exists(target_dir) or os.stat(path).st_mtime > os.stat(target_dir).st_mtime:
-        # Compile Vue file
         cwd, filename = os.path.split(path)
-
-        proc = yield gramex.service.threadpool.submit(subprocess.run, [
-            # unhandled-rejections ensures that returncode != 0 on error
-            'node', '--unhandled-rejections=strict',
-            vue_path, 'build', '--target', 'wc', filename, '--dest', target_dir
-        ], cwd=cwd, capture_output=True, encoding='utf-8')
+        subs = {'exe': exe, 'filename': filename, 'targetDir': target_dir}
+        cmd = [string.Template(x).substitute(subs) for x in cmd.split()]
+        app_log.debug(f'Compiling .{ext}: {" ".join(cmd)}')
+        proc = yield gramex.service.threadpool.submit(
+            subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8')
         if proc.returncode:
-            raise RuntimeError(f'Vue compilation failure:\n{proc.stderr}')
+            raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}')
 
     source = os.path.split(path)[-1]
-    target = os.path.split(path)[-1].replace('.vue', '.min.js')
+    target = os.path.split(path)[-1].replace(f'.{ext}', f'.{target_ext}')
     if 'map' in handler.args:
-        # Serve map file if browser requested component-name.vue?map
+        # Serve map file if browser requested component-name.ext?map
         handler.set_header('Content-Type', 'application/json')
         return gramex.cache.open(os.path.join(target_dir, target + '.map'), 'bin', mode='rb')
     else:
-        # Serve compiled JS if browser requested just .vue
+        # Serve compiled JS if browser requested just .JS
         handler.set_header('Content-Type', 'text/javascript')
         content = gramex.cache.open(os.path.join(target_dir, target), 'bin', mode='rb')
-        # ... but replace the map file with component-name.vue?map
+        # ... but replace the map file with component-name.<type>?map
         return content.replace(
             f'//# sourceMappingURL={target}.map'.encode('utf-8'),
             f'//# sourceMappingURL={source}?map'.encode('utf-8'))
 
-# Test cases
-# - Invalid Vue file should generate a compilation failure
-# - Changing Vue file should recompile
+
+ts = partial(
+    jscompiler, ext='ts', target_ext='js', exe=ts_path,
+    cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap')
+vue = partial(
+    jscompiler, ext='vue', target_ext='min.js', exe=vue_path,
+    cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')

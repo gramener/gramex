@@ -58,6 +58,17 @@ sass = scss
 
 
 @tornado.gen.coroutine
+def ts(content, handler):
+    '''
+    Render a TypeScript file as JavaScript.
+    Ignore the content provided. ts needs the file actually located at handler.path.
+    '''
+    from gramex.apps.ui import ts
+    result = yield ts(handler, handler.path)
+    return result.decode('utf-8')
+
+
+@tornado.gen.coroutine
 def vue(content, handler):
     '''
     Renders a Vue file as JS web component via @vue/cli.

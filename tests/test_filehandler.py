@@ -206,6 +206,21 @@ class TestFileHandler(TestGramex):
                 ok_(f'//# sourceMappingURL=comp-{name}.vue?map' in text, f'{url}: has sourcemap')
                 source = self.check(url + '?map').json()
                 eq_(source['version'], 3)
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
+
+    def test_ts(self):
+        for dir in ('/dir/transform-ts', '/dir/ts-file'):
+            for name in ('a', 'b'):
+                url = f'{dir}/{name}.ts'
+                text = self.check(url, timeout=30).text
+                # TypeScript transpiles into ES3 by default, converting const to var.
+                # So check for 'var a =' in output, though source uses 'const a ='
+
+                ok_(f'var {name} = ' in text, f'{url}: has correct content')
+                ok_(f'//# sourceMappingURL={name}.ts?map' in text, f'{url}: has sourcemap')
+                source = self.check(url + '?map').json()
+                eq_(source['version'], 3)
 
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
