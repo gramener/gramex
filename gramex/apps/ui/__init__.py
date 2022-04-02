@@ -135,15 +135,19 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
         content.append(f'@import "{path}";')
         with open(scss_path, 'w', encoding='utf-8') as handle:
             handle.write('\n'.join(content))
-        # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir
+        # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir, CWD
         proc = yield gramex.service.threadpool.submit(subprocess.run, [
             'node', sass_bin, scss_path, cache_file,
             '--style', 'compressed',
             '--load-path', os.path.dirname(path),
             '--load-path', ui_dir,
             '--load-path', bootstrap_dir,
+            '--load-path', os.getcwd(),
         ], capture_output=True, input='\n'.join(content), encoding='utf-8')
         if proc.returncode:
+            # If there's an error, remove the generated files and raise an error
+            os.unlink(cache_file)
+            os.unlink(scss_path)
             gramex.console(proc.stderr)
             raise RuntimeError('sass compilation failure')
 
