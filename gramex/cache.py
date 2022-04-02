@@ -120,9 +120,7 @@ def _markdown(handle, **kwargs):
 @opener
 def _yaml(handle, **kwargs):
     import yaml
-    defaults = {'Loader': yaml.SafeLoader}
-    kwargs = {k: kwargs.pop(k, v) for k, v in defaults.items()}
-    return yaml.load(handle.read(), **kwargs)   # nosec: SafeLoader
+    return yaml.safe_load(handle.read())
 
 
 def _template(path, **kwargs):
@@ -255,7 +253,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     - ``bin``: reads binary files using io.open
     - ``text`` or ``txt``: reads text files using io.open
-    - ``yaml``: reads files using yaml.load via io.open
+    - ``yaml``: reads files using yaml.safe_load via io.open
     - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
       Same as ``yaml``, but allows ``import:`` and variable substitution.
     - ``json``: reads files using json.load via io.open

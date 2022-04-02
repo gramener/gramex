@@ -390,8 +390,8 @@ def once(*args, **kwargs):
 # int(x), float(x), str(x) do a good job of converting strings to respective types.
 # But not all types work smoothly. Handle them here.
 _convert_map = {
-    # bool("true") fails Use yaml.load in such cases
-    bool: lambda x: yaml.load(x, Loader=yaml.SafeLoader) if isinstance(x, (str, bytes)) else x,
+    # bool("true") fails Use yaml.safe_load in such cases
+    bool: lambda x: yaml.safe_load(x) if isinstance(x, (str, bytes)) else x,
     # NoneType("None") doesn't work either. Just return None
     type(None): lambda x: None,
     # TODO: Convert dates but without importing pandas on startup

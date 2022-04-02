@@ -272,7 +272,7 @@ class TestPathConfig(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):
         # Test gramex.config.walk with dicts
-        o = yaml.load('''
+        o = yaml.safe_load('''
             a:
                 b:
                     c: 1
@@ -300,7 +300,7 @@ class TestConfig(unittest.TestCase):
 
     def test_walk_list(self):
         # Test gramex.config.walk with lists
-        o = yaml.load('''
+        o = yaml.safe_load('''
             - 1
             - 2
             - 3
@@ -311,7 +311,7 @@ class TestConfig(unittest.TestCase):
             (1, 2, [1, 2, 3]),
             (2, 3, [1, 2, 3])])
 
-        o = yaml.load('''
+        o = yaml.safe_load('''
             -
                 x: 1
             -
@@ -364,7 +364,7 @@ class TestConfig(unittest.TestCase):
             a: 1
             a: 2
         '''
-        eq_(yaml.load(dup_keys, Loader=yaml.SafeLoader), {'a': 2})
+        eq_(yaml.safe_load(dup_keys), {'a': 2})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -373,9 +373,9 @@ class TestConfig(unittest.TestCase):
                 b: 1
                 b: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': {'b': 2}})
+        eq_(yaml.safe_load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
-            yaml.load(dup_keys, Loader=ConfigYAMLLoader)
+            yaml.safe_load(dup_keys)
 
     def test_recursive_encode(self):
         ua, ub = 'α', 'β'
@@ -389,7 +389,7 @@ class TestConfig(unittest.TestCase):
         for scalar in (None, True, 1, float(1), 'abc', {1, 2}):
             eq_(prune_keys(scalar, 'comment'), scalar)
         with open(info.home / 'config.prune_keys.yaml', encoding='utf-8') as handle:
-            tests = yaml.load(handle, Loader=yaml.SafeLoader)
+            tests = yaml.safe_load(handle)
         for test in tests:
             eq_(prune_keys(test['source'], 'comment'), test['target'])
 

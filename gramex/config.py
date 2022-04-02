@@ -836,7 +836,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         return
 
     with path.open(encoding='utf-8') as handle:
-        result = yaml.load(handle, Loader=yaml.SafeLoader)
+        result = yaml.safe_load(handle)
     # Ignore empty .secrets.yaml
     if not result:
         return
@@ -855,7 +855,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         from tornado.web import decode_signed_value
         app_log.info(f'Fetching remote secrets from {secrets_url}')
         # Load string from the URL -- but ignore comments. file:// URLs are fine too
-        value = yaml.load(urlopen(secrets_url), Loader=yaml.SafeLoader)   # nosec: SafeLoader
+        value = yaml.safe_load(urlopen(secrets_url))    # nosec: allow file:// URLs
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.
