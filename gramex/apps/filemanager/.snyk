@@ -4,7 +4,7 @@ ignore:
   SNYK-JS-SHELLQUOTE-1766506:
     - '*':
         reason: Vulnerability in third party package. Await fix
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2022-01-01T00:00:00.000Z
 
 patch: {}

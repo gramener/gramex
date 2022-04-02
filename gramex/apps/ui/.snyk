@@ -4,101 +4,81 @@ ignore:
 
   # @vue/cli@4.5.13 has vulnerabilities that only affects projects using Vue. Known risk.
   # Since this only impacts developer-controlled code, it's acceptable. Wait for @vue/cli to fix.
-  SNYK-JS-ANSIHTML-1296849:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
   SNYK-JS-ANSIREGEX-1583908:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-10-01T00:00:00.000Z
   SNYK-JS-CSSWHAT-1298035:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-DECOMPRESSTAR-559095:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-EJS-1049328:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-GLOBPARENT-1016905:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
   SNYK-JS-NTHCHECK-1586032:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
-        created: 2021-10-01T00:00:00.000Z
-  SNYK-JS-OBJECTPATH-1569453:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-11-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-OBJECTPATH-1585658:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-11-30T00:00:00.000Z
-        created: 2021-10-01T00:00:00.000Z
-  SNYK-JS-PRISMJS-1585202:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-11-30T00:00:00.000Z
-        created: 2021-10-01T00:00:00.000Z
-  SNYK-JS-SETVALUE-1540541:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-11-30T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-10-01T00:00:00.000Z
   SNYK-JS-MERGE-1040469:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-10-01T00:00:00.000Z
   SNYK-JS-MERGE-1042987:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2021-10-01T00:00:00.000Z
-  SNYK-JS-JSONSCHEMA-1920922:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
-        created: 2022-01-01T00:00:00.000Z
   SNYK-JS-UGLIFYJS-1727251:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2022-01-01T00:00:00.000Z
   SNYK-JS-NODEFORGE-2330875:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2022-02-01T00:00:00.000Z
   SNYK-JS-NODEFORGE-2331908:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2022-02-01T00:00:00.000Z
+  SNYK-JS-NODEFORGE-2430337:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-06-30T00:00:00.000Z
+        created: 2022-04-021T00:00:00.000Z
+  SNYK-JS-NODEFORGE-2430339:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-06-30T00:00:00.000Z
+        created: 2022-04-021T00:00:00.000Z
+  SNYK-JS-NODEFORGE-2430341:
+    - '*':
+        reason: No fix available. Await @vue/cli upgrade
+        expires: 2022-06-30T00:00:00.000Z
+        created: 2022-04-021T00:00:00.000Z
   SNYK-JS-UNSETVALUE-2400660:
     - '*':
         reason: No fix available. Await @vue/cli upgrade
-        expires: 2022-03-31T00:00:00.000Z
+        expires: 2022-06-30T00:00:00.000Z
         created: 2022-03-01T00:00:00.000Z
-  SNYK-JS-SIMPLEGET-2361683:
-    - '*':
-        reason: No fix available. Await comicgen > sharp upgrade
-        expires: 2022-03-31T00:00:00.000Z
-        created: 2022-02-01T00:00:00.000Z
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
   SNYK-JS-D3COLOR-1076592:
