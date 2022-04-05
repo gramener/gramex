@@ -61,6 +61,7 @@ class MLHandler(FormHandler):
         index_col = None
         try:
             if 'transform' in data:
+                cls.store.dump('built_transform', data['transform'])
                 data['transform'] = build_transform(
                     {'function': data['transform']},
                     vars={'data': None, 'handler': None},
@@ -76,8 +77,6 @@ class MLHandler(FormHandler):
             app_log.warning('MLHandler could not find training data.')
             data = None
             cls._built_transform = staticmethod(lambda x: x)
-
-        # TODO - Update the guide to reflect that the model path is not settable.
 
         # store the model kwargs from gramex.yaml into the store
         for key in ml.TRANSFORMS:
@@ -95,10 +94,11 @@ class MLHandler(FormHandler):
         cls.store.dump('params', model_params)
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
             cls.model = get_model(cls.store.model_path, {})
-            # cls.model = cls.store.load_model()
-        else:
-            cls.model = get_model(mclass, model_params, **kwargs)
-        if (data is not None) and model:
+        elif data is not None:
+            data = cls._filtercols(data)
+            data = cls._filterrows(data)
+            cls.model = get_model(mclass, model_params, data=data, cats=cats,
+                                  nums=nums, target_col=target_col)
             # train the model
             if issubclass(cls.model.__class__, TransformerMixin):
                 target = None
@@ -198,7 +198,7 @@ class MLHandler(FormHandler):
 
     def _check_model_path(self):
         try:
-            self.model = self.store.load_model()
+            self.model = get_model(self.store.model_path, {})
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
 

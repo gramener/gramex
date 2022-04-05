@@ -237,12 +237,6 @@ class ModelStore(cache.JSONStore):
         df.to_hdf(self.data_store, format="table", key="data", append=append, **kwargs)
         return self.load_data(df)
 
-    def load_model(self):
-        return cache.open(self.model_path, joblib.load)
-
-    def save_model(self, model):
-        joblib.dump(model, self.model_path)
-
 
 class AbstractModel(ABC):
     """Abstract base class for all models supported by MLHandler.
@@ -334,7 +328,11 @@ class SklearnModel(AbstractModel):
         return result
 
     def _predict(self, X, **kwargs):
-        return self.model.predict(X, **kwargs)
+        try:
+            y = self.model.predict(X, **kwargs)
+        except RuntimeError:
+            y = self.model.predict(X[self.model['transform']._feature_names_in], **kwargs)
+        return y
 
     def predict(
         self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs
@@ -356,7 +354,9 @@ class SklearnModel(AbstractModel):
         return p
 
     def get_params(self, **kwargs):
-        return self.model.get_params(**kwargs)
+        # self.model could be a pipeline or a raw sklearn estimator
+        model = self.model[-1] if isinstance(self.model, Pipeline) else self.model
+        return model.get_params(**kwargs)
 
     def score(self, X, y_true, **kwargs):
         return self.model.score(X, y_true, **kwargs)
