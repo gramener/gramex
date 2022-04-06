@@ -34,7 +34,7 @@ DEFAULT_TEMPLATE = op.join(op.dirname(__file__), '..', 'apps', 'mlhandler', 'tem
 def get_model(mclass: str, model_params: dict, **kwargs) -> ml.AbstractModel:
     if not mclass:
         return
-    if op.isfile(mclass):
+    if mclass.endswith('.pkl'):
         model = cache.open(mclass, joblib.load)
         if isinstance(model, Pipeline):
             _, wrapper = ml.search_modelclass(model[-1].__class__.__name__)
@@ -222,7 +222,7 @@ class MLHandler(FormHandler):
             }
             try:
                 attrs = get_model(self.store.model_path, {}).get_attributes()
-            except (AttributeError, ImportError):
+            except (AttributeError, ImportError, FileNotFoundError):
                 attrs = {}
             params['attrs'] = attrs
             self.write(json.dumps(params, indent=2, cls=CustomJSONEncoder))
