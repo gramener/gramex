@@ -1248,6 +1248,8 @@ url:
     kwargs:
       model:
         class: SARIMAX
+        params:
+          order: [7, 1, 0]
       xsrf_cookies: false
 
   capture:

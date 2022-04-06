@@ -28,7 +28,7 @@ TRANSFORMS = {
     "index_col": None,
 }
 SEARCH_MODULES = {
-    "SklearnModel": [
+    "gramex.ml_api.SklearnModel": [
         "sklearn.linear_model",
         "sklearn.tree",
         "sklearn.ensemble",
@@ -37,11 +37,14 @@ SEARCH_MODULES = {
         "sklearn.neural_network",
         "sklearn.naive_bayes",
     ],
-    "SklearnTransformer": [
+    "gramex.ml_api.SklearnTransformer": [
         "sklearn.decomposition",
         "gramex.ml",
     ],
-    "StatsModel": ["gramex.sm_api"],
+    "gramex.sm_api.StatsModel": [
+        "statsmodels.tsa.api",
+        "statsmodels.tsa.statespace.sarimax"
+    ],
 }
 
 
@@ -278,6 +281,7 @@ class SklearnModel(AbstractModel):
         target_col: Optional[str] = None,
         nums: Optional[List[str]] = None,
         cats: Optional[List[str]] = None,
+        params: Any = None,
         **kwargs,
     ):
         if not isinstance(model, Pipeline) and any([nums, cats]):
@@ -375,7 +379,3 @@ class SklearnTransformer(SklearnModel):
     def _predict(self, X, **kwargs):
         """Sklearn transformers don't have a "predict", they have a "transform"."""
         return self.model.transform(X, **kwargs)
-
-
-class StatsModel(SklearnModel):
-    """A statsmodels model."""
