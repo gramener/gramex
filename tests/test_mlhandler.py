@@ -1,5 +1,6 @@
 from io import BytesIO, StringIO
 import os
+from unittest import skipUnless
 
 import joblib
 import gramex
@@ -16,10 +17,36 @@ from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder, tempfiles
+try:
+    from statsmodels.datasets.interest_inflation import load as infl_load
+    STATSMODELS_INSTALLED = True
+except ImportError:
+    STATSMODELS_INSTALLED = False
+
+
 op = os.path
 
 
-class TestMLHandler(TestGramex):
+@skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")
+class TestStatsmodels(TestGramex):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
+        paths = [op.join(cls.root, f) for f in [
+            'mlhandler-sarimax/config.json',
+            'mlhandler-sarimax/data.h5',
+            'mlhandler-sarimax/mlhandler-sarimax.pkl',
+        ]]
+        for p in paths:
+            tempfiles[p] = p
+
+    def test_sarimax(self):
+        data = infl_load().data
+        resp = self.get('/sarimax')
+
+
+class TestSklearn(TestGramex):
     ACC_TOL = 0.95
 
     @classmethod
