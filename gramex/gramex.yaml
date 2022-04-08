@@ -281,6 +281,11 @@ app:
         httponly: true          # Only HTTP access, no JS access
 
 
+# The `otp:` section defines where to store one-time passwords
+otp:
+    url: sqlite:///$GRAMEXDATA/auth.recover.db
+    table: users
+
 # The `schedule:` section defines when specific code is to run.
 schedule:
     # Every day and on startup, check if Gramex needs to be updated

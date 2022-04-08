@@ -59,6 +59,7 @@ info = AttrDict(
     gramexlog=AttrDict(apps=AttrDict()),
     url=AttrDict(),
     main_ioloop=None,
+    otp=AttrDict(),
     _md=None,
 )
 _cache, _tmpl_cache = AttrDict(), AttrDict()
@@ -961,3 +962,8 @@ def gramexlog(conf):
 
     info.gramexlog.handle = ioloop.call_later(flush, push)
     info.gramexlog.push = push
+
+
+def otp(conf):
+    '''Set up OTP service'''
+    info.otp = AttrDict(conf)
