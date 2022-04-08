@@ -405,35 +405,30 @@ class OTP(object):
         full hashing string
         '''
         self.size = size
-        # create database at GRAMEXDATA
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        self.engine = gramex.data.create_engine(url, encoding='utf-8')
-        conn = self.engine.connect()
-        conn.execute('CREATE TABLE IF NOT EXISTS users '
-                     '(user TEXT, email TEXT, token TEXT, expire REAL)')
-        self.table = gramex.data.get_table(self.engine, 'users')
+        # Alter the table to ensure it has user, email, token, expire columns
+        gramex.data.alter(**gramex.service.otp, columns={
+            'user': 'TEXT',
+            'email': 'TEXT',
+            'token': 'TEXT',
+            'expire': 'REAL',
+        })
 
     def token(self, user, email, expire):
         '''Generate a one-tie token, store it in the recovery database, and return it'''
         token = uuid.uuid4().hex[:self.size]
-        query = self.table.insert().values({
-            'user': user, 'email': email, 'token': token, 'expire': expire,
+        gramex.data.insert(**gramex.service.otp, id=['token'], args={
+            'user': [user], 'email': [email], 'token': [token], 'expire': [expire],
         })
-        self.engine.execute(query)
         return token
 
     def pop(self, token):
         '''Return the row matching the token, and deletes it from the list'''
-        where = self.table.c['token'] == token
-        query = self.table.select().where(where)
-        result = self.engine.execute(query)
-        if result.returns_rows:
-            row = result.fetchone()
-            if row is not None:
-                self.engine.execute(self.table.delete(where))
-                if row['expire'] >= time.time():
-                    return row
+        rows = gramex.data.filter(**gramex.service.otp, args={'token': [token]})
+        if len(rows) > 0:
+            row = rows.iloc[0].to_dict()
+            if row['expire'] > time.time():
+                gramex.data.delete(**gramex.service.otp, id=['token'], args={'token': [token]})
+                return row
         return None
 
 

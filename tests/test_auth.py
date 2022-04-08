@@ -736,10 +736,7 @@ class TestDBAuthSignup(DBAuthBase):
         eq_(user['email'], 'any@example.org')
 
         # Check that the user has been added to the recovery database
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        recover_engine = sa.create_engine(url)
-        tokens = pd.read_sql('SELECT * FROM users', recover_engine).set_index('token')
+        tokens = gramex.data.filter(**gramex.service.otp).set_index('token')
         eq_(tokens['user'][token], 'newuser')
         eq_(tokens['email'][token], 'any@example.org')
 
