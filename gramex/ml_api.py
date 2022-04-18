@@ -207,6 +207,9 @@ class ModelStore(cache.JSONStore):
         self.path = path
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
+    def model_kwargs(self):
+        return {k: self.load(k) for k in TRANSFORMS}
+
     def load(self, key, default=None):
         if key in ("transform", "model"):
             return super(ModelStore, self).load(key, {})
@@ -292,10 +295,10 @@ class SklearnModel(AbstractModel):
             self.model = model
         self.kwargs = kwargs
 
-    def _fit(self, X, y, **kwargs):
+    def _fit(self, X, y):
         if hasattr(self.model, "partial_fit"):
-            return self.model.partial_fit(X, y, classes=np.unique(y), **kwargs)
-        return self.model.fit(X, y, **kwargs)
+            return self.model.partial_fit(X, y, classes=np.unique(y))
+        return self.model.fit(X, y)
 
     def fit(
         self,
@@ -321,7 +324,7 @@ class SklearnModel(AbstractModel):
         """
         app_log.info("Starting training...")
         try:
-            result = self._fit(X, y, **kwargs)
+            result = self._fit(X, y)
             app_log.info("Done training...")
         except Exception as exc:
             app_log.exception(exc)

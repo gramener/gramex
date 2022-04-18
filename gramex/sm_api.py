@@ -43,7 +43,8 @@ class StatsModel(AbstractModel):
         return pd.Series(result, index=endog.index)
 
     def fit(
-        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None
+        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None,
+        **kwargs
     ):
         """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
         params = self.params.copy()

@@ -13,6 +13,7 @@ from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import safe_rmtree
 from gramex import cache
 
+import numpy as np
 import pandas as pd
 import joblib
 from sklearn.base import TransformerMixin
@@ -111,6 +112,7 @@ class MLHandler(FormHandler):
             gramex.service.threadpool.submit(
                 cls.model.fit, train, target,
                 model_path=cls.store.model_path, name=cls.name,
+                **cls.store.model_kwargs()
             )
 
     def _parse_multipart_form_data(self):
@@ -171,7 +173,7 @@ class MLHandler(FormHandler):
 
     def _transform(self, data, **kwargs):
         orgdata = self.store.load_data()
-        for col in data:
+        for col in np.intersect1d(data.columns, orgdata.columns):
             data[col] = data[col].astype(orgdata[col].dtype)
         data = self._filtercols(data, **kwargs)
         data = self._filterrows(data, **kwargs)
