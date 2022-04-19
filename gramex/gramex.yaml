@@ -305,9 +305,12 @@ url:
         pattern: /(.*)                  # All URLs beginning with /
         handler: FileHandler                # Handler used
         kwargs:                             # Options to the handler
-            path: .                         #   path is current dir
-            default_filename: index.html    #   default filename
-            index: true                     #   display the index
+            path: .                         # Path is current dir
+            default_filename:               # Choose default file for a directory from
+              - default.template.html       #   Template files, else
+              - default.tmpl.html
+              - index.html                  #   HTML file, else
+            index: true                     # Display directory indices
             sass: ['*.scss', '*.sass']      # Handle SASS files
             ts: ['*.ts']                    # Handle TypeScript files
             vue: ['*.vue']                  # Handle Vue files

@@ -59,6 +59,10 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/text.txt', path='dir/text.txt')
         self.check('/dir/noindex/subdir/text.txt', path='dir/subdir/text.txt')
 
+        # Check default filenames support default.template.html and default.tmpl.html
+        self.check('/dir/def1/', text='7\ndefault.template.html')
+        self.check('/dir/def2/', text='7\ndefault.tmpl.html')
+
         # Check unicode filenames only if pathlib supports them
         try:
             pathlib.Path(tempfiles.unicode_file)

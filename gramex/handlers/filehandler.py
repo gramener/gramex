@@ -51,7 +51,10 @@ class FileHandler(BaseHandler):
 
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
-        The default is ``None``, which displays all files in the directory.
+        It can be a list of default filenames tried in order, e.g.
+        ``[index.template.html, index.html, README.md]``.
+        The default is ``None``, which displays all files in the directory
+        using the ``index_template`` option.
     :arg boolean index: If ``true``, shows a directory index. If ``false``,
         raises a HTTP 404: Not Found error when users try to access a directory.
     :arg list ignore: List of glob patterns to ignore. Even if the path matches
@@ -133,7 +136,13 @@ class FileHandler(BaseHandler):
             cls.pattern = path
         else:
             cls.root = Path(path).absolute()
-        cls.default_filename = default_filename
+        # Convert default_filename into a list
+        if not default_filename:
+            cls.default_filename = []
+        elif isinstance(default_filename, list):
+            cls.default_filename = default_filename
+        else:
+            cls.default_filename = [default_filename]
         cls.index = index
         cls.ignore = cls.set(cls.kwargs.ignore)
         cls.allow = cls.set(cls.kwargs.allow)
@@ -224,7 +233,11 @@ class FileHandler(BaseHandler):
 
         self.path = path
         if self.path.is_dir():
-            self.file = self.path / self.default_filename if self.default_filename else self.path
+            self.file = self.path
+            for default_filename in self.default_filename:
+                self.file = self.path / default_filename
+                if self.file.exists():
+                    break
             if not (self.default_filename and self.file.exists()) and not self.index:
                 raise HTTPError(NOT_FOUND, f'{self.file} missing index')
             # Ensure URL has a trailing '/' when displaying the index / default file
@@ -243,6 +256,7 @@ class FileHandler(BaseHandler):
         if not self.allowed(self.file):
             raise HTTPError(FORBIDDEN, f'{self.file} not allowed')
 
+        # Display the list of files for directories without a default file
         if self.path.is_dir() and self.index and not (
                 self.default_filename and self.file.exists()):
             self.set_header('Content-Type', 'text/html; charset=UTF-8')
