@@ -317,6 +317,13 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
     if rel:
         stack = inspect.getouterframes(inspect.currentframe(), 2)
         folder = os.path.dirname(os.path.abspath(stack[1][1]))
+        # If we're calling from a FileHandler template, use the template's path
+        if stack[1][1] == '<string>.generated.py':
+            g = stack[1][0].f_globals
+            if 'handler' in g and g['handler'].__class__.__name__ == 'FileHandler':
+                folder = os.path.dirname(g['handler'].file)
+            else:
+                app_log.warning(f'gramex.cache.open: rel= failed for {path}')
         path = os.path.join(folder, path)
 
     original_callback = callback

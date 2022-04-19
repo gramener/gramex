@@ -156,6 +156,9 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/../nonexistent', code=404)
         self.check('/dir/noindex/../../gramex.yaml', code=403)
 
+    def test_gramex_cache_rel(self):
+        self.check('/dir/cache.template.html', text='α.txt')
+
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
