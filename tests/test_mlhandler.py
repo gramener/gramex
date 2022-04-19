@@ -1,5 +1,6 @@
 from io import BytesIO, StringIO
 import os
+from unittest import skipUnless
 
 import joblib
 import gramex
@@ -8,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
@@ -16,10 +17,65 @@ from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder, tempfiles
+try:
+    from statsmodels.datasets.interest_inflation import load as infl_load
+    STATSMODELS_INSTALLED = True
+except ImportError:
+    STATSMODELS_INSTALLED = False
+
+
 op = os.path
 
 
-class TestMLHandler(TestGramex):
+@skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")
+class TestStatsmodels(TestGramex):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.root = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler')
+        paths = [op.join(cls.root, f) for f in [
+            'mlhandler-sarimax/config.json',
+            'mlhandler-sarimax/data.h5',
+            'mlhandler-sarimax/mlhandler-sarimax.pkl',
+        ]]
+        for p in paths:
+            tempfiles[p] = p
+
+    def test_sarimax(self):
+        resp = self.get('/sarimax')
+        self.assertEqual(resp.status_code, NOT_FOUND)
+
+        # Create the model
+        data = infl_load().data
+        index = pd.to_datetime(
+            data[['year', 'quarter']].apply(lambda x: '%dQ%d' % (x.year, x.quarter), axis=1)
+        )
+        data.drop(['year', 'quarter'], axis=1, inplace=True)
+        data['index'] = index
+        params = {
+            'index_col': 'index',
+            'target_col': 'R'
+        }
+        resp = self.get('/sarimax', data=params, method='put')
+        self.assertEqual(resp.status_code, OK)
+
+        # Train the model
+        resp = self.get('/sarimax?_action=append', method='post',
+                        data=data.to_json(orient='records'),
+                        headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, OK)
+        resp = self.get('/sarimax?_action=train', method='post')
+        self.assertLessEqual(resp.json()['score'], 0.01)
+
+        # Get predictions
+        resp = self.get('/sarimax', method='post',
+                        data=data[['index', 'Dp']].to_json(orient='records'),
+                        headers={'Content-Type': 'application/json'})
+        self.assertEqual(resp.status_code, OK)
+        self.assertLessEqual(mean_absolute_error(np.array(resp.json()), data['R']), 0.01)
+
+
+class TestSklearn(TestGramex):
     ACC_TOL = 0.95
 
     @classmethod

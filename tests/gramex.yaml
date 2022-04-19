@@ -1241,6 +1241,17 @@ url:
           n_components: 2
       xsrf_cookies: false
 
+  # statsmodels
+  mlhandler/sarimax:
+    pattern: /sarimax
+    handler: MLHandler
+    kwargs:
+      model:
+        class: SARIMAX
+        params:
+          order: [7, 1, 0]
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler

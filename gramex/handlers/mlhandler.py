@@ -6,13 +6,14 @@ import re
 import gramex
 from gramex import ml_api as ml
 from gramex.transforms import build_transform
-from gramex.config import app_log, CustomJSONEncoder
+from gramex.config import app_log, CustomJSONEncoder, locate
 from gramex import data as gdata
 from gramex.handlers import FormHandler
 from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import safe_rmtree
 from gramex import cache
 
+import numpy as np
 import pandas as pd
 import joblib
 from sklearn.base import TransformerMixin
@@ -40,11 +41,13 @@ def get_model(mclass: str, model_params: dict, **kwargs) -> ml.AbstractModel:
             _, wrapper = ml.search_modelclass(model[-1].__class__.__name__)
         else:
             _, wrapper = ml.search_modelclass(model.__class__.__name__)
-        model_params = model.get_params()
     else:
         mclass, wrapper = ml.search_modelclass(mclass)
-        model = mclass(**model_params)
-    return getattr(ml, wrapper)(model, **kwargs)
+        try:
+            model = mclass(**model_params)
+        except TypeError:
+            model = mclass
+    return locate(wrapper)(model, params=model_params, **kwargs)
 
 
 class MLHandler(FormHandler):
@@ -107,7 +110,9 @@ class MLHandler(FormHandler):
                 target = data[target_col]
                 train = data.drop([target_col], axis=1)
             gramex.service.threadpool.submit(
-                cls.model.fit, train, target, cls.store.model_path, cls.name,
+                cls.model.fit, train, target,
+                model_path=cls.store.model_path, name=cls.name,
+                **cls.store.model_kwargs()
             )
 
     def _parse_multipart_form_data(self):
@@ -168,7 +173,7 @@ class MLHandler(FormHandler):
 
     def _transform(self, data, **kwargs):
         orgdata = self.store.load_data()
-        for col in data:
+        for col in np.intersect1d(data.columns, orgdata.columns):
             data[col] = data[col].astype(orgdata[col].dtype)
         data = self._filtercols(data, **kwargs)
         data = self._filterrows(data, **kwargs)
@@ -263,6 +268,7 @@ class MLHandler(FormHandler):
 
     def _train(self, data=None):
         target_col = self.get_argument('target_col', self.store.load('target_col'))
+        index_col = self.get_argument('index_col', self.store.load('index_col'))
         self.store.dump('target_col', target_col)
         data = self._parse_data(False) if data is None else data
         data = self._filtercols(data)
@@ -274,7 +280,7 @@ class MLHandler(FormHandler):
         )
         if not isinstance(self.model, ml.SklearnTransformer):
             target = data[target_col]
-            train = data[[c for c in data if c != target_col]]
+            train = data[[c for c in data if c not in (target_col, index_col)]]
             self.model.fit(train, target, self.store.model_path)
             result = {'score': self.model.score(train, target)}
         else:

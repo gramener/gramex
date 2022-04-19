@@ -13,3 +13,4 @@ sphinx_rtd_theme      # For documentation
 testfixtures          # For logcapture
 typing_extensions     # For OpenAPIHandler annotation testing
 websocket-client      # For websocket testing
+statsmodels           # For sm_api.StatsModels

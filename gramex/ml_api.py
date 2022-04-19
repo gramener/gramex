@@ -28,7 +28,7 @@ TRANSFORMS = {
     "index_col": None,
 }
 SEARCH_MODULES = {
-    "SklearnModel": [
+    "gramex.ml_api.SklearnModel": [
         "sklearn.linear_model",
         "sklearn.tree",
         "sklearn.ensemble",
@@ -37,11 +37,14 @@ SEARCH_MODULES = {
         "sklearn.neural_network",
         "sklearn.naive_bayes",
     ],
-    "SklearnTransformer": [
+    "gramex.ml_api.SklearnTransformer": [
         "sklearn.decomposition",
         "gramex.ml",
     ],
-    "StatsModel": ["gramex.sm_api"],
+    "gramex.sm_api.StatsModel": [
+        "statsmodels.tsa.api",
+        "statsmodels.tsa.statespace.sarimax"
+    ],
 }
 
 
@@ -204,6 +207,9 @@ class ModelStore(cache.JSONStore):
         self.path = path
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
+    def model_kwargs(self):
+        return {k: self.load(k) for k in TRANSFORMS}
+
     def load(self, key, default=None):
         if key in ("transform", "model"):
             return super(ModelStore, self).load(key, {})
@@ -278,6 +284,7 @@ class SklearnModel(AbstractModel):
         target_col: Optional[str] = None,
         nums: Optional[List[str]] = None,
         cats: Optional[List[str]] = None,
+        params: Any = None,
         **kwargs,
     ):
         if not isinstance(model, Pipeline) and any([nums, cats]):
@@ -288,10 +295,10 @@ class SklearnModel(AbstractModel):
             self.model = model
         self.kwargs = kwargs
 
-    def _fit(self, X, y, **kwargs):
+    def _fit(self, X, y):
         if hasattr(self.model, "partial_fit"):
-            return self.model.partial_fit(X, y, classes=np.unique(y), **kwargs)
-        return self.model.fit(X, y, **kwargs)
+            return self.model.partial_fit(X, y, classes=np.unique(y))
+        return self.model.fit(X, y)
 
     def fit(
         self,
@@ -317,7 +324,7 @@ class SklearnModel(AbstractModel):
         """
         app_log.info("Starting training...")
         try:
-            result = self._fit(X, y, **kwargs)
+            result = self._fit(X, y)
             app_log.info("Done training...")
         except Exception as exc:
             app_log.exception(exc)
@@ -375,7 +382,3 @@ class SklearnTransformer(SklearnModel):
     def _predict(self, X, **kwargs):
         """Sklearn transformers don't have a "predict", they have a "transform"."""
         return self.model.transform(X, **kwargs)
-
-
-class StatsModel(SklearnModel):
-    """A statsmodels model."""
