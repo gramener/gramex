@@ -616,7 +616,9 @@ class BaseMixin(object):
             pass
         # Warn if app.session.domain is x.com but request comes from y.com.
         host = self.request.host_name
-        if 'domain' in kwargs and not host.endswith(kwargs['domain']):
+        if ('domain' in kwargs and
+                not host.endswith(kwargs['domain']) and
+                not kwargs['domain'].endswith('.local')):
             app_log.warning(f'{self.name}: session.domain={kwargs["domain"]} '
                             f'but cookie sent to {host}')
         return session_id
