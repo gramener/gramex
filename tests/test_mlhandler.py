@@ -47,7 +47,10 @@ class TestMLHandler(TestGramex):
             'mlhandler-badcol/mlhandler-badcol.pkl',
             'mlhandler-decompositions/config.json',
             'mlhandler-decompositions/data.h5',
-            'mlhandler-decompositions/mlhandler-decompositions.pkl'
+            'mlhandler-decompositions/mlhandler-decompositions.pkl',
+            'mlhandler-pipeline/config.json',
+            'mlhandler-pipeline/data.h5',
+            'mlhandler-pipeline/mlhandler-pipeline.pkl'
         ]]
         paths += [op.join(folder, 'model.pkl')]
         for p in paths:
@@ -510,3 +513,17 @@ class TestMLHandler(TestGramex):
         sv1, sv2 = params['attrs']['singular_values_']
         self.assertEqual(round(sv1), 20)  # NOQA: E912
         self.assertEqual(round(sv2), 5)
+
+    def test_pipeline_features(self):
+        df = pd.read_csv('actors.csv')  # Send the df as is, no preprocessing
+        r = self.get('/mlpipe?_action=score', method='post', data=df.to_json(orient='records'),
+                     headers={'Content-Type': 'application/json'})
+        self.assertEqual(r.json()['score'], 1)
+        # Inspect the model and check that the pipeline rules apply
+        buff = BytesIO(self.get('/mlpipe?_download').content)
+        buff.seek(0)
+        model = joblib.load(buff)
+        self.assertEqual(
+            [(k[0], k[-1]) for k in model['transform'].transformers_],
+            [('ohe', ['category']), ('scaler', ['votes'])]
+        )

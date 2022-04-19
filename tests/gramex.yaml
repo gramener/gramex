@@ -1191,6 +1191,19 @@ url:
         cats: [species]
       xsrf_cookies: false
 
+  mlhandler/pipeline:
+    pattern: /mlpipe
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/actors.csv
+      model:
+        class: DecisionTreeRegressor
+        target_col: rating
+        cats: [category]
+        exclude: [name]
+      xsrf_cookies: false
+
   mlhandler/nopath:
     pattern: /mlnopath
     handler: MLHandler
