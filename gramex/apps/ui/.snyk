@@ -79,6 +79,11 @@ ignore:
         reason: No fix available. Await @vue/cli upgrade
         expires: 2022-06-30T00:00:00.000Z
         created: 2022-03-01T00:00:00.000Z
+  SNYK-JS-EJS-2803307:
+    - '*':
+        reason: Need to upgrade @vue/cli to v5
+        expires: 2022-06-30T00:00:00.000Z
+        created: 2022-05-03T00:00:00.000Z
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
   SNYK-JS-D3COLOR-1076592:
