@@ -96,7 +96,11 @@ class MLHandler(FormHandler):
         cls.store.dump('class', mclass)
         cls.store.dump('params', model_params)
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
-            cls.model = get_model(cls.store.model_path, {})
+            if op.isdir(cls.store.model_path):
+                mclass, wrapper = ml.search_modelclass(mclass)
+                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+            else:
+                cls.model = get_model(cls.store.model_path, {})
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
@@ -180,12 +184,12 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
+        self._check_model_path()
         metric = self.get_argument('_metric', False)
         if metric:
             scorer = get_scorer(metric)
         if data is None:
             data = self._parse_data(False)
-        self.model = get_model(self.store.model_path, {})
         data = self._transform(data, drop_duplicates=False)
         try:
             target = data.pop(score_col)
@@ -206,6 +210,11 @@ class MLHandler(FormHandler):
             self.model = get_model(self.store.model_path, {})
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
+        except IsADirectoryError:
+            if not hasattr(self, "model"):
+                mclass = self.store.load('class')
+                mclass, wrapper = ml.search_modelclass(mclass)
+                self.model = locate(wrapper).from_disk(mclass, self.store.model_path)
 
     @coroutine
     def prepare(self):
