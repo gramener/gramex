@@ -1252,6 +1252,14 @@ url:
           order: [7, 1, 0]
       xsrf_cookies: false
 
+  mlhandler/huggingface/sentiment:
+    pattern: /sentiment
+    handler: MLHandler
+    kwargs:
+      model:
+        class: SentimentAnalysis
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
