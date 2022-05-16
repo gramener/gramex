@@ -210,11 +210,6 @@ class MLHandler(FormHandler):
             self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
-        except IsADirectoryError:
-            if not hasattr(self, "model"):
-                mclass = self.store.load('class')
-                mclass, wrapper = ml.search_modelclass(mclass)
-                self.model = locate(wrapper).from_disk(mclass, self.store.model_path)
 
     @coroutine
     def prepare(self):

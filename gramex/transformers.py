@@ -56,7 +56,7 @@ class SentimentAnalysis(BaseTransformer):
             model=self.model, train_dataset=tokenized, args=train_args
         )
         trainer.train()
-        self.model.to('cpu')
+        self.model.to("cpu")
         self.model.save_pretrained(op.join(model_path, "model"))
         self.tokenizer.save_pretrained(op.join(model_path, "tokenizer"))
         self.pipeline = trf.pipeline(
