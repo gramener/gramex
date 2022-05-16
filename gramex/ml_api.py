@@ -278,6 +278,15 @@ class AbstractModel(ABC):
 class SklearnModel(AbstractModel):
     """SklearnModel."""
 
+    @classmethod
+    def from_disk(cls, path, **kwargs):
+        model = cache.open(path, joblib.load)
+        if isinstance(model, Pipeline):
+            _, wrapper = search_modelclass(model[-1].__class__.__name__)
+        else:
+            _, wrapper = search_modelclass(model.__class__.__name__)
+        return cls(model, params={})
+
     def __init__(
         self,
         model: Any,
@@ -396,11 +405,10 @@ class HFTransformer(SklearnModel):
         self.kwargs = kwargs
 
     @classmethod
-    def from_disk(cls, klass, path):
+    def from_disk(cls, path, klass):
         model = op.join(path, "model")
         tokenizer = op.join(path, "tokenizer")
-        # lenc = op.join(path, "lenc.pkl")
-        return cls(klass(model, tokenizer))  # , lenc=lenc))
+        return cls(klass(model, tokenizer))
 
     def fit(
         self,

@@ -5,6 +5,7 @@ import transformers as trf
 
 from datasets import Dataset
 from gramex.config import app_log
+from gramex import cache
 from sklearn.metrics import roc_auc_score
 
 
@@ -15,18 +16,17 @@ def load_pretrained(klass, path, default, **kwargs):
     if op.isdir(path):
         try:
             app_log.info(f"Attempting to load {klass.__name__} from {path}")
-            model = klass.from_pretrained(path, **kwargs)
+            model = cache.open(path, klass.from_pretrained, **kwargs)
         except:  # NOQA: E722
             app_log.info(f"Falling back to default {klass.__name__}: {default}.")
-            model = klass.from_pretrained(default, **kwargs)
+            model = cache.open(default, klass.from_pretrained, **kwargs)
     else:
+        app_log.info(f"{path} not found on disk; loading default...")
         model = klass.from_pretrained(default, **kwargs)
     return model
 
 
-class SentimentAnalysis(object):
-    task = "sentiment-analysis"
-
+class BaseTransformer(object):
     def __init__(self, model=DEFAULT_MODEL, tokenizer=DEFAULT_TOKENIZER, **kwargs):
         self._model = model
         self._tokenizer = tokenizer
@@ -36,7 +36,13 @@ class SentimentAnalysis(object):
         self.tokenizer = load_pretrained(
             trf.AutoTokenizer, tokenizer, DEFAULT_TOKENIZER
         )
-        self.pipeline = trf.pipeline(self.task, model=model, tokenizer=tokenizer)
+        self.pipeline = trf.pipeline(
+            self.task, model=self.model, tokenizer=self.tokenizer
+        )
+
+
+class SentimentAnalysis(BaseTransformer):
+    task = "sentiment-analysis"
 
     def fit(self, text, labels, model_path, **kwargs):
         if pd.api.types.is_object_dtype(labels):
@@ -51,7 +57,7 @@ class SentimentAnalysis(object):
             model=self.model, train_dataset=tokenized, args=train_args
         )
         trainer.train()
-        self.model.to('cpu')
+        self.model.to("cpu")
         self.model.save_pretrained(op.join(model_path, "model"))
         self.tokenizer.save_pretrained(op.join(model_path, "tokenizer"))
         self.pipeline = trf.pipeline(
