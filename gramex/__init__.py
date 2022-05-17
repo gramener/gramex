@@ -194,8 +194,9 @@ def gramex_update(url):
         'uname': platform.uname(),
     }
     if update:
-        events = query('SELECT * FROM events WHERE time > ? ORDER BY time',
-                       (update[0]['time'], ))
+        events = query(
+            'SELECT * FROM events WHERE time > ? ORDER BY time',
+            (update[0]['time'], ))
     else:
         events = query('SELECT * FROM events')
     logs = [dict(log, **meta) for log in events]
