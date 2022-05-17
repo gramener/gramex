@@ -9,7 +9,7 @@ import yaml
 from functools import wraps
 from types import GeneratorType
 from orderedattrdict import AttrDict
-from gramex.config import app_log, locate, variables, CustomJSONEncoder
+from gramex.config import app_log, locate, variables, CustomJSONEncoder, merge
 
 
 def identity(x):
@@ -162,9 +162,8 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         def transform(handler=None):
             return json.dumps(handler, key="abc", name=handler.name)
     '''
-    # Ensure that the transform is a dict. This is a common mistake. We forget
-    # the function: under it.
-    if not hasattr(conf, 'items'):
+    # Ensure that the transform is a dict with "function:" in it. (This is a common mistake)
+    if not isinstance(conf, dict) or 'function' not in conf:
         raise ValueError(f'{filename}: needs "function:". Got {conf!r}')
 
     conf = {key: val for key, val in conf.items() if key in {'function', 'args', 'kwargs'}}
@@ -173,13 +172,16 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     if vars is None:
         vars = {'_val': None}
 
-    if 'function' not in conf or not conf['function']:
-        raise KeyError(f'{filename}: No function in conf {conf}')
+    # If the function is a list, treat it as a pipeline
+    if isinstance(conf['function'], (list, tuple)):
+        if iter:
+            app_log.warning(f'pipeline:{filename}: cannot use iter=True')
+        return build_pipeline(conf['function'], vars, filename, cache)
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
     # tree is the ast result
-    expr = conf['function']
+    expr = str(conf['function'])
     tree = ast.parse(expr)
     if len(tree.body) != 1 or not isinstance(tree.body[0], ast.Expr):
         raise ValueError(f'{filename}: function: must be Python function or expr, not {expr}')
@@ -198,7 +200,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
         function = locate(function_name, modules=['gramex.transforms'])
         doc = function.__doc__
         if function is None:
-            app_log.error(f'{filename}: Cannot load function {function_name}')
+            app_log.error(f'function:{filename}: Cannot load function {function_name}')
         # This section converts the function into an expression.
         # We do this only if the original expression was a *callable* function.
         # But if we can't load the original function (e.g. SyntaxError),
@@ -259,6 +261,63 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     return result
 
 
+def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
+    if not isinstance(conf, (list, tuple)):
+        raise ValueError(f'pipeline:{filename}: must be a list, not {type(conf)}')
+    if len(conf) == 0:
+        raise ValueError(f'pipeline:{filename}: cannot be an empty list')
+    if vars is None:
+        vars = {}
+    if not isinstance(vars, dict):
+        raise ValueError(f'pipeline:{filename}: vars must be a dict, not {type(vars)}')
+    # current_scope has the variables available in each stage.
+    # Whenever a stage defines a `name:`, add it to the current_scope.
+    current_scope = dict(vars)
+    n, compiled_stages = len(conf), []
+    for index, spec in enumerate(conf, start=1):
+        # Store the original configuration for reporting error messages
+        stage = {'spec': spec, 'index': index}
+        if 'function' not in spec:
+            raise ValueError(f'pipeline:{filename}: {index}/{n}: missing "function"')
+        # Compile the function, allowing use of all variables in current_scope
+        stage['function'] = build_transform(
+            {'function': spec['function']},
+            vars=current_scope, filename=f'pipeline:{filename} {index}/{n}', iter=False)
+        # If the stage defines a name, add it as a variable for current_scope
+        if 'name' in spec:
+            current_scope[spec['name']] = None
+        compiled_stages.append(stage)
+
+    def run_pipeline(**kwargs):
+        start = datetime.datetime.utcnow().isoformat()
+        app_log.debug(f'pipeline:{filename} running')
+        error, stage = '', {'spec': {}, 'index': None}
+        try:
+            merge(kwargs, vars, 'setdefault')
+            result = None
+            for stage in compiled_stages:
+                result = stage['function'](**kwargs)
+                if 'name' in stage['spec']:
+                    kwargs[stage['spec']['name']] = result
+            return result
+        except:     # noqa: E722 - trap all exceptions for storelocation logging
+            import sys
+            import traceback
+            error = f'pipeline:{filename} {stage["index"]}/{n} failed: {stage["spec"]}'
+            error += '\n' + ''.join(traceback.format_exception(*sys.exc_info()))
+            raise
+        finally:
+            end = datetime.datetime.utcnow().isoformat()
+            from gramex.services import info
+            if 'pipeline' in info.storelocations:
+                from gramex.data import insert
+                insert(**info.storelocations.pipeline, id=['name', 'start'], args={
+                    'name': [f'{filename}'], 'start': [start], 'end': [end], 'error': [error],
+                })
+
+    return run_pipeline
+
+
 def condition(*args):
     '''
     DEPRECATED. Use the ``if`` construct in config keys instead.
@@ -266,17 +325,21 @@ def condition(*args):
     Variables can also be computed based on conditions::
 
         variables:
-          OS:
-            default: 'No OS variable defined'
-          PORT:
-            function: condition
-            args:
-              - $OS.startswith('Windows')
-              - 9991
-              - $OS.startswith('Linux')
-              - 9992
-              - 8883
+            OS:
+                default: 'No OS variable defined'
+            PORT:
+                function: condition
+                args:
+                    - $OS.startswith('Windows')
+                    - 9991
+                    - $OS.startswith('Linux')
+                    - 9992
+                    - 8883
     '''
+    import warnings
+    warnings.warn(
+        'condition() deprecated. https://gramener.com/gramex/guide/config/#conditions',
+        DeprecationWarning)
     from string import Template
     var_defaults = {}
     for var in variables:
@@ -463,13 +526,13 @@ def handler(func):
     The function args and kwargs are taken from these sources this in order.
 
     1. From the YAML function, e.g. ``function: greet.birthday('Name', age=10)`` sets
-       ``name='Name'`` and ``age=10``
+        ``name='Name'`` and ``age=10``
     2. Over-ridden by YAML URL pattern, e.g. ``pattern: /$YAMLPATH/(.*)/(?P<age>.*)`` when called
-       with ``/greet/Name/10`` sets ``name='Name'`` and ``age=10``
+        with ``/greet/Name/10`` sets ``name='Name'`` and ``age=10``
     3. Over-ridden by URL query parameters, e.g. ``/greet?name=Name&age=10`` sets ``name='Name'``
-       and ``age=10``
+        and ``age=10``
     4. Over-ridden by URL POST body parameters, e.g. ``curl -X POST /greet -d "?name=Name&age=10"``
-       sets ``name='Name'`` and ``age=10``
+        sets ``name='Name'`` and ``age=10``
 
     ``handler`` is also available as a kwarg. You can use this as the last positional argument or
     a keyword argument. Both ``def birthday(name, age, handler)`` and

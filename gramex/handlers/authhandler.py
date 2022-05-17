@@ -101,7 +101,7 @@ class AuthHandler(BaseHandler):
                 action = [action]
             for conf in action:
                 cls.actions.append(build_transform(
-                    conf, vars=AttrDict(handler=None),
+                    conf, vars={'handler': None},
                     filename=f'url:{cls.name}:{conf.function}'))
 
     @coroutine

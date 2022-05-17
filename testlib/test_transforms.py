@@ -66,9 +66,9 @@ class BuildTransform(unittest.TestCase):
         return fn
 
     def test_invalid_function_raises_error(self):
-        with assert_raises(KeyError):
+        with assert_raises(ValueError):
             build_transform({})
-        with assert_raises(KeyError):
+        with assert_raises(ValueError):
             build_transform({'function': ''})
         with assert_raises(ValueError):
             build_transform({'function': 'x = 1'})
@@ -346,6 +346,44 @@ class BuildTransform(unittest.TestCase):
         for path in cls.files:
             if os.path.exists(path):
                 os.unlink(path)
+
+
+class BuildPipelines(unittest.TestCase):
+    @staticmethod
+    def pipeline(stages, **kwargs):
+        return build_transform({'function': stages}, **kwargs)
+
+    def test_pipeline(self):
+        eq_(self.pipeline([{'function': True}])(), True)
+        eq_(self.pipeline([{'function': 0}])(), 0)
+        eq_(self.pipeline([{'function': '3 + 4'}, {'function': '4 + 5'}])(), 9)
+        pipeline = self.pipeline([{'function': 'x - y'}], vars={'x': 0, 'y': 0})
+        eq_(pipeline(), 0)
+        eq_(pipeline(x=3, y=4), -1)
+        pipeline = self.pipeline([
+            {'function': '3 + 4', 'name': 'x'},
+            {'function': '4 + 5', 'name': 'y'},
+            {'function': 'x + y'},
+        ])
+        eq_(pipeline(), 16)
+
+    def test_exceptions(self):
+        # Pipelines must have at least 1 stage
+        with assert_raises(ValueError):
+            self.pipeline([])
+        # Each stage must have a function
+        with assert_raises(ValueError):
+            self.pipeline([{'name': 'x', 'function': 0}, {'name': 'y'}])
+        with assert_raises(SyntaxError):
+            self.pipeline([{'function': 'd$j'}])
+        pipeline = self.pipeline([
+            {'name': 'a', 'function': 0},
+            {'name': 'b', 'function': 1},
+            {'name': 'ratio', 'function': 'b / a'},
+            {'function': 'ratio * ratio'}
+        ])
+        with assert_raises(ZeroDivisionError):
+            pipeline()
 
 
 class Badgerfish(unittest.TestCase):

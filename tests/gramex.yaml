@@ -376,6 +376,14 @@ url:
     handler: FunctionHandler
     kwargs:
       function: functionutils.content
+  func/pipeline:
+    pattern: /func/pipeline
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - { name: x, function: '"--"' }
+        - { name: n, function: 2}
+        - { function: (x + handler.request.path) * n }
 
   # TestPyNode
   pynode/run:
