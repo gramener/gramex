@@ -59,7 +59,7 @@ info = AttrDict(
     gramexlog=AttrDict(apps=AttrDict()),
     url=AttrDict(),
     main_ioloop=None,
-    otp=AttrDict(),
+    storelocations=AttrDict(),
     _md=None,
 )
 _cache, _tmpl_cache = AttrDict(), AttrDict()
@@ -688,7 +688,7 @@ def _cache_generator(conf, name):
 
 def url(conf):
     '''Set up the tornado web app URL handlers'''
-    info.url = {}
+    info.url = AttrDict()
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
@@ -964,6 +964,8 @@ def gramexlog(conf):
     info.gramexlog.push = push
 
 
-def otp(conf):
-    '''Set up OTP service'''
-    info.otp = AttrDict(conf)
+def storelocations(conf):
+    '''Initialize the store locations'''
+    for key, subconf in conf.items():
+        info.storelocations[key] = subconf
+        gramex.data.alter(**subconf)

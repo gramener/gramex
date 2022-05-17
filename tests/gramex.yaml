@@ -2742,3 +2742,8 @@ invalid-service: true
 
 eventlog:
   path: $YAMLPATH/events.db
+
+storelocations:
+  # The `otp:` section defines where to store one-time passwords
+  otp:
+      url: sqlite:///$YAMLPATH/otp.db
