@@ -8,7 +8,7 @@ D:\site\gramener.com\viz\async-gramex\.gitlab-ci.yml: OK
 D:\site\gramener.com\viz\async-gramex\.htmllintrc: OK
 D:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 D:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
-D:\site\gramener.com\viz\async-gramex\dist\gramex-1.78.0.tar.gz: OK
+D:\site\gramener.com\viz\async-gramex\dist\gramex-1.79.0.tar.gz: OK
 D:\site\gramener.com\viz\async-gramex\docs\conf.py: OK
 D:\site\gramener.com\viz\async-gramex\docs\design.rst: OK
 D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.languagetool.rst: OK
@@ -354,6 +354,7 @@ D:\site\gramener.com\viz\async-gramex\gramex\pptgen2\commands.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\pptgen2\config.yaml: OK
 D:\site\gramener.com\viz\async-gramex\gramex\pptgen2\README.md: OK
 D:\site\gramener.com\viz\async-gramex\gramex\pptgen2\__init__.py: OK
+D:\site\gramener.com\viz\async-gramex\gramex\pptgen2\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\gramex\pynode.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\release.json: OK
 D:\site\gramener.com\viz\async-gramex\gramex\scale.py: OK
@@ -426,7 +427,6 @@ D:\site\gramener.com\viz\async-gramex\testlib\auto_test.csv: OK
 D:\site\gramener.com\viz\async-gramex\testlib\input.pptx: OK
 D:\site\gramener.com\viz\async-gramex\testlib\input2.pptx: OK
 D:\site\gramener.com\viz\async-gramex\testlib\iris.csv: OK
-D:\site\gramener.com\viz\async-gramex\testlib\killme.pptx: OK
 D:\site\gramener.com\viz\async-gramex\testlib\README.md: OK
 D:\site\gramener.com\viz\async-gramex\testlib\sales-query.sql: OK
 D:\site\gramener.com\viz\async-gramex\testlib\script1.R: OK
@@ -452,6 +452,7 @@ D:\site\gramener.com\viz\async-gramex\testlib\test_cache\mymodule.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_cache\template.sub.txt: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_cache\template.txt: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_cache\__init__.py: Empty file
+D:\site\gramener.com\viz\async-gramex\testlib\test_cache\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\testlib\test_cache_module.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_commandline.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_config\config.a.yaml: OK
@@ -477,6 +478,7 @@ D:\site\gramener.com\viz\async-gramex\testlib\test_config\dir1\config.a.yaml: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_config\dir1\config.b.yaml: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_config\dir1\subdir\config.c.yaml: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_config\__init__.py: OK
+D:\site\gramener.com\viz\async-gramex\testlib\test_config\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\testlib\test_config_error\gramex.yaml: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_config_error\README.md: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_data.py: OK
@@ -497,10 +499,10 @@ D:\site\gramener.com\viz\async-gramex\testlib\test_store.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_transforms.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\test_watch.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\__init__.py: OK
+D:\site\gramener.com\viz\async-gramex\testlib\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db: OK
-D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-shm: OK
-D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-wal: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\.secrets.yaml: OK
+D:\site\gramener.com\viz\async-gramex\tests\.snyk: OK
 D:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
@@ -542,7 +544,6 @@ D:\site\gramener.com\viz\async-gramex\tests\dir\install\gramex-bower-package\bow
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\gramex-npm-package\npm-setup.js: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\gramex-npm-package\package.json: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\Makefile: OK
-D:\site\gramener.com\viz\async-gramex\tests\dir\install\node_modules: Excluded
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\package-lock.json: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\package.json: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\requirements.txt: OK
@@ -552,6 +553,7 @@ D:\site\gramener.com\viz\async-gramex\tests\dir\install\setup.sh: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\yarn.lock: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\markdown.md: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\non-index-template.txt: OK
+D:\site\gramener.com\viz\async-gramex\tests\dir\rmarkdown.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\rmarkdown.Rmd: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\subdir\gramex.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\subdir\template.txt: OK
@@ -573,6 +575,7 @@ D:\site\gramener.com\viz\async-gramex\tests\install-test-flat.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\install-test.zip: OK
 D:\site\gramener.com\viz\async-gramex\tests\lookup.xlsx: OK
 D:\site\gramener.com\viz\async-gramex\tests\openapiresponse.yaml: OK
+D:\site\gramener.com\viz\async-gramex\tests\otp.db: OK
 D:\site\gramener.com\viz\async-gramex\tests\processtest.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\README.md: OK
 D:\site\gramener.com\viz\async-gramex\tests\remote-secrets.yaml: OK
@@ -652,13 +655,13 @@ D:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8615272
+Known viruses: 8616509
 Engine version: 0.103.3
 Scanned directories: 85
-Scanned files: 607
+Scanned files: 608
 Infected files: 0
-Data scanned: 16.29 MB
-Data read: 5.06 MB (ratio 3.22:1)
-Time: 56.328 sec (0 m 56 s)
-Start Date: 2022:05:03 19:59:38
-End Date:   2022:05:03 20:00:34
+Data scanned: 18.00 MB
+Data read: 5.67 MB (ratio 3.17:1)
+Time: 38.443 sec (0 m 38 s)
+Start Date: 2022:05:18 11:19:04
+End Date:   2022:05:18 11:19:43

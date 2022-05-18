@@ -484,25 +484,19 @@ class TestInsert(unittest.TestCase):
         new_files = [
             {'url': os.path.join(folder, 'insert.csv'), 'encoding': 'utf-8'},
             {'url': os.path.join(folder, 'insert.xlsx'), 'sheet_name': 'test'},
-            {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
+            # Insertion into HDF files is deprecated. We don't use it much.
+            # {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
         ]
         for conf in new_files:
             remove_if_possible(conf['url'])
             self.tmpfiles.append(conf['url'])
             gramex.data.insert(args=self.insert_rows, **conf)
             # Check if added rows are correct
-            try:
-                actual = gramex.data.filter(**conf)
-            except ValueError:
-                # TODO: This is a temporary fix for NumPy 1.16.2, Tables 3.4.4
-                # https://github.com/pandas-dev/pandas/issues/24839
-                if conf['url'].endswith('.hdf') and np.__version__.startswith('1.16'):
-                    raise SkipTest('Ignore NumPy 1.16.2 / PyTables 3.4.4 quirk')
-            else:
-                expected = pd.DataFrame(self.insert_rows)
-                actual['sales'] = actual['sales'].astype(float)
-                expected['sales'] = expected['sales'].astype(float)
-                afe(actual, expected, check_like=True)
+            actual = gramex.data.filter(**conf)
+            expected = pd.DataFrame(self.insert_rows)
+            actual['sales'] = actual['sales'].astype(float)
+            expected['sales'] = expected['sales'].astype(float)
+            afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
         url = dbutils.mysql_create_db(server.mysql, 'test_insert')

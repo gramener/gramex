@@ -81,7 +81,7 @@ class Capture(object):
             url = f'http://localhost:{port}/'
             if cmd is None:
                 script = os.path.join(variables.GRAMEXPATH, 'apps', 'capture', self.engine.script)
-                cmd = f'"{self.engine.cmd}" "{script}" --port={port}'
+                cmd = f'{self.engine.cmd} "{script}" --port={port}'
         self.url = url
         self.first_line_re = re.compile(self.engine.first_line)
         self.cmd = cmd
@@ -126,8 +126,8 @@ class Capture(object):
             app_log.info(f'Starting {script} via {self.cmd}')
             self.close()
             # self.cmd is taken from the YAML configuration. Safe to run
-            self.proc = Popen(shlex.split(self.cmd),        # nosec: frozen input
-                              stdout=PIPE, stderr=STDOUT)
+            self.proc = Popen(      # nosec: frozen input
+                shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?

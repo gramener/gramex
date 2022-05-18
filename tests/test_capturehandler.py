@@ -132,7 +132,7 @@ class TestCaptureHandler(TestGramex):
         parser = PDFParser(io.BytesIO(result.content))
         page = next(PDFPage.create_pages(PDFDocument(parser)))
         self.assertIn([round(x) for x in page.attrs['MediaBox']], (
-            [0, 0, 1188, 842],      # noqa: Chrome uses 1188 x 842 for A3
+            [0, 0, 1190, 842],      # noqa: Chrome uses 1190 x 842 for A3
             [0, 0, 1191, 842],      # noqa: PhantomJS uses 1191 x 842 for A3
         ))
 
@@ -216,8 +216,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
             'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx'})
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 1)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000, size=(100, 100))
         self.check_text(prs.slides[0].shapes[1], text=title, font_size=18)
 
         # Check title_size
@@ -232,8 +232,9 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
             'url': self.url, 'ext': 'pptx', 'title': ['高', 'σ'], 'selector': ['.subset', 'p']})
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 2)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000,
+            size=(100, 100))
         para_img = self.check_img(prs.slides[1].shapes[0].image.blob)
         para_size = (prs.slides[1].shapes[0].width, prs.slides[1].shapes[0].height)
         eq_(prs.slides[0].shapes[1].text, '高')
@@ -246,8 +247,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         })
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 2)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000, size=(100, 100))
         self.check_img(prs.slides[1].shapes[0].image.blob, size=para_img.size)
         # 2nd image with twice the dpi is half the size
         self.assertAlmostEqual(prs.slides[1].shapes[0].width * 2, para_size[0], delta=1)
@@ -255,8 +256,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     def test_delay_render(self):
         # delay=. After 1 second, renderComplete is set. Page changes text and color to green
-        result = self.fetch(self.src, params={'url': self.url, 'delay': 'renderComplete',
-                                              'file': 'delay-str'})
+        result = self.fetch(self.src, params={
+            'url': self.url, 'delay': 'renderComplete', 'file': 'delay-str'})
         self.check_filename(result, 'delay-str.pdf')
         self.assertIn('Greenblock', normalize(get_text(result.content)))
 

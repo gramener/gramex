@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 
 const puppeteer = require('puppeteer')
-const image_size = require('fast-image-size')
+const imageSize = require('fast-image-size')
 const bodyParser = require('body-parser')
 const minimist = require('minimist')
 const express = require('express')
@@ -193,7 +193,7 @@ async function render(q) {
   if (q.ext == 'pdf') {
     // TODO: header / footer
     if (q.media != 'print')
-      await page.emulateMedia(q.media)
+      await page.emulateMediaType(q.media)
     await page.pdf(pdf_options)
   } else {
     const options = {
@@ -227,7 +227,7 @@ async function render(q) {
         pptx.setSlideSize(fmt[0] * 72, fmt[1] * 72)
         const scale = 72 / (+dpi || 96)
         const slide = pptx.makeNewSlide()
-        const size = image_size(options.path)
+        const size = imageSize(options.path)
         slide.addImage(options.path, {
           x: typeof x == 'undefined' ? 'c' : x * scale,
           y: typeof y == 'undefined' ? 'c' : y * scale,
@@ -237,10 +237,10 @@ async function render(q) {
         if (typeof title != 'undefined')
           slide.addText(title, {x: 0, y: 0, cx: '100%', font_size: +title_size || 18})
       }
-      await new Promise(res => {
+      await new Promise(resolve => {
         const out = fs.createWriteStream(target)
+        out.on('close', resolve)
         pptx.generate(out)
-        out.on('close', res)
       })
       image_files.forEach(path => fs.unlinkSync(path))
     } else {
