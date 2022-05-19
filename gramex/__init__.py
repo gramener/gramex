@@ -4,6 +4,7 @@ Help: https://gramener.com/gramex/guide/
 
 Common startup options
   --listen.port=9090            Starts Gramex at port 9090
+  --log.level=warning           Accepts debug|info|warning|error|critical
   --browser=true                Open the browser after startup
   --settings.debug              Start Python debugger on error
 
@@ -116,7 +117,7 @@ def callback_commandline(commands):
     '''
     # Set logging config at startup. (Services may override this.)
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
-    log_config.root.level = logging.INFO
+    log_config.loggers.gramex.level = logging.INFO
     from . import services
     services.log(log_config)
 
@@ -156,10 +157,20 @@ def callback_commandline(commands):
     if not os.path.isfile('gramex.yaml'):
         return console, {'msg': 'No gramex.yaml. See https://gramener.com/gramex/guide/'}
 
-    # Run gramex.init(cmd={command line arguments like YAML variables})
     pyver = sys.version.replace('\n', ' ')
     app_log.info(f'Gramex {__version__} | {os.getcwd()} | Python {pyver}')
-    return init, {'cmd': AttrDict(app=kwargs)}
+
+    # Run gramex.init(cmd={command line arguments like YAML variables})
+    # --log.* settings are moved to log.loggers.gramex.*
+    #   E.g. --log.level => log.loggers.gramex.level
+    # --* remaining settings are moved to app.*
+    #   E.g. --watch => app.watch
+    config = AttrDict(app=kwargs)
+    if kwargs.get('log'):
+        config.log = AttrDict(loggers=AttrDict(gramex=kwargs.pop('log')))
+        if 'level' in config.log.loggers.gramex:
+            config.log.loggers.gramex.level = config.log.loggers.gramex.level.upper()
+    return init, {'cmd': config}
 
 
 def commandline(args=None):
@@ -275,9 +286,9 @@ def init(force_reload=False, **kwargs):
     # Override final configurations
     appconfig.clear()
     appconfig.update(+config_layers)
-    # --settings.debug => log.root.level = True
+    # If --settings.debug, override root and Gramex loggers to show debug messages
     if appconfig.app.get('settings', {}).get('debug', False):
-        appconfig.log.root.level = logging.DEBUG
+        appconfig.log.root.level = appconfig.log.loggers.gramex.level = logging.DEBUG
 
     # Set up a watch on config files (including imported files)
     if appconfig.app.get('watch', True):
