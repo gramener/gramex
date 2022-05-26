@@ -174,9 +174,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
 
     # If the function is a list, treat it as a pipeline
     if isinstance(conf['function'], (list, tuple)):
-        if iter:
-            app_log.warning(f'pipeline:{filename}: cannot use iter=True')
-        return build_pipeline(conf['function'], vars, filename, cache)
+        return build_pipeline(conf['function'], vars, filename, cache, iter)
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
@@ -261,7 +259,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     return result
 
 
-def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
+def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True):
     if not isinstance(conf, (list, tuple)):
         raise ValueError(f'pipeline:{filename}: must be a list, not {type(conf)}')
     if len(conf) == 0:
@@ -275,6 +273,8 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
     current_scope = dict(vars)
     n, compiled_stages = len(conf), []
     for index, spec in enumerate(conf, start=1):
+        if isinstance(spec, str):
+            spec = {'function': spec}
         # Store the original configuration for reporting error messages
         stage = {'spec': spec, 'index': index}
         if 'function' not in spec:
@@ -299,7 +299,10 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
                 result = stage['function'](**kwargs)
                 if 'name' in stage['spec']:
                     kwargs[stage['spec']['name']] = result
-            return result
+            if iter:
+                return result if isinstance(result, GeneratorType) else [result]
+            else:
+                return result
         except:     # noqa: E722 - trap all exceptions for storelocation logging
             import sys
             import traceback
