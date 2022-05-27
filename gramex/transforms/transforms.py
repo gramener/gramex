@@ -174,9 +174,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
 
     # If the function is a list, treat it as a pipeline
     if isinstance(conf['function'], (list, tuple)):
-        if iter:
-            app_log.warning(f'pipeline:{filename}: cannot use iter=True')
-        return build_pipeline(conf['function'], vars, filename, cache)
+        return build_pipeline(conf['function'], vars, filename, cache, iter)
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
@@ -261,7 +259,7 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     return result
 
 
-def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
+def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True):
     if not isinstance(conf, (list, tuple)):
         raise ValueError(f'pipeline:{filename}: must be a list, not {type(conf)}')
     if len(conf) == 0:
@@ -275,6 +273,8 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
     current_scope = dict(vars)
     n, compiled_stages = len(conf), []
     for index, spec in enumerate(conf, start=1):
+        if not isinstance(spec, dict):
+            spec = {'function': str(spec)}
         # Store the original configuration for reporting error messages
         stage = {'spec': spec, 'index': index}
         if 'function' not in spec:
@@ -289,28 +289,49 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False):
         compiled_stages.append(stage)
 
     def run_pipeline(**kwargs):
+        '''
+        This returned function actually runs the pipeline.
+        It loops through each pipeline step, runs the function, and returns the last value.
+
+        Any ``kwargs`` passed are used as globals.
+        (They default to the ``vars`` in :py:func:`build_pipeline`.)
+
+        If a step specifies a ``name``, the result is stored in ``kwargs[name]``,
+        making it available as a global to the next step.
+
+        Logs the time taken for each step (and errors, if any) in storelocations.pipeline.
+        '''
         start = datetime.datetime.utcnow().isoformat()
         app_log.debug(f'pipeline:{filename} running')
         error, stage = '', {'spec': {}, 'index': None}
         try:
+            # Use kwargs as globals for the steps. Initialize with vars
             merge(kwargs, vars, 'setdefault')
             result = None
             for stage in compiled_stages:
                 result = stage['function'](**kwargs)
+                # Store the returned value in the kwargs as globals
                 if 'name' in stage['spec']:
                     kwargs[stage['spec']['name']] = result
-            return result
+            # If the pipeline SHOULD return an iterable, ensure last result is iterable
+            if iter:
+                return result if isinstance(result, GeneratorType) else [result]
+            else:
+                return result
         except:     # noqa: E722 - trap all exceptions for storelocation logging
+            # On any exception, capture the error and traceback to log it
             import sys
             import traceback
             error = f'pipeline:{filename} {stage["index"]}/{n} failed: {stage["spec"]}'
             error += '\n' + ''.join(traceback.format_exception(*sys.exc_info()))
+            # but raise the original Exception
             raise
         finally:
-            end = datetime.datetime.utcnow().isoformat()
+            # Log pipeline execution (and error, if any)
             from gramex.services import info
             if 'pipeline' in info.storelocations:
                 from gramex.data import insert
+                end = datetime.datetime.utcnow().isoformat()
                 insert(**info.storelocations.pipeline, id=['name', 'start'], args={
                     'name': [f'{filename}'], 'start': [start], 'end': [end], 'error': [error],
                 })

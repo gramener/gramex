@@ -87,6 +87,9 @@ class TestFunctionHandler(TestGramex):
         eq_(execs['name'].iloc[0], 'url:func/pipeline')
         eq_(execs['error'].iloc[0], None)
 
+        self.check('/func/pipeline-number', text='2')
+        self.check('/func/pipeline-iterable', text='[3,"x",false]')
+
 
 class TestWrapper(TestGramex):
     def test_config_kwargs(self):

@@ -383,8 +383,19 @@ url:
       function:
         - { name: x, function: '"--"' }
         - { name: n, function: 2}
-        - { function: (x + handler.request.path) * n }
-
+        - (x + handler.request.path) * n
+  func/pipeline-number:
+    pattern: /func/pipeline-number
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - 2
+  func/pipeline-iterable:
+    pattern: /func/pipeline-iterable
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - [3, x, null, false]   # Returns [3, "x", false]
   # TestPyNode
   pynode/run:
     pattern: /pynode/run
