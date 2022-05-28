@@ -8,9 +8,10 @@ elasticsearch>=7.0.0,<8.0.0   # OPT: Test gramexlog: features
 pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
 pymongo               # For MongoDB tests
-babel >= 2.9.1        # For sphinx_rtd_theme https://snyk.io/vuln/SNYK-PYTHON-BABEL-1278589
-sphinx_rtd_theme      # For documentation
 testfixtures          # For logcapture
 typing_extensions     # For OpenAPIHandler annotation testing
 websocket-client      # For websocket testing
 statsmodels           # For sm_api.StatsModels
+
+mkdocs                # For documentation
+mkdocstrings          # For documentation
