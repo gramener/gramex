@@ -1,14 +1,16 @@
-'''
-This module is a service registry for ``gramex.yaml``. Each key must have a
+'''Configure Gramex services.
+. Each key must have a
 corresponding function in this file.
 
 For example, if ``gramex.yaml`` contains this section::
 
-    log:
-        version: 1
+```yaml
+log:
+    version: 1
+```
 
-... then :func:`log` is called as ``log({"version": 1})``. If no such function
-exists, a warning is raised.
+... then [gramex.service.log()][gramex.services.log] is called as ``log({"version": 1})``.
+If no such function exists, a warning is raised.
 '''
 import io
 import re
@@ -501,6 +503,9 @@ def create_alert(name, alert):
 
 
 def alert(conf):
+    '''
+    Sets up the alert service
+    '''
     from . import scheduler
     _stop_all_tasks(info.alert)
     schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()

@@ -4,21 +4,22 @@ from .basehandler import BaseWebSocketHandler
 
 
 class WebSocketHandler(BaseWebSocketHandler):
-    '''
-    Handles WebSockets. It accepts these parameters:
+    '''Creates a websocket microservice.'''
+    @classmethod
+    def setup(cls, **kwargs):
+        '''Configure the websocket handler.
 
-    :arg function open: ``open(handler)`` is called when the connection is opened
-    :arg function on_message: ``on_message(handler, message)`` is called with a
-        string message when the client sends a message.
-    :arg function on_close: ``on_close(handler)`` is called when the websocket is
-        closed.
-    :arg list origins: a domain name or list of domain names. No wildcards
+        Accepts these parameters:
 
-    The handler has a ``.write_message(text)`` method that sends a message back
-    to the client.
-    '''
-    @staticmethod
-    def _setup(cls, **kwargs):
+        - `open`: function. `open(handler)` is called when the connection is opened
+        - `on_message`: function. `on_message(handler, message: str)` is called when client sends a
+            message
+        - `on_close`: function. `on_close(handler)` is called when connection is closed.
+        - `origins`: a domain name or list of domain names. No wildcards
+
+        Functions can use `handler.write_message(msg: str)` to sends a message back to the client.
+        '''
+        super(WebSocketHandler, cls).setup(**kwargs)
         override_methods = {
             'open': ['handler'],
             'on_message': ['handler', 'message'],
@@ -34,11 +35,6 @@ class WebSocketHandler(BaseWebSocketHandler):
                     vars={arg: None for arg in override_methods[method]},
                     filename=f'url:{cls.name}.{method}',
                     iter=False))
-
-    @classmethod
-    def setup(cls, **kwargs):
-        super(WebSocketHandler, cls).setup(**kwargs)
-        cls._setup(cls, **kwargs)
 
     def check_origin(self, origin):
         origins = self.kwargs.get('origins', [])

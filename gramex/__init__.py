@@ -1,25 +1,15 @@
-'''
-Gramex {__version__} Copyright (c) 2017 by Gramener
-Help: https://gramener.com/gramex/guide/
+'''Parses command line / configuration and runs Gramex.
 
-Common startup options
-  --listen.port=9090            Starts Gramex at port 9090
-  --log.level=warning           Accepts debug|info|warning|error|critical
-  --browser=true                Open the browser after startup
-  --settings.debug              Start Python debugger on error
+Running `gramex` on the command line calls:
 
-Helper applications. For usage, run "gramex <app> --help"
-  gramex init                   Add Gramex project scaffolding to current dir
-  gramex service                Windows service setup
-  gramex mail                   Send email from command line
-  gramex license                See Gramex license, accept or reject it
+1. [gramex.commandline][] to parse command line arguments
+2. [gramex.init][] to parse the configuration and start Gramex
 
-Installation commands. For usage, run "gramex <command> --help"
-  gramex install                Install an app
-  gramex update                 Update an app
-  gramex setup                  Run make, npm install, bower install etc on app
-  gramex run                    Run an installed app
-  gramex uninstall              Uninstall an app
+This module also has
+
+- [gramex.shutdown][] to shut down Gramex (e.g. on `Ctrl+C`)
+- [gramex.gramex_update][] to check if Gramex is out of date
+- [gramex.log][] to log messages persistently (e.g. on ElasticSearch)
 '''
 
 import os
@@ -30,9 +20,37 @@ import logging
 import logging.config
 from packaging import version
 from pathlib import Path
+from typing import List
 from orderedattrdict import AttrDict
 from gramex.config import ChainConfig, PathConfig, app_log, variables, setup_variables
 from gramex.config import ioloop_running, prune_keys, setup_secrets
+
+help = '''
+Gramex {__version__} Copyright (c) 2017 by Gramener
+Help: https://gramener.com/gramex/guide/
+
+Common startup options
+
+--listen.port=9090            Starts Gramex at port 9090
+--log.level=warning           Accepts debug|info|warning|error|critical
+--browser=true                Open the browser after startup
+--settings.debug              Start Python debugger on error
+
+Helper applications. For usage, run "gramex <app> --help"
+
+gramex init                   Add Gramex project scaffolding to current dir
+gramex service                Windows service setup
+gramex mail                   Send email from command line
+gramex license                See Gramex license, accept or reject it
+
+Installation commands. For usage, run "gramex <command> --help"
+
+gramex install                Install an app
+gramex update                 Update an app
+gramex setup                  Run make, npm install, bower install etc on app
+gramex run                    Run an installed app
+gramex uninstall              Uninstall an app
+'''
 
 paths = AttrDict()              # Paths where configurations are stored
 conf = AttrDict()               # Final merged configurations
@@ -65,57 +83,40 @@ PathConfig.duplicate_warn = [
 ]
 
 
-def parse_command_line(commands):
+def commandline(args: List[str] = None):
+    '''Run Gramex from the command line.
+
+    Parameters:
+        args: Command line arguments. If not provided, uses `sys.argv`
+
+    Gramex can be run in 2 ways, both of which call [gramex.commandline][]:
+
+    1. `python -m gramex`, which runs `__main__.py`.
+    2. `gramex`, which runs `console_scripts` in `setup.py`
+
+    `gramex -V` and `gramex --version` exit after printing the Gramex version.
+
+    The positional arguments call different functions:
+
+    - `gramex` runs Gramex and calls [gramex.init][]
+    - `gramex init` creates a new Gramex project and calls [gramex.install.init][]
+    - `gramex service` creates a Windows service and calls [gramex.install.service][]
+    - ... etc. (Run `gramex help` for more)
+
+    Keyword arguments are passed to the function, e.g.
+    `gramex service install --startup=auto` calls
+    `gramex.install.service('install', startup='auto')`.
+
+    Keyword arguments with '.' are split into sub-keys, e.g.
+    `gramex --listen.port 80` becomes `init(listen={"port": 80})`.
+
+    Values are parsed as YAML, e.g. `null` becomes `None`.
+
+    If the keyword arguments include `--help`, it prints the usage of that function and exits.
     '''
-    Parse command line arguments. For example:
+    commands = sys.argv[1:] if args is None else args
 
-        gramex cmd1 cmd2 --a=1 2 -b x --c --p.q=4
-
-    returns:
-
-        {"_": ["cmd1", "cmd2"], "a": [1, 2], "b": "x", "c": True, "p": {"q": [4]}}
-
-    Values are parsed as YAML. Arguments with '.' are split into subgroups. For
-    example, ``gramex --listen.port 80`` returns ``{"listen": {"port": 80}}``.
-    '''
-    group = '_'
-    args = AttrDict({group: []})
-    for arg in commands:
-        if arg.startswith('-'):
-            group, value = arg.lstrip('-'), 'True'
-            if '=' in group:
-                group, value = group.split('=', 1)
-        else:
-            value = arg
-
-        value = yaml.safe_load(value)
-        base = args
-        keys = group.split('.')
-        for key in keys[:-1]:
-            base = base.setdefault(key, AttrDict())
-
-        # Add the key to the base.
-        # If it's already there, make it a list.
-        # If it's already a list, append to it.
-        if keys[-1] not in base or base[keys[-1]] is True:
-            base[keys[-1]] = value
-        elif not isinstance(base[keys[-1]], list):
-            base[keys[-1]] = [base[keys[-1]], value]
-        else:
-            base[keys[-1]].append(value)
-
-    return args
-
-
-def callback_commandline(commands):
-    '''
-    Find what method should be run based on the command line programs. This
-    refactoring allows us to test gramex.commandline() to see if it processes
-    the command line correctly, without actually running the commands.
-
-    Returns a callback method and kwargs for the callback method.
-    '''
-    # Set logging config at startup. (Services may override this.)
+    # t first, setup log: service at INFO to log progress. App's log: may override this later.
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
     log_config.loggers.gramex.level = logging.INFO
     from . import services
@@ -126,8 +127,8 @@ def callback_commandline(commands):
     kwargs = parse_command_line(commands)
     args = kwargs.pop('_')
 
-    # If --help or -V --version is specified, print a message and end
-    if kwargs.get('V') is True or kwargs.get('version') is True:
+    # If -V or --version is specified, print a message and end
+    if 'V' in kwargs or 'version' in kwargs:
         pyver = '{0}.{1}.{2}'.format(*sys.version_info[:3])
         msg = [
             f'Gramex version: {__version__}',
@@ -135,7 +136,7 @@ def callback_commandline(commands):
             f'Python version: {pyver}',
             f'Python path: {sys.executable}',
         ]
-        return console, {'msg': '\n'.join(msg)}
+        return console(msg='\n'.join(msg))
 
     # Any positional argument is treated as a gramex command
     if len(args) > 0:
@@ -147,15 +148,15 @@ def callback_commandline(commands):
         }:
             import gramex.install
             if 'help' in kwargs:
-                return console, {'msg': gramex.install.show_usage(method)}
-            return getattr(gramex.install, method), {'args': args, 'kwargs': kwargs}
+                return console(msg=gramex.install.show_usage(method))
+            return getattr(gramex.install, method)(args=args, kwargs=kwargs)
         raise NotImplementedError(f'Unknown gramex command: {base_command}')
-    elif kwargs.get('help') is True:
-        return console, {'msg': __doc__.strip().format(**globals())}
+    elif 'help' in kwargs:
+        return console(msg=help.strip().format(**globals()))
 
     # Use current dir as base (where gramex is run from) if there's a gramex.yaml.
     if not os.path.isfile('gramex.yaml'):
-        return console, {'msg': 'No gramex.yaml. See https://gramener.com/gramex/guide/'}
+        return console(msg='No gramex.yaml. See https://gramener.com/gramex/guide/')
 
     pyver = sys.version.replace('\n', ' ')
     app_log.info(f'Gramex {__version__} | {os.getcwd()} | Python {pyver}')
@@ -170,79 +171,71 @@ def callback_commandline(commands):
         config.log = AttrDict(loggers=AttrDict(gramex=kwargs.pop('log')))
         if 'level' in config.log.loggers.gramex:
             config.log.loggers.gramex.level = config.log.loggers.gramex.level.upper()
-    return init, {'cmd': config}
+    return init(cmd=config)
 
 
-def commandline(args=None):
+def parse_command_line(commands: List[str]):
+    # Parse command line arguments.
+    # e.g. gramex cmd1 cmd2 --a=1 2 -b x --c --p.q=4
+    # returns {"_": ["cmd1", "cmd2"], "a": [1, 2], "b": "x", "c": True, "p": {"q": [4]}}
+    key = '_'
+    args = AttrDict({key: []})
+    for arg in commands:
+        # If it's a keyword argument, extract key=value. "--key" becomes key=True
+        if arg.startswith('-'):
+            key, value = arg.lstrip('-'), 'True'
+            if '=' in key:
+                key, value = key.split('=', 1)
+        # If it's a positional argument, leave the key as '_', and get the value
+        else:
+            value = arg
+
+        # Parse values as YAML, e.g. null -> None
+        value = yaml.safe_load(value)
+        # If there are sub-keys, create a dict for them
+        base = args
+        keys = key.split('.')
+        for key in keys[:-1]:
+            base = base.setdefault(key, AttrDict())
+
+        # Make a list where required. `--x=1 --x=2` becomes {x: [1, 2]}
+        # If key is present, make it a list.
+        # If key is a list, append to it.
+        if keys[-1] not in base or base[keys[-1]] is True:
+            base[keys[-1]] = value
+        elif not isinstance(base[keys[-1]], list):
+            base[keys[-1]] = [base[keys[-1]], value]
+        else:
+            base[keys[-1]].append(value)
+
+    return args
+
+
+def init(force_reload: bool = False, **kwargs) -> None:
+    '''Load Gramex configurations and start / restart the Gramex instance.
+
+    Parameters:
+        force_reload (bool): Reload services even config hasn't changed
+        **kwargs (dict): Overrides config
+
+    `gramex.init()` loads configurations from 3 sources, which override each other:
+
+    1. Gramex's `gramex.yaml`
+    2. Current directory's `gramex.yaml`
+    3. The `kwargs`
+
+    Then it calls each [gramex.services][] with its configuration.
+
+    It can be called multiple times. For efficiency, a services function is called only if its
+    configuration has changed or `force_reload=True`.
+
+    If a kwarg value is:
+
+    - a string, it's loaded as-is
+    - a Path pointing to a file, it's loaded as a YAML config file
+    - a Path pointing to a directory, it loads a `gramex.yaml` file from that directory
     '''
-    Run Gramex from the command line. Called via:
-
-    - setup.py console_scripts when running gramex
-    - __main__.py when running python -m gramex
-    '''
-    callback, kwargs = callback_commandline(sys.argv[1:] if args is None else args)
-    callback(**kwargs)
-
-
-def gramex_update(url):
-    '''If a newer version of gramex is available, logs a warning'''
-    import time
-    import requests
-    import platform
-    from . import services
-
-    if not services.info.eventlog:
-        return app_log.error('eventlog: service is not running. So Gramex update is disabled')
-
-    query = services.info.eventlog.query
-    update = query('SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1')
-    delay = 24 * 60 * 60            # Wait for one day before updates
-    if update and time.time() < update[0]['time'] + delay:
-        return app_log.debug('Gramex update ran recently. Deferring check.')
-
-    meta = {
-        'dir': variables.get('GRAMEXDATA'),
-        'uname': platform.uname(),
-    }
-    if update:
-        events = query(
-            'SELECT * FROM events WHERE time > ? ORDER BY time',
-            (update[0]['time'], ))
-    else:
-        events = query('SELECT * FROM events')
-    logs = [dict(log, **meta) for log in events]
-
-    r = requests.post(url, data=json.dumps(logs))
-    r.raise_for_status()
-    update = r.json()
-    server_version = update['version']
-    if version.parse(server_version) > version.parse(__version__):
-        app_log.error(f'Gramex {server_version} is available. https://gramener.com/gramex/guide/')
-    elif version.parse(server_version) < version.parse(__version__):
-        app_log.warning(f'Gramex {__version__} is ahead of stable {server_version}')
-    else:
-        app_log.debug(f'Gramex {__version__} is up to date')
-    services.info.eventlog.add('update', update)
-    return {'logs': logs, 'response': update}
-
-
-def console(msg):
-    '''Write message to console'''
-    print(msg)              # noqa
-
-
-def init(force_reload=False, **kwargs):
-    '''
-    Update Gramex configurations and start / restart the instance.
-
-    ``gramex.init()`` can be called any time to refresh configuration files.
-    ``gramex.init(key=val)`` adds ``val`` as a configuration layer named
-    ``key``. If ``val`` is a Path, it is converted into a PathConfig. (If it is
-    Path directory, use ``gramex.yaml``.)
-
-    Services are re-initialised if their configurations have changed. Service
-    callbacks are always re-run (even if the configuration hasn't changed.)
-    '''
+    # Set up secrets from .secrets.yaml, if any
     try:
         setup_secrets(paths['base'] / '.secrets.yaml')
     except Exception as e:
@@ -316,7 +309,7 @@ def init(force_reload=False, **kwargs):
 
 
 def shutdown():
-    '''Shut down this instance'''
+    '''Shut down the running Gramex instance.'''
     from . import services
     ioloop = services.info.main_ioloop
     if ioloop_running(ioloop):
@@ -325,14 +318,64 @@ def shutdown():
         ioloop.add_callback(ioloop.stop)
 
 
-def log(*args, **kwargs):
+def gramex_update(url: str):
+    '''Check if a newer version of Gramex is available. If yes, log a warning.
+
+    Parameters:
+        url: URL to check for new version
+
+    Gramex uses <https://gramener.com/gramex-update/> as the URL to check for new versions.
     '''
-    Logs structured information for future reference. Typical usage::
+    import time
+    import requests
+    import platform
+    from . import services
 
-        gramex.log(level='INFO', x=1, msg='abc')
+    if not services.info.eventlog:
+        return app_log.error('eventlog: service is not running. So Gramex update is disabled')
 
-    This logs ``{level: INFO, x: 1, msg: abc}`` into a logging queue. If a `gramexlog` service like
-    ElasticSearch has been configured, it will periodically flush the logs into the server.
+    query = services.info.eventlog.query
+    update = query('SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1')
+    delay = 24 * 60 * 60            # Wait for one day before updates
+    if update and time.time() < update[0]['time'] + delay:
+        return app_log.debug('Gramex update ran recently. Deferring check.')
+
+    meta = {
+        'dir': variables.get('GRAMEXDATA'),
+        'uname': platform.uname(),
+    }
+    if update:
+        events = query(
+            'SELECT * FROM events WHERE time > ? ORDER BY time',
+            (update[0]['time'], ))
+    else:
+        events = query('SELECT * FROM events')
+    logs = [dict(log, **meta) for log in events]
+
+    r = requests.post(url, data=json.dumps(logs))
+    r.raise_for_status()
+    update = r.json()
+    server_version = update['version']
+    if version.parse(server_version) > version.parse(__version__):
+        app_log.error(f'Gramex {server_version} is available. https://gramener.com/gramex/guide/')
+    elif version.parse(server_version) < version.parse(__version__):
+        app_log.warning(f'Gramex {__version__} is ahead of stable {server_version}')
+    else:
+        app_log.debug(f'Gramex {__version__} is up to date')
+    services.info.eventlog.add('update', update)
+    return {'logs': logs, 'response': update}
+
+
+def log(*args, **kwargs):
+    '''Logs structured information for future reference.
+
+    Examples:
+        >>> gramex.log(level='INFO', x=1, msg='abc')
+
+        This logs `{level: INFO, x: 1, msg: abc}` into a logging queue.
+
+        If a `gramexlog` service like ElasticSearch has been configured, it will periodically flush
+        the logs into the server.
     '''
     from . import services
     # gramexlog() positional arguments may have a handler and app (in any order)
@@ -357,3 +400,8 @@ def log(*args, **kwargs):
     # Add additional keys specified in gramex.yaml via keys:
     kwargs.update(conf.extra_keys(handler))
     conf.queue.append(kwargs)
+
+
+def console(msg):
+    '''Write message to console. An alias for print().'''
+    print(msg)              # noqa
