@@ -66,13 +66,13 @@ _cache, _tmpl_cache = AttrDict(), AttrDict()
 atexit.register(info.threadpool.shutdown)
 
 
-def version(conf):
+def version(conf: dict) -> None:
     '''Check if config version is supported. Currently, only 1.0 is supported'''
     if conf != 1.0:
         raise NotImplementedError(f'version: {conf} is not supported. Only 1.0')
 
 
-def log(conf):
+def log(conf: dict) -> None:
     '''Set up logging using Python's standard logging.config.dictConfig()'''
     # Create directories for directories mentioned by handlers if logs are used
     active_handlers = set(conf.get('root', {}).get('handlers', []))
@@ -94,7 +94,7 @@ def log(conf):
         app_log.exception('Error in log: configuration')
 
 
-def app(conf):
+def app(conf: dict) -> None:
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
     ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
@@ -194,7 +194,7 @@ def app(conf):
         return callback
 
 
-def schedule(conf):
+def schedule(conf: dict) -> None:
     '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
@@ -214,7 +214,7 @@ def schedule(conf):
             app_log.exception(e)
 
 
-def alert(conf):
+def alert(conf: dict) -> None:
     '''
     Sets up the alert service
     '''
@@ -242,7 +242,7 @@ def alert(conf):
                 app_log.exception(f'Failed to initialize alert: {name}')
 
 
-def threadpool(conf):
+def threadpool(conf: dict) -> None:
     '''Set up a global threadpool executor'''
     # By default, use a single worker. If a different value is specified, use it
     workers = 1
@@ -252,7 +252,7 @@ def threadpool(conf):
     atexit.register(info.threadpool.shutdown)
 
 
-def url(conf):
+def url(conf: dict) -> None:
     '''Set up the tornado web app URL handlers'''
     info.url = AttrDict()
     # Sort the handlers in descending order of priority
@@ -324,13 +324,13 @@ def url(conf):
     info.app.add_handlers('.*$', info.url.values())
 
 
-def mime(conf):
+def mime(conf: dict) -> None:
     '''Set up MIME types'''
     for ext, type in conf.items():
         mimetypes.add_type(type, ext, strict=True)
 
 
-def watch(conf):
+def watch(conf: dict) -> None:
     '''Set up file watchers'''
     from . import watcher
 
@@ -372,7 +372,7 @@ _cache_defaults = {
 }
 
 
-def cache(conf):
+def cache(conf: dict) -> None:
     '''Set up caches'''
     for name, config in conf.items():
         cache_type = config['type']
@@ -401,7 +401,7 @@ def cache(conf):
                 setattr(gramex.cache, key, val)
 
 
-def eventlog(conf):
+def eventlog(conf: dict) -> None:
     '''Set up the application event logger'''
     if not conf.path:
         return
@@ -441,7 +441,7 @@ def eventlog(conf):
     atexit.register(shutdown)
 
 
-def email(conf):
+def email(conf: dict) -> None:
     '''Set up email service'''
     for name, config in conf.items():
         _key = cache_key('email', config)
@@ -458,7 +458,7 @@ sms_notifiers = {
 }
 
 
-def sms(conf):
+def sms(conf: dict) -> None:
     '''Set up SMS service'''
     for name, config in conf.items():
         _key = cache_key('sms', config)
@@ -474,18 +474,26 @@ def sms(conf):
             app_log.exception(f'sms:{name}: Cannot setup {notifier_type}')
 
 
-def encrypt(conf):
+def handlers(conf: dict) -> None:
+    '''Set up handlers service.
+
+    This holds default configurations for handlers configured by [gramex.service.url][],
+    e.g. BaseHandler errors, FileHandler ignores, etc.'''
+    pass
+
+
+def encrypt(conf: dict) -> None:
     app_log.warning('encrypt: service deprecated.')
 
 
-def test(conf):
+def test(conf: dict) -> None:
     '''Set up test service'''
     # Remove auth: section when running gramex.
     # If there are passwords here, they will not be loaded in memory
     conf.pop('auth', None)
 
 
-def gramexlog(conf):
+def gramexlog(conf: dict) -> None:
     '''Set up gramexlog service'''
     from gramex.transforms import build_log_info
     try:
@@ -530,7 +538,7 @@ def gramexlog(conf):
     info.gramexlog.push = push
 
 
-def storelocations(conf):
+def storelocations(conf: dict) -> None:
     '''Initialize the store locations'''
     for key, subconf in conf.items():
         info.storelocations[key] = subconf

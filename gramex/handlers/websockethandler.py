@@ -17,6 +17,12 @@ class WebSocketHandler(BaseWebSocketHandler):
     @classmethod
     def setup(cls, **kwargs):
         super(WebSocketHandler, cls).setup(**kwargs)
+        cls._setup(cls, **kwargs)
+
+    @staticmethod
+    def _setup(cls, **kwargs):
+        # ProxyHandler proxies websockets, and needs a setup without subclassing WebSocketHandler.
+        # _setup() can be used both by WebSocketHandler and ProxyHandler.
         override_methods = {
             'open': ['handler'],
             'on_message': ['handler', 'message'],

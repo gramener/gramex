@@ -49,9 +49,9 @@ plugins = {}
 
 
 def filter(
-        url: Union[str, pd.DataFrame], args: dict = None, meta: dict = {}, engine: str = None,
-        table: str = None, ext: str = None, columns: dict = None, query: str = None,
-        queryfile: str = None, state: str = None, transform: Callable = None,
+        url: Union[str, pd.DataFrame], args: dict = {}, meta: dict = {}, engine: str = None,
+        ext: str = None, columns: dict = None, query: str = None,
+        queryfile: str = None, transform: Callable = None,
         transform_kwargs: dict = {}, **kwargs: dict) -> pd.DataFrame:
     '''Filter data using URL query parameters.
 
@@ -219,6 +219,8 @@ def filter(
         return method(url=url, controls=controls, args=args, meta=meta, query=query,
                       columns=columns, **kwargs)
     elif engine == 'sqlalchemy':
+        table = kwargs.pop('table', None)
+        state = kwargs.pop('state', None)
         engine = alter(url, table, columns, **kwargs)
         if query or queryfile:
             if queryfile:
@@ -247,7 +249,7 @@ def filter(
 
 
 def delete(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
         table: str = None, ext: str = None, id: str = None, columns: dict = None,
         query: str = None, queryfile: str = None, transform: Callable = None,
         transform_kwargs: dict = {}, **kwargs: dict) -> int:
@@ -297,7 +299,7 @@ def delete(
 
 
 def update(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
         table: str = None, ext: str = None, id: str = None, columns: dict = None,
         query: str = None, queryfile: str = None, transform: Callable = None,
         transform_kwargs: dict = {}, **kwargs: dict) -> int:
@@ -347,7 +349,7 @@ def update(
 
 
 def insert(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
         table: str = None, ext: str = None, id: str = None, columns: dict = None,
         query: str = None, queryfile: str = None, transform: Callable = None,
         transform_kwargs: dict = {}, **kwargs: dict) -> int:
@@ -525,7 +527,7 @@ def get_table(engine: sa.engine.base.Engine, table: str, **kwargs: dict) -> sa.T
 
 
 def download(
-        data: Union(pd.DataFrame, List[pd.DataFrame]), format: str = 'json',
+        data: Union[pd.DataFrame, List[pd.DataFrame]], format: str = 'json',
         template: str = None, args: dict = {}, **kwargs: dict) -> bytes:
     '''
     Download a DataFrame or dict of DataFrames in various formats. This is used
@@ -1216,7 +1218,7 @@ _frame_functions = {
 
 
 def _filter_frame(
-        data: pd.DataFrame, meta: dict, controls: dict, args: dict, source:str = 'select',
+        data: pd.DataFrame, meta: dict, controls: dict, args: dict, source: str = 'select',
         id: List[str] = []) -> pd.DataFrame:
     '''
     If `source` is `'select'`, returns a DataFrame in which the DataFrame
