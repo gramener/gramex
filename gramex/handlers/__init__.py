@@ -1,6 +1,4 @@
-'''
-Handlers
-'''
+'''Handlers set up the micro-services for [gramex.service.url][].'''
 
 from .basehandler import BaseHandler, BaseWebSocketHandler, SetupFailedHandler
 from .functionhandler import FunctionHandler

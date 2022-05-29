@@ -4,21 +4,18 @@ from .basehandler import BaseWebSocketHandler
 
 
 class WebSocketHandler(BaseWebSocketHandler):
-    '''Creates a websocket microservice.'''
+    '''Creates a websocket microservice.
+
+    - `open`: function. `open(handler)` is called when the connection is opened
+    - `on_message`: function. `on_message(handler, message: str)` is called when client sends a
+        message
+    - `on_close`: function. `on_close(handler)` is called when connection is closed.
+    - `origins`: a domain name or list of domain names. No wildcards
+
+    Functions can use `handler.write_message(msg: str)` to sends a message back to the client.
+    '''
     @classmethod
     def setup(cls, **kwargs):
-        '''Configure the websocket handler.
-
-        Accepts these parameters:
-
-        - `open`: function. `open(handler)` is called when the connection is opened
-        - `on_message`: function. `on_message(handler, message: str)` is called when client sends a
-            message
-        - `on_close`: function. `on_close(handler)` is called when connection is closed.
-        - `origins`: a domain name or list of domain names. No wildcards
-
-        Functions can use `handler.write_message(msg: str)` to sends a message back to the client.
-        '''
         super(WebSocketHandler, cls).setup(**kwargs)
         override_methods = {
             'open': ['handler'],

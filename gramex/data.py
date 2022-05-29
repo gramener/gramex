@@ -1,6 +1,4 @@
-'''
-Interact with data from the browser
-'''
+'''Query and manipule data from any source.'''
 from datetime import datetime
 import io
 import os
@@ -13,6 +11,7 @@ import pandas as pd
 import gramex.cache
 from packaging import version
 from tornado.escape import json_encode
+from typing import Callable, List, Union
 from gramex.config import merge, app_log
 from orderedattrdict import AttrDict
 
@@ -49,152 +48,134 @@ _numeric_types = {'int', 'long', 'float', 'Decimal'}
 plugins = {}
 
 
-def _transform_fn(transform, transform_kwargs):
-    if transform is not None and transform_kwargs is not None:
-        return lambda v: transform(v, **transform_kwargs)
-    return transform
+def filter(
+        url: Union[str, pd.DataFrame], args: dict = None, meta: dict = {}, engine: str = None,
+        table: str = None, ext: str = None, columns: dict = None, query: str = None,
+        queryfile: str = None, state: str = None, transform: Callable = None,
+        transform_kwargs: dict = {}, **kwargs: dict) -> pd.DataFrame:
+    '''Filter data using URL query parameters.
 
+    Examples:
+        >>> gramex.data.filter(dataframe, args=handler.args)
+        >>> gramex.data.filter('file.csv', args=handler.args)
+        >>> gramex.data.filter('mysql://server/db', table='table', args=handler.args)
 
-def _replace(engine, args, *vars, **kwargs):
-    escape = _sql_safe if engine == 'sqlalchemy' else _path_safe
-    params = {k: v[0] for k, v in args.items() if len(v) > 0 and escape(v[0])}
+    Parameters:
 
-    def _format(val):
-        if isinstance(val, str):
-            return val.format(**params)
-        if isinstance(val, list):
-            return [_format(v) for v in val]
-        if isinstance(val, dict):
-            return AttrDict([(k, _format(v)) for k, v in val.items()])
-        return val
+        url: DataFrame, sqlalchemy URL, directory or file name, http(s) URL
+        args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
+        meta: this dict is updated with metadata during the course of filtering
+        engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
+            'http', 'https', 'sqlalchemy', 'dir'
+        table: table name (if url is an SQLAlchemy URL), `.format`-ed using `args`.
+        ext: file extension (if url is a file). Defaults to url extension
+        columns: database column names to create if required (if url is a database).
+            Keys are column names. Values can be SQL types, or dicts with these keys:
+                - `type` (str), e.g. `"VARCHAR(10)"`
+                - `default` (str/int/float/bool), e.g. `"none@example.org"`
+                - `nullable` (bool), e.g. `False`
+                - `primary_key` (bool), e.g. `True` -- used only when creating new tables
+                - `autoincrement` (bool), e.g. `True` -- used only when creating new tables
+        query: optional SQL query to execute (if url is a database),
+            `.format`-ed using `args` and supports SQLAlchemy SQL parameters.
+            Loads entire result in memory before filtering.
+        queryfile: optional SQL query file to execute (if url is a database).
+            Same as specifying the `query:` in a file. Overrides `query:`
+        state: optional SQL query to check if data has changed.
+        transform: optional in-memory transform of source data. Takes
+            the result of gramex.cache.open or gramex.cache.query. Must return a
+            DataFrame. Applied to both file and SQLAlchemy urls.
+        transform_kwargs: optional keyword arguments to be passed to the
+            transform function -- apart from data
+        **kwargs: Additional parameters are passed to
+            [gramex.cache.open][], `sqlalchemy.create_engine` or the plugin's filter
 
-    return _format(list(vars)) + [_format(kwargs)]
+    Returns:
+        Filtered DataFrame
 
+    Remaining kwargs are passed to [gramex.cache.open][] if `url` is a file, or
+    `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL.
 
-def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
-           query=None, queryfile=None, transform=None, transform_kwargs=None, **kwargs):
-    '''
-    Filters data using URL query parameters. Typical usage::
+    If this is used in a handler as
 
-        filtered = gramex.data.filter(dataframe, args=handler.args)
-        filtered = gramex.data.filter('file.csv', args=handler.args)
-        filtered = gramex.data.filter('mysql://server/db', table='table', args=handler.args)
+        >>> filtered = gramex.data.filter(dataframe, args=handler.args)
 
-    It accepts the following parameters:
+    ... then calling the handler with `?x=1&y=2` returns all rows in
+    `dataframe` where x is 1 and y is 2.
 
-    :arg source url: Pandas DataFrame, sqlalchemy URL, directory or file name,
-        http(s) data file, all `.format``-ed using ``args``.
-    :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
-    :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
-        'http', 'https', 'sqlalchemy', 'dir'
-    :arg str ext: file extension (if url is a file). Defaults to url extension
-    :arg dict columns: database column names to create if required (if url is a database).
-        Keys are column names. Values can be SQL types, or dicts with these keys:
-            - ``type`` (str), e.g. ``"VARCHAR(10)"``
-            - ``default`` (str/int/float/bool), e.g. ``"none@example.org"``
-            - ``nullable`` (bool), e.g. ``False``
-            - ``primary_key`` (bool), e.g. ``True`` -- used only when creating new tables
-            - ``autoincrement`` (bool), e.g. ``True`` -- used only when creating new tables
-    :arg str query: optional SQL query to execute (if url is a database),
-        ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
-        Loads entire result in memory before filtering.
-    :arg str queryfile: optional SQL query file to execute (if url is a database).
-        Same as specifying the ``query:`` in a file. Overrides ``query:``
-    :arg function transform: optional in-memory transform of source data. Takes
-        the result of gramex.cache.open or gramex.cache.query. Must return a
-        DataFrame. Applied to both file and SQLAlchemy urls.
-    :arg dict transform_kwargs: optional keyword arguments to be passed to the
-        transform function -- apart from data
-    :arg dict kwargs: Additional parameters are passed to
-        :py:func:`gramex.cache.open`, ``sqlalchemy.create_engine`` or the plugin's filter
-    :return: a filtered DataFrame
+    If `table` or `query` is passed to an SQLAlchemy url, it is formatted using `args`.
+    For example
 
-    Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
-    ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL. In particular:
+        >>> data = gramex.data.filter('mysql://server/db', table='{xxx}', args=handler.args)
 
-    :arg str table: table name (if url is an SQLAlchemy URL), ``.format``-ed
-        using ``args``.
+    ... when passed `?xxx=sales` returns rows from the sales table. Similarly:
 
-    If this is used in a handler as::
+        >>> data = gramex.data.filter(
+        ...     'mysql://server/db', args=handler.args,
+        ...     query='SELECT {col}, COUNT(*) FROM table GROUP BY {col}')
 
-        filtered = gramex.data.filter(dataframe, args=handler.args)
+    ... when passsed `?col=City` replaces `{col}` with `City`.
 
-    ... then calling the handler with ``?x=1&y=2`` returns all rows in
-    ``dataframe`` where x is 1 and y is 2.
-
-    If a table or query is passed to an SQLAlchemy url, it is formatted using
-    ``args``. For example::
-
-        data = gramex.data.filter('mysql://server/db', table='{xxx}', args=handler.args)
-
-    ... when passed ``?xxx=sales`` returns rows from the sales table. Similarly::
-
-        data = gramex.data.filter('mysql://server/db', args=handler.args,
-                                  query='SELECT {col}, COUNT(*) FROM table GROUP BY {col}')
-
-    ... when passsed ``?col=City`` replaces ``{col}`` with ``City``.
-
-    **NOTE**: To avoid SQL injection attacks, only values without spaces are
-    allowed. So ``?col=City Name`` or ``?col=City+Name`` **will not** work.
+    NOTE: To avoid SQL injection attacks, only keys without spaces are allowed.
+    So `?city name=Oslo` **will not** work.
 
     The URL supports operators filter like this:
 
-    - ``?x`` selects x is not null
-    - ``?x!`` selects x is null
-    - ``?x=val`` selects x == val
-    - ``?x!=val`` selects x != val
-    - ``?x>=val`` selects x > val
-    - ``?x>~=val`` selects x >= val
-    - ``?x<=val`` selects x < val
-    - ``?x<~=val`` selects x <= val
-    - ``?x~=val`` selects x matches val as a regular expression
-    - ``?x!~=val`` selects x does not match val as a regular expression
+    - `?x` selects x is not null
+    - `?x!` selects x is null
+    - `?x=val` selects x == val
+    - `?x!=val` selects x != val
+    - `?x>=val` selects x > val
+    - `?x>~=val` selects x >= val
+    - `?x<=val` selects x < val
+    - `?x<~=val` selects x <= val
+    - `?x~=val` selects x matches val as a regular expression
+    - `?x!~=val` selects x does not match val as a regular expression
 
     Multiple filters are combined into an AND clause. Ranges can also be
     specified like this:
 
-    - ``?x=a&y=b`` selects x = a AND y = b
-    - ``?x>=100&x<=200`` selects x > 100 AND x < 200
+    - `?x=a&y=b` selects x = a AND y = b
+    - `?x>=100&x<=200` selects x > 100 AND x < 200
 
     If the same column has multiple values, they are combined like this:
 
-    - ``?x=a&x=b`` selects x IN (a, b)
-    - ``?x!=a&x!=b`` selects x NOT IN (a, b)
-    - ``?x~=a&x~=b`` selects x ~ a|b
-    - ``?x>=a&x>=b`` selects x > MIN(a, b)
-    - ``?x<=a&x<=b`` selects x < MAX(a, b)
+    - `?x=a&x=b` selects x IN (a, b)
+    - `?x!=a&x!=b` selects x NOT IN (a, b)
+    - `?x~=a&x~=b` selects x ~ a|b
+    - `?x>=a&x>=b` selects x > MIN(a, b)
+    - `?x<=a&x<=b` selects x < MAX(a, b)
 
     Arguments are converted to the type of the column before comparing. If this
     fails, it raises a ValueError.
 
     These URL query parameters control the output:
 
-    - ``?_sort=col`` sorts column col in ascending order. ``?_sort=-col`` sorts
-      in descending order.
-    - ``?_limit=100`` limits the result to 100 rows
-    - ``?_offset=100`` starts showing the result from row 100. Default: 0
-    - ``?_c=x&_c=y`` returns only columns ``[x, y]``. ``?_c=-col`` drops col.
+    - `?_sort=col` sorts column col in ascending order. `?_sort=-col` sorts
+        in descending order.
+    - `?_limit=100` limits the result to 100 rows
+    - `?_offset=100` starts showing the result from row 100. Default: 0
+    - `?_c=x&_c=y` returns only columns `[x, y]`. `?_c=-col` drops col.
 
     If a column name matches one of the above, you cannot filter by that column.
     Avoid column names beginning with _.
 
-    To get additional information about the filtering, use::
+    To get additional information about the filtering, use:
 
         meta = {}      # Create a variable which will be filled with more info
         filtered = gramex.data.filter(data, meta=meta, **handler.args)
 
-    The ``meta`` variable is populated with the following keys:
+    The `meta` variable is populated with the following keys:
 
-    - ``filters``: Applied filters as ``[(col, op, val), ...]``
-    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', col), ('_by', col), ...]``
-    - ``excluded``: Excluded columns as ``[col, ...]``
-    - ``sort``: Sorted columns as ``[(col, True), ...]``. The second parameter is ``ascending=``
-    - ``offset``: Offset as integer. Defaults to 0
-    - ``limit``: Limit as integer - ``None`` if limit is not applied
-    - ``count``: Total number of rows, if available
-    - ``by``: Group by columns as ``[col, ...]``
-    - ``inserted``: List of (dict of primary values) for each inserted row
+    - `filters`: Applied filters as `[(col, op, val), ...]`
+    - `ignored`: Ignored filters as `[(col, vals), ('_sort', col), ('_by', col), ...]`
+    - `excluded`: Excluded columns as `[col, ...]`
+    - `sort`: Sorted columns as `[(col, True), ...]`. The second parameter is `ascending=`
+    - `offset`: Offset as integer. Defaults to 0
+    - `limit`: Limit as integer - `None` if limit is not applied
+    - `count`: Total number of rows, if available
+    - `by`: Group by columns as `[col, ...]`
+    - `inserted`: List of (dict of primary values) for each inserted row
 
     These variables may be useful to show additional information about the
     filtered data.
@@ -238,8 +219,6 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         return method(url=url, controls=controls, args=args, meta=meta, query=query,
                       columns=columns, **kwargs)
     elif engine == 'sqlalchemy':
-        table = kwargs.pop('table', None)
-        state = kwargs.pop('state', None)
         engine = alter(url, table, columns, **kwargs)
         if query or queryfile:
             if queryfile:
@@ -267,19 +246,22 @@ def filter(url, args={}, meta={}, engine=None, ext=None, columns=None,
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
-def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
-           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
-    '''
-    Deletes data using URL query parameters. Typical usage::
+def delete(
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        table: str = None, ext: str = None, id: str = None, columns: dict = None,
+        query: str = None, queryfile: str = None, transform: Callable = None,
+        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    '''Deletes data using URL query parameters.
 
-        count = gramex.data.delete(dataframe, args=handler.args, id=['id'])
-        count = gramex.data.delete('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.delete('mysql://server/db', table='x', args=handler.args, id=['id'])
+    Examples:
+        >>> gramex.data.delete(dataframe, args=handler.args, id=['id'])
+        >>> gramex.data.delete('file.csv', args=handler.args, id=['id'])
+        >>> gramex.data.delete('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a list of column names defining the primary key.
-    Calling this in a handler with ``?id=1&id=2`` deletes rows with id is 1 or 2.
+    `id` is a list of column names defining the primary key.
+    Calling this in a handler with `?id=1&id=2` deletes rows with id is 1 or 2.
 
-    It accepts the same parameters as :py:func:`filter`, and returns the number
+    It accepts the same parameters as [gramex.data.filter][], and returns the number
     of deleted rows.
     '''
     if engine is None:
@@ -314,19 +296,23 @@ def delete(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
-def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
-           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
-    '''
-    Update data using URL query parameters. Typical usage::
+def update(
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        table: str = None, ext: str = None, id: str = None, columns: dict = None,
+        query: str = None, queryfile: str = None, transform: Callable = None,
+        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    '''Update data using URL query parameters.
 
-        count = gramex.data.update(dataframe, args=handler.args, id=['id'])
-        count = gramex.data.update('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.update('mysql://server/db', table='x', args=handler.args, id=['id'])
+    Examples:
+        >>> gramex.data.update(dataframe, args=handler.args, id=['id'])
+        >>> gramex.data.update('file.csv', args=handler.args, id=['id'])
+        >>> gramex.data.update('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a list of column names defining the primary key.
-    Calling this in a handler with ``?id=1&x=2`` updates x=2 where id=1.
+    `id` is a list of column names defining the primary key.
+    Calling this in a handler with `?id=1&x=2` updates x=2 where id=1.
 
-    It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
+    It accepts the same parameters as [gramex.data.filter][], and returns the number of updated
+    rows.
     '''
     if engine is None:
         engine = get_engine(url)
@@ -360,21 +346,25 @@ def update(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
-def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, columns=None,
-           query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
-    '''
-    Insert data using URL query parameters. Typical usage::
+def insert(
+        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = None, engine: str = None,
+        table: str = None, ext: str = None, id: str = None, columns: dict = None,
+        query: str = None, queryfile: str = None, transform: Callable = None,
+        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    '''Insert data using URL query parameters.
 
-        count = gramex.data.insert(dataframe, args=handler.args, id=['id'])
-        count = gramex.data.insert('file.csv', args=handler.args, id=['id'])
-        count = gramex.data.insert('mysql://server/db', table='x', args=handler.args, id=['id'])
+    Examples:
+        >>> gramex.data.insert(dataframe, args=handler.args, id=['id'])
+        >>> gramex.data.insert('file.csv', args=handler.args, id=['id'])
+        >>> gramex.data.insert('mysql://server/db', table='x', args=handler.args, id=['id'])
 
-    ``id`` is a list of column names defining the primary key.
-    Calling this in a handler with ``?id=3&x=2`` inserts a new record with id=3 and x=2.
+    `id` is a list of column names defining the primary key.
+    Calling this in a handler with `?id=3&x=2` inserts a new record with id=3 and x=2.
 
     If the target file / table does not exist, it is created.
 
-    It accepts the same parameters as :py:func:`filter`, and returns the number of updated rows.
+    It accepts the same parameters as [gramex.data.filter][], and returns the number of updated
+    rows.
     '''
     if engine is None:
         engine = get_engine(url)
@@ -481,18 +471,18 @@ def insert(url, meta={}, args=None, engine=None, table=None, ext=None, id=None, 
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
-def get_engine(url):
-    '''
-    Used to detect type of url passed. Returns:
+def get_engine(url: Union[str, pd.DataFrame]) -> str:
+    '''Detect the type of url passed.
 
-    - ``'dataframe'`` if url is a Pandas DataFrame
-    - ``'sqlalchemy'`` if url is a sqlalchemy compatible URL
-    - ``'plugin'`` if it is `<valid-plugin-name>://...`
-    - ``protocol`` if url is of the form `protocol://...`
-    - ``'dir'`` if it is not a URL but a valid directory
-    - ``'file'`` if it is not a URL but a valid file
+    The return value is
 
-    Else it raises an Exception
+    - `'dataframe'` if url is a Pandas DataFrame
+    - `'sqlalchemy'` if url is a sqlalchemy compatible URL
+    - `'plugin'` if it is `<valid-plugin-name>://...`
+    - `protocol` if url is of the form `protocol://...`
+    - `'dir'` if it is not a URL but a valid directory
+    - `'file'` if it is not a URL but a valid file
+    - `None` otherwise
     '''
     if isinstance(url, pd.DataFrame):
         return 'dataframe'
@@ -510,11 +500,11 @@ def get_engine(url):
         return url.drivername
 
 
-def create_engine(url, create=sa.create_engine, **kwargs):
+def create_engine(url: str, create: sa.engine.base.Engine = sa.create_engine, **kwargs: dict):
     '''
     Cached version of sqlalchemy.create_engine (or any custom engine).
 
-    Normally, this is not required. But :py:func:`get_table` caches the engine
+    Normally, this is not required. But [gramex.data.get_table][] caches the engine
     *and* metadata *and* uses autoload=True. This makes sqlalchemy create a new
     database connection for every engine object, and not dispose it. So we
     re-use the engine objects within this module.
@@ -524,7 +514,7 @@ def create_engine(url, create=sa.create_engine, **kwargs):
     return _ENGINE_CACHE[url]
 
 
-def get_table(engine, table, **kwargs):
+def get_table(engine: sa.engine.base.Engine, table: str, **kwargs: dict) -> sa.Table:
     '''Return the sqlalchemy table from the engine and table name'''
     if engine not in _METADATA_CACHE:
         _METADATA_CACHE[engine] = sa.MetaData(bind=engine)
@@ -534,481 +524,15 @@ def get_table(engine, table, **kwargs):
     return sa.Table(table, metadata, autoload=True, autoload_with=engine, **kwargs)
 
 
-def _pop_controls(args):
-    '''Filter out data controls: _sort, _limit, _offset, _c (column) and _by from args'''
-    return {
-        key: args.pop(key)
-        for key in ('_sort', '_limit', '_offset', '_c', '_by')
-        if key in args
-    }
-
-
-def _pop_columns(data, cols, ignored):
-    '''Remove columns not in cols'''
-    cols = set(cols)
-    for col in data.columns:
-        if col not in cols:
-            ignored.append([col, data[col].tolist()])
-    return data[[col for col in cols if col in data.columns]]
-
-
-def _sql_safe(val):
-    '''Return True if val is safe for insertion in an SQL query'''
-    if isinstance(val, str):
-        return not re.search(r'\s', val)
-    elif isinstance(val, (int, float, bool)):
-        return True
-    return False
-
-
-def _path_safe(path):
-    '''Returns True if path does not try to escape outside a given directory using .. or / etc'''
-    # Ignore non-strings. These are generally not meant for paths
-    if not isinstance(path, str):
-        return True
-    return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
-
-
-# The order of operators is important. ~ is at the end. Otherwise, !~
-# or >~ will also be mapped to ~ as an operator
-operators = ['!', '>', '>~', '<', '<~', '!~', '~']
-
-
-def _filter_col(col, cols):
-    '''
-    Parses a column name from a list of columns and returns a (col, agg, op)
-    tuple.
-
-    - ``col`` is the name of the column in cols.
-    - ``agg`` is the aggregation operation (SUM, MIN, MAX, etc), else None
-    - ``op`` is the operator ('', !, >, <, etc)
-
-    If the column is invalid, then ``col`` and ``op`` are None
-    '''
-    colset = set(cols)
-    # ?col= is returned quickly
-    if col in colset:
-        return col, None, ''
-    # Check if it matches a non-empty operator, like ?col>~=
-    for op in operators:
-        if col.endswith(op):
-            name = col[:-len(op)]
-            if name in colset:
-                return name, None, op
-            # If there's an aggregator, split it out, like ?col|SUM>~=
-            elif _agg_sep in name:
-                name, agg = name.rsplit(_agg_sep, 1)
-                if name in colset:
-                    return name, agg, op
-    # If no operators match, it might be a pure aggregation, like ?col|SUM=
-    if _agg_sep in col:
-        name, agg = col.rsplit(_agg_sep, 1)
-        if name in colset:
-            return name, agg, ''
-    # Otherwise we don't know what it is
-    return None, None, None
-
-
-def _convertor(conv):
-    '''
-    Updates a type conversion function.
-
-    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False.
-    Datetimes are converted using dateutil parser.
-    '''
-    # Convert based on Pandas datatype. But for boolean, convert from string as below
-    if conv in {np.bool_, bool}:
-        conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
-    elif conv in {datetime}:
-        from dateutil.parser import parse
-        conv = parse
-    return conv
-
-
-def _filter_frame_col(data, key, col, op, vals, meta):
-    # Apply type conversion for values
-    conv = _convertor(data[col].dtype.type)
-    vals = tuple(conv(val) for val in vals if val)
-    if op not in {'', '!'} and len(vals) == 0:
-        meta['ignored'].append((key, vals))
-    elif op == '':
-        data = data[data[col].isin(vals)] if len(vals) else data[pd.notnull(data[col])]
-    elif op == '!':
-        data = data[~data[col].isin(vals)] if len(vals) else data[pd.isnull(data[col])]
-    elif op == '>':
-        data = data[data[col] > min(vals)]
-    elif op == '>~':
-        data = data[data[col] >= min(vals)]
-    elif op == '<':
-        data = data[data[col] < max(vals)]
-    elif op == '<~':
-        data = data[data[col] <= max(vals)]
-    elif op == '!~':
-        data = data[~data[col].str.contains('|'.join(vals))]
-    elif op == '~':
-        data = data[data[col].str.contains('|'.join(vals))]
-    meta['filters'].append((col, op, vals))
-    return data
-
-
-# Treat SQL type datetime as str when converting URL arguments to values.
-# Don't try to convert ?date=2022-01-01 to datetime(2022, 1, 1).
-_sql_types = {datetime: str}
-
-
-def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
-    '''
-    - Updates ``query`` with a method (WHERE/HAVING) that sets '<key> <op> <vals>'
-    - ``column`` is the underlying ColumnElement
-    - ``conv`` is a type conversion function that converts ``vals`` to the correct type
-    - Updates ``meta`` with the fields used for filtering (or ignored)
-    '''
-    conv = _sql_types.get(conv, conv)
-    vals = tuple(conv(val) for val in vals if val)
-    if op not in {'', '!'} and len(vals) == 0:
-        meta['ignored'].append((key, vals))
-    elif op == '':
-        # Test if column is not NULL. != None is NOT the same as is not None
-        query = method(column.in_(vals) if len(vals) else column != None)      # noqa
-    elif op == '!':
-        # Test if column is NULL. == None is NOT the same as is None
-        query = method(column.notin_(vals) if len(vals) else column == None)   # noqa
-    elif op == '>':
-        query = method(column > min(vals))
-    elif op == '>~':
-        query = method(column >= min(vals))
-    elif op == '<':
-        query = method(column < max(vals))
-    elif op == '<~':
-        query = method(column <= max(vals))
-    elif op == '!~':
-        query = method(column.notlike('%' + '%'.join(vals) + '%'))
-    elif op == '~':
-        query = method(column.like('%' + '%'.join(vals) + '%'))
-    meta['filters'].append((col, op, vals))
-    return query
-
-
-def _filter_sort_columns(controls, cols, meta):
-    '''
-    Checks ?_sort=col&_sort=-col. Returns list of (columns to sort by, ascending/not).
-
-    Updates meta['sort'] with columns to sort by,
-    and meta['ignored'] with unrecognized sort column names as ('_sort', columns)
-    '''
-    sorts, ignore_sorts = [], []
-    if '_sort' in controls:
-        for col in controls['_sort']:
-            if col in cols:
-                sorts.append((col, True))
-            elif col.startswith('-') and col[1:] in cols:
-                sorts.append((col[1:], False))
-            else:
-                ignore_sorts.append(col)
-        if len(ignore_sorts) > 0:
-            meta['ignored'].append(('_sort', ignore_sorts))
-        meta['sort'] = sorts
-    return sorts
-
-
-def _filter_select_columns(controls, cols, meta):
-    '''
-    Checks ?_c=col&_c=-col. Takes values of ?_c= as col_filter and
-    data column names as cols. Returns list of columns to show.
-
-    Updates meta['excluded'] with columns explicitly excluded,
-    and meta['ignored'] with unrecognized column names.
-    '''
-    if '_c' not in controls:
-        return cols
-    selected_cols, excluded_cols, ignored_cols = [], set(), []
-    for col in controls['_c']:
-        if col in cols:
-            selected_cols.append(col)
-        elif col.startswith('-') and col[1:] in cols:
-            excluded_cols.add(col[1:])
-        else:
-            ignored_cols.append(col)
-    if len(excluded_cols) > 0 and len(selected_cols) == 0:
-        selected_cols = cols
-    show_cols = [col for col in selected_cols if col not in excluded_cols]
-    meta['excluded'] = list(excluded_cols)
-    if ignored_cols:
-        meta['ignored'].append(('_c', ignored_cols))
-    return show_cols
-
-
-def _filter_offset_limit(controls, meta):
-    offset, limit = 0, None
-    if '_offset' in controls:
-        try:
-            offset = min(int(v) for v in controls['_offset'])
-        except ValueError:
-            raise ValueError(f'_offset not integer: {controls["_offset"]!r}')
-        meta['offset'] = offset
-    if '_limit' in controls:
-        try:
-            limit = min(int(v) for v in controls['_limit'])
-        except ValueError:
-            raise ValueError(f'_limit not integer: {controls["_limit"]!r}')
-        meta['limit'] = limit
-    return offset, limit
-
-
-def _filter_groupby_columns(by, cols, meta):
-    '''
-    Checks ?_by=col&_by=col for filter().
-
-    - ``by``: list of column names to group by
-    - ``cols``: list of valid column names
-    - ``meta``: meta['by'] and meta['ignored'] are updated
-
-    Returns a list of columns to group by
-    '''
-    colset = set(cols)
-    for col in by:
-        if col in colset:
-            meta['by'].append(col)
-        else:
-            meta['ignored'].append(('_by', col))
-    return meta['by']
-
-
-# If ?by=col|avg is provided, this works in SQL but not in Pandas DataFrames.
-# Convert into a DataFrame friendly function
-_frame_functions = {
-    'avg': 'mean',
-    'average': 'mean',
-}
-
-
-def _filter_frame(data, meta, controls, args, source='select', id=[]):
-    '''
-    If ``source`` is ``'select'``, returns a DataFrame in which the DataFrame
-    ``data`` is filtered using ``args``. Additional controls like _sort, etc are
-    in ``controls``. Metadata is stored in ``meta``.
-
-    If ``source`` is ``'update'``, filters using ``args`` but only for columns
-    mentioned in ``id``. Resulting DataFrame is updated with remaining ``args``.
-    Returns the updated rows.
-
-    If ``source`` is ``'delete'``, filters using ``args`` but only for columns
-    mentioned in ``id``. Deletes these rows. Returns the deleted rows.
-
-    :arg data: dataframe
-    :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
-    :arg args: user arguments to filter the data
-    :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
-    :arg id: list of id specific to data using which values can be updated
-    '''
-    original_data = data
-    cols_for_update = {}
-    cols_having = []
-    for key, vals in args.items():
-        # check if `key`` is in the `id` list -- ONLY when data is updated
-        if (source in ('update', 'delete') and key in id) or (source == 'select'):
-            # Parse column names, ignoring missing / unmatched columns
-            col, agg, op = _filter_col(key, data.columns)
-            if col is None:
-                meta['ignored'].append((key, vals))
-                continue
-            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
-            # e.g. ?sales|SUM=<val> should be applied only after the column is created
-            if agg is not None:
-                cols_having.append((key, col + _agg_sep + agg, op, vals))
-                continue
-            # Apply filters
-            data = _filter_frame_col(data, key, col, op, vals, meta)
-        elif source == 'update':
-            # Update values should only contain 1 value. 2nd onwards are ignored
-            if key not in data.columns or len(vals) == 0:
-                meta['ignored'].append((key, vals))
-            else:
-                cols_for_update[key] = vals[0]
-                if len(vals) > 1:
-                    meta['ignored'].append((key, vals[1:]))
-        else:
-            meta['ignored'].append((key, vals))
-    meta['count'] = len(data)
-    if source == 'delete':
-        original_data.drop(data.index, inplace=True)
-        return data
-    elif source == 'update':
-        conv = {k: v.type for k, v in data.dtypes.items()}
-        for key, val in cols_for_update.items():
-            original_data.loc[data.index, key] = conv[key](val)
-        return data
-    else:
-        # Apply controls
-        if '_by' in controls:
-            by = _filter_groupby_columns(controls['_by'], data.columns, meta)
-            # If ?_c is not specified, use 'col|sum' for all numeric columns
-            # TODO: This does not support ?_c=-<col> to hide a column
-            col_list = controls.get('_c', None)
-            if col_list is None:
-                col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
-                            if pd.api.types.is_numeric_dtype(data[col])]
-            agg_cols = []
-            agg_dict = AttrDict()
-            for key in col_list:
-                col, agg, val = _filter_col(key, data.columns)
-                if agg is not None:
-                    # Convert aggregation into a Pandas GroupBy agg function
-                    agg = agg.lower()
-                    agg = _frame_functions.get(agg, agg)
-                    agg_cols.append(key)
-                    if col in agg_dict:
-                        agg_dict[col].append(agg)
-                    else:
-                        agg_dict[col] = [agg]
-            if len(by) > 0:
-                if not agg_cols:
-                    # If no aggregation columns exist, just show groupby columns.
-                    data = data.groupby(by).agg('size').reset_index()
-                    data = data.iloc[:, [0]]
-                else:
-                    data = data.groupby(by).agg(agg_dict)
-                    data.columns = agg_cols
-                    data = data.reset_index()
-                # Apply HAVING operators
-                for key, col, op, vals in cols_having:
-                    data = _filter_frame_col(data, key, col, op, vals, meta)
-            else:
-                row = [data[col].agg(op) for col, ops in agg_dict.items() for op in ops]
-                data = pd.DataFrame([row], columns=agg_cols)
-        elif '_c' in controls:
-            show_cols = _filter_select_columns(controls, data.columns, meta)
-            data = data[show_cols]
-        sorts = _filter_sort_columns(controls, data.columns, meta)
-        if sorts:
-            data = data.sort_values(by=[c[0] for c in sorts],
-                                    ascending=[c[1] for c in sorts])
-        offset, limit = _filter_offset_limit(controls, meta)
-        if offset is not None:
-            data = data.iloc[offset:]
-        if limit is not None:
-            data = data.iloc[:limit]
-        return data
-
-
-def _filter_db(engine, table, meta, controls, args, source='select', id=[]):
-    '''
-
-    It accepts the following parameters
-
-    :arg sqlalchemy engine engine: constructed sqlalchemy string
-    :arg database table table: table name in the mentioned database
-    :arg controls: dictionary of `_sort`, `_c`, `_offset`, `_limit` params
-    :arg meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
-    :arg args: dictionary of user arguments to filter the data
-    :arg source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
-    :arg id: list of keys specific to data using which values can be updated
-    '''
-    table = get_table(engine, table)
-    cols = table.columns
-    colslist = cols.keys()
-
-    if source == 'delete':
-        query = sa.delete(table)
-    elif source == 'update':
-        query = sa.update(table)
-    else:
-        query = sa.select([table])
-    cols_for_update = {}
-    cols_having = []
-    for key, vals in args.items():
-        # check if `key`` is in the `id` list -- ONLY when data is updated
-        if (source in ('update', 'delete') and key in id) or (source == 'select'):
-            # Parse column names, ignoring missing / unmatched columns
-            col, agg, op = _filter_col(key, colslist)
-            if col is None:
-                meta['ignored'].append((key, vals))
-                continue
-            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
-            # e.g. ?sales|SUM=<val> should be applied only after the column is created
-            if agg is not None:
-                cols_having.append((key, col + _agg_sep + agg, op, vals))
-                continue
-            # Apply filters
-            query = _filter_db_col(query, query.where, key, col, op, vals,
-                                   cols[col], cols[col].type.python_type, meta)
-        elif source == 'update':
-            # Update values should only contain 1 value. 2nd onwards are ignored
-            if key not in cols or len(vals) == 0:
-                meta['ignored'].append((key, vals))
-            else:
-                cols_for_update[key] = vals[0]
-                if len(vals) > 1:
-                    meta['ignored'].append((key, vals[1:]))
-        else:
-            meta['ignored'].append((key, vals))
-    if source == 'delete':
-        res = engine.execute(query)
-        return res.rowcount
-    elif source == 'update':
-        query = query.values(cols_for_update)
-        res = engine.execute(query)
-        return res.rowcount
-    else:
-        # Apply controls
-        if '_by' in controls:
-            by = _filter_groupby_columns(controls['_by'], colslist, meta)
-            query = query.group_by(*by)
-            # If ?_c is not specified, use 'col|sum' for all numeric columns
-            # TODO: This does not support ?_c=-<col> to hide a column
-            col_list = controls.get('_c', None)
-            if col_list is None:
-                col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
-                            if column.type.python_type.__name__ in _numeric_types]
-            agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
-            typ = {}                                                # {label: python type}
-            for key in col_list:
-                col, agg, val = _filter_col(key, colslist)
-                if agg is not None:
-                    # Convert aggregation into SQLAlchemy query
-                    agg = agg.lower()
-                    typ[key] = _agg_type.get(agg, cols[col].type.python_type)
-                    agg_func = getattr(sa.sql.expression.func, agg)
-                    agg_cols[key] = agg_func(cols[col]).label(key)
-            if not agg_cols:
-                return pd.DataFrame()
-            # SQLAlchemy 1.4+ only accepts positional arguments for .with_only_columns()
-            if version.parse(sa.__version__) >= version.parse('1.4'):
-                query = query.with_only_columns(*agg_cols.values())
-            # SQLAlchemy 1.3- only accepts a list for .with_only_columns()
-            else:
-                query = query.with_only_columns(agg_cols.values())
-            # Apply HAVING operators
-            for key, col, op, vals in cols_having:
-                query = _filter_db_col(query, query.having, key, col, op, vals,
-                                       agg_cols[col], typ[col], meta)
-        elif '_c' in controls:
-            show_cols = _filter_select_columns(controls, colslist, meta)
-            query = query.with_only_columns([cols[col] for col in show_cols])
-            if len(show_cols) == 0:
-                return pd.DataFrame()
-        sorts = _filter_sort_columns(controls, colslist + query.columns.keys(), meta)
-        for col, asc in sorts:
-            orderby = sa.asc if asc else sa.desc
-            query = query.order_by(orderby(col))
-        offset, limit = _filter_offset_limit(controls, meta)
-        if offset is not None:
-            query = query.offset(offset)
-        if limit is not None:
-            query = query.limit(limit)
-        return pd.read_sql(query, engine)
-
-
-_VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
-
-
-def download(data, format='json', template=None, args={}, **kwargs):
+def download(
+        data: Union(pd.DataFrame, List[pd.DataFrame]), format: str = 'json',
+        template: str = None, args: dict = {}, **kwargs: dict) -> bytes:
     '''
     Download a DataFrame or dict of DataFrames in various formats. This is used
-    by :py:class:`gramex.handlers.FormHandler`. You are **strongly** advised to
+    by [gramex.handlers.FormHandler][]. You are **strongly** advised to
     try it before creating your own FunctionHandler.
 
-    Usage as a FunctionHandler::
+    Usage as a FunctionHandler:
 
         def download_as_csv(handler):
             handler.set_header('Content-Type', 'text/csv')
@@ -1017,40 +541,43 @@ def download(data, format='json', template=None, args={}, **kwargs):
 
     It takes the following arguments:
 
-    :arg dataset data: A DataFrame or a dict of DataFrames
-    :arg str format: Output format. Can be ``csv|json|html|xlsx|template``
-    :arg file template: Path to template file for ``template`` format
-    :arg dict args: dictionary of user arguments to subsitute spec
-    :arg dict kwargs: Additional parameters that are passed to the relevant renderer
-    :return: bytes with the download file contents
+    Parameters:
+        data: A DataFrame or a dict of DataFrames
+        format: Output format. Can be `csv|json|html|xlsx|template`
+        template: Path to template file for `template` format
+        args: dictionary of user arguments to subsitute spec
+        **kwargs: Additional parameters that are passed to the relevant renderer
 
-    When ``data`` is a DataFrame, this is what different ``format=`` parameters
+    Returns:
+        bytes with the download file contents
+
+    When `data` is a DataFrame, this is what different `format=` parameters
     return:
 
-    - ``csv`` returns a UTF-8-BOM encoded CSV file of the dataframe
-    - ``xlsx`` returns an Excel file with 1 sheet named ``data``. kwargs are
-      passed to ``.to_excel(index=False)``
-    - ``html`` returns a HTML file with a single table. kwargs are passed to
-      ``.to_html(index=False)``
-    - ``json`` returns a JSON file. kwargs are passed to
-      ``.to_json(orient='records', force_ascii=True)``.
-    - ``template`` returns a Tornado template rendered file. The template
-      receives ``data`` as ``data`` and any additional kwargs.
-    - ``pptx`` returns a PPTX generated by pptgen
-    - ``seaborn`` or ``sns`` returns a Seaborn generated chart
-    - ``vega`` returns JavaScript that renders a Vega chart
+    - `csv` returns a UTF-8-BOM encoded CSV file of the dataframe
+    - `xlsx` returns an Excel file with 1 sheet named `data`. kwargs are
+        passed to `.to_excel(index=False)`
+    - `html` returns a HTML file with a single table. kwargs are passed to
+        `.to_html(index=False)`
+    - `json` returns a JSON file. kwargs are passed to
+        `.to_json(orient='records', force_ascii=True)`.
+    - `template` returns a Tornado template rendered file. The template
+        receives `data` as `data` and any additional kwargs.
+    - `pptx` returns a PPTX generated by pptgen
+    - `seaborn` or `sns` returns a Seaborn generated chart
+    - `vega` returns JavaScript that renders a Vega chart
 
-    When ``data`` is a dict of DataFrames, the following additionally happens:
+    When `data` is a dict of DataFrames, the following additionally happens:
 
-    - ``format='csv'`` renders all DataFrames one below the other, adding the
-      key as heading
-    - ``format='xlsx'`` renders each DataFrame on a sheet whose name is the key
-    - ``format='html'`` renders tables below one another with the key as heading
-    - ``format='json'`` renders as a dict of DataFrame JSONs
-    - ``format='template'`` sends ``data`` and all ``kwargs`` as passed to the
-      template
-    - ``format='pptx'`` passes ``data`` as a dict of datasets to pptgen
-    - ``format='vega'`` passes ``data`` as a dict of datasets to Vega
+    - `format='csv'` renders all DataFrames one below the other, adding the
+        key as heading
+    - `format='xlsx'` renders each DataFrame on a sheet whose name is the key
+    - `format='html'` renders tables below one another with the key as heading
+    - `format='json'` renders as a dict of DataFrame JSONs
+    - `format='template'` sends `data` and all `kwargs` as passed to the
+        template
+    - `format='pptx'` passes `data` as a dict of datasets to pptgen
+    - `format='vega'` passes `data` as a dict of datasets to Vega
 
     You need to set the MIME types on the handler yourself. Recommended MIME
     types are in gramex.yaml under handler.FormHandler.
@@ -1171,24 +698,28 @@ def download(data, format='json', template=None, args={}, **kwargs):
         return out.getvalue()
 
 
-def dirstat(url, timeout=10, **kwargs):
-    '''
-    Return a DataFrame with the list of all files & directories under the url.
+def dirstat(url: str, timeout: int = 10, **kwargs: dict) -> pd.DataFrame:
+    '''Return a DataFrame with the list of all files & directories under the url.
 
-    It accepts the following parameters:
+    Parameters:
+        url: path to a directory, or a URL like `dir:///c:/path/`, `dir:////root/dir/`
+        timeout: max seconds to wait. `None` to wait forever
 
-    :arg str url: path to a directory, or a URL like ``dir:///c:/path/``,
-        ``dir:////root/dir/``. Raises ``OSError`` if url points to a missing
-        location or is not a directory.
-    :arg int timeout: max seconds to wait. ``None`` to wait forever. (default: 10)
-    :return: a DataFrame with columns:
-        - ``type``: extension with a ``.`` prefix -- or ``dir``
-        - ``dir``: directory path to the file relative to the URL
-        - ``name``: file name (including extension)
-        - ``path``: full path to file or dir. This equals url / dir / name
-        - ``size``: file size
-        - ``mtime``: last modified time in seconds since epoch
-        - ``level``: path depth (i.e. the number of paths in dir)
+    Raises:
+        OSError: if url points to a missing location or is not a directory.
+
+    Returns:
+        DataFrame with 1 row per file/directory in the URL
+
+    The result has these columns.
+
+    - `type`: extension with a `.` prefix -- or `dir`
+    - `dir`: directory path to the file relative to the URL
+    - `name`: file name (including extension)
+    - `path`: full path to file or dir. This equals url / dir / name
+    - `size`: file size
+    - `mtime`: last modified time in seconds since epoch
+    - `level`: path depth (i.e. the number of paths in dir)
     '''
     try:
         url = sa.engine.url.make_url(url)
@@ -1223,86 +754,89 @@ def dirstat(url, timeout=10, **kwargs):
     return pd.DataFrame(result)
 
 
-def filtercols(url, args={}, meta={}, engine=None, ext=None,
-               query=None, queryfile=None, transform=None, transform_kwargs={}, **kwargs):
-    '''
-    Filter data and extract unique values of each column using URL query parameters.
-    Typical usage::
+def filtercols(
+        url: Union[str, pd.DataFrame], args: dict = {}, meta: dict = {}, engine: str = None,
+        ext: str = None, query: str = None, queryfile: str = None, transform: Callable = None,
+        transform_kwargs: dict = {}, **kwargs: dict) -> pd.DataFrame:
+    '''Filter data and extract unique values of each column using URL query parameters.
 
-        filtered = gramex.data.filtercols(dataframe, args=handler.args)
-        filtered = gramex.data.filtercols('file.csv', args=handler.args)
-        filtered = gramex.data.filtercols('mysql://server/db', table='table', args=handler.args)
+    Examples:
+        >>> gramex.data.filtercols(dataframe, args=handler.args)
+        >>> gramex.data.filtercols('file.csv', args=handler.args)
+        >>> gramex.data.filtercols('mysql://server/db', table='table', args=handler.args)
 
-    It accepts the following parameters:
+    Parameters:
 
-    :arg source url: Pandas DataFrame, sqlalchemy URL, directory or file name,
-        `.format``-ed using ``args``.
-    :arg dict args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
-    :arg dict meta: this dict is updated with metadata during the course of filtering
-    :arg str engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
-        'http', 'https', 'sqlalchemy', 'dir'
-    :arg str ext: file extension (if url is a file). Defaults to url extension
-    :arg str query: optional SQL query to execute (if url is a database),
-        ``.format``-ed using ``args`` and supports SQLAlchemy SQL parameters.
-        Loads entire result in memory before filtering.
-    :arg str queryfile: optional SQL query file to execute (if url is a database).
-        Same as specifying the ``query:`` in a file. Overrides ``query:``
-    :arg function transform: optional in-memory transform of source data. Takes
-        the result of gramex.cache.open or gramex.cache.query. Must return a
-        DataFrame. Applied to both file and SQLAlchemy urls.
-    :arg dict transform_kwargs: optional keyword arguments to be passed to the
-        transform function -- apart from data
-    :arg dict kwargs: Additional parameters are passed to
-        :py:func:`gramex.cache.open` or ``sqlalchemy.create_engine``
-    :return: a filtered DataFrame
+        url: Pandas DataFrame, sqlalchemy URL, directory or file name,
+            `.format`-ed using `args`.
+        args: URL query parameters as a dict of lists. Pass handler.args or parse_qs results
+        meta: this dict is updated with metadata during the course of filtering
+        engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
+            'http', 'https', 'sqlalchemy', 'dir'
+        ext: file extension (if url is a file). Defaults to url extension
+        query: optional SQL query to execute (if url is a database),
+            `.format`-ed using `args` and supports SQLAlchemy SQL parameters.
+            Loads entire result in memory before filtering.
+        queryfile: optional SQL query file to execute (if url is a database).
+            Same as specifying the `query:` in a file. Overrides `query:`
+        transform (function): optional in-memory transform of source data. Takes
+            the result of gramex.cache.open or gramex.cache.query. Must return a
+            DataFrame. Applied to both file and SQLAlchemy urls.
+        transform_kwargs: optional keyword arguments to be passed to the
+            transform function -- apart from data
+        **kwargs: Additional parameters are passed to
+            [gramex.cache.open][] or `sqlalchemy.create_engine`
 
-    Remaining kwargs are passed to :py:func:`gramex.cache.open` if ``url`` is a file, or
-    ``sqlalchemy.create_engine`` if ``url`` is a SQLAlchemy URL.
+    Returns:
+        filtered DataFrame
 
-    If this is used in a handler as::
+    Remaining kwargs are passed to [gramex.cache.open][] if `url` is a file, or
+    `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL.
 
-        filtered = gramex.data.filtercols(dataframe, args=handler.args)
+    If this is used in a handler as
 
-    ... then calling the handler with ``?_c=state&_c=district`` returns all unique values
-     in columns of ``dataframe`` where columns are state and district.
+        >>> filtered = gramex.data.filtercols(dataframe, args=handler.args)
+
+    ... then calling the handler with `?_c=state&_c=district` returns all unique values
+    in columns of `dataframe` where columns are state and district.
 
     Column filter supports like this:
 
-    - ``?_c=y&x`` returns df with unique values of y where x is not null
-    - ``?_c=y&x=val`` returns df with unique values of y where x == val
-    - ``?_c=y&y=val`` returns df with unique values of y, ignores filter y == val
-    - ``?_c=y&x>=val`` returns df with unique values of y where x > val
-    - ``?_c=x&_c=y&x=val`` returns df with unique values of x ignoring filter x == val
-      and returns unique values of y where x == val
+    - `?_c=y&x` returns df with unique values of y where x is not null
+    - `?_c=y&x=val` returns df with unique values of y where x == val
+    - `?_c=y&y=val` returns df with unique values of y, ignores filter y == val
+    - `?_c=y&x>=val` returns df with unique values of y where x > val
+    - `?_c=x&_c=y&x=val` returns df with unique values of x ignoring filter x == val
+        and returns unique values of y where x == val
 
     Arguments are converted to the type of the column before comparing. If this
     fails, it raises a ValueError.
 
     These URL query parameters control the output:
 
-    - ``?_sort=col`` sorts column col in ascending order. ``?_sort=-col`` sorts
-      in descending order.
-    - ``?_limit=100`` limits the result to 100 rows
-    - ``?_offset=100`` starts showing the result from row 100. Default: 0
-    - ``?_c=x&_c=y`` returns only columns ``[x, y]``. ``?_c=-col`` drops col.
+    - `?_sort=col` sorts column col in ascending order. `?_sort=-col` sorts
+        in descending order.
+    - `?_limit=100` limits the result to 100 rows
+    - `?_offset=100` starts showing the result from row 100. Default: 0
+    - `?_c=x&_c=y` returns only columns `[x, y]`. `?_c=-col` drops col.
 
     If a column name matches one of the above, you cannot filter by that column.
     Avoid column names beginning with _.
 
-    To get additional information about the filtering, use::
+    To get additional information about the filtering, use:
 
         meta = {}      # Create a variable which will be filled with more info
         filtered = gramex.data.filter(data, meta=meta, **handler.args)
 
-    The ``meta`` variable is populated with the following keys:
+    The `meta` variable is populated with the following keys:
 
-    - ``filters``: Applied filters as ``[(col, op, val), ...]``
-    - ``ignored``: Ignored filters as ``[(col, vals), ('_sort', cols), ...]``
-    - ``excluded``: Excluded columns as ``[col, ...]``
-    - ``sort``: Sorted columns as ``[(col, True), ...]``. The second parameter is ``ascending=``
-    - ``offset``: Offset as integer. Defaults to 0
-    - ``limit``: Limit as integer - ``100`` if limit is not applied
-    - ``count``: Total number of rows, if available
+    - `filters`: Applied filters as `[(col, op, val), ...]`
+    - `ignored`: Ignored filters as `[(col, vals), ('_sort', cols), ...]`
+    - `excluded`: Excluded columns as `[col, ...]`
+    - `sort`: Sorted columns as `[(col, True), ...]`. The second parameter is `ascending=`
+    - `offset`: Offset as integer. Defaults to 0
+    - `limit`: Limit as integer - `100` if limit is not applied
+    - `count`: Total number of rows, if available
 
     These variables may be useful to show additional information about the
     filtered data.
@@ -1332,37 +866,37 @@ def filtercols(url, args={}, meta={}, engine=None, ext=None,
     return result
 
 
-def alter(url: str, table: str, columns: dict = None, **kwargs):
-    '''
-    Create or alter a table with columns specified::
+def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engine.base.Engine:
+    '''Create or alter a table with columns specified.
 
-        gramex.data.alter(url, table, columns={
-            'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
-            'email': {'nullable': True, 'default': 'none'},
-            'age': {'type': 'float', 'nullable': False, 'default': 18},
-        })
+    Examples:
+        >>> gramex.data.alter(url, table, columns={
+        ...     'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+        ...     'email': {'nullable': True, 'default': 'none'},
+        ...     'age': {'type': 'float', 'nullable': False, 'default': 18},
+        ... })
 
-    It accepts the following parameters:
+    Parameters:
+        url: sqlalchemy URL
+        table: table name
+        columns: column names, with values are SQL types, or dicts with keys:
+            - `type` (str), e.g. `"VARCHAR(10)"`
+            - `default` (str/int/float/bool), e.g. `"none@example.org"`
+            - `nullable` (bool), e.g. `False`
+            - `primary_key` (bool), e.g. `True` -- used only when creating new tables
+            - `autoincrement` (bool), e.g. `True` -- used only when creating new tables
+        **kwargs: passed to `sqlalchemy.create_engine()`.
 
-    :arg str url: sqlalchemy URL
-    :arg str table: table name
-    :arg dict columns: column names, with values are SQL types, or dicts with keys:
-        - ``type`` (str), e.g. ``"VARCHAR(10)"``
-        - ``default`` (str/int/float/bool), e.g. ``"none@example.org"``
-        - ``nullable`` (bool), e.g. ``False``
-        - ``primary_key`` (bool), e.g. ``True`` -- used only when creating new tables
-        - ``autoincrement`` (bool), e.g. ``True`` -- used only when creating new tables
-    :return: sqlalchemy engine
-
-    Other kwargs are passed to ``sqlalchemy.create_engine()``.
+    Returns:
+        SQLAlchemy engine
 
     If the table exists, any new columns are added. Existing columns are unchanged.
 
     If the table does not exist, the table is created with the specified columns.
 
-    Note: ``primary_key`` and ``autoincrement`` don't work on existing tables because:
-        - SQLite disallows PRIMARY KEY with ALTER. https://stackoverflow.com/a/1120030/100904
-        - AUTO_INCREMENT doesn't work without PRIMARY KEY in MySQL
+    Note: `primary_key` and `autoincrement` don't work on existing tables because
+    [SQLite disallows PRIMARY KEY with ALTER](https://stackoverflow.com/a/1120030/100904)
+    and AUTO_INCREMENT doesn't work without PRIMARY KEY in MySQL.
     '''
     engine = create_engine(url, **kwargs)
     if columns is None:
@@ -1409,6 +943,499 @@ def alter(url: str, table: str, columns: dict = None, **kwargs):
         # Refresh table metadata after altering
         get_table(engine, table, extend_existing=True)
     return engine
+
+
+def _transform_fn(transform, transform_kwargs):
+    if transform is not None and transform_kwargs is not None:
+        return lambda v: transform(v, **transform_kwargs)
+    return transform
+
+
+def _replace(engine, args, *vars, **kwargs):
+    escape = _sql_safe if engine == 'sqlalchemy' else _path_safe
+    params = {k: v[0] for k, v in args.items() if len(v) > 0 and escape(v[0])}
+
+    def _format(val):
+        if isinstance(val, str):
+            return val.format(**params)
+        if isinstance(val, list):
+            return [_format(v) for v in val]
+        if isinstance(val, dict):
+            return AttrDict([(k, _format(v)) for k, v in val.items()])
+        return val
+
+    return _format(list(vars)) + [_format(kwargs)]
+
+
+def _pop_controls(args):
+    '''Filter out data controls: _sort, _limit, _offset, _c (column) and _by from args'''
+    return {
+        key: args.pop(key)
+        for key in ('_sort', '_limit', '_offset', '_c', '_by')
+        if key in args
+    }
+
+
+def _pop_columns(data, cols, ignored):
+    '''Remove columns not in cols'''
+    cols = set(cols)
+    for col in data.columns:
+        if col not in cols:
+            ignored.append([col, data[col].tolist()])
+    return data[[col for col in cols if col in data.columns]]
+
+
+def _sql_safe(val):
+    '''Return True if val is safe for insertion in an SQL query'''
+    if isinstance(val, str):
+        return not re.search(r'\s', val)
+    elif isinstance(val, (int, float, bool)):
+        return True
+    return False
+
+
+def _path_safe(path):
+    '''Returns True if path does not try to escape outside a given directory using .. or / etc'''
+    # Ignore non-strings. These are generally not meant for paths
+    if not isinstance(path, str):
+        return True
+    return os.path.realpath(os.path.join(_path_safe_root, path)).startswith(_path_safe_root)
+
+
+# The order of operators is important. ~ is at the end. Otherwise, !~
+# or >~ will also be mapped to ~ as an operator
+operators = ['!', '>', '>~', '<', '<~', '!~', '~']
+
+
+def _filter_col(col, cols):
+    '''
+    Parses a column name from a list of columns and returns a (col, agg, op)
+    tuple.
+
+    - `col` is the name of the column in cols.
+    - `agg` is the aggregation operation (SUM, MIN, MAX, etc), else None
+    - `op` is the operator ('', !, >, <, etc)
+
+    If the column is invalid, then `col` and `op` are None
+    '''
+    colset = set(cols)
+    # ?col= is returned quickly
+    if col in colset:
+        return col, None, ''
+    # Check if it matches a non-empty operator, like ?col>~=
+    for op in operators:
+        if col.endswith(op):
+            name = col[:-len(op)]
+            if name in colset:
+                return name, None, op
+            # If there's an aggregator, split it out, like ?col|SUM>~=
+            elif _agg_sep in name:
+                name, agg = name.rsplit(_agg_sep, 1)
+                if name in colset:
+                    return name, agg, op
+    # If no operators match, it might be a pure aggregation, like ?col|SUM=
+    if _agg_sep in col:
+        name, agg = col.rsplit(_agg_sep, 1)
+        if name in colset:
+            return name, agg, ''
+    # Otherwise we don't know what it is
+    return None, None, None
+
+
+def _convertor(conv):
+    '''
+    Updates a type conversion function.
+
+    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False.
+    Datetimes are converted using dateutil parser.
+    '''
+    # Convert based on Pandas datatype. But for boolean, convert from string as below
+    if conv in {np.bool_, bool}:
+        conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
+    elif conv in {datetime}:
+        from dateutil.parser import parse
+        conv = parse
+    return conv
+
+
+def _filter_frame_col(data, key, col, op, vals, meta):
+    # Apply type conversion for values
+    conv = _convertor(data[col].dtype.type)
+    vals = tuple(conv(val) for val in vals if val)
+    if op not in {'', '!'} and len(vals) == 0:
+        meta['ignored'].append((key, vals))
+    elif op == '':
+        data = data[data[col].isin(vals)] if len(vals) else data[pd.notnull(data[col])]
+    elif op == '!':
+        data = data[~data[col].isin(vals)] if len(vals) else data[pd.isnull(data[col])]
+    elif op == '>':
+        data = data[data[col] > min(vals)]
+    elif op == '>~':
+        data = data[data[col] >= min(vals)]
+    elif op == '<':
+        data = data[data[col] < max(vals)]
+    elif op == '<~':
+        data = data[data[col] <= max(vals)]
+    elif op == '!~':
+        data = data[~data[col].str.contains('|'.join(vals))]
+    elif op == '~':
+        data = data[data[col].str.contains('|'.join(vals))]
+    meta['filters'].append((col, op, vals))
+    return data
+
+
+# Treat SQL type datetime as str when converting URL arguments to values.
+# Don't try to convert ?date=2022-01-01 to datetime(2022, 1, 1).
+_sql_types = {datetime: str}
+
+
+def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
+    '''
+    - Updates `query` with a method (WHERE/HAVING) that sets '<key> <op> <vals>'
+    - `column` is the underlying ColumnElement
+    - `conv` is a type conversion function that converts `vals` to the correct type
+    - Updates `meta` with the fields used for filtering (or ignored)
+    '''
+    conv = _sql_types.get(conv, conv)
+    vals = tuple(conv(val) for val in vals if val)
+    if op not in {'', '!'} and len(vals) == 0:
+        meta['ignored'].append((key, vals))
+    elif op == '':
+        # Test if column is not NULL. != None is NOT the same as is not None
+        query = method(column.in_(vals) if len(vals) else column != None)      # noqa
+    elif op == '!':
+        # Test if column is NULL. == None is NOT the same as is None
+        query = method(column.notin_(vals) if len(vals) else column == None)   # noqa
+    elif op == '>':
+        query = method(column > min(vals))
+    elif op == '>~':
+        query = method(column >= min(vals))
+    elif op == '<':
+        query = method(column < max(vals))
+    elif op == '<~':
+        query = method(column <= max(vals))
+    elif op == '!~':
+        query = method(column.notlike('%' + '%'.join(vals) + '%'))
+    elif op == '~':
+        query = method(column.like('%' + '%'.join(vals) + '%'))
+    meta['filters'].append((col, op, vals))
+    return query
+
+
+def _filter_sort_columns(controls: dict, cols: List[str], meta: dict) -> List[str]:
+    '''
+    Checks ?_sort=col&_sort=-col. Returns list of (columns to sort by, ascending/not).
+
+    Updates meta['sort'] with columns to sort by,
+    and meta['ignored'] with unrecognized sort column names as ('_sort', columns)
+    '''
+    sorts, ignore_sorts = [], []
+    if '_sort' in controls:
+        for col in controls['_sort']:
+            if col in cols:
+                sorts.append((col, True))
+            elif col.startswith('-') and col[1:] in cols:
+                sorts.append((col[1:], False))
+            else:
+                ignore_sorts.append(col)
+        if len(ignore_sorts) > 0:
+            meta['ignored'].append(('_sort', ignore_sorts))
+        meta['sort'] = sorts
+    return sorts
+
+
+def _filter_select_columns(controls, cols, meta):
+    '''
+    Checks ?_c=col&_c=-col. Takes values of ?_c= as col_filter and
+    data column names as cols. Returns list of columns to show.
+
+    Updates meta['excluded'] with columns explicitly excluded,
+    and meta['ignored'] with unrecognized column names.
+    '''
+    if '_c' not in controls:
+        return cols
+    selected_cols, excluded_cols, ignored_cols = [], set(), []
+    for col in controls['_c']:
+        if col in cols:
+            selected_cols.append(col)
+        elif col.startswith('-') and col[1:] in cols:
+            excluded_cols.add(col[1:])
+        else:
+            ignored_cols.append(col)
+    if len(excluded_cols) > 0 and len(selected_cols) == 0:
+        selected_cols = cols
+    show_cols = [col for col in selected_cols if col not in excluded_cols]
+    meta['excluded'] = list(excluded_cols)
+    if ignored_cols:
+        meta['ignored'].append(('_c', ignored_cols))
+    return show_cols
+
+
+def _filter_offset_limit(controls, meta):
+    offset, limit = 0, None
+    if '_offset' in controls:
+        try:
+            offset = min(int(v) for v in controls['_offset'])
+        except ValueError:
+            raise ValueError(f'_offset not integer: {controls["_offset"]!r}')
+        meta['offset'] = offset
+    if '_limit' in controls:
+        try:
+            limit = min(int(v) for v in controls['_limit'])
+        except ValueError:
+            raise ValueError(f'_limit not integer: {controls["_limit"]!r}')
+        meta['limit'] = limit
+    return offset, limit
+
+
+def _filter_groupby_columns(by, cols, meta):
+    '''
+    Checks ?_by=col&_by=col for filter().
+
+    - `by`: list of column names to group by
+    - `cols`: list of valid column names
+    - `meta`: meta['by'] and meta['ignored'] are updated
+
+    Returns a list of columns to group by
+    '''
+    colset = set(cols)
+    for col in by:
+        if col in colset:
+            meta['by'].append(col)
+        else:
+            meta['ignored'].append(('_by', col))
+    return meta['by']
+
+
+# If ?by=col|avg is provided, this works in SQL but not in Pandas DataFrames.
+# Convert into a DataFrame friendly function
+_frame_functions = {
+    'avg': 'mean',
+    'average': 'mean',
+}
+
+
+def _filter_frame(
+        data: pd.DataFrame, meta: dict, controls: dict, args: dict, source:str = 'select',
+        id: List[str] = []) -> pd.DataFrame:
+    '''
+    If `source` is `'select'`, returns a DataFrame in which the DataFrame
+    `data` is filtered using `args`. Additional controls like _sort, etc are
+    in `controls`. Metadata is stored in `meta`.
+
+    If `source` is `'update'`, filters using `args` but only for columns
+    mentioned in `id`. Resulting DataFrame is updated with remaining `args`.
+    Returns the updated rows.
+
+    If `source` is `'delete'`, filters using `args` but only for columns
+    mentioned in `id`. Deletes these rows. Returns the deleted rows.
+
+    Parameters:
+        data: dataframe
+        meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
+        args: user arguments to filter the data
+        source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
+        id: list of id specific to data using which values can be updated
+    '''
+    original_data = data
+    cols_for_update = {}
+    cols_having = []
+    for key, vals in args.items():
+        # check if `key` is in the `id` list -- ONLY when data is updated
+        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+            # Parse column names, ignoring missing / unmatched columns
+            col, agg, op = _filter_col(key, data.columns)
+            if col is None:
+                meta['ignored'].append((key, vals))
+                continue
+            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
+            # e.g. ?sales|SUM=<val> should be applied only after the column is created
+            if agg is not None:
+                cols_having.append((key, col + _agg_sep + agg, op, vals))
+                continue
+            # Apply filters
+            data = _filter_frame_col(data, key, col, op, vals, meta)
+        elif source == 'update':
+            # Update values should only contain 1 value. 2nd onwards are ignored
+            if key not in data.columns or len(vals) == 0:
+                meta['ignored'].append((key, vals))
+            else:
+                cols_for_update[key] = vals[0]
+                if len(vals) > 1:
+                    meta['ignored'].append((key, vals[1:]))
+        else:
+            meta['ignored'].append((key, vals))
+    meta['count'] = len(data)
+    if source == 'delete':
+        original_data.drop(data.index, inplace=True)
+        return data
+    elif source == 'update':
+        conv = {k: v.type for k, v in data.dtypes.items()}
+        for key, val in cols_for_update.items():
+            original_data.loc[data.index, key] = conv[key](val)
+        return data
+    else:
+        # Apply controls
+        if '_by' in controls:
+            by = _filter_groupby_columns(controls['_by'], data.columns, meta)
+            # If ?_c is not specified, use 'col|sum' for all numeric columns
+            # TODO: This does not support ?_c=-<col> to hide a column
+            col_list = controls.get('_c', None)
+            if col_list is None:
+                col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
+                            if pd.api.types.is_numeric_dtype(data[col])]
+            agg_cols = []
+            agg_dict = AttrDict()
+            for key in col_list:
+                col, agg, val = _filter_col(key, data.columns)
+                if agg is not None:
+                    # Convert aggregation into a Pandas GroupBy agg function
+                    agg = agg.lower()
+                    agg = _frame_functions.get(agg, agg)
+                    agg_cols.append(key)
+                    if col in agg_dict:
+                        agg_dict[col].append(agg)
+                    else:
+                        agg_dict[col] = [agg]
+            if len(by) > 0:
+                if not agg_cols:
+                    # If no aggregation columns exist, just show groupby columns.
+                    data = data.groupby(by).agg('size').reset_index()
+                    data = data.iloc[:, [0]]
+                else:
+                    data = data.groupby(by).agg(agg_dict)
+                    data.columns = agg_cols
+                    data = data.reset_index()
+                # Apply HAVING operators
+                for key, col, op, vals in cols_having:
+                    data = _filter_frame_col(data, key, col, op, vals, meta)
+            else:
+                row = [data[col].agg(op) for col, ops in agg_dict.items() for op in ops]
+                data = pd.DataFrame([row], columns=agg_cols)
+        elif '_c' in controls:
+            show_cols = _filter_select_columns(controls, data.columns, meta)
+            data = data[show_cols]
+        sorts = _filter_sort_columns(controls, data.columns, meta)
+        if sorts:
+            data = data.sort_values(by=[c[0] for c in sorts],
+                                    ascending=[c[1] for c in sorts])
+        offset, limit = _filter_offset_limit(controls, meta)
+        if offset is not None:
+            data = data.iloc[offset:]
+        if limit is not None:
+            data = data.iloc[:limit]
+        return data
+
+
+def _filter_db(
+        engine: str, table: str, meta: dict, controls: dict, args: dict, source: str = 'select',
+        id: List[str] = []):
+    '''
+    Parameters:
+        engine: constructed sqlalchemy string
+        table: table name in the mentioned database
+        meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
+        controls: dictionary of `_sort`, `_c`, `_offset`, `_limit` params
+        args: dictionary of user arguments to filter the data
+        source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
+        id: list of keys specific to data using which values can be updated
+    '''
+    table = get_table(engine, table)
+    cols = table.columns
+    colslist = cols.keys()
+
+    if source == 'delete':
+        query = sa.delete(table)
+    elif source == 'update':
+        query = sa.update(table)
+    else:
+        query = sa.select([table])
+    cols_for_update = {}
+    cols_having = []
+    for key, vals in args.items():
+        # check if `key` is in the `id` list -- ONLY when data is updated
+        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+            # Parse column names, ignoring missing / unmatched columns
+            col, agg, op = _filter_col(key, colslist)
+            if col is None:
+                meta['ignored'].append((key, vals))
+                continue
+            # Process aggregated columns AFTER filtering, not before (like HAVING clause)
+            # e.g. ?sales|SUM=<val> should be applied only after the column is created
+            if agg is not None:
+                cols_having.append((key, col + _agg_sep + agg, op, vals))
+                continue
+            # Apply filters
+            query = _filter_db_col(query, query.where, key, col, op, vals,
+                                   cols[col], cols[col].type.python_type, meta)
+        elif source == 'update':
+            # Update values should only contain 1 value. 2nd onwards are ignored
+            if key not in cols or len(vals) == 0:
+                meta['ignored'].append((key, vals))
+            else:
+                cols_for_update[key] = vals[0]
+                if len(vals) > 1:
+                    meta['ignored'].append((key, vals[1:]))
+        else:
+            meta['ignored'].append((key, vals))
+    if source == 'delete':
+        res = engine.execute(query)
+        return res.rowcount
+    elif source == 'update':
+        query = query.values(cols_for_update)
+        res = engine.execute(query)
+        return res.rowcount
+    else:
+        # Apply controls
+        if '_by' in controls:
+            by = _filter_groupby_columns(controls['_by'], colslist, meta)
+            query = query.group_by(*by)
+            # If ?_c is not specified, use 'col|sum' for all numeric columns
+            # TODO: This does not support ?_c=-<col> to hide a column
+            col_list = controls.get('_c', None)
+            if col_list is None:
+                col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
+                            if column.type.python_type.__name__ in _numeric_types]
+            agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
+            typ = {}                                                # {label: python type}
+            for key in col_list:
+                col, agg, val = _filter_col(key, colslist)
+                if agg is not None:
+                    # Convert aggregation into SQLAlchemy query
+                    agg = agg.lower()
+                    typ[key] = _agg_type.get(agg, cols[col].type.python_type)
+                    agg_func = getattr(sa.sql.expression.func, agg)
+                    agg_cols[key] = agg_func(cols[col]).label(key)
+            if not agg_cols:
+                return pd.DataFrame()
+            # SQLAlchemy 1.4+ only accepts positional arguments for .with_only_columns()
+            if version.parse(sa.__version__) >= version.parse('1.4'):
+                query = query.with_only_columns(*agg_cols.values())
+            # SQLAlchemy 1.3- only accepts a list for .with_only_columns()
+            else:
+                query = query.with_only_columns(agg_cols.values())
+            # Apply HAVING operators
+            for key, col, op, vals in cols_having:
+                query = _filter_db_col(query, query.having, key, col, op, vals,
+                                       agg_cols[col], typ[col], meta)
+        elif '_c' in controls:
+            show_cols = _filter_select_columns(controls, colslist, meta)
+            query = query.with_only_columns([cols[col] for col in show_cols])
+            if len(show_cols) == 0:
+                return pd.DataFrame()
+        sorts = _filter_sort_columns(controls, colslist + query.columns.keys(), meta)
+        for col, asc in sorts:
+            orderby = sa.asc if asc else sa.desc
+            query = query.order_by(orderby(col))
+        offset, limit = _filter_offset_limit(controls, meta)
+        if offset is not None:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
+        return pd.read_sql(query, engine)
+
+
+_VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
 
 
 # MongoDB Operations
@@ -1504,7 +1531,7 @@ def _mongodb_collection(url, database, collection, **kwargs):
 
 
 def _mongodb_json(obj):
-    '''Parse val in keys ending with . as JSON ({"key.": val}), but retain other keys'''
+    # Parse val in keys ending with . as JSON ({"key.": val}), but retain other keys
     result = {}
     for key, val in obj.items():
         if key.endswith('.'):
@@ -1516,7 +1543,7 @@ def _mongodb_json(obj):
 
 def _filter_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
                     columns=None, **kwargs):
-    '''TODO: Document function and usage'''
+    # TODO: Document function and usage
     table = _mongodb_collection(url, database, collection, **kwargs)
     # TODO: If data is missing, identify columns using columns:
     row = table.find_one(query)

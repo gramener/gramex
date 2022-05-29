@@ -15,3 +15,4 @@ statsmodels           # For sm_api.StatsModels
 
 mkdocs                # For documentation
 mkdocstrings          # For documentation
+mkdocstrings[python]  # For documentation

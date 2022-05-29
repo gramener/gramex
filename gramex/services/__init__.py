@@ -1,15 +1,13 @@
 '''Configure Gramex services.
-. Each key must have a
-corresponding function in this file.
 
-For example, if ``gramex.yaml`` contains this section::
+Each key in `gramex.yaml` calls the corresponding function in this file. For example,
 
 ```yaml
 log:
     version: 1
 ```
 
-... then [gramex.service.log()][gramex.services.log] is called as ``log({"version": 1})``.
+... calls [gramex.service.log()][gramex.services.log] as ``log({"version": 1})``.
 If no such function exists, a warning is raised.
 '''
 import io
@@ -96,40 +94,6 @@ def log(conf):
         app_log.exception('Error in log: configuration')
 
 
-class GramexApp(tornado.web.Application):
-    def log_request(self, handler):
-        # BaseHandler defines a a custom log format. If that's present, use it.
-        if hasattr(handler, 'log_request'):
-            handler.log_request()
-        # Log the request with the handler name at the end.
-        status = handler.get_status()
-        if status < 400:                    # noqa: < 400 is any successful request
-            log_method = gramex.cache.app_log.info
-        elif status < 500:                  # noqa: 400-499 is a user error
-            log_method = gramex.cache.app_log.warning
-        else:                               # 500+ is a server error
-            log_method = gramex.cache.app_log.error
-        request_time = 1000.0 * handler.request.request_time()
-        handler_name = getattr(handler, 'name', handler.__class__.__name__)
-        summary = handler._request_summary()
-        log_method(f"{handler.get_status()} {summary} {request_time:.2f}ms {handler_name}")
-
-    def clear_handlers(self):
-        '''
-        Clear all handlers in the application.
-        (Tornado does not provide a direct way of doing this.)
-        '''
-        # Up to Tornado 4.4, the handlers attribute stored the handlers
-        if hasattr(self, 'handlers'):
-            del self.handlers[:]
-            self.named_handlers.clear()
-
-        # From Tornado 4.5, there are routers that hold the rules
-        else:
-            del self.default_router.rules[:]
-            del self.wildcard_router.rules[:]
-
-
 def app(conf):
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
     ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
@@ -143,8 +107,8 @@ def app(conf):
             port_used_codes = dict(windows=10048, linux=98)
             if e.errno not in port_used_codes.values():
                 raise
-            logging.error('Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex',
-                          conf.listen.port)
+            logging.error(
+                'Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex', conf.listen.port)
             sys.exit(1)
 
         def callback():
@@ -230,12 +194,6 @@ def app(conf):
         return callback
 
 
-def _stop_all_tasks(tasks):
-    for name, task in tasks.items():
-        task.stop()
-    tasks.clear()
-
-
 def schedule(conf):
     '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
@@ -249,257 +207,11 @@ def schedule(conf):
             continue
         try:
             app_log.info(f'Initialising schedule:{name}')
-            _cache[_key] = scheduler.Task(name, sched, info.threadpool,
-                                          ioloop=info.main_ioloop)
+            _cache[_key] = scheduler.Task(
+                name, sched, info.threadpool, ioloop=info.main_ioloop)
             info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
-
-
-def _markdown_convert(content):
-    '''
-    Convert content into Markdown with extensions.
-    '''
-    # Cache the markdown converter
-    if '_markdown' not in info:
-        import markdown
-        info['_markdown'] = markdown.Markdown(extensions=[
-            'markdown.extensions.extra',
-            'markdown.extensions.meta',
-            'markdown.extensions.codehilite',
-            'markdown.extensions.smarty',
-            'markdown.extensions.sane_lists',
-            'markdown.extensions.fenced_code',
-            'markdown.extensions.toc',
-        ], output_format='html5')
-    return info['_markdown'].convert(content)
-
-
-def _tmpl(template_string):
-    '''Compile Tornado template. Cache the results'''
-    if template_string not in _tmpl_cache:
-        _tmpl_cache[template_string] = Template(template_string)
-    return _tmpl_cache[template_string]
-
-
-def create_alert(name, alert):
-    '''Generate the function to be run by alert() using the alert configuration'''
-
-    # Configure email service
-    if alert.get('service', None) is None:
-        if len(info.email) > 0:
-            service = alert['service'] = list(info.email.keys())[0]
-            app_log.warning(f'alert: {name}: using first email service: {service}')
-        else:
-            app_log.error(f'alert: {name}: define an email: service to use')
-            return
-    service = alert['service']
-    mailer = info.email.get(service, None)
-    if mailer is None:
-        app_log.error(f'alert: {name}: undefined email service: {service}')
-        return
-
-    # - Warn if to, cc, bcc exists and is not a string or list of strings. Ignore incorrect
-    #    - if to: [1, 'user@example.org'], then
-    #    - log a warning about the 1. Drop the 1. to: becomes ['user@example.org']
-
-    # Error if to, cc, bcc are all missing, return None
-    if not any(key in alert for key in ['to', 'cc', 'bcc']):
-        app_log.error(f'alert: {name}: missing to/cc/bcc')
-        return
-    # Ensure that config has the right type (str, dict, list)
-    contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
-    addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
-    for key in ['subject'] + addr_fields + contentfields:
-        if not isinstance(alert.get(key, ''), (str, list)):
-            app_log.error(f'alert: {name}.{key}: {alert[key]!r} must be a list or str')
-            return
-    if not isinstance(alert.get('images', {}), dict):
-        app_log.error(f'alert: {name}.images: {alert["images"]!r} is not a dict')
-        return
-    if not isinstance(alert.get('attachments', []), list):
-        app_log.error(f'alert: {name}.attachments: {alert["attachments"]!r} is not a list')
-        return
-
-    # Warn if subject is missing
-    if 'subject' not in alert:
-        app_log.warning(f'alert: {name}: missing subject')
-
-    # Warn if body, html, bodyfile, htmlfile keys are missing
-    if not any(key in alert for key in contentfields):
-        app_log.warning(f'alert: {name}: missing body/html/bodyfile/htmlfile/...')
-
-    # Pre-compile data.
-    #   - `data: {key: [...]}` -- loads data in-place
-    #   - `data: {key: {url: file}}` -- loads from a file
-    #   - `data: {key: {url: sqlalchemy-url, table: table}}` -- loads from a database
-    #   - `data: file` -- same as `data: {data: {url: file}}`
-    #   - `data: {key: file}` -- same as `data: {key: {url: file}}`
-    #   - `data: [...]` -- same as `data: {data: [...]}`
-    datasets = {}
-    if 'data' in alert:
-        if isinstance(alert['data'], str):
-            datasets = {'data': {'url': alert['data']}}
-        elif isinstance(alert['data'], list):
-            datasets = {'data': alert['data']}
-        elif isinstance(alert['data'], dict):
-            for key, dataset in alert['data'].items():
-                if isinstance(dataset, str):
-                    datasets[key] = {'url': dataset}
-                elif isinstance(dataset, list) or 'url' in dataset:
-                    datasets[key] = dataset
-                else:
-                    app_log.error(f'alert: {name}.data: {key} is missing url:')
-        else:
-            app_log.error(f'alert: {name}.data: must be data file or dict. Not {alert["data"]!r}')
-
-    if 'each' in alert and alert['each'] not in datasets:
-        app_log.error(f'alert: {name}.each: {alert["each"]} is not in data:')
-        return
-
-    vars = {key: None for key in datasets}
-    vars.update({'config': None, 'args': None})
-    condition = build_transform(
-        {'function': alert.get('condition', 'True')},
-        filename=f'alert: {name}', vars=vars, iter=False)
-
-    alert_logger = logging.getLogger('gramex.alert')
-
-    def load_datasets(data, each):
-        '''
-        Modify data by load datasets and filter by condition.
-        Modify each to apply the each: argument, else return (None, None)
-        '''
-        for key, val in datasets.items():
-            # Allow raw data in lists as-is. Treat dicts as {url: ...}
-            data[key] = val if isinstance(val, list) else gramex.data.filter(**val)
-        result = condition(**data)
-        # Avoiding isinstance(result, pd.DataFrame) to avoid importing pandas
-        if type(result).__name__ == 'DataFrame':
-            data['data'] = result
-        elif isinstance(result, dict):
-            data.update(result)
-        elif not result:
-            app_log.debug(f'alert: {name} stopped. condition = {result}')
-            return
-        if 'each' in alert:
-            each_data = data[alert['each']]
-            if isinstance(each_data, dict):
-                each += list(each_data.items())
-            elif isinstance(each_data, list):
-                each += list(enumerate(each_data))
-            elif hasattr(each_data, 'iterrows'):
-                each += list(each_data.iterrows())
-            else:
-                raise ValueError(f'alert: {name}: each: data.{alert["each"]} must be ' +
-                                 'dict/list/DF, not {type(each_data)}')
-        else:
-            each.append((0, None))
-
-    def create_mail(data):
-        '''
-        Return kwargs that can be passed to a mailer.mail
-        '''
-        mail = {}
-        for key in ['bodyfile', 'htmlfile', 'markdownfile']:
-            target = key.replace('file', '')
-            if key in alert and target not in alert:
-                path = _tmpl(alert[key]).generate(**data).decode('utf-8')
-                tmpl = gramex.cache.open(path, 'template')
-                mail[target] = tmpl.generate(**data).decode('utf-8')
-        for key in addr_fields + ['subject', 'body', 'html', 'markdown']:
-            if key not in alert:
-                continue
-            if isinstance(alert[key], list):
-                mail[key] = [_tmpl(v).generate(**data).decode('utf-8') for v in alert[key]]
-            else:
-                mail[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
-        headers = {}
-        # user: {id: ...} creates an X-Gramex-User header to mimic the user
-        if 'user' in alert:
-            user = deepcopy(alert['user'])
-            for key, val, node in walk(user):
-                node[key] = _tmpl(val).generate(**data).decode('utf-8')
-            user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
-            headers['X-Gramex-User'] = tornado.web.create_signed_value(
-                info.app.settings['cookie_secret'], 'user', user)
-        if 'markdown' in mail:
-            mail['html'] = _markdown_convert(mail.pop('markdown'))
-        if 'images' in alert:
-            mail['images'] = {}
-            for cid, val in alert['images'].items():
-                urlpath = _tmpl(val).generate(**data).decode('utf-8')
-                urldata = urlfetch(urlpath, info=True, headers=headers)
-                if urldata['content_type'].startswith('image/'):
-                    mail['images'][cid] = urldata['name']
-                else:
-                    with io.open(urldata['name'], 'rb') as temp_file:
-                        bytestoread = 80
-                        first_line = temp_file.read(bytestoread)
-                    # TODO: let admin know that the image was not processed
-                    app_log.error(f'alert: {name}: {cid}: {urldata["r"].status_code} '
-                                  f'({urldata["content_type"]}) not an image: {urlpath}\n'
-                                  f'{first_line!r}')
-        if 'attachments' in alert:
-            mail['attachments'] = [
-                urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
-                for v in alert['attachments']
-            ]
-        return mail
-
-    def run_alert(callback=None, args=None):
-        '''
-        Runs the configured alert. If a callback is specified, calls the
-        callback with all email arguments. Else sends the email.
-        If args= is specified, add it as data['args'].
-        '''
-        app_log.info(f'alert: {name} running')
-        data, each, fail = {'config': alert, 'args': {} if args is None else args}, [], []
-        try:
-            load_datasets(data, each)
-        except Exception as e:
-            app_log.exception(f'alert: {name} data processing failed')
-            fail.append({'error': e})
-
-        retval = []
-        for index, row in each:
-            data['index'], data['row'], data['config'] = index, row, alert
-            try:
-                retval.append(AttrDict(index=index, row=row, mail=create_mail(data)))
-            except Exception as e:
-                app_log.exception(f'alert: {name}[{index}] templating (row={row!r})')
-                fail.append({'index': index, 'row': row, 'error': e})
-
-        callback = mailer.mail if not callable(callback) else callback
-        done = []
-        for v in retval:
-            try:
-                callback(**v.mail)
-            except Exception as e:
-                fail.append({'index': v.index, 'row': v.row, 'mail': v.mail, 'error': e})
-                app_log.exception(f'alert: {name}[{v.index}] delivery (row={v.row!r})')
-            else:
-                done.append(v)
-                event = {
-                    'alert': name, 'service': service, 'from': mailer.email or '',
-                    'to': '', 'cc': '', 'bcc': '', 'subject': '',
-                    'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
-                }
-                event.update({k: v for k, v in v.mail.items() if k in event})
-                event['attachments'] = ', '.join(v.mail.get('attachments', []))
-                alert_logger.info(event)
-
-        # Run notifications
-        args = {'done': done, 'fail': fail}
-        for notification_name in alert.get('notify', []):
-            notify = info.alert.get(notification_name)
-            if notify is not None:
-                notify.run(callback=callback, args=args)
-            else:
-                app_log.error(f'alert: {name}.notify: alert {notification_name} not defined')
-        return args
-
-    return run_alert
 
 
 def alert(conf):
@@ -538,160 +250,6 @@ def threadpool(conf):
         workers = conf.get('workers', workers)
     info.threadpool = concurrent.futures.ThreadPoolExecutor(workers)
     atexit.register(info.threadpool.shutdown)
-
-
-def handlers(conf):
-    '''
-    The handlers: config is used by the url: handlers to set up the defaults.
-    No explicit configuration is required.
-    '''
-    pass
-
-
-def _sort_url_patterns(entry):
-    '''
-    Sort URL patterns based on their specificity. This allows patterns to
-    over-ride each other in a CSS-like way.
-    '''
-    name, spec = entry
-    pattern = spec.get('pattern', '')
-    # URLs are resolved in this order:
-    return (
-        spec.get('priority', 0),    # by explicity priority: parameter
-        pattern.count('/'),         # by path depth (deeper paths are higher)
-        -(pattern.count('*') +
-          pattern.count('+')),      # by wildcards (wildcards get lower priority)
-    )
-    # TODO: patterns like (js/.*|css/.*|img/.*) will have path depth of 3.
-    # But this should really count only as 1.
-
-
-def _url_normalize(pattern):
-    '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
-    url = urlsplit(pattern)
-    path = posixpath.normpath(url.path)
-    if url.path.endswith('/') and not path.endswith('/'):
-        path += '/'
-    return urlunsplit((url.scheme, url.netloc, path, url.query, ''))
-
-
-def _get_cache_key(conf, name):
-    '''
-    Parse the cache.key parameter. Return a function that takes the request and
-    returns the cache key value.
-
-    The cache key is a string or a list of strings. The strings can be:
-
-    - ``request.attr`` => ``request.attr`` can be any request attribute, as str
-    - ``header.key`` => ``request.headers[key]``
-    - ``cookies.key`` => ``request.cookies[key].value``
-    - ``args.key`` => ``handler.args[key]`` joined with a comma.
-    - ``user.key`` => ``handler.current_user[key]`` as str
-
-    Invalid key strings are ignored with a warning. If all key strings are
-    invalid, the default cache.key of ``request.uri`` is used.
-    '''
-    default_key = 'request.uri'
-    keys = conf.get('key', default_key)
-    if not isinstance(keys, list):
-        keys = [keys]
-    key_getters = []
-    for key in keys:
-        parts = key.split('.', 2)
-        if len(parts) < 2:
-            app_log.warning(f'url:{name}: ignoring invalid cache key {key}')
-            continue
-        # convert second part into a Python string representation
-        val = repr(parts[1])
-        if parts[0] == 'request':
-            key_getters.append(f'str(getattr(request, {val}, missing))')
-        elif parts[0].startswith('header'):
-            key_getters.append(f'request.headers.get({val}, missing)')
-        elif parts[0].startswith('cookie'):
-            key_getters.append(
-                f'request.cookies[{val}].value if {val} in request.cookies else missing')
-        elif parts[0].startswith('user'):
-            key_getters.append(f'str(handler.current_user.get({val}, missing)) '
-                               'if handler.current_user else missing')
-        elif parts[0].startswith('arg'):
-            key_getters.append(f'argsep.join(handler.args.get({val}, [missing]))')
-        else:
-            app_log.warning(f'url:{name}: ignoring invalid cache key: {key}')
-    # If none of the keys are valid, use the default request key
-    if not len(key_getters):
-        key_getters = [default_key]
-
-    method = 'def cache_key(handler):\n'
-    method += '\trequest = handler.request\n'
-    method += f'\treturn ({", ".join(key_getters)})'
-    context = {
-        'missing': '~',
-        'argsep': ', ',         # join args using comma
-    }
-    # exec() is safe here since the code is constructed entirely in this function
-    exec(method, context)       # nosec: frozen input
-    return context['cache_key']
-
-
-def _cache_generator(conf, name):
-    '''
-    The ``url:`` section of ``gramex.yaml`` can specify a ``cache:`` section. For
-    example::
-
-        url:
-            home:
-                pattern: /
-                handler: ...
-                cache:
-                    key: request.uri
-                    store: memory
-                    expires:
-                        duration: 1 minute
-
-    This function takes the ``cache`` section of the configuration and returns a
-    "cache" function. This function accepts a RequestHandler and returns a
-    ``CacheFile`` instance.
-
-    Here's a typical usage::
-
-        cache_method = _cache_generator(conf.cache)     # one-time initialisation
-        cache_file = cache_method(handler)              # used inside a hander
-
-    The cache_file instance exposes the following interface::
-
-        cache_file.get()        # returns None
-        cache_file.write('abc')
-        cache_file.write('def')
-        cache_file.close()
-        cache_file.get()        # returns 'abcdef'
-    '''
-    # cache: can be True (to use default settings) or False (to disable cache)
-    if conf is True:
-        conf = {}
-    elif conf is False:
-        return None
-
-    # Get the store. Defaults to the first store in the cache: section
-    default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
-    store_name = conf.get('store', default_store)
-    if store_name not in info.cache:
-        app_log.warning(f'url:{name}: store {store_name} missing', name, store_name)
-    store = info.cache.get(store_name)
-
-    url_cache_key = _get_cache_key(conf, name)
-    cachefile_class = urlcache.get_cachefile(store)
-    cache_expiry = conf.get('expiry', {})
-    cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
-    cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
-
-    # This method will be added to the handler class as "cache", and called as
-    # self.cache()
-    def get_cachefile(handler):
-        return cachefile_class(key=url_cache_key(handler), store=store,
-                               handler=handler, expire=cache_expiry_duration,
-                               statuses=set(cache_statuses))
-
-    return get_cachefile
 
 
 def url(conf):
@@ -977,3 +535,425 @@ def storelocations(conf):
     for key, subconf in conf.items():
         info.storelocations[key] = subconf
         gramex.data.alter(**subconf)
+
+
+class GramexApp(tornado.web.Application):
+    def log_request(self, handler):
+        # BaseHandler defines a a custom log format. If that's present, use it.
+        if hasattr(handler, 'log_request'):
+            handler.log_request()
+        # Log the request with the handler name at the end.
+        status = handler.get_status()
+        if status < 400:                    # noqa: < 400 is any successful request
+            log_method = gramex.cache.app_log.info
+        elif status < 500:                  # noqa: 400-499 is a user error
+            log_method = gramex.cache.app_log.warning
+        else:                               # 500+ is a server error
+            log_method = gramex.cache.app_log.error
+        request_time = 1000.0 * handler.request.request_time()
+        handler_name = getattr(handler, 'name', handler.__class__.__name__)
+        summary = handler._request_summary()
+        log_method(f"{handler.get_status()} {summary} {request_time:.2f}ms {handler_name}")
+
+    def clear_handlers(self):
+        # Clear all handlers in the application
+        del self.default_router.rules[:]
+        del self.wildcard_router.rules[:]
+
+
+def create_alert(name, alert):
+    '''Generate the function to be run by alert() using the alert configuration'''
+
+    # Configure email service
+    if alert.get('service', None) is None:
+        if len(info.email) > 0:
+            service = alert['service'] = list(info.email.keys())[0]
+            app_log.warning(f'alert: {name}: using first email service: {service}')
+        else:
+            app_log.error(f'alert: {name}: define an email: service to use')
+            return
+    service = alert['service']
+    mailer = info.email.get(service, None)
+    if mailer is None:
+        app_log.error(f'alert: {name}: undefined email service: {service}')
+        return
+
+    # - Warn if to, cc, bcc exists and is not a string or list of strings. Ignore incorrect
+    #    - if to: [1, 'user@example.org'], then
+    #    - log a warning about the 1. Drop the 1. to: becomes ['user@example.org']
+
+    # Error if to, cc, bcc are all missing, return None
+    if not any(key in alert for key in ['to', 'cc', 'bcc']):
+        app_log.error(f'alert: {name}: missing to/cc/bcc')
+        return
+    # Ensure that config has the right type (str, dict, list)
+    contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
+    addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
+    for key in ['subject'] + addr_fields + contentfields:
+        if not isinstance(alert.get(key, ''), (str, list)):
+            app_log.error(f'alert: {name}.{key}: {alert[key]!r} must be a list or str')
+            return
+    if not isinstance(alert.get('images', {}), dict):
+        app_log.error(f'alert: {name}.images: {alert["images"]!r} is not a dict')
+        return
+    if not isinstance(alert.get('attachments', []), list):
+        app_log.error(f'alert: {name}.attachments: {alert["attachments"]!r} is not a list')
+        return
+
+    # Warn if subject is missing
+    if 'subject' not in alert:
+        app_log.warning(f'alert: {name}: missing subject')
+
+    # Warn if body, html, bodyfile, htmlfile keys are missing
+    if not any(key in alert for key in contentfields):
+        app_log.warning(f'alert: {name}: missing body/html/bodyfile/htmlfile/...')
+
+    # Pre-compile data.
+    #   - `data: {key: [...]}` -- loads data in-place
+    #   - `data: {key: {url: file}}` -- loads from a file
+    #   - `data: {key: {url: sqlalchemy-url, table: table}}` -- loads from a database
+    #   - `data: file` -- same as `data: {data: {url: file}}`
+    #   - `data: {key: file}` -- same as `data: {key: {url: file}}`
+    #   - `data: [...]` -- same as `data: {data: [...]}`
+    datasets = {}
+    if 'data' in alert:
+        if isinstance(alert['data'], str):
+            datasets = {'data': {'url': alert['data']}}
+        elif isinstance(alert['data'], list):
+            datasets = {'data': alert['data']}
+        elif isinstance(alert['data'], dict):
+            for key, dataset in alert['data'].items():
+                if isinstance(dataset, str):
+                    datasets[key] = {'url': dataset}
+                elif isinstance(dataset, list) or 'url' in dataset:
+                    datasets[key] = dataset
+                else:
+                    app_log.error(f'alert: {name}.data: {key} is missing url:')
+        else:
+            app_log.error(f'alert: {name}.data: must be data file or dict. Not {alert["data"]!r}')
+
+    if 'each' in alert and alert['each'] not in datasets:
+        app_log.error(f'alert: {name}.each: {alert["each"]} is not in data:')
+        return
+
+    vars = {key: None for key in datasets}
+    vars.update({'config': None, 'args': None})
+    condition = build_transform(
+        {'function': alert.get('condition', 'True')},
+        filename=f'alert: {name}', vars=vars, iter=False)
+
+    alert_logger = logging.getLogger('gramex.alert')
+
+    def load_datasets(data, each):
+        '''
+        Modify data by load datasets and filter by condition.
+        Modify each to apply the each: argument, else return (None, None)
+        '''
+        for key, val in datasets.items():
+            # Allow raw data in lists as-is. Treat dicts as {url: ...}
+            data[key] = val if isinstance(val, list) else gramex.data.filter(**val)
+        result = condition(**data)
+        # Avoiding isinstance(result, pd.DataFrame) to avoid importing pandas
+        if type(result).__name__ == 'DataFrame':
+            data['data'] = result
+        elif isinstance(result, dict):
+            data.update(result)
+        elif not result:
+            app_log.debug(f'alert: {name} stopped. condition = {result}')
+            return
+        if 'each' in alert:
+            each_data = data[alert['each']]
+            if isinstance(each_data, dict):
+                each += list(each_data.items())
+            elif isinstance(each_data, list):
+                each += list(enumerate(each_data))
+            elif hasattr(each_data, 'iterrows'):
+                each += list(each_data.iterrows())
+            else:
+                raise ValueError(f'alert: {name}: each: data.{alert["each"]} must be ' +
+                                 'dict/list/DF, not {type(each_data)}')
+        else:
+            each.append((0, None))
+
+    def create_mail(data):
+        '''
+        Return kwargs that can be passed to a mailer.mail
+        '''
+        mail = {}
+        for key in ['bodyfile', 'htmlfile', 'markdownfile']:
+            target = key.replace('file', '')
+            if key in alert and target not in alert:
+                path = _tmpl(alert[key]).generate(**data).decode('utf-8')
+                tmpl = gramex.cache.open(path, 'template')
+                mail[target] = tmpl.generate(**data).decode('utf-8')
+        for key in addr_fields + ['subject', 'body', 'html', 'markdown']:
+            if key not in alert:
+                continue
+            if isinstance(alert[key], list):
+                mail[key] = [_tmpl(v).generate(**data).decode('utf-8') for v in alert[key]]
+            else:
+                mail[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
+        headers = {}
+        # user: {id: ...} creates an X-Gramex-User header to mimic the user
+        if 'user' in alert:
+            user = deepcopy(alert['user'])
+            for key, val, node in walk(user):
+                node[key] = _tmpl(val).generate(**data).decode('utf-8')
+            user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
+            headers['X-Gramex-User'] = tornado.web.create_signed_value(
+                info.app.settings['cookie_secret'], 'user', user)
+        if 'markdown' in mail:
+            mail['html'] = _markdown_convert(mail.pop('markdown'))
+        if 'images' in alert:
+            mail['images'] = {}
+            for cid, val in alert['images'].items():
+                urlpath = _tmpl(val).generate(**data).decode('utf-8')
+                urldata = urlfetch(urlpath, info=True, headers=headers)
+                if urldata['content_type'].startswith('image/'):
+                    mail['images'][cid] = urldata['name']
+                else:
+                    with io.open(urldata['name'], 'rb') as temp_file:
+                        bytestoread = 80
+                        first_line = temp_file.read(bytestoread)
+                    # TODO: let admin know that the image was not processed
+                    app_log.error(f'alert: {name}: {cid}: {urldata["r"].status_code} '
+                                  f'({urldata["content_type"]}) not an image: {urlpath}\n'
+                                  f'{first_line!r}')
+        if 'attachments' in alert:
+            mail['attachments'] = [
+                urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
+                for v in alert['attachments']
+            ]
+        return mail
+
+    def run_alert(callback=None, args=None):
+        '''
+        Runs the configured alert. If a callback is specified, calls the
+        callback with all email arguments. Else sends the email.
+        If args= is specified, add it as data['args'].
+        '''
+        app_log.info(f'alert: {name} running')
+        data, each, fail = {'config': alert, 'args': {} if args is None else args}, [], []
+        try:
+            load_datasets(data, each)
+        except Exception as e:
+            app_log.exception(f'alert: {name} data processing failed')
+            fail.append({'error': e})
+
+        retval = []
+        for index, row in each:
+            data['index'], data['row'], data['config'] = index, row, alert
+            try:
+                retval.append(AttrDict(index=index, row=row, mail=create_mail(data)))
+            except Exception as e:
+                app_log.exception(f'alert: {name}[{index}] templating (row={row!r})')
+                fail.append({'index': index, 'row': row, 'error': e})
+
+        callback = mailer.mail if not callable(callback) else callback
+        done = []
+        for v in retval:
+            try:
+                callback(**v.mail)
+            except Exception as e:
+                fail.append({'index': v.index, 'row': v.row, 'mail': v.mail, 'error': e})
+                app_log.exception(f'alert: {name}[{v.index}] delivery (row={v.row!r})')
+            else:
+                done.append(v)
+                event = {
+                    'alert': name, 'service': service, 'from': mailer.email or '',
+                    'to': '', 'cc': '', 'bcc': '', 'subject': '',
+                    'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+                }
+                event.update({k: v for k, v in v.mail.items() if k in event})
+                event['attachments'] = ', '.join(v.mail.get('attachments', []))
+                alert_logger.info(event)
+
+        # Run notifications
+        args = {'done': done, 'fail': fail}
+        for notification_name in alert.get('notify', []):
+            notify = info.alert.get(notification_name)
+            if notify is not None:
+                notify.run(callback=callback, args=args)
+            else:
+                app_log.error(f'alert: {name}.notify: alert {notification_name} not defined')
+        return args
+
+    return run_alert
+
+
+def _markdown_convert(content):
+    '''
+    Convert content into Markdown with extensions.
+    '''
+    # Cache the markdown converter
+    if '_markdown' not in info:
+        import markdown
+        info['_markdown'] = markdown.Markdown(extensions=[
+            'markdown.extensions.extra',
+            'markdown.extensions.meta',
+            'markdown.extensions.codehilite',
+            'markdown.extensions.smarty',
+            'markdown.extensions.sane_lists',
+            'markdown.extensions.fenced_code',
+            'markdown.extensions.toc',
+        ], output_format='html5')
+    return info['_markdown'].convert(content)
+
+
+def _tmpl(template_string):
+    '''Compile Tornado template. Cache the results'''
+    if template_string not in _tmpl_cache:
+        _tmpl_cache[template_string] = Template(template_string)
+    return _tmpl_cache[template_string]
+
+
+def _stop_all_tasks(tasks):
+    for name, task in tasks.items():
+        task.stop()
+    tasks.clear()
+
+
+def _sort_url_patterns(entry):
+    '''
+    Sort URL patterns based on their specificity. This allows patterns to
+    over-ride each other in a CSS-like way.
+    '''
+    name, spec = entry
+    pattern = spec.get('pattern', '')
+    # URLs are resolved in this order:
+    return (
+        spec.get('priority', 0),    # by explicity priority: parameter
+        pattern.count('/'),         # by path depth (deeper paths are higher)
+        -(pattern.count('*') +
+          pattern.count('+')),      # by wildcards (wildcards get lower priority)
+    )
+    # TODO: patterns like (js/.*|css/.*|img/.*) will have path depth of 3.
+    # But this should really count only as 1.
+
+
+def _url_normalize(pattern):
+    '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
+    url = urlsplit(pattern)
+    path = posixpath.normpath(url.path)
+    if url.path.endswith('/') and not path.endswith('/'):
+        path += '/'
+    return urlunsplit((url.scheme, url.netloc, path, url.query, ''))
+
+
+def _get_cache_key(conf, name):
+    '''
+    Parse the cache.key parameter. Return a function that takes the request and
+    returns the cache key value.
+
+    The cache key is a string or a list of strings. The strings can be:
+
+    - ``request.attr`` => ``request.attr`` can be any request attribute, as str
+    - ``header.key`` => ``request.headers[key]``
+    - ``cookies.key`` => ``request.cookies[key].value``
+    - ``args.key`` => ``handler.args[key]`` joined with a comma.
+    - ``user.key`` => ``handler.current_user[key]`` as str
+
+    Invalid key strings are ignored with a warning. If all key strings are
+    invalid, the default cache.key of ``request.uri`` is used.
+    '''
+    default_key = 'request.uri'
+    keys = conf.get('key', default_key)
+    if not isinstance(keys, list):
+        keys = [keys]
+    key_getters = []
+    for key in keys:
+        parts = key.split('.', 2)
+        if len(parts) < 2:
+            app_log.warning(f'url:{name}: ignoring invalid cache key {key}')
+            continue
+        # convert second part into a Python string representation
+        val = repr(parts[1])
+        if parts[0] == 'request':
+            key_getters.append(f'str(getattr(request, {val}, missing))')
+        elif parts[0].startswith('header'):
+            key_getters.append(f'request.headers.get({val}, missing)')
+        elif parts[0].startswith('cookie'):
+            key_getters.append(
+                f'request.cookies[{val}].value if {val} in request.cookies else missing')
+        elif parts[0].startswith('user'):
+            key_getters.append(f'str(handler.current_user.get({val}, missing)) '
+                               'if handler.current_user else missing')
+        elif parts[0].startswith('arg'):
+            key_getters.append(f'argsep.join(handler.args.get({val}, [missing]))')
+        else:
+            app_log.warning(f'url:{name}: ignoring invalid cache key: {key}')
+    # If none of the keys are valid, use the default request key
+    if not len(key_getters):
+        key_getters = [default_key]
+
+    method = 'def cache_key(handler):\n'
+    method += '\trequest = handler.request\n'
+    method += f'\treturn ({", ".join(key_getters)})'
+    context = {
+        'missing': '~',
+        'argsep': ', ',         # join args using comma
+    }
+    # exec() is safe here since the code is constructed entirely in this function
+    exec(method, context)       # nosec: frozen input
+    return context['cache_key']
+
+
+def _cache_generator(conf, name):
+    '''
+    The ``url:`` section of ``gramex.yaml`` can specify a ``cache:`` section. For
+    example::
+
+        url:
+            home:
+                pattern: /
+                handler: ...
+                cache:
+                    key: request.uri
+                    store: memory
+                    expires:
+                        duration: 1 minute
+
+    This function takes the ``cache`` section of the configuration and returns a
+    "cache" function. This function accepts a RequestHandler and returns a
+    ``CacheFile`` instance.
+
+    Here's a typical usage::
+
+        cache_method = _cache_generator(conf.cache)     # one-time initialisation
+        cache_file = cache_method(handler)              # used inside a hander
+
+    The cache_file instance exposes the following interface::
+
+        cache_file.get()        # returns None
+        cache_file.write('abc')
+        cache_file.write('def')
+        cache_file.close()
+        cache_file.get()        # returns 'abcdef'
+    '''
+    # cache: can be True (to use default settings) or False (to disable cache)
+    if conf is True:
+        conf = {}
+    elif conf is False:
+        return None
+
+    # Get the store. Defaults to the first store in the cache: section
+    default_store = list(info.cache.keys())[0] if len(info.cache) > 0 else None
+    store_name = conf.get('store', default_store)
+    if store_name not in info.cache:
+        app_log.warning(f'url:{name}: store {store_name} missing', name, store_name)
+    store = info.cache.get(store_name)
+
+    url_cache_key = _get_cache_key(conf, name)
+    cachefile_class = urlcache.get_cachefile(store)
+    cache_expiry = conf.get('expiry', {})
+    cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
+    cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
+
+    # This method will be added to the handler class as "cache", and called as
+    # self.cache()
+    def get_cachefile(handler):
+        return cachefile_class(key=url_cache_key(handler), store=store,
+                               handler=handler, expire=cache_expiry_duration,
+                               statuses=set(cache_statuses))
+
+    return get_cachefile
