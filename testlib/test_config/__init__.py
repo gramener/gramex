@@ -272,7 +272,7 @@ class TestPathConfig(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):
         # Test gramex.config.walk with dicts
-        o = yaml.safe_load('''
+        o = yaml.load('''
             a:
                 b:
                     c: 1
@@ -300,7 +300,7 @@ class TestConfig(unittest.TestCase):
 
     def test_walk_list(self):
         # Test gramex.config.walk with lists
-        o = yaml.safe_load('''
+        o = yaml.load('''
             - 1
             - 2
             - 3
@@ -311,7 +311,7 @@ class TestConfig(unittest.TestCase):
             (1, 2, [1, 2, 3]),
             (2, 3, [1, 2, 3])])
 
-        o = yaml.safe_load('''
+        o = yaml.load('''
             -
                 x: 1
             -
@@ -375,7 +375,7 @@ class TestConfig(unittest.TestCase):
         '''
         eq_(yaml.safe_load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
-            yaml.safe_load(dup_keys)
+            yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
     def test_recursive_encode(self):
         ua, ub = 'α', 'β'

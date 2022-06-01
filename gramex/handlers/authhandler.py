@@ -101,7 +101,7 @@ class AuthHandler(BaseHandler):
                 action = [action]
             for conf in action:
                 cls.actions.append(build_transform(
-                    conf, vars=AttrDict(handler=None),
+                    conf, vars={'handler': None},
                     filename=f'url:{cls.name}:{conf.function}'))
 
     @coroutine
@@ -405,29 +405,23 @@ class OTP(object):
         full hashing string
         '''
         self.size = size
-        # Alter the table to ensure it has user, email, token, expire columns
-        gramex.data.alter(**gramex.service.otp, columns={
-            'user': 'TEXT',
-            'email': 'TEXT',
-            'token': 'TEXT',
-            'expire': 'REAL',
-        })
+        self.store = gramex.service.storelocations.otp
 
     def token(self, user, email, expire):
         '''Generate a one-tie token, store it in the recovery database, and return it'''
         token = uuid.uuid4().hex[:self.size]
-        gramex.data.insert(**gramex.service.otp, id=['token'], args={
+        gramex.data.insert(**self.store, id=['token'], args={
             'user': [user], 'email': [email], 'token': [token], 'expire': [expire],
         })
         return token
 
     def pop(self, token):
         '''Return the row matching the token, and deletes it from the list'''
-        rows = gramex.data.filter(**gramex.service.otp, args={'token': [token]})
+        rows = gramex.data.filter(**self.store, args={'token': [token]})
         if len(rows) > 0:
             row = rows.iloc[0].to_dict()
             if row['expire'] > time.time():
-                gramex.data.delete(**gramex.service.otp, id=['token'], args={'token': [token]})
+                gramex.data.delete(**self.store, id=['token'], args={'token': [token]})
                 return row
         return None
 

@@ -3,4 +3,5 @@
 
 
 "gramex-npm-package@file:gramex-npm-package":
-  version "1.0.0"
+  "resolved" "file:gramex-npm-package"
+  "version" "1.0.0"

@@ -735,8 +735,10 @@ class TestDBAuthSignup(DBAuthBase):
         user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
 
+        # Check that the recovery database is at the custom location
+        ok_(gramex.service.storelocations.otp['url'].endswith('otp.db'))
         # Check that the user has been added to the recovery database
-        tokens = gramex.data.filter(**gramex.service.otp).set_index('token')
+        tokens = gramex.data.filter(**gramex.service.storelocations.otp).set_index('token')
         eq_(tokens['user'][token], 'newuser')
         eq_(tokens['email'][token], 'any@example.org')
 

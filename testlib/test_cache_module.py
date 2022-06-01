@@ -240,8 +240,8 @@ class TestOpen(unittest.TestCase):
             expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec: test case
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'yaml', _reload_status=True,
-                                                 Loader=AttrDictYAMLLoader)
+            result, reloaded = gramex.cache.open(
+                path, 'yaml', _reload_status=True, Loader=AttrDictYAMLLoader)
             eq_(reloaded, reload)
             ok_(isinstance(result, AttrDict))
             eq_(result, expected)

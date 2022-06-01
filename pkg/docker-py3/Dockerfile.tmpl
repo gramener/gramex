@@ -6,7 +6,7 @@ LABEL version="{{ version }}"
 LABEL maintainer="{{ author_email }}"
 
 # Install system requirements. The ORDER of runs is critical. Keep them exactly in this order
-RUN apt update && apt install -y pandoc
+RUN apt -y --allow-releaseinfo-change update && apt install -y pandoc
 RUN pip install --upgrade pip orderedattrdict tornado
 RUN conda install -c conda-forge -c gramener gramex -y
 RUN apt -y install gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 \

@@ -235,7 +235,7 @@ class BaseMixin(object):
         for pattern, trans in transform.items():
             cls.transform[pattern] = {
                 'function': build_transform(
-                    trans, vars=AttrDict((('content', None), ('handler', None))),
+                    trans, vars={'content': None, 'handler': None},
                     filename=f'url:{cls.name}'),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
@@ -379,14 +379,14 @@ class BaseMixin(object):
         # Set up the auth
         if isinstance(auth, dict):
             cls._auth = auth
-            cls._auth_methods = cls.get_list(auth.get('methods', ''), 'auth.methods',
-                                             '[GET, POST, OPTIONS]')
+            cls._auth_methods = cls.get_list(
+                auth.get('methods', ''), 'auth.methods', '[GET, POST, OPTIONS]')
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
             if auth.get('condition'):
                 cls.permissions.append(
-                    build_transform(auth['condition'], vars=AttrDict(handler=None),
+                    build_transform(auth['condition'], vars={'handler': None},
                                     filename=f'url:{cls.name}.auth.permission'))
             # Add check for membership
             memberships = auth.get('membership', [])
@@ -470,7 +470,7 @@ class BaseMixin(object):
                         f'url.{cls.name}.error.{error_code} has function:. Ignoring path:')
                 cls.error[error_code] = {'function': build_transform(
                     error_config,
-                    vars=AttrDict((('status_code', None), ('kwargs', None), ('handler', None))),
+                    vars={'status_code': None, 'kwargs': None, 'handler': None},
                     filename=f'url:{cls.name}.error.{error_code}'
                 )}
             elif error_path:

@@ -120,7 +120,8 @@ def _markdown(handle, **kwargs):
 @opener
 def _yaml(handle, **kwargs):
     import yaml
-    return yaml.safe_load(handle.read())
+    kwargs.setdefault('Loader', yaml.SafeLoader)
+    return yaml.load(handle.read(), **kwargs)   # nosec: kwargs uses SafeLoader
 
 
 def _template(path, **kwargs):

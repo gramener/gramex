@@ -30,8 +30,8 @@ class FunctionHandler(BaseHandler):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
-        cls.info['function'] = build_transform(kwargs, vars={'handler': None},
-                                               filename=f'url:{cls.name}')
+        cls.info['function'] = build_transform(
+            kwargs, vars={'handler': None}, filename=f'url:{cls.name}')
         cls.headers = headers
         cls.post = cls.put = cls.delete = cls.patch = cls.get
         if not kwargs.get('cors'):

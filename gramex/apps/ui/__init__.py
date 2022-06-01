@@ -22,7 +22,7 @@ config_file = join(ui_dir, 'config.yaml')
 cache_dir = join(variables['GRAMEXDATA'], 'apps', 'ui')
 sass_bin = join(ui_dir, 'node_modules', 'sass', 'sass.js')
 ts_path = join(ui_dir, 'node_modules', 'typescript', 'bin', 'tsc')
-vue_path = join(ui_dir, 'node_modules', '@vue', 'cli', 'bin', 'vue')
+vue_path = join(ui_dir, 'node_modules', '@vue', 'cli-service', 'bin', 'vue-cli-service')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
 

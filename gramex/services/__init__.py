@@ -35,7 +35,7 @@ from copy import deepcopy
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from tornado.template import Template
 from orderedattrdict import AttrDict
-from gramex import debug, shutdown, __version__
+from gramex import console, debug, shutdown, __version__
 from gramex.transforms import build_transform
 from gramex.config import locate, app_log, ioloop_running, app_log_extra, merge, walk
 from gramex.cache import urlfetch, cache_key
@@ -59,7 +59,7 @@ info = AttrDict(
     gramexlog=AttrDict(apps=AttrDict()),
     url=AttrDict(),
     main_ioloop=None,
-    otp=AttrDict(),
+    storelocations=AttrDict(),
     _md=None,
 )
 _cache, _tmpl_cache = AttrDict(), AttrDict()
@@ -159,6 +159,7 @@ def app(conf):
 
             app_log.info('Listening on port %d', conf.listen.port)
             app_log_extra['port'] = conf.listen.port
+            msg = f'Gramex {__version__} listening on http://127.0.0.1:{conf.listen.port}/. '
 
             # browser: True opens the application home page on localhost.
             # browser: url opens the application to a specific URL
@@ -168,12 +169,14 @@ def app(conf):
                     url = urljoin(url, conf.browser)
                 try:
                     browser = webbrowser.get()
-                    app_log.info(f'Opening {url} in {browser.__class__.__name__} browser')
+                    msg += f'Opening {url} in {browser.__class__.__name__} browser'
                     browser.open(url)
                 except webbrowser.Error:
-                    app_log.info('Unable to open browser')
+                    msg += 'Unable to open browser'
             else:
-                app_log.info('<Ctrl-B> opens the browser. <Ctrl-D> starts the debugger.')
+                msg += '<Ctrl-B> opens browser, <Ctrl-D> starts debugger'
+
+            console(msg)
 
             # Ensure that we call shutdown() on Ctrl-C.
             # On Windows, Tornado does not exit on Ctrl-C. This also fixes that.
@@ -688,7 +691,7 @@ def _cache_generator(conf, name):
 
 def url(conf):
     '''Set up the tornado web app URL handlers'''
-    info.url = {}
+    info.url = AttrDict()
     # Sort the handlers in descending order of priority
     specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
     for name, spec in specs:
@@ -964,6 +967,8 @@ def gramexlog(conf):
     info.gramexlog.push = push
 
 
-def otp(conf):
-    '''Set up OTP service'''
-    info.otp = AttrDict(conf)
+def storelocations(conf):
+    '''Initialize the store locations'''
+    for key, subconf in conf.items():
+        info.storelocations[key] = subconf
+        gramex.data.alter(**subconf)
