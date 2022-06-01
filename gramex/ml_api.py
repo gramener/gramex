@@ -368,7 +368,11 @@ class SklearnModel(AbstractModel):
         """
         p = self._predict(X, **kwargs)
         if target_col:
-            X[target_col] = p
+            try:
+                X[target_col] = p
+            except ValueError:
+                # This happens for NER: predictions of a single sample can be multiple entities.
+                X[target_col] = [p]
             return X
         return p
 

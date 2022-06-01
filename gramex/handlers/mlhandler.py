@@ -97,7 +97,7 @@ class MLHandler(FormHandler):
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
             if op.isdir(cls.store.model_path):
                 mclass, wrapper = ml.search_modelclass(mclass)
-                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+                cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
             else:
                 cls.model = get_model(cls.store.model_path, {})
         elif data is not None:
@@ -133,7 +133,7 @@ class MLHandler(FormHandler):
         return pd.concat(dfs, axis=0)
 
     def _parse_application_json(self):
-        return pd.read_json(self.request.body.decode('utf8'))
+        return pd.read_json(self.request.body)
 
     def _parse_data(self, _cache=True, append=False):
         header = self.request.headers.get('Content-Type', '').split(';')[0]
@@ -171,7 +171,12 @@ class MLHandler(FormHandler):
             action = kwargs.get(method, cls.store.load(method, True))
             if action:
                 subset = action if isinstance(action, list) else None
-                data = getattr(data, method)(subset=subset)
+                try:
+                    data = getattr(data, method)(subset=subset)
+                except TypeError as exc:
+                    # The label column for an NER dataset is a nested list.
+                    # Can't do drop_duplicates on that.
+                    app_log.warning(exc)
         return data
 
     def _transform(self, data, **kwargs):
