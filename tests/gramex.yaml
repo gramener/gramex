@@ -1260,6 +1260,14 @@ url:
         class: SentimentAnalysis
       xsrf_cookies: false
 
+  mlhandler/huggingface/ner:
+    pattern: /ner
+    handler: MLHandler
+    kwargs:
+      model:
+        class: NER
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
