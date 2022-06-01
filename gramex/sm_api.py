@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import joblib
 from gramex.config import app_log
+from gramex import cache
 from statsmodels import api as sm
 from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
 from sklearn.metrics import mean_absolute_error
@@ -8,6 +10,12 @@ from gramex.ml_api import AbstractModel
 
 
 class StatsModel(AbstractModel):
+
+    @classmethod
+    def from_disk(cls, path, **kwargs):
+        model = cache.open(path, joblib.load)
+        return cls(model, params={})
+
     def __init__(self, mclass, params, **kwargs):
         self.stl_kwargs = kwargs.pop("stl", False)
         if isinstance(mclass, SARIMAXResultsWrapper):

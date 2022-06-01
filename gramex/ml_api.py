@@ -43,8 +43,9 @@ SEARCH_MODULES = {
     ],
     "gramex.sm_api.StatsModel": [
         "statsmodels.tsa.api",
-        "statsmodels.tsa.statespace.sarimax"
+        "statsmodels.tsa.statespace.sarimax",
     ],
+    "gramex.ml_api.HFTransformer": ["gramex.transformers"],
 }
 
 
@@ -277,6 +278,15 @@ class AbstractModel(ABC):
 class SklearnModel(AbstractModel):
     """SklearnModel."""
 
+    @classmethod
+    def from_disk(cls, path, **kwargs):
+        model = cache.open(path, joblib.load)
+        if isinstance(model, Pipeline):
+            _, wrapper = search_modelclass(model[-1].__class__.__name__)
+        else:
+            _, wrapper = search_modelclass(model.__class__.__name__)
+        return cls(model, params={})
+
     def __init__(
         self,
         model: Any,
@@ -338,7 +348,9 @@ class SklearnModel(AbstractModel):
         try:
             y = self.model.predict(X, **kwargs)
         except RuntimeError:
-            y = self.model.predict(X[self.model['transform']._feature_names_in], **kwargs)
+            y = self.model.predict(
+                X[self.model["transform"]._feature_names_in], **kwargs
+            )
         return y
 
     def predict(
@@ -382,3 +394,35 @@ class SklearnTransformer(SklearnModel):
     def _predict(self, X, **kwargs):
         """Sklearn transformers don't have a "predict", they have a "transform"."""
         return self.model.transform(X, **kwargs)
+
+
+class HFTransformer(SklearnModel):
+    def __init__(self, model, params=None, data=None, **kwargs):
+        self.model = model
+        if params is None:
+            params = {"text_col": "text", "target_col": "label"}
+        self.params = params
+        self.kwargs = kwargs
+
+    @classmethod
+    def from_disk(cls, path, klass):
+        model = op.join(path, "model")
+        tokenizer = op.join(path, "tokenizer")
+        return cls(klass(model, tokenizer))
+
+    def fit(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+        model_path: str = "",
+        name: str = "",
+        **kwargs,
+    ):
+        text = X.squeeze("columns")
+        self.model.fit(text, y, model_path, **kwargs)
+
+    def _predict(
+        self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs
+    ):
+        text = X["text"]
+        return self.model.predict(text)
