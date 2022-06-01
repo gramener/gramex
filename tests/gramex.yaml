@@ -376,7 +376,26 @@ url:
     handler: FunctionHandler
     kwargs:
       function: functionutils.content
-
+  func/pipeline:
+    pattern: /func/pipeline
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - { name: x, function: '"--"' }
+        - { name: n, function: 2}
+        - (x + handler.request.path) * n
+  func/pipeline-number:
+    pattern: /func/pipeline-number
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - 2
+  func/pipeline-iterable:
+    pattern: /func/pipeline-iterable
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - [3, x, null, false]   # Returns [3, "x", false]
   # TestPyNode
   pynode/run:
     pattern: /pynode/run
@@ -1260,6 +1279,7 @@ url:
         class: SentimentAnalysis
       xsrf_cookies: false
 
+<<<<<<< HEAD
   mlhandler/huggingface/ner:
     pattern: /ner
     handler: MLHandler
@@ -1268,6 +1288,8 @@ url:
         class: NER
       xsrf_cookies: false
 
+=======
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
   capture:
     pattern: /capture
     handler: CaptureHandler
@@ -2758,3 +2780,8 @@ invalid-service: true
 
 eventlog:
   path: $YAMLPATH/events.db
+
+storelocations:
+  # The `otp:` section defines where to store one-time passwords
+  otp:
+      url: sqlite:///$YAMLPATH/otp.db

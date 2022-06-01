@@ -281,10 +281,26 @@ app:
         httponly: true          # Only HTTP access, no JS access
 
 
-# The `otp:` section defines where to store one-time passwords
-otp:
-    url: sqlite:///$GRAMEXDATA/auth.recover.db
-    table: users
+# The storelocations: section defines where Gramex stores its data.
+storelocations:
+  # The `otp:` section defines where to store one-time passwords
+  otp:
+      url: sqlite:///$GRAMEXDATA/auth.recover.db
+      table: users
+      columns:
+        user: TEXT
+        email: TEXT
+        token: TEXT
+        expire: REAL    # Seconds since epoch
+  # Store pipeline execution runs
+  pipeline:
+    url: sqlite:///$GRAMEXDATA/pipeline.db
+    table: runs
+    columns:
+      name: TEXT
+      start: TEXT   # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
+      end: TEXT     # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
+      error: TEXT   # Error stage + traceback
 
 # The `schedule:` section defines when specific code is to run.
 schedule:

@@ -98,7 +98,11 @@ class MLHandler(FormHandler):
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
             if op.isdir(cls.store.model_path):
                 mclass, wrapper = ml.search_modelclass(mclass)
+<<<<<<< HEAD
                 cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
+=======
+                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
             else:
                 cls.model = get_model(cls.store.model_path, {})
         elif data is not None:

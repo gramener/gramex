@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from .basehandler import BaseWebSocketHandler
@@ -32,7 +31,7 @@ class WebSocketHandler(BaseWebSocketHandler):
             if method in kwargs:
                 setattr(cls, method, build_transform(
                     kwargs[method],
-                    vars=OrderedDict((arg, None) for arg in override_methods[method]),
+                    vars={arg: None for arg in override_methods[method]},
                     filename=f'url:{cls.name}.{method}',
                     iter=False))
 

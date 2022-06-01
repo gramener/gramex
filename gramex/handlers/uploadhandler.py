@@ -183,7 +183,7 @@ class UploadHandler(BaseHandler):
         if transform is not None:
             if isinstance(transform, dict) and 'function' in transform:
                 cls.transform.append(build_transform(
-                    transform, vars=AttrDict((('content', None), ('handler', None))),
+                    transform, vars={'content': None, 'handler': None},
                     filename=f'url:{cls.name}'))
             else:
                 app_log.error(

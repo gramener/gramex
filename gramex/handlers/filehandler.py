@@ -75,28 +75,15 @@ class FileHandler(BaseHandler):
         structure as :class:`FunctionHandler`, and accepts these keys:
 
         ``function``
-            A string that resolves into any Python function or method (e.g.
-            ``markdown.markdown``). By default, it is called with the file
-            contents as ``function(content)`` and the result is rendered as-is
-            (hence must be a string.)
-
-        ``args``
-            optional positional arguments to be passed to the function. By
-            default, this is just ``['content']`` where ``content`` is the file
-            contents. You can also pass the handler via ``['handler']``, or both
-            of them in any order.
-
-        ``kwargs``:
-            an optional list of keyword arguments to be passed to the function.
-            A value with of ``handler`` and ``content`` is replaced with the
-            RequestHandler and file contents respectively.
+            The expression to return. Example: ``function: mymodule.transform(content, handler)``.
+            ``content`` has the file contents. ``handler`` has the FileHandler object
 
         ``encoding``
-            The encoding to load the file as. If you don't specify an encoding,
-            file contents are passed to ``function`` as a binary string.
+            The encoding to read the file with, e.g. ``utf-8``. If ``None`` (the default), the
+            file is read as bytes, and the transform `function` MUST accept the content as bytes
 
         ``headers``:
-            HTTP headers to set on the response.
+            HTTP headers to set on the response
     :arg string template: ``template="*.html"`` renders all HTML files as Tornado templates.
         ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
     :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS (new in Gramex 1.66).

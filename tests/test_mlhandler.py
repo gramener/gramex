@@ -52,22 +52,35 @@ class TestTransformers(TestGramex):
             if op.isdir(path):
                 shutil.rmtree(path)
 
+<<<<<<< HEAD
     def test_default_sentiment(self):
+=======
+    def test_blank_predictions(self):
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
+<<<<<<< HEAD
     def test_train_sentiment(self):
+=======
+    def test_train(self):
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
         """Train with some vague sentences."""
         warnings.warn("This test takes a LONG time. Leave while you can.")
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
+<<<<<<< HEAD
             method="post",
+=======
+            method='post',
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
             data=df.to_json(orient="records"),
             headers={"Content-Type": "application/json"},
             timeout=300,
         )
+<<<<<<< HEAD
         self.assertGreaterEqual(resp.json()["score"], 0.9)
 
     def test_default_ner(self):
@@ -101,6 +114,9 @@ class TestTransformers(TestGramex):
         metrics = pd.DataFrame.from_records(resp.json()["score"]).set_index("index")
         metrics = metrics.drop(["number"], axis=0).mean(axis=1)
         self.assertTrue((metrics > 0.6).all())
+=======
+        self.assertGreaterEqual(resp.json()['score'], 0.9)
+>>>>>>> e2ad8d77ea46fca38766843aa6b4d085626f3f6c
 
 
 @skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")
