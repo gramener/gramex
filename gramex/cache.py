@@ -6,6 +6,7 @@ import io
 import json
 import mimetypes
 import os
+from typing import Tuple, Union, Dict, Callable
 import pandas as pd
 import re
 import requests
@@ -187,9 +188,24 @@ def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=..., 
     return data.infer_objects()                 # Convert data types
 
 
-def stat(path):
-    '''
-    Returns a file status tuple - based on file last modified time and file size
+def stat(path: str) -> Tuple[Union[float, None], Union[int, None]]:
+    '''Returns file status. Used to check if a file has changed.
+
+    If the `stat(file)` has changed, the file has been updated and needs to be reloaded.
+    It checks the file's last modified time -- AND file size in case the modified time
+    is not refreshed.
+
+    Examples:
+        To see the status of gramex.yaml:
+
+        >>> stat('gramex.yaml')
+        (1654149106.1422858, 7675)
+
+    Parameters:
+        path: Absolute file path/Path relative to gramex root folder
+
+    Returns:
+        The last modified time and file size.
     '''
     if os.path.exists(path):
         stat = os.stat(path)
@@ -238,6 +254,19 @@ open_callback = dict(
     yml=_yaml,
     yaml=_yaml
 )
+
+
+def _relpath(path):
+    stack = inspect.getouterframes(inspect.currentframe(), 3)
+    folder = os.path.dirname(os.path.abspath(stack[1][1]))
+    # If we're calling from a FileHandler template, use the template's path
+    if stack[1][1] == '<string>.generated.py':
+        g = stack[1][0].f_globals
+        if 'handler' in g and g['handler'].__class__.__name__ == 'FileHandler':
+            folder = os.path.dirname(g['handler'].file)
+        else:
+            app_log.warning(f'gramex.cache.open/save: rel= on unknown template folder for {path}')
+    return os.path.join(folder, path)
 
 
 def open(path, callback=None, transform=None, rel=False, **kwargs):
@@ -316,16 +345,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     # Get the parent frame's filename. Compute path relative to that.
     if rel:
-        stack = inspect.getouterframes(inspect.currentframe(), 2)
-        folder = os.path.dirname(os.path.abspath(stack[1][1]))
-        # If we're calling from a FileHandler template, use the template's path
-        if stack[1][1] == '<string>.generated.py':
-            g = stack[1][0].f_globals
-            if 'handler' in g and g['handler'].__class__.__name__ == 'FileHandler':
-                folder = os.path.dirname(g['handler'].file)
-            else:
-                app_log.warning(f'gramex.cache.open: rel= failed for {path}')
-        path = os.path.join(folder, path)
+        path = _relpath(path)
 
     original_callback = callback
     if callback is None:
@@ -393,21 +413,37 @@ _SAVE_CALLBACKS = dict(
 )
 
 
-def save(data, url, callback=None, **kwargs):
+def save(data: pd.DataFrame, url: str, rel: bool = False, callback: Union[str, Callable] = None,
+         **kwargs: dict) -> None:
     '''
-    Saves a DataFrame into file at url. It does not cache.
+    Saves a Pandas DataFrame into file at url.
 
-    ``callback`` is almost the same as for :py:func:`gramex.cache.open`. It can
-    be ``json``, ``csv``, ``xlsx``, ``hdf``, ``html``, ``stata`` or
-    a function that accepts the filename and any other arguments.
+    Examples:
+        To save data into `sample.csv`:
 
-    Other keyword arguments are passed directly to the callback.
+        >>> type(data)
+        <class 'pandas.core.frame.DataFrame'>
+        >>> data
+           a  b
+        0  1  2
+        >>> save(data, 'sample.csv')
+
+    Parameters:
+        data: Pandas dataframe which has to be saved to a file.
+        url: Absolute/Relative location (relative to gramex root folder)
+            in which the file has to be saved.
+        rel: If true, opens the path relative to the caller function's file path.
+        callback: Almost the same as for [gramex.cache.open][]. It can
+            be `json`, `csv`, `xlsx`, `hdf`, `html`, `stata` or
+            a function that accepts the filename and any other arguments.
+        **kwargs: Other keyword arguments are passed directly to the callback.
     '''
     if callback is None:
         callback = os.path.splitext(url)[-1][1:]
     if callable(callback):
         return callback(data, url, **kwargs)
     elif callback in _SAVE_CALLBACKS:
+        url = _relpath(url) if rel else url
         method = getattr(data, _SAVE_CALLBACKS[callback])
         return method(url, **(used_kwargs(method, kwargs)[0]))
     else:
@@ -544,15 +580,20 @@ def query(sql, engine, state=None, **kwargs):
 _MODULE_CACHE = {}
 
 
-def reload_module(*modules):
-    '''
-    Reloads one or more modules if they are outdated, i.e. only if required the
+def reload_module(*modules) -> None:
+    '''Reloads one or more modules if they are outdated, i.e. only if required the
     underlying source file has changed.
 
-    For example::
+    Examples:
 
-        import mymodule             # Load cached module
-        reload_module(mymodule)     # Reload module if the source has changed
+        >>> import mymodule
+        >>> reload_module(mymodule)
+
+        Load the cached module. Reload the module if the source has changed.
+
+    Parameters:
+
+        modules: Pass the module which has to reload.
 
     This is most useful during template development. If your changes are in a
     Python module, add adding these lines to pick up new module changes when
@@ -576,28 +617,44 @@ def reload_module(*modules):
         _MODULE_CACHE[name] = fstat
 
 
-def urlfetch(path, info=False, **kwargs):
+def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
+    '''Fetch the content in the url and return a file path where it is downloaded.
+
+    Examples:
+
+        >>> urlfetch('https://gramener.com/gramex/guide/mlhandler/titanic?_download=titanic.csv\
+                      &_format=csv')
+        >>> '/path/to/tmpfile.csv'
+
+        This is a synchronous function, i.e. it waits until the file is downloaded.
+
+    Parameters:
+        url: The path can be http, https or file path
+        info: True if metadata of the requested file is required. If true, it
+            returns a dict with (filename), r (request) url, ext (extension), content_type.
+        **kwargs: Any other keyword arguments are passed to requests.get.
+
+    Returns:
+        Filepath where the file is downloaded.
+
+    * If url is a file url, return as is.
+    * If url is a file url and info is true, return a dict with name (filepath),
+        ext (extension), and content_type as well as r, url set to None.
+    * If path is a URL, download the file, return the saved filename.
+    * The filename extension is based on the URL's Content-Type HTTP header.
+    * If info is true, returns a dict with name (filename), r (request)
+        url, ext (extension), content_type.
+    * Automatically delete the files on exit of the application.
     '''
-    - If path is a file path, return as is.
-    - If path is a file path and info is true, return a dict with name (filepath),
-      ext (extension), and content_type as well as r, url set to None.
-    - If path is a URL, download the file, return the saved filename.
-      The filename extension is based on the URL's Content-Type HTTP header.
-    - If info is true, returns a dict with name (filename), r (request)
-      url, ext (extension), content_type.
-    - Any other keyword arguments are passed to requests.get.
-    - Automatically delete the files on exit of the application.
-    - This is a synchronous function, i.e. it waits until the file is downloaded.
-    '''
-    url = urlparse(path)
+    url = urlparse(url)
     if url.scheme not in {'http', 'https'}:  # path is a filepath
         if info:
-            ext = os.path.splitext(path)[1]
-            content_type = mimetypes.guess_type(path, strict=True)[0]
-            return {'name': path, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
+            ext = os.path.splitext(url)[1]
+            content_type = mimetypes.guess_type(url, strict=True)[0]
+            return {'name': url, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
         else:
-            return path
-    r = requests.get(path, **kwargs)
+            return url
+    r = requests.get(url, **kwargs)
     if 'Content-Type' in r.headers:
         content_type = r.headers['Content-Type'].split(';')[0]
         ext = mimetypes.guess_extension(content_type, strict=False)
