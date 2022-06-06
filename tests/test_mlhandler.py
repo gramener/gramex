@@ -55,7 +55,13 @@ class TestTransformers(TestGramex):
     def test_blank_predictions(self):
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
-        self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
+        self.assertEqual(
+            resp.json(),
+            [
+                {"text": "This is bad.", "label": "NEGATIVE"},
+                {"text": "This is good.", "label": "POSITIVE"},
+            ],
+        )
 
     def test_train(self):
         """Train with some vague sentences."""
@@ -63,12 +69,12 @@ class TestTransformers(TestGramex):
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
-            method='post',
+            method="post",
             data=df.to_json(orient="records"),
             headers={"Content-Type": "application/json"},
             timeout=300,
         )
-        self.assertGreaterEqual(resp.json()['score'], 0.9)
+        self.assertGreaterEqual(resp.json()["score"], 0.9)
 
 
 @skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")

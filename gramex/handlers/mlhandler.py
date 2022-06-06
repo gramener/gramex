@@ -119,6 +119,9 @@ class MLHandler(FormHandler):
                 **cls.store.model_kwargs()
             )
 
+    def get_template_path(self):
+        return op.dirname(self.template)
+
     def _parse_multipart_form_data(self):
         dfs = []
         for _, files in self.request.files.items():
@@ -134,7 +137,7 @@ class MLHandler(FormHandler):
         return pd.concat(dfs, axis=0)
 
     def _parse_application_json(self):
-        return pd.read_json(self.request.body.decode('utf8'))
+        return pd.read_json(self.request.body)
 
     def _parse_data(self, _cache=True, append=False):
         header = self.request.headers.get('Content-Type', '').split(';')[0]

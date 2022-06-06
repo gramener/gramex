@@ -10,6 +10,7 @@ from sklearn.metrics import roc_auc_score
 
 
 DEFAULT_MODEL = DEFAULT_TOKENIZER = "distilbert-base-uncased-finetuned-sst-2-english"
+_CACHE = {}
 
 
 def load_pretrained(klass, path, default, **kwargs):
@@ -22,7 +23,11 @@ def load_pretrained(klass, path, default, **kwargs):
             model = cache.open(default, klass.from_pretrained, **kwargs)
     else:
         app_log.info(f"{path} not found on disk; loading default...")
-        model = klass.from_pretrained(default, **kwargs)
+        key = klass.__name__ + default
+        if key in _CACHE:
+            model = _CACHE[key]
+        else:
+            model = _CACHE[key] = klass.from_pretrained(default, **kwargs)
     return model
 
 
@@ -43,6 +48,10 @@ class BaseTransformer(object):
 
 class SentimentAnalysis(BaseTransformer):
     task = "sentiment-analysis"
+
+    @property
+    def labels(self):
+        return self.model.config.label2id.keys()
 
     def fit(self, text, labels, model_path, **kwargs):
         if pd.api.types.is_object_dtype(labels):
@@ -69,10 +78,15 @@ class SentimentAnalysis(BaseTransformer):
     def predict(self, text, **kwargs):
         text = text.tolist()
         predictions = self.pipeline(text)
-        return [k["label"] for k in predictions]
+        return [{"text": t, "label": p["label"]} for t, p in zip(text, predictions)]
 
     def score(self, X, y_true, **kwargs):
         y_true = [self.model.config.label2id[x] for x in y_true]
-        y_pred = self.predict(X.squeeze("columns"))
+        y_pred = [p["label"] for p in self.predict(X.squeeze("columns"))]
         y_pred = [self.model.config.label2id[x] for x in y_pred]
-        return roc_auc_score(y_true, y_pred)
+        try:
+            score = roc_auc_score(y_true, y_pred)
+        # Can't find roc_auc_scores for single samples, or when only one class is present.
+        except ValueError:
+            score = 0
+        return score
