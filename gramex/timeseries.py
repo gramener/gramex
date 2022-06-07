@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import joblib
+from typing import Union
 from gramex.config import app_log
 from gramex import cache
 from statsmodels import api as sm
@@ -10,7 +11,6 @@ from gramex.ml_api import AbstractModel
 
 
 class StatsModel(AbstractModel):
-
     @classmethod
     def from_disk(cls, path, **kwargs):
         model = cache.open(path, joblib.load)
@@ -51,8 +51,14 @@ class StatsModel(AbstractModel):
         return pd.Series(result, index=endog.index)
 
     def fit(
-        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None,
-        **kwargs
+        self,
+        X,
+        y=None,
+        model_path=None,
+        name=None,
+        index_col=None,
+        target_col=None,
+        **kwargs,
     ):
         """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
         params = self.params.copy()
@@ -106,3 +112,47 @@ class StatsModel(AbstractModel):
         if not result:
             return {}
         return result.summary().as_html()
+
+
+class Prophet(StatsModel):
+    def fit(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+        model_path: str = "",
+        name: str = "",
+        **kwargs,
+    ):
+        X["y"] = y
+        self.model = self.mclass.fit(X)
+        from prophet.serialize import model_to_json
+
+        with open(model_path, "w") as fout:
+            fout.write(model_to_json(self.model))
+        score = self.score(X[["ds"]], y)
+        return score
+
+    @classmethod
+    def from_disk(cls, path, *args, **kwargs):
+        from prophet.serialize import model_from_json
+
+        with open(path, "r") as fin:
+            model = model_from_json(fin.read())
+        return cls(model, params={})
+
+    def score(self, X, y_true, **kwargs):
+        return mean_absolute_error(y_true, self.mclass.predict(X)["yhat"])
+
+    def predict(
+        self,
+        X: Union[pd.DataFrame, np.ndarray] = None,
+        n_periods=None,
+        include_history=False,
+        **kwargs,
+    ):
+        if n_periods is not None:
+            future = self.mclass.make_future_dataframe(
+                periods=int(n_periods), include_history=include_history
+            )
+            return self.mclass.predict(future)
+        return self.mclass.predict(X)

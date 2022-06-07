@@ -21,22 +21,80 @@ from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder, tempfiles
 
+STATSMODELS_INSTALLED = PROPHET_INSTALLED = TRANSFORMERS_INSTALLED = True
+
 try:
     from statsmodels.datasets.interest_inflation import load as infl_load
 
-    STATSMODELS_INSTALLED = True
 except ImportError:
     STATSMODELS_INSTALLED = False
 try:
     logging.getLogger("tensorflow").disabled = True
     import transformers as trf  # NOQA: F401
 
-    TRANSFORMERS_INSTALLED = True
 except ImportError:
     TRANSFORMERS_INSTALLED = False
 
+try:
+    import prophet  # NOQA: F401
+except ImportError:
+    PROPHET_INSTALLED = False
+
 
 op = os.path
+
+
+@skipUnless(PROPHET_INSTALLED, "Please install Prophet to run these tests.")
+class TestProphet(TestGramex):
+    @classmethod
+    def setUpClass(cls):
+        df = pd.read_csv(
+            "https://bit.ly/39d7Y6r", index_col="ds", parse_dates=["ds"]
+        )  # Peyton Manning dataset
+        train, test = df.loc[:"2014"], df.loc["2015":]
+        train, test = train.reset_index(), test.reset_index()
+        train["ds"] = train["ds"].astype(str)
+        test["ds"] = test["ds"].astype(str)
+        cls.train, cls.test = train, test
+
+    @classmethod
+    def tearDownClass(cls):
+
+        path = op.join(
+            gramex.config.variables["GRAMEXDATA"],
+            "apps",
+            "mlhandler",
+            "mlhandler-prophet",
+        )
+        if op.isdir(path):
+            shutil.rmtree(path)
+
+    def setUp(self):
+        resp = self.get(
+            "/prophet?_action=train&target_col=y",
+            method="post",
+            data=self.train.to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertTrue(resp.json()["score"] < 0.4)
+
+    def test_default(self):
+
+        # Get predictions
+        resp = self.get(
+            "/prophet?_action=predict",
+            method="post",
+            data=self.test[["ds"]].to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        )
+        yhat = pd.DataFrame.from_records(resp.json())["yhat"]
+        self.assertTrue(mean_absolute_error(self.test["y"], yhat) < 0.5)
+
+    def test_forecast(self):
+        n_periods = self.test.shape[0]
+        resp = self.get(f"/prophet?_action=predict&n_periods={n_periods}")
+        yhat = pd.DataFrame.from_records(resp.json())["yhat"]
+        self.assertTrue(mean_absolute_error(self.test["y"], yhat) < 0.5)
 
 
 @skipUnless(TRANSFORMERS_INSTALLED, "Please install transformers to run these tests.")
@@ -52,23 +110,61 @@ class TestTransformers(TestGramex):
             if op.isdir(path):
                 shutil.rmtree(path)
 
-    def test_blank_predictions(self):
+    def test_default_sentiment(self):
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
-        self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
+        self.assertEqual(
+            resp.json(),
+            [
+                {"text": "This is bad.", "label": "NEGATIVE"},
+                {"text": "This is good.", "label": "POSITIVE"},
+            ],
+        )
 
-    def test_train(self):
+    def test_train_sentiment(self):
         """Train with some vague sentences."""
         warnings.warn("This test takes a LONG time. Leave while you can.")
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
-            method='post',
+            method="post",
             data=df.to_json(orient="records"),
             headers={"Content-Type": "application/json"},
             timeout=300,
         )
-        self.assertGreaterEqual(resp.json()['score'], 0.9)
+        self.assertGreaterEqual(resp.json()["score"], 0.9)
+
+    def test_default_ner(self):
+        """Ensure that the default model predicts something."""
+        resp = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300)
+        labels = [c["labels"] for c in resp.json()]
+        ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
+        self.assertListEqual(ents, [[("Narendra Modi", "PER"), ("India", "LOC")]])
+
+        resp = self.get(
+            "/ner?text=Narendra Modi is the PM of India.&text=Joe Biden is POTUS.",
+            timeout=300,
+        )
+        labels = [c["labels"] for c in resp.json()]
+        ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
+        self.assertListEqual(
+            ents, [[("Narendra Modi", "PER"), ("India", "LOC")], [("Joe Biden", "PER")]]
+        )
+
+    def test_train_ner(self):
+        warnings.warn("This test takes a LONG time. Leave while you can.")
+        df = pd.read_json("https://bit.ly/3wZYsf5")
+        resp = self.get(
+            "/ner?_action=train&target_col=labels",
+            method="post",
+            data=df.to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+            timeout=300,
+        )
+        # Ensure that f1, precision and recall are > 0.6 for all NEs
+        metrics = pd.DataFrame.from_records(resp.json()["score"]).set_index("index")
+        metrics = metrics.drop(["number"], axis=0).mean(axis=1)
+        self.assertTrue((metrics > 0.6).all())
 
 
 @skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")

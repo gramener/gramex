@@ -98,9 +98,14 @@ class MLHandler(FormHandler):
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
             if op.isdir(cls.store.model_path):
                 mclass, wrapper = ml.search_modelclass(mclass)
-                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+                cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
             else:
-                cls.model = get_model(cls.store.model_path, {})
+                try:
+                    cls.model = get_model(cls.store.model_path, {})
+                except Exception as err:
+                    app_log.warning(err)
+                    mclass, wrapper = ml.search_modelclass(mclass)
+                    cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
@@ -119,6 +124,9 @@ class MLHandler(FormHandler):
                 **cls.store.model_kwargs()
             )
 
+    def get_template_path(self):
+        return op.dirname(self.template)
+
     def _parse_multipart_form_data(self):
         dfs = []
         for _, files in self.request.files.items():
@@ -134,7 +142,7 @@ class MLHandler(FormHandler):
         return pd.concat(dfs, axis=0)
 
     def _parse_application_json(self):
-        return pd.read_json(self.request.body.decode('utf8'))
+        return pd.read_json(self.request.body)
 
     def _parse_data(self, _cache=True, append=False):
         header = self.request.headers.get('Content-Type', '').split(';')[0]
@@ -172,7 +180,12 @@ class MLHandler(FormHandler):
             action = kwargs.get(method, cls.store.load(method, True))
             if action:
                 subset = action if isinstance(action, list) else None
-                data = getattr(data, method)(subset=subset)
+                try:
+                    data = getattr(data, method)(subset=subset)
+                except TypeError as exc:
+                    # The label column for an NER dataset is a nested list.
+                    # Can't do drop_duplicates on that.
+                    app_log.warning(exc)
         return data
 
     def _transform(self, data, **kwargs):
@@ -200,7 +213,7 @@ class MLHandler(FormHandler):
             # Set data in the same order as the transformer requests
             try:
                 tcol = self.store.load('target_col', '_prediction')
-                data = self.model.predict(data, target_col=tcol)
+                data = self.model.predict(data, target_col=tcol, **self.args)
             except Exception as exc:
                 app_log.exception(exc)
             return data
