@@ -149,7 +149,7 @@ class OpenAPIHandler(BaseHandler):
                 if not hasattr(cls, 'info') or 'function' not in cls.info:
                     continue
                 function = cls.info['function']
-                function = function.__func__ or function
+                function = getattr(function, '__func__', function)
                 if callable(function):
                     fnspec = self.function_spec(function)
                     fnspec['summary'] = summary
