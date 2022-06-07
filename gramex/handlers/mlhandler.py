@@ -100,7 +100,12 @@ class MLHandler(FormHandler):
                 mclass, wrapper = ml.search_modelclass(mclass)
                 cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
             else:
-                cls.model = get_model(cls.store.model_path, {})
+                try:
+                    cls.model = get_model(cls.store.model_path, {})
+                except Exception as err:
+                    app_log.warning(err)
+                    mclass, wrapper = ml.search_modelclass(mclass)
+                    cls.model = locate(wrapper).from_disk(cls.store.model_path, mclass)
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)

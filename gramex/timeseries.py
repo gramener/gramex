@@ -133,7 +133,7 @@ class Prophet(StatsModel):
         return score
 
     @classmethod
-    def from_disk(cls, path, **kwargs):
+    def from_disk(cls, path, *args, **kwargs):
         from prophet.serialize import model_from_json
 
         with open(path, "r") as fin:
@@ -141,7 +141,7 @@ class Prophet(StatsModel):
         return cls(model, params={})
 
     def score(self, X, y_true, **kwargs):
-        return mean_absolute_error(y_true, self.model.predict(X)["yhat"])
+        return mean_absolute_error(y_true, self.mclass.predict(X)["yhat"])
 
     def predict(
         self,
