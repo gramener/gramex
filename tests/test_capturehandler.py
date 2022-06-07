@@ -190,7 +190,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     @classmethod
     def setupClass(cls):
-        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=10)
+        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=15)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
     @staticmethod

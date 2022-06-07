@@ -1203,7 +1203,7 @@ class TestPPTGen(TestCase):
         # "slidesense" prints usage
         with OutputCapture() as logs:
             commandline([])
-        ok_(logs.captured.startswith('usage: slidesense'))
+        ok_(logs.captured.startswith('Generates target PPTX'))
         # "slidesense nonexistent.yaml" prints an error
         with LogCapture() as logs:
             commandline(['nonexistent.yaml'])

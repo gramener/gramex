@@ -78,8 +78,9 @@ class TestSetupErrors(TestGramex):
         self.check('/invalid-handler', code=NOT_FOUND)
 
     def test_invalid_setup(self):
-        self.check('/invalid-setup', code=INTERNAL_SERVER_ERROR,
-                   text='url:invalid-setup: No function in conf {}')
+        self.check(
+            '/invalid-setup', code=INTERNAL_SERVER_ERROR,
+            text='url:invalid-setup: needs "function:"')
 
     def test_invalid_function(self):
         self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')

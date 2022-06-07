@@ -176,7 +176,7 @@ class TestFileHandler(TestGramex):
         handler = AttrDict(file=path)
         result = rmarkdown('', handler).add_done_callback(_callback)
         try:
-            self.check('/dir/transform/rmarkdown.Rmd', text=result)
+            self.check('/dir/transform/rmarkdown.Rmd', text=result, timeout=30)
         except AssertionError:
             raise SkipTest('TODO: Once NumPy & rpy2 work together, remove this SkipTest. #259')
         htmlpath = str(server.info.folder / 'dir/rmarkdown.html')
