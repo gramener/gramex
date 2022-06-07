@@ -9,23 +9,6 @@ D:\site\gramener.com\viz\async-gramex\.htmllintrc: OK
 D:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 D:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
 D:\site\gramener.com\viz\async-gramex\dist\gramex-1.79.0.tar.gz: OK
-D:\site\gramener.com\viz\async-gramex\docs\conf.py: OK
-D:\site\gramener.com\viz\async-gramex\docs\design.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.languagetool.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.logviewer.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.apps.ui.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.handlers.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.pptgen.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.pptgen2.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.services.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\gramex.transforms.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\index.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\make.bat: OK
-D:\site\gramener.com\viz\async-gramex\docs\Makefile: OK
-D:\site\gramener.com\viz\async-gramex\docs\readme.rst: OK
-D:\site\gramener.com\viz\async-gramex\docs\_build: Excluded
 D:\site\gramener.com\viz\async-gramex\gramex\apps\.eslintrc.js: OK
 D:\site\gramener.com\viz\async-gramex\gramex\apps\admin\.gitignore: OK
 D:\site\gramener.com\viz\async-gramex\gramex\apps\admin\controlpanel.py: OK
@@ -371,6 +354,7 @@ D:\site\gramener.com\viz\async-gramex\gramex\services\__init__.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\services\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\gramex\sm_api.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\topcause.py: OK
+D:\site\gramener.com\viz\async-gramex\gramex\transformers.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\transforms\auth.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\transforms\badgerfish.py: OK
 D:\site\gramener.com\viz\async-gramex\gramex\transforms\rmarkdown.py: OK
@@ -393,6 +377,76 @@ D:\site\gramener.com\viz\async-gramex\gramex.egg-info\top_level.txt: OK
 D:\site\gramener.com\viz\async-gramex\LICENSE: OK
 D:\site\gramener.com\viz\async-gramex\Makefile: OK
 D:\site\gramener.com\viz\async-gramex\MANIFEST.in: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\404.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\assets\_mkdocstrings.css: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\cache\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\config\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\fontawesome-webfont.eot: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\fontawesome-webfont.svg: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\fontawesome-webfont.ttf: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\fontawesome-webfont.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\fontawesome-webfont.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-bold-italic.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-bold-italic.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-bold.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-bold.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-normal-italic.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-normal-italic.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-normal.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\lato-normal.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\Roboto-Slab-Bold.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\Roboto-Slab-Bold.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\Roboto-Slab-Regular.woff: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\fonts\Roboto-Slab-Regular.woff2: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\theme.css: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\css\theme_extra.css: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\data\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\debug\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\gramex\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\handlers\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\http\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\img\favicon.ico: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\install\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\js\html5shiv.min.js: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\js\jquery-3.6.0.min.js: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\js\theme.js: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\js\theme_extra.js: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\license\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\ml\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\ml_api\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\objects.inv: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\pynode\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\readthedocs-extra.css: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\scale\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\secrets\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\services\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\sitemap.xml: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\sitemap.xml.gz: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\sm_api\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\topcause\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\api\winservice\index.html: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\cache.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\config.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\data.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\debug.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\gramex.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\handlers.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\http.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\index.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\install.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\license.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\ml.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\ml_api.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\pynode.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\readthedocs-extra.css: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\scale.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\secrets.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\services.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\sm_api.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\topcause.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\docs\winservice.md: OK
+D:\site\gramener.com\viz\async-gramex\mkdocs\mkdocs.yml: OK
 D:\site\gramener.com\viz\async-gramex\node_modules: Excluded
 D:\site\gramener.com\viz\async-gramex\package-lock.json: OK
 D:\site\gramener.com\viz\async-gramex\package.json: OK
@@ -501,13 +555,14 @@ D:\site\gramener.com\viz\async-gramex\testlib\test_watch.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\__init__.py: OK
 D:\site\gramener.com\viz\async-gramex\testlib\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db: OK
+D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-shm: OK
+D:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-wal: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\.secrets.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\.snyk: OK
 D:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
-D:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 D:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
 D:\site\gramener.com\viz\async-gramex\tests\dir\.hidden: Empty file
@@ -553,7 +608,6 @@ D:\site\gramener.com\viz\async-gramex\tests\dir\install\setup.sh: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\install\yarn.lock: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\markdown.md: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\non-index-template.txt: OK
-D:\site\gramener.com\viz\async-gramex\tests\dir\rmarkdown.html: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\rmarkdown.Rmd: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\subdir\gramex.yaml: OK
 D:\site\gramener.com\viz\async-gramex\tests\dir\subdir\template.txt: OK
@@ -655,13 +709,13 @@ D:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 D:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8616509
+Known viruses: 8617627
 Engine version: 0.103.3
-Scanned directories: 85
-Scanned files: 608
+Scanned directories: 110
+Scanned files: 662
 Infected files: 0
-Data scanned: 18.00 MB
-Data read: 5.67 MB (ratio 3.17:1)
-Time: 38.443 sec (0 m 38 s)
-Start Date: 2022:05:18 11:19:04
-End Date:   2022:05:18 11:19:43
+Data scanned: 26.34 MB
+Data read: 10.03 MB (ratio 2.63:1)
+Time: 149.058 sec (2 m 29 s)
+Start Date: 2022:06:07 14:18:51
+End Date:   2022:06:07 14:21:20
