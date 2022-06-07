@@ -437,10 +437,12 @@ def iterate_on(spec, data: dict):
 
 
 def commandline(args=None):
-    '''
-    usage: slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+    '''Generates target PPTX from a source PPTX, applying rules in config file and opens it.
 
-    Generates target PPTX from a source PPTX, applying rules in config file and opens it.
+    Usage
+
+        slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+
     If no config file is specified, uses `gramex.yaml` in the current directory.
 
     The config file can have a pptgen configuration like {source: ..., target: ..., rules: ...}

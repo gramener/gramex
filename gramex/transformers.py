@@ -71,7 +71,7 @@ class SentimentAnalysis(BaseTransformer):
         predictions = self.pipeline(text)
         return [k["label"] for k in predictions]
 
-    def score(self, X, y_true, **kwargs):
+    def score(self, X, y_true, **kwargs):   # noqa: N803
         y_true = [self.model.config.label2id[x] for x in y_true]
         y_pred = self.predict(X.squeeze("columns"))
         y_pred = [self.model.config.label2id[x] for x in y_pred]

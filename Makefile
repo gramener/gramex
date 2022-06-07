@@ -85,10 +85,7 @@ push-docker:
 release-test: clean-test lint docs test
 
 docs:
-	rm -f docs/gramex* docs/modules.rst
-	sphinx-apidoc -o docs/ gramex --no-toc
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
+	cd mkdocs && mkdocs build
 
 release: clean
 	$(PYTHON) setup.py sdist
@@ -108,7 +105,7 @@ stats:
 	@find tests testlib -path '*node_modules/*' -prune -o -name '*.py' | grep '\.py$$' | xargs wc -l | tail -1
 
 push-docs: docs
-	rsync -avzP docs/_build/html/ ubuntu@gramener.com:/mnt/gramener/learn.gramener.com/gramex/
+	rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
 
 push-pypi: clean
 	python setup.py sdist

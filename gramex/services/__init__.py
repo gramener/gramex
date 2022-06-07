@@ -1,14 +1,14 @@
-'''
-This module is a service registry for ``gramex.yaml``. Each key must have a
-corresponding function in this file.
+'''Configure Gramex services.
 
-For example, if ``gramex.yaml`` contains this section::
+Each key in `gramex.yaml` calls the corresponding function in this file. For example,
 
-    log:
-        version: 1
+```yaml
+log:
+    version: 1
+```
 
-... then :func:`log` is called as ``log({"version": 1})``. If no such function
-exists, a warning is raised.
+... calls [gramex.service.log()][gramex.services.log] as ``log({"version": 1})``.
+If no such function exists, a warning is raised.
 '''
 import io
 import re
@@ -66,13 +66,13 @@ _cache, _tmpl_cache = AttrDict(), AttrDict()
 atexit.register(info.threadpool.shutdown)
 
 
-def version(conf):
+def version(conf: dict) -> None:
     '''Check if config version is supported. Currently, only 1.0 is supported'''
     if conf != 1.0:
         raise NotImplementedError(f'version: {conf} is not supported. Only 1.0')
 
 
-def log(conf):
+def log(conf: dict) -> None:
     '''Set up logging using Python's standard logging.config.dictConfig()'''
     # Create directories for directories mentioned by handlers if logs are used
     active_handlers = set(conf.get('root', {}).get('handlers', []))
@@ -94,41 +94,7 @@ def log(conf):
         app_log.exception('Error in log: configuration')
 
 
-class GramexApp(tornado.web.Application):
-    def log_request(self, handler):
-        # BaseHandler defines a a custom log format. If that's present, use it.
-        if hasattr(handler, 'log_request'):
-            handler.log_request()
-        # Log the request with the handler name at the end.
-        status = handler.get_status()
-        if status < 400:                    # noqa: < 400 is any successful request
-            log_method = gramex.cache.app_log.info
-        elif status < 500:                  # noqa: 400-499 is a user error
-            log_method = gramex.cache.app_log.warning
-        else:                               # 500+ is a server error
-            log_method = gramex.cache.app_log.error
-        request_time = 1000.0 * handler.request.request_time()
-        handler_name = getattr(handler, 'name', handler.__class__.__name__)
-        summary = handler._request_summary()
-        log_method(f"{handler.get_status()} {summary} {request_time:.2f}ms {handler_name}")
-
-    def clear_handlers(self):
-        '''
-        Clear all handlers in the application.
-        (Tornado does not provide a direct way of doing this.)
-        '''
-        # Up to Tornado 4.4, the handlers attribute stored the handlers
-        if hasattr(self, 'handlers'):
-            del self.handlers[:]
-            self.named_handlers.clear()
-
-        # From Tornado 4.5, there are routers that hold the rules
-        else:
-            del self.default_router.rules[:]
-            del self.wildcard_router.rules[:]
-
-
-def app(conf):
+def app(conf: dict) -> None:
     '''Set up tornado.web.Application() -- only if the ioloop hasn't started'''
     ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
     if ioloop_running(ioloop):
@@ -141,8 +107,8 @@ def app(conf):
             port_used_codes = dict(windows=10048, linux=98)
             if e.errno not in port_used_codes.values():
                 raise
-            logging.error('Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex',
-                          conf.listen.port)
+            logging.error(
+                'Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex', conf.listen.port)
             sys.exit(1)
 
         def callback():
@@ -228,13 +194,7 @@ def app(conf):
         return callback
 
 
-def _stop_all_tasks(tasks):
-    for name, task in tasks.items():
-        task.stop()
-    tasks.clear()
-
-
-def schedule(conf):
+def schedule(conf: dict) -> None:
     '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
@@ -247,37 +207,366 @@ def schedule(conf):
             continue
         try:
             app_log.info(f'Initialising schedule:{name}')
-            _cache[_key] = scheduler.Task(name, sched, info.threadpool,
-                                          ioloop=info.main_ioloop)
+            _cache[_key] = scheduler.Task(
+                name, sched, info.threadpool, ioloop=info.main_ioloop)
             info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
 
 
-def _markdown_convert(content):
+def alert(conf: dict) -> None:
     '''
-    Convert content into Markdown with extensions.
+    Sets up the alert service
     '''
-    # Cache the markdown converter
-    if '_markdown' not in info:
-        import markdown
-        info['_markdown'] = markdown.Markdown(extensions=[
-            'markdown.extensions.extra',
-            'markdown.extensions.meta',
-            'markdown.extensions.codehilite',
-            'markdown.extensions.smarty',
-            'markdown.extensions.sane_lists',
-            'markdown.extensions.fenced_code',
-            'markdown.extensions.toc',
-        ], output_format='html5')
-    return info['_markdown'].convert(content)
+    from . import scheduler
+    _stop_all_tasks(info.alert)
+    schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
+
+    for name, alert in conf.items():
+        _key = cache_key('alert', alert)
+        if _key in _cache:
+            task = info.alert[name] = _cache[_key]
+            task.call_later()
+            continue
+        app_log.info(f'Initialising alert: {name}')
+        schedule = {key: alert[key] for key in schedule_keys if key in alert}
+        if 'thread' in alert:
+            schedule['thread'] = alert['thread']
+        schedule['function'] = create_alert(name, alert)
+        if schedule['function'] is not None:
+            try:
+                _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
+                                              ioloop=info.main_ioloop)
+                info.alert[name] = _cache[_key]
+            except Exception:
+                app_log.exception(f'Failed to initialize alert: {name}')
 
 
-def _tmpl(template_string):
-    '''Compile Tornado template. Cache the results'''
-    if template_string not in _tmpl_cache:
-        _tmpl_cache[template_string] = Template(template_string)
-    return _tmpl_cache[template_string]
+def threadpool(conf: dict) -> None:
+    '''Set up a global threadpool executor'''
+    # By default, use a single worker. If a different value is specified, use it
+    workers = 1
+    if conf and hasattr(conf, 'get'):
+        workers = conf.get('workers', workers)
+    info.threadpool = concurrent.futures.ThreadPoolExecutor(workers)
+    atexit.register(info.threadpool.shutdown)
+
+
+def url(conf: dict) -> None:
+    '''Set up the tornado web app URL handlers'''
+    info.url = AttrDict()
+    # Sort the handlers in descending order of priority
+    specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
+    for name, spec in specs:
+        _key = cache_key('url', spec)
+        if _key in _cache:
+            info.url[name] = _cache[_key]
+            continue
+        if 'pattern' not in spec:
+            app_log.error(f'url:{name}: no pattern: specified')
+            continue
+        # service: is an alias for handler: and has higher priority
+        if 'service' in spec:
+            spec.handler = spec.service
+        if 'handler' not in spec:
+            app_log.error(f'url:{name}: no service: or handler: specified')
+            continue
+        app_log.debug(f'url:{name} ({spec.handler}) {spec.get("priority", "")}')
+        handler_class = locate(str(spec.handler), modules=['gramex.handlers'])
+        if handler_class is None:
+            app_log.error(f'url:{name}: ignoring missing handler {spec.handler}')
+            continue
+
+        # Create a subclass of the handler with additional attributes.
+        class_vars = {'name': name, 'conf': spec}
+        # If there's a cache section, get the cache method for use by BaseHandler
+        if 'cache' in spec:
+            class_vars['cache'] = _cache_generator(spec['cache'], name=name)
+        else:
+            class_vars['cache'] = None
+        handler = type(spec.handler, (handler_class, ), class_vars)
+
+        # Ensure that there's a kwargs: dict in the spec
+        spec.setdefault('kwargs', AttrDict())
+        if not isinstance(spec.kwargs, dict):
+            app_log.error(f'url:{name} kwargs must be a dict, not {spec.kwargs!r}')
+            spec.kwargs = AttrDict()
+        # If there's a setup method, call it to initialize the class
+        if hasattr(handler_class, 'setup'):
+            try:
+                handler.setup_default_kwargs()      # Updates spec.kwargs with base handlers
+                handler.setup(**spec.kwargs)
+            except Exception:
+                app_log.exception(f'url:{name} ({spec.handler}) invalid configuration')
+                # Since we can't set up the handler, all requests must report the error instead
+                class_vars['exc_info'] = sys.exc_info()
+                error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
+                handler = type(spec.handler, (error_handler, ), class_vars)
+                spec.kwargs = {}
+                handler.setup(**spec.kwargs)
+
+        try:
+            handler_entry = tornado.web.URLSpec(
+                name=name,
+                pattern=_url_normalize(spec.pattern),
+                handler=handler,
+                kwargs=spec.kwargs,
+            )
+        except re.error:
+            app_log.error(f'url:{name}: pattern: {spec.pattern!r} is invalid')
+            continue
+        except Exception:
+            app_log.exception(f'url:{name}: setup failed')
+            continue
+        info.url[name] = _cache[_key] = handler_entry
+
+    info.app.clear_handlers()
+    info.app.add_handlers('.*$', info.url.values())
+
+
+def mime(conf: dict) -> None:
+    '''Set up MIME types'''
+    for ext, type in conf.items():
+        mimetypes.add_type(type, ext, strict=True)
+
+
+def watch(conf: dict) -> None:
+    '''Set up file watchers'''
+    from . import watcher
+
+    events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
+    for name, config in conf.items():
+        _key = cache_key('watch', config)
+        if _key in _cache:
+            watcher.watch(name, **_cache[_key])
+            continue
+        if 'paths' not in config:
+            app_log.error(f'watch:{name} has no "paths"')
+            continue
+        if not set(config.keys()) & events:
+            app_log.error(f'watch:{name} has no events (on_modified, ...)')
+            continue
+        if not isinstance(config['paths'], (list, set, tuple)):
+            config['paths'] = [config['paths']]
+        for event in events:
+            if event in config:
+                if not callable(config[event]):
+                    config[event] = locate(config[event], modules=['gramex.transforms'])
+                    if not callable(config[event]):
+                        app_log.error(f'watch:{name}.{event} is not callable')
+                        config[event] = lambda event: None
+        _cache[_key] = config
+        watcher.watch(name, **_cache[_key])
+
+
+_cache_defaults = {
+    'memory': {
+        'size': 500000000,      # 500 MiB
+    },
+    'disk': {
+        'size': 10000000000,    # 10 GiB
+    },
+    'redis': {
+        'size': 500000000,      # 500 MiB
+    }
+}
+
+
+def cache(conf: dict) -> None:
+    '''Set up caches'''
+    for name, config in conf.items():
+        cache_type = config['type']
+        if cache_type not in _cache_defaults:
+            app_log.warning(f'cache:{name} has unknown type {config.type}')
+            continue
+        config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
+        if cache_type == 'memory':
+            info.cache[name] = urlcache.MemoryCache(
+                maxsize=config['size'], getsizeof=gramex.cache.sizeof)
+        elif cache_type == 'disk':
+            path = config.get('path', '.cache-' + name)
+            info.cache[name] = urlcache.DiskCache(
+                path, size_limit=config['size'], eviction_policy='least-recently-stored')
+            atexit.register(info.cache[name].close)
+        elif cache_type == 'redis':
+            path = config['path'] if 'path' in config else None
+            try:
+                info.cache[name] = urlcache.RedisCache(path=path, maxsize=config['size'])
+            except Exception:
+                app_log.exception(f'cache:{name} cannot connect to redis')
+        # if default: true, make this the default cache for gramex.cache.{open,query}
+        if config.get('default'):
+            for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
+                val = gramex.cache.set_cache(info.cache[name], getattr(gramex.cache, key))
+                setattr(gramex.cache, key, val)
+
+
+def eventlog(conf: dict) -> None:
+    '''Set up the application event logger'''
+    if not conf.path:
+        return
+
+    import time
+    import sqlite3
+
+    folder = os.path.dirname(os.path.abspath(conf.path))
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    def query(q, *args, **kwargs):
+        conn = sqlite3.connect(conf.path, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        result = list(conn.execute(q, *args, **kwargs))
+        conn.commit()
+        conn.close()
+        return result
+
+    def add(event_name, data):
+        '''Write a message into the application event log'''
+        data = json.dumps(data, ensure_ascii=True, separators=(',', ':'))
+        query('INSERT INTO events VALUES (?, ?, ?)', [time.time(), event_name, data])
+
+    def shutdown():
+        add('shutdown', {'version': __version__, 'pid': os.getpid()})
+        # Don't close the connection here. gramex.gramex_update() runs in a thread. If we start and
+        # stop gramex quickly, allow gramex_update to add too this entry
+        # conn.close()
+
+    info.eventlog.query = query
+    info.eventlog.add = add
+
+    query('CREATE TABLE IF NOT EXISTS events (time REAL, event TEXT, data TEXT)')
+    add('startup', {'version': __version__, 'pid': os.getpid(),
+                    'args': sys.argv, 'cwd': os.getcwd()})
+    atexit.register(shutdown)
+
+
+def email(conf: dict) -> None:
+    '''Set up email service'''
+    for name, config in conf.items():
+        _key = cache_key('email', config)
+        if _key in _cache:
+            info.email[name] = _cache[_key]
+            continue
+        info.email[name] = _cache[_key] = SMTPMailer(**config)
+
+
+sms_notifiers = {
+    'amazonsns': AmazonSNS,
+    'exotel': Exotel,
+    'twilio': Twilio,
+}
+
+
+def sms(conf: dict) -> None:
+    '''Set up SMS service'''
+    for name, config in conf.items():
+        _key = cache_key('sms', config)
+        if _key in _cache:
+            info.sms[name] = _cache[_key]
+            continue
+        notifier_type = config.pop('type')
+        if notifier_type not in sms_notifiers:
+            raise ValueError(f'sms:{name}: Unknown type: {notifier_type}')
+        try:
+            info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
+        except Exception:
+            app_log.exception(f'sms:{name}: Cannot setup {notifier_type}')
+
+
+def handlers(conf: dict) -> None:
+    '''Set up handlers service.
+
+    This holds default configurations for handlers configured by [gramex.services.url][],
+    e.g. BaseHandler errors, FileHandler ignores, etc.'''
+    pass
+
+
+def encrypt(conf: dict) -> None:
+    app_log.warning('encrypt: service deprecated.')
+
+
+def test(conf: dict) -> None:
+    '''Set up test service'''
+    # Remove auth: section when running gramex.
+    # If there are passwords here, they will not be loaded in memory
+    conf.pop('auth', None)
+
+
+def gramexlog(conf: dict) -> None:
+    '''Set up gramexlog service'''
+    from gramex.transforms import build_log_info
+    try:
+        from elasticsearch import Elasticsearch, helpers
+    except ImportError:
+        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
+        return
+
+    # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
+    flush = conf.pop('flush', 5)
+    ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
+    # Set the defaultapp to the first config key under gramexlog:
+    if len(conf):
+        info.gramexlog.defaultapp = next(iter(conf.keys()))
+    for app, app_conf in conf.items():
+        app_config = info.gramexlog.apps[app] = AttrDict()
+        app_config.queue = []
+        keys = app_conf.pop('keys', [])
+        # If user specifies keys: [port, args.x, ...], these are captured as additional keys.
+        # The keys use same spec as Gramex logging.
+        app_config.extra_keys = build_log_info(keys)
+        # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
+        app_config.conn = Elasticsearch(**app_conf)
+
+    def push():
+        for app, app_config in info.gramexlog.apps.items():
+            for item in app_config.queue:
+                item['_index'] = app_config.get('index', app)
+            try:
+                helpers.bulk(app_config.conn, app_config.queue)
+                app_config.queue.clear()
+            except Exception:
+                # TODO: If the connection broke, re-create it
+                # This generic exception should be caught for thread to continue its execution
+                app_log.exception(f'gramexlog: push to {app} failed')
+        if 'handle' in info.gramexlog:
+            ioloop.remove_timeout(info.gramexlog.handle)
+        # Call again after flush seconds
+        info.gramexlog.handle = ioloop.call_later(flush, push)
+
+    info.gramexlog.handle = ioloop.call_later(flush, push)
+    info.gramexlog.push = push
+
+
+def storelocations(conf: dict) -> None:
+    '''Initialize the store locations'''
+    for key, subconf in conf.items():
+        info.storelocations[key] = subconf
+        gramex.data.alter(**subconf)
+
+
+class GramexApp(tornado.web.Application):
+    def log_request(self, handler):
+        # BaseHandler defines a a custom log format. If that's present, use it.
+        if hasattr(handler, 'log_request'):
+            handler.log_request()
+        # Log the request with the handler name at the end.
+        status = handler.get_status()
+        if status < 400:                    # noqa: < 400 is any successful request
+            log_method = gramex.cache.app_log.info
+        elif status < 500:                  # noqa: 400-499 is a user error
+            log_method = gramex.cache.app_log.warning
+        else:                               # 500+ is a server error
+            log_method = gramex.cache.app_log.error
+        request_time = 1000.0 * handler.request.request_time()
+        handler_name = getattr(handler, 'name', handler.__class__.__name__)
+        summary = handler._request_summary()
+        log_method(f"{handler.get_status()} {summary} {request_time:.2f}ms {handler_name}")
+
+    def clear_handlers(self):
+        # Clear all handlers in the application
+        del self.default_router.rules[:]
+        del self.wildcard_router.rules[:]
 
 
 def create_alert(name, alert):
@@ -500,47 +789,36 @@ def create_alert(name, alert):
     return run_alert
 
 
-def alert(conf):
-    from . import scheduler
-    _stop_all_tasks(info.alert)
-    schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
-
-    for name, alert in conf.items():
-        _key = cache_key('alert', alert)
-        if _key in _cache:
-            task = info.alert[name] = _cache[_key]
-            task.call_later()
-            continue
-        app_log.info(f'Initialising alert: {name}')
-        schedule = {key: alert[key] for key in schedule_keys if key in alert}
-        if 'thread' in alert:
-            schedule['thread'] = alert['thread']
-        schedule['function'] = create_alert(name, alert)
-        if schedule['function'] is not None:
-            try:
-                _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
-                                              ioloop=info.main_ioloop)
-                info.alert[name] = _cache[_key]
-            except Exception:
-                app_log.exception(f'Failed to initialize alert: {name}')
-
-
-def threadpool(conf):
-    '''Set up a global threadpool executor'''
-    # By default, use a single worker. If a different value is specified, use it
-    workers = 1
-    if conf and hasattr(conf, 'get'):
-        workers = conf.get('workers', workers)
-    info.threadpool = concurrent.futures.ThreadPoolExecutor(workers)
-    atexit.register(info.threadpool.shutdown)
-
-
-def handlers(conf):
+def _markdown_convert(content):
     '''
-    The handlers: config is used by the url: handlers to set up the defaults.
-    No explicit configuration is required.
+    Convert content into Markdown with extensions.
     '''
-    pass
+    # Cache the markdown converter
+    if '_markdown' not in info:
+        import markdown
+        info['_markdown'] = markdown.Markdown(extensions=[
+            'markdown.extensions.extra',
+            'markdown.extensions.meta',
+            'markdown.extensions.codehilite',
+            'markdown.extensions.smarty',
+            'markdown.extensions.sane_lists',
+            'markdown.extensions.fenced_code',
+            'markdown.extensions.toc',
+        ], output_format='html5')
+    return info['_markdown'].convert(content)
+
+
+def _tmpl(template_string):
+    '''Compile Tornado template. Cache the results'''
+    if template_string not in _tmpl_cache:
+        _tmpl_cache[template_string] = Template(template_string)
+    return _tmpl_cache[template_string]
+
+
+def _stop_all_tasks(tasks):
+    for name, task in tasks.items():
+        task.stop()
+    tasks.clear()
 
 
 def _sort_url_patterns(entry):
@@ -687,288 +965,3 @@ def _cache_generator(conf, name):
                                statuses=set(cache_statuses))
 
     return get_cachefile
-
-
-def url(conf):
-    '''Set up the tornado web app URL handlers'''
-    info.url = AttrDict()
-    # Sort the handlers in descending order of priority
-    specs = sorted(conf.items(), key=_sort_url_patterns, reverse=True)
-    for name, spec in specs:
-        _key = cache_key('url', spec)
-        if _key in _cache:
-            info.url[name] = _cache[_key]
-            continue
-        if 'pattern' not in spec:
-            app_log.error(f'url:{name}: no pattern: specified')
-            continue
-        # service: is an alias for handler: and has higher priority
-        if 'service' in spec:
-            spec.handler = spec.service
-        if 'handler' not in spec:
-            app_log.error(f'url:{name}: no service: or handler: specified')
-            continue
-        app_log.debug(f'url:{name} ({spec.handler}) {spec.get("priority", "")}')
-        handler_class = locate(str(spec.handler), modules=['gramex.handlers'])
-        if handler_class is None:
-            app_log.error(f'url:{name}: ignoring missing handler {spec.handler}')
-            continue
-
-        # Create a subclass of the handler with additional attributes.
-        class_vars = {'name': name, 'conf': spec}
-        # If there's a cache section, get the cache method for use by BaseHandler
-        if 'cache' in spec:
-            class_vars['cache'] = _cache_generator(spec['cache'], name=name)
-        else:
-            class_vars['cache'] = None
-        handler = type(spec.handler, (handler_class, ), class_vars)
-
-        # Ensure that there's a kwargs: dict in the spec
-        spec.setdefault('kwargs', AttrDict())
-        if not isinstance(spec.kwargs, dict):
-            app_log.error(f'url:{name} kwargs must be a dict, not {spec.kwargs!r}')
-            spec.kwargs = AttrDict()
-        # If there's a setup method, call it to initialize the class
-        if hasattr(handler_class, 'setup'):
-            try:
-                handler.setup_default_kwargs()      # Updates spec.kwargs with base handlers
-                handler.setup(**spec.kwargs)
-            except Exception:
-                app_log.exception(f'url:{name} ({spec.handler}) invalid configuration')
-                # Since we can't set up the handler, all requests must report the error instead
-                class_vars['exc_info'] = sys.exc_info()
-                error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
-                handler = type(spec.handler, (error_handler, ), class_vars)
-                spec.kwargs = {}
-                handler.setup(**spec.kwargs)
-
-        try:
-            handler_entry = tornado.web.URLSpec(
-                name=name,
-                pattern=_url_normalize(spec.pattern),
-                handler=handler,
-                kwargs=spec.kwargs,
-            )
-        except re.error:
-            app_log.error(f'url:{name}: pattern: {spec.pattern!r} is invalid')
-            continue
-        except Exception:
-            app_log.exception(f'url:{name}: setup failed')
-            continue
-        info.url[name] = _cache[_key] = handler_entry
-
-    info.app.clear_handlers()
-    info.app.add_handlers('.*$', info.url.values())
-
-
-def mime(conf):
-    '''Set up MIME types'''
-    for ext, type in conf.items():
-        mimetypes.add_type(type, ext, strict=True)
-
-
-def watch(conf):
-    '''Set up file watchers'''
-    from . import watcher
-
-    events = {'on_modified', 'on_created', 'on_deleted', 'on_moved', 'on_any_event'}
-    for name, config in conf.items():
-        _key = cache_key('watch', config)
-        if _key in _cache:
-            watcher.watch(name, **_cache[_key])
-            continue
-        if 'paths' not in config:
-            app_log.error(f'watch:{name} has no "paths"')
-            continue
-        if not set(config.keys()) & events:
-            app_log.error(f'watch:{name} has no events (on_modified, ...)')
-            continue
-        if not isinstance(config['paths'], (list, set, tuple)):
-            config['paths'] = [config['paths']]
-        for event in events:
-            if event in config:
-                if not callable(config[event]):
-                    config[event] = locate(config[event], modules=['gramex.transforms'])
-                    if not callable(config[event]):
-                        app_log.error(f'watch:{name}.{event} is not callable')
-                        config[event] = lambda event: None
-        _cache[_key] = config
-        watcher.watch(name, **_cache[_key])
-
-
-_cache_defaults = {
-    'memory': {
-        'size': 500000000,      # 500 MiB
-    },
-    'disk': {
-        'size': 10000000000,    # 10 GiB
-    },
-    'redis': {
-        'size': 500000000,      # 500 MiB
-    }
-}
-
-
-def cache(conf):
-    '''Set up caches'''
-    for name, config in conf.items():
-        cache_type = config['type']
-        if cache_type not in _cache_defaults:
-            app_log.warning(f'cache:{name} has unknown type {config.type}')
-            continue
-        config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
-        if cache_type == 'memory':
-            info.cache[name] = urlcache.MemoryCache(
-                maxsize=config['size'], getsizeof=gramex.cache.sizeof)
-        elif cache_type == 'disk':
-            path = config.get('path', '.cache-' + name)
-            info.cache[name] = urlcache.DiskCache(
-                path, size_limit=config['size'], eviction_policy='least-recently-stored')
-            atexit.register(info.cache[name].close)
-        elif cache_type == 'redis':
-            path = config['path'] if 'path' in config else None
-            try:
-                info.cache[name] = urlcache.RedisCache(path=path, maxsize=config['size'])
-            except Exception:
-                app_log.exception(f'cache:{name} cannot connect to redis')
-        # if default: true, make this the default cache for gramex.cache.{open,query}
-        if config.get('default'):
-            for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
-                val = gramex.cache.set_cache(info.cache[name], getattr(gramex.cache, key))
-                setattr(gramex.cache, key, val)
-
-
-def eventlog(conf):
-    '''Set up the application event logger'''
-    if not conf.path:
-        return
-
-    import time
-    import sqlite3
-
-    folder = os.path.dirname(os.path.abspath(conf.path))
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    def query(q, *args, **kwargs):
-        conn = sqlite3.connect(conf.path, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        result = list(conn.execute(q, *args, **kwargs))
-        conn.commit()
-        conn.close()
-        return result
-
-    def add(event_name, data):
-        '''Write a message into the application event log'''
-        data = json.dumps(data, ensure_ascii=True, separators=(',', ':'))
-        query('INSERT INTO events VALUES (?, ?, ?)', [time.time(), event_name, data])
-
-    def shutdown():
-        add('shutdown', {'version': __version__, 'pid': os.getpid()})
-        # Don't close the connection here. gramex.gramex_update() runs in a thread. If we start and
-        # stop gramex quickly, allow gramex_update to add too this entry
-        # conn.close()
-
-    info.eventlog.query = query
-    info.eventlog.add = add
-
-    query('CREATE TABLE IF NOT EXISTS events (time REAL, event TEXT, data TEXT)')
-    add('startup', {'version': __version__, 'pid': os.getpid(),
-                    'args': sys.argv, 'cwd': os.getcwd()})
-    atexit.register(shutdown)
-
-
-def email(conf):
-    '''Set up email service'''
-    for name, config in conf.items():
-        _key = cache_key('email', config)
-        if _key in _cache:
-            info.email[name] = _cache[_key]
-            continue
-        info.email[name] = _cache[_key] = SMTPMailer(**config)
-
-
-sms_notifiers = {
-    'amazonsns': AmazonSNS,
-    'exotel': Exotel,
-    'twilio': Twilio,
-}
-
-
-def sms(conf):
-    '''Set up SMS service'''
-    for name, config in conf.items():
-        _key = cache_key('sms', config)
-        if _key in _cache:
-            info.sms[name] = _cache[_key]
-            continue
-        notifier_type = config.pop('type')
-        if notifier_type not in sms_notifiers:
-            raise ValueError(f'sms:{name}: Unknown type: {notifier_type}')
-        try:
-            info.sms[name] = _cache[_key] = sms_notifiers[notifier_type](**config)
-        except Exception:
-            app_log.exception(f'sms:{name}: Cannot setup {notifier_type}')
-
-
-def encrypt(conf):
-    app_log.warning('encrypt: service deprecated.')
-
-
-def test(conf):
-    '''Set up test service'''
-    # Remove auth: section when running gramex.
-    # If there are passwords here, they will not be loaded in memory
-    conf.pop('auth', None)
-
-
-def gramexlog(conf):
-    '''Set up gramexlog service'''
-    from gramex.transforms import build_log_info
-    try:
-        from elasticsearch import Elasticsearch, helpers
-    except ImportError:
-        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
-        return
-
-    # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
-    flush = conf.pop('flush', 5)
-    ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
-    # Set the defaultapp to the first config key under gramexlog:
-    if len(conf):
-        info.gramexlog.defaultapp = next(iter(conf.keys()))
-    for app, app_conf in conf.items():
-        app_config = info.gramexlog.apps[app] = AttrDict()
-        app_config.queue = []
-        keys = app_conf.pop('keys', [])
-        # If user specifies keys: [port, args.x, ...], these are captured as additional keys.
-        # The keys use same spec as Gramex logging.
-        app_config.extra_keys = build_log_info(keys)
-        # Ensure all gramexlog keys are popped from app_conf, leaving only Elasticsearch keys
-        app_config.conn = Elasticsearch(**app_conf)
-
-    def push():
-        for app, app_config in info.gramexlog.apps.items():
-            for item in app_config.queue:
-                item['_index'] = app_config.get('index', app)
-            try:
-                helpers.bulk(app_config.conn, app_config.queue)
-                app_config.queue.clear()
-            except Exception:
-                # TODO: If the connection broke, re-create it
-                # This generic exception should be caught for thread to continue its execution
-                app_log.exception(f'gramexlog: push to {app} failed')
-        if 'handle' in info.gramexlog:
-            ioloop.remove_timeout(info.gramexlog.handle)
-        # Call again after flush seconds
-        info.gramexlog.handle = ioloop.call_later(flush, push)
-
-    info.gramexlog.handle = ioloop.call_later(flush, push)
-    info.gramexlog.push = push
-
-
-def storelocations(conf):
-    '''Initialize the store locations'''
-    for key, subconf in conf.items():
-        info.storelocations[key] = subconf
-        gramex.data.alter(**subconf)

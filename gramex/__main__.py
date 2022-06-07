@@ -1,11 +1,12 @@
-'''
-Gramex command line server
-'''
+'''Gramex command line server.
 
-# There are 2 Gramex entry points: __main__.py and gramex.commandline().
-# __main__.py is run by python -m gramex.
-# gramex.commandline() is run by gramex.exe.
-# gramex.init() is called after import gramex -- when using Gramex as a library.
+Gramex can be run in 2 ways.
+
+1. `python -m gramex` runs __main__.py.
+2. `gramex` runs whatever is in `console_scripts` in `setup.py`
+
+Both call `gramex.commandline()`.
+'''
 
 import gramex
 
