@@ -561,6 +561,7 @@ def run(args, kwargs):
 
 
 def service(args, kwargs):
+    '''Install, remove, start or stop Gramex as a Windows service.'''
     try:
         import gramex.winservice
     except ImportError:

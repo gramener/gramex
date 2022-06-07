@@ -1,0 +1,26 @@
+/* Section headings */
+.doc-heading {
+  margin-top: 2em; /* Clearly separate section headings from each other */
+  border-bottom: 1px solid #e1e4e5; /* Same color as hr */
+}
+
+/* Section headings are inside <code>...</code>. Red looks ugly here. Dress it like a regular heading. */
+.doc-heading code {
+  font-size: inherit;
+  color: inherit;
+  padding: 0;
+  border: none;
+}
+
+/* Show source is too close to the next section. Give ample space */
+details.quote {
+  margin-bottom: 3rem;
+}
+
+/* Breadcrumbs have very little space after "»". Add spacing. But not on "Edit on Github" aside.*/
+.wy-breadcrumbs li {
+  margin-right: 0.5rem;
+}
+.wy-breadcrumbs li.wy-breadcrumbs-aside {
+  margin-right: unset;
+}
