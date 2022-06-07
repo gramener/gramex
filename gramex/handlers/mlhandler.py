@@ -208,7 +208,7 @@ class MLHandler(FormHandler):
             # Set data in the same order as the transformer requests
             try:
                 tcol = self.store.load('target_col', '_prediction')
-                data = self.model.predict(data, target_col=tcol)
+                data = self.model.predict(data, target_col=tcol, **self.args)
             except Exception as exc:
                 app_log.exception(exc)
             return data

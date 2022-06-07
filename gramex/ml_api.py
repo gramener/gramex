@@ -41,10 +41,11 @@ SEARCH_MODULES = {
         "sklearn.decomposition",
         "gramex.ml",
     ],
-    "gramex.sm_api.StatsModel": [
+    "gramex.timeseries.StatsModel": [
         "statsmodels.tsa.api",
         "statsmodels.tsa.statespace.sarimax",
     ],
+    "gramex.timeseries.Prophet": ["prophet"],
     "gramex.ml_api.HFTransformer": ["gramex.transformers"],
 }
 

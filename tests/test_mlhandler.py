@@ -21,22 +21,80 @@ from sklearn.tree import DecisionTreeClassifier
 
 from . import TestGramex, folder, tempfiles
 
+STATSMODELS_INSTALLED = PROPHET_INSTALLED = TRANSFORMERS_INSTALLED = True
+
 try:
     from statsmodels.datasets.interest_inflation import load as infl_load
 
-    STATSMODELS_INSTALLED = True
 except ImportError:
     STATSMODELS_INSTALLED = False
 try:
     logging.getLogger("tensorflow").disabled = True
     import transformers as trf  # NOQA: F401
 
-    TRANSFORMERS_INSTALLED = True
 except ImportError:
     TRANSFORMERS_INSTALLED = False
 
+try:
+    import prophet  # NOQA: F401
+except ImportError:
+    PROPHET_INSTALLED = False
+
 
 op = os.path
+
+
+@skipUnless(PROPHET_INSTALLED, "Please install Prophet to run these tests.")
+class TestProphet(TestGramex):
+    @classmethod
+    def setUpClass(cls):
+        df = pd.read_csv(
+            "https://bit.ly/39d7Y6r", index_col="ds", parse_dates=["ds"]
+        )  # Peyton Manning dataset
+        train, test = df.loc[:"2014"], df.loc["2015":]
+        train, test = train.reset_index(), test.reset_index()
+        train["ds"] = train["ds"].astype(str)
+        test["ds"] = test["ds"].astype(str)
+        cls.train, cls.test = train, test
+
+    @classmethod
+    def tearDownClass(cls):
+
+        path = op.join(
+            gramex.config.variables["GRAMEXDATA"],
+            "apps",
+            "mlhandler",
+            "mlhandler-prophet",
+        )
+        if op.isdir(path):
+            shutil.rmtree(path)
+
+    def setUp(self):
+        resp = self.get(
+            "/prophet?_action=train&target_col=y",
+            method="post",
+            data=self.train.to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertTrue(resp.json()["score"] < 0.4)
+
+    def test_default(self):
+
+        # Get predictions
+        resp = self.get(
+            "/prophet?_action=predict",
+            method="post",
+            data=self.test[["ds"]].to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        )
+        yhat = pd.DataFrame.from_records(resp.json())["yhat"]
+        self.assertTrue(mean_absolute_error(self.test["y"], yhat) < 0.5)
+
+    def test_forecast(self):
+        n_periods = self.test.shape[0]
+        resp = self.get(f"/prophet?_action=predict&n_periods={n_periods}")
+        yhat = pd.DataFrame.from_records(resp.json())["yhat"]
+        self.assertTrue(mean_absolute_error(self.test["y"], yhat) < 0.5)
 
 
 @skipUnless(TRANSFORMERS_INSTALLED, "Please install transformers to run these tests.")

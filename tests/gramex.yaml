@@ -1287,6 +1287,14 @@ url:
         class: NER
       xsrf_cookies: false
 
+  mlhandler/prophet:
+    pattern: /prophet
+    handler: MLHandler
+    kwargs:
+      model:
+        class: Prophet
+      xsrf_cookies: false
+
   capture:
     pattern: /capture
     handler: CaptureHandler
