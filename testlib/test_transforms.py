@@ -351,6 +351,7 @@ class BuildTransform(unittest.TestCase):
 class BuildPipelines(unittest.TestCase):
     @staticmethod
     def pipeline(stages, **kwargs):
+        kwargs.setdefault('iter', False)
         return build_transform({'function': stages}, **kwargs)
 
     def test_pipeline(self):
