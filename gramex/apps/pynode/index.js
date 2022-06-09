@@ -97,6 +97,7 @@ function main() {
             add.push(library)
           }
         })
+        // add = [install, lib1, lib2, ...]. If there's something more than 'install', install it
         if (add.length > 1) {
           // NOTE: In Windows, installing a library requires a restart
           try {

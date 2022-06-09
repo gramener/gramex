@@ -29,6 +29,8 @@ class Node(object):
         # cwd is the directory where node runs. Defaults to $GRAMEXDATA/pynode/
         # node_modules is updated under this.
         self.cwd = os.path.join(variables['GRAMEXDATA'], 'pynode') if cwd is None else cwd
+        if not os.path.exists(self.cwd):
+            os.makedirs(self.cwd)
         # node_path is where the node executable is. Autodetect from PATH by default
         self.node_path = node_path or which('node')
         self.url = f'ws://127.0.0.1:{port}'
