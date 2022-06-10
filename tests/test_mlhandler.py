@@ -113,13 +113,7 @@ class TestTransformers(TestGramex):
     def test_default_sentiment(self):
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
-        self.assertEqual(
-            resp.json(),
-            [
-                {"text": "This is bad.", "label": "NEGATIVE"},
-                {"text": "This is good.", "label": "POSITIVE"},
-            ],
-        )
+        self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
     def test_train_sentiment(self):
         """Train with some vague sentences."""
@@ -127,12 +121,12 @@ class TestTransformers(TestGramex):
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
-            method="post",
+            method='post',
             data=df.to_json(orient="records"),
             headers={"Content-Type": "application/json"},
             timeout=300,
         )
-        self.assertGreaterEqual(resp.json()["score"], 0.9)
+        self.assertGreaterEqual(resp.json()['score'], 0.9)
 
     def test_default_ner(self):
         """Ensure that the default model predicts something."""

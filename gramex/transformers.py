@@ -114,11 +114,7 @@ def load_pretrained(klass, path, default, **kwargs):
             model = cache.open(default, klass.from_pretrained, **kwargs)
     else:
         app_log.info(f"{path} not found on disk; loading default...")
-        key = klass.__name__ + default
-        if key in _CACHE:
-            model = _CACHE[key]
-        else:
-            model = _CACHE[key] = klass.from_pretrained(default, **kwargs)
+        model = klass.from_pretrained(default, **kwargs)
     return model
 
 
@@ -159,10 +155,6 @@ class SentimentAnalysis(BaseTransformer):
     ) = "distilbert-base-uncased-finetuned-sst-2-english"
     AUTO_CLASS = trf.AutoModelForSequenceClassification
 
-    @property
-    def labels(self):
-        return self.model.config.label2id.keys()
-
     def fit(self, text, labels, model_path, **kwargs):
         if pd.api.types.is_object_dtype(labels):
             labels = labels.map(self.model.config.label2id.get)
@@ -181,11 +173,11 @@ class SentimentAnalysis(BaseTransformer):
     def predict(self, text, **kwargs):
         text = text.tolist()
         predictions = self.pipeline(text)
-        return [{"text": t, "label": p["label"]} for t, p in zip(text, predictions)]
+        return [k["label"] for k in predictions]
 
     def score(self, X, y_true, **kwargs):
         y_true = [self.model.config.label2id[x] for x in y_true]
-        y_pred = [p["label"] for p in self.predict(X.squeeze("columns"))]
+        y_pred = self.predict(X.squeeze("columns"))
         y_pred = [self.model.config.label2id[x] for x in y_pred]
         try:
             score = roc_auc_score(y_true, y_pred)
