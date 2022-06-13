@@ -5,9 +5,9 @@ import gramex.cache
 
 
 class CacheLoader(tornado.template.Loader):
+    '''Like tornado.template.Loader, but caching only until underlying file is changed.'''
     def load(self, name, parent_path=None):
-        # Identical to tornado.template.Loader.load, but ALWAYS creates
-        # template, even if it's cached -- because _create_template caches it
+        # Always load the file. _create_template takes care of the caching
         name = self.resolve_path(name, parent_path=parent_path)
         with self.lock:
             self.templates[name] = self._create_template(name)
@@ -25,10 +25,7 @@ class CacheLoader(tornado.template.Loader):
 
 @tornado.gen.coroutine
 def template(content, handler=None, **kwargs):
-    '''
-    Renders template from content. Used as a transform in any handler, mainly
-    FileHandler.
-    '''
+    '''Renders template from content. Used as a transform in any handler, mainly FileHandler.'''
     loader = None
     if handler is not None and getattr(handler, 'path', None):
         loader = CacheLoader(os.path.dirname(str(handler.file)))
@@ -44,11 +41,9 @@ def template(content, handler=None, **kwargs):
 
 @tornado.gen.coroutine
 def scss(content, handler):
-    '''
-    Renders a SCSS file as CSS via.
-    Ignore the content provided. sass needs the file actually located at handler.path.
-    '''
+    '''Renders a SCSS file as CSS.'''
     from gramex.apps.ui import sass2
+    # Ignore the content provided. sass2 needs the file actually located at handler.path.
     result = yield sass2(handler, handler.path)
     return result.decode('utf-8')
 
@@ -59,21 +54,17 @@ sass = scss
 
 @tornado.gen.coroutine
 def ts(content, handler):
-    '''
-    Render a TypeScript file as JavaScript.
-    Ignore the content provided. ts needs the file actually located at handler.path.
-    '''
+    '''Render a TypeScript file as JavaScript.'''
     from gramex.apps.ui import ts
+    # Ignore the content provided. ts needs the file actually located at handler.path.
     result = yield ts(handler, handler.path)
     return result.decode('utf-8')
 
 
 @tornado.gen.coroutine
 def vue(content, handler):
-    '''
-    Renders a Vue file as JS web component via @vue/cli.
-    Ignore the content provided. vue needs the file actually located at handler.path.
-    '''
+    '''Renders a Vue file as JS web component via @vue/cli.'''
     from gramex.apps.ui import vue
+    # Ignore the content provided. vue needs the file actually located at handler.path.
     result = yield vue(handler, handler.path)
     return result.decode('utf-8')
