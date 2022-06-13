@@ -67,7 +67,7 @@ def filter(
         meta: this dict is updated with metadata during the course of filtering
         engine: over-rides the auto-detected engine. Can be 'dataframe', 'file',
             'http', 'https', 'sqlalchemy', 'dir'
-        table: table name (if url is an SQLAlchemy URL), `.format`-ed using `args`.
+        table (str): table name (if url is an SQLAlchemy URL), `.format`-ed using `args`.
         ext: file extension (if url is a file). Defaults to url extension
         columns: database column names to create if required (if url is a database).
             Keys are column names. Values can be SQL types, or dicts with these keys:
@@ -81,7 +81,7 @@ def filter(
             Loads entire result in memory before filtering.
         queryfile: optional SQL query file to execute (if url is a database).
             Same as specifying the `query:` in a file. Overrides `query:`
-        state: optional SQL query to check if data has changed.
+        state (str): optional SQL query to check if data has changed.
         transform: optional in-memory transform of source data. Takes
             the result of gramex.cache.open or gramex.cache.query. Must return a
             DataFrame. Applied to both file and SQLAlchemy urls.
