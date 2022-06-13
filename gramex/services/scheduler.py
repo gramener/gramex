@@ -4,6 +4,7 @@ import re
 import time
 import tornado.ioloop
 from crontab import CronTab
+from concurrent.futures import ThreadPoolExecutor
 from gramex.transforms import build_transform
 from gramex.config import app_log, ioloop_running
 
@@ -11,17 +12,46 @@ from gramex.config import app_log, ioloop_running
 class Task(object):
     '''Run a task. Then schedule it at the next occurrance.'''
 
-    def __init__(self, name, schedule, threadpool, ioloop=None):
-        '''
-        Create a new task based on a schedule in ioloop (default to current).
+    def __init__(
+            self,
+            name: str,
+            schedule: dict,
+            threadpool: ThreadPoolExecutor,
+            ioloop: tornado.ioloop = None):
+        '''Create a new task based on a schedule.
 
-        The schedule configuration accepts:
+        Parameters:
+            name: Name of the schedule
+            schedule: Schedule configuration (see below)
+            threadpool: Threadpool to use for running the task
+            ioloop: IOLoop to run the task on. If None, use main IOLoop
 
-        - minutes, hours, dates, months, weekdays, years: cron schedule
-        - utc: True for UTC time zone, else local time zone (default: False)
-        - every: interval to run at (e.g. "3h 30m" or "90s")
-        - startup: True to run at startup, '*' to run on every config change
-        - thread: True to run in a separate thread (default: False)
+        Schedule configurations are dicts with these keys:
+
+        - `minutes`: minutes to run at (as per cron spec below)
+        - `hours`: hours to run at (as per cron spec below)
+        - `dates`: dates to run at (as per cron spec below)
+        - `months`: months to run at (as per cron spec below)
+        - `weekdays`: weekdays to run at (as per cron spec below)
+        - `years`: years to run at (as per cron spec below)
+        - `utc`: True for UTC time zone, else local time zone (default: False)
+        - `every`: interval to run at (e.g. "3h 30m" or "90s")
+        - `startup`: `True` to run at startup, `'*'` to run on every config change
+        - `thread`: `True` to run in a separate thread (default: False)
+
+        The minutes, hours, dates, months, weekdays, years keys can take these values:
+
+        - `*`: use all possible values, i.e. every minute, every hour, etc.
+        - `3,4,5`: use multiple values separated by commas
+        - `1-5`: use range of values
+        - `*/4`: repeat every 4th time, i.e. every 4th minute, 4th hour, etc.
+        - `8-16/2`: repeat every 2nd time between 8 to 16. Same as 8,10,12,14,16
+
+        To specify a schedule, you must specify at least one of these:
+
+        - `minutes`, `hours`, `dates`, `months`, `weekdays`, `years`
+        - `every`
+        - `startup`
         '''
         self.name = name
         self.utc = schedule.get('utc', False)
