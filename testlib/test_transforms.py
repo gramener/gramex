@@ -58,8 +58,11 @@ class BuildTransform(unittest.TestCase):
     dummy = os.path.join(folder, 'dummy.py')
     files = set([dummy])
 
-    def check_transform(self, transform, yaml_code, vars=None, cache=True, iter=True, doc=None):
-        fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache, iter=iter)
+    def check_transform(
+            self, transform, yaml_code, vars=None, kwargs=None,
+            cache=True, iter=True, doc=None):
+        fn = build_transform(
+            yaml_parse(yaml_code), vars=vars, kwargs=kwargs, cache=cache, iter=iter)
         eqfn(fn, transform)
         if doc is not None:
             eq_(fn.__doc__, doc)
@@ -170,7 +173,7 @@ class BuildTransform(unittest.TestCase):
         def transform(x=1, y=2):
             result = max(x, y, 3)
             return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
+        vars = {'x': 1, 'y': 2}
         self.check_transform(transform, '''
             function: max
             args:
@@ -230,7 +233,7 @@ class BuildTransform(unittest.TestCase):
         def transform(x=1, y=2):
             result = dict(x, y, a=x, b=y, c=3, d='=4')
             return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
+        vars = {'x': 1, 'y': 2}
         self.check_transform(transform, '''
             function: dict
             kwargs: {a: =x, b: =y, c: 3, d: ==4}
@@ -252,13 +255,41 @@ class BuildTransform(unittest.TestCase):
         def transform(x=1, y=2):
             result = format(x, y, a=x, b=y, c=3)
             return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
+        vars = {'x': 1, 'y': 2}
         self.check_transform(transform, '''
             function: format
             args: [=x, =y]
             kwargs: {a: =x, b: =y, c: =3}
         ''', vars=vars)
         self.check_transform(transform, 'function: format(x, y, a=x, b=y, c=3)', vars=vars)
+
+    def test_fn_var_kwargs(self):
+        def transform(**kwargs):
+            result = kwargs
+            return result
+        self.check_transform(transform, 'function: kwargs', vars={}, kwargs=True, iter=False)
+
+        def transform(**kw):
+            result = kw
+            return result
+        self.check_transform(transform, 'function: kw', vars={}, kwargs='kw', iter=False)
+
+        def transform(_val, **kwargs):
+            result = str(_val) + str(kwargs)
+            return result if isinstance(result, GeneratorType) else [result, ]
+        self.check_transform(transform, 'function: str(_val) + str(kwargs)', kwargs=True)
+
+        def transform(x=1, y=2, **kw):
+            result = str([x, y]) + str(kw)
+            return result if isinstance(result, GeneratorType) else [result, ]
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(transform, 'function: str([x, y]) + str(kw)', vars=vars, kwargs='kw')
+
+        def transform(x=1, y=2):
+            result = str([x, y])
+            return result if isinstance(result, GeneratorType) else [result, ]
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(transform, 'function: str([x, y])', vars=vars, kwargs=False)
 
     def test_coroutine(self):
         def transform(_val):
@@ -329,7 +360,7 @@ class BuildTransform(unittest.TestCase):
         fn = self.check_transform(transform, '''
             function: str.__add__
             args: [=content, '123']
-        ''', vars=AttrDict(content=None))
+        ''', vars={'content': None})
         eq_(fn('abc'), ['abc123'])
 
         def transform(handler):
@@ -338,7 +369,7 @@ class BuildTransform(unittest.TestCase):
         fn = self.check_transform(transform, '''
             function: str.endswith
             args: [=handler.current_user.user, 'ta']
-        ''', vars=AttrDict(handler=None))
+        ''', vars={'handler': None})
 
     @classmethod
     def tearDownClass(cls):
@@ -352,21 +383,25 @@ class BuildPipelines(unittest.TestCase):
     @staticmethod
     def pipeline(stages, **kwargs):
         kwargs.setdefault('iter', False)
+        kwargs.setdefault('kwargs', True)
         return build_transform({'function': stages}, **kwargs)
 
     def test_pipeline(self):
         eq_(self.pipeline([{'function': True}])(), True)
         eq_(self.pipeline([{'function': 0}])(), 0)
         eq_(self.pipeline([{'function': '3 + 4'}, {'function': '4 + 5'}])(), 9)
-        pipeline = self.pipeline([{'function': 'x - y'}], vars={'x': 0, 'y': 0})
+        pipeline = self.pipeline([
+            {'function': 'x - y + kwargs.get("z", 0)'}
+        ], vars={'x': 0, 'y': 0})
         eq_(pipeline(), 0)
         eq_(pipeline(x=3, y=4), -1)
+        eq_(pipeline(x=3, y=4, z=2), 1)
         pipeline = self.pipeline([
             {'function': '3 + 4', 'name': 'x'},
             {'function': '4 + 5', 'name': 'y'},
-            {'function': 'x + y'},
+            {'function': 'x + y + kwargs.get("z", 0)'},
         ])
-        eq_(pipeline(), 16)
+        eq_(pipeline(z=10), 26)
 
     def test_exceptions(self):
         # Pipelines must have at least 1 stage
