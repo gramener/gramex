@@ -227,23 +227,27 @@ def _substitute_variable(val):
 
 
 def _calc_value(val, key):
+    '''Calculate the value to assign to this key.
+
+    If val is a scalar (string, boolean, dict, etc), return as-is.
+
+    If it's a list or a dict, return calculated values of underlying values.
+
+    If it's a dict with a `function` key, evaluation the function and return the non-None value.
+    If the returned value(s) are None, return the calculated 'default' value.
     '''
-    Calculate the value to assign to this key.
-
-    If ``val`` is not a dictionary that has a ``function`` key, return it as-is.
-
-    If it has a function key, call that function (with specified args, kwargs,
-    etc) and allow the ``key`` parameter as an argument.
-
-    If the function is a generator, the first value is used.
-    '''
-    if hasattr(val, 'get') and val.get('function'):
-        from .transforms import build_transform
-        function = build_transform(val, vars={'key': None}, filename=f'config:{key}')
-        for result in function(key):
-            if result is not None:
-                return result
-        return val.get('default')
+    if isinstance(val, dict):
+        if val.get('function'):
+            from .transforms import build_transform
+            function = build_transform(val, vars={'key': None}, filename=f'config:{key}')
+            for result in function(key):
+                if result is not None:
+                    return result
+            return _calc_value(val.get('default', None), key)
+        else:
+            return {k: _calc_value(v, k) for k, v in val.items()}
+    elif isinstance(val, (list, tuple)):
+        return [_calc_value(v, key) for v in val]
     else:
         return _substitute_variable(val)
 

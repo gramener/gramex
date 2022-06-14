@@ -10,10 +10,9 @@
 # $LOGVIEWER_SCHEDULER_KWARGS
 
 variables:
-  # TODO: dict in default does not accept variables
-  # LOGVIEWER_DB:
-  #   default:
-  #     url: sqlite:///$GRAMEXDATA/logs/logviewer.db
+  LOGVIEWER_DB:
+    default:
+      url: sqlite:///$GRAMEXDATA/logs/logviewer.db
   LOGVIEWER_SCHEDULER_PORT:
     default: ''
   LOGVIEWER_PATH_UI:
