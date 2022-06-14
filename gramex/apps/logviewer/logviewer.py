@@ -8,14 +8,16 @@ from lxml.etree import Element              # nosec: lxml is fixed
 from lxml.html import fromstring, tostring  # nosec: lxml is fixed
 import numpy as np
 import pandas as pd
-import gramex.data
+import gramex.data as gdata
 import gramex.cache
 from gramex import conf
-from gramex.config import app_log
+from gramex.config import app_log, variables
 from gramex.transforms import build_transform
 
 if sys.version_info.major == 3:
     unicode = str
+
+DB_URL = f"sqlite:///{variables['GRAMEXDATA']}/logs/logviewer.db"
 
 DB_CONFIG = {
     'table': 'agg{}',
@@ -63,8 +65,8 @@ def pdagg(df, groups, aggfuncs):
 
 def table_exists(table, conn):
     '''check if table exists in sqlite db'''
-    query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-    return not pd.read_sql(query, conn, params=[table]).empty
+    # TODO: Convert to gdata
+    return bool(len(gdata.filter(DB_URL, table='sqlite_master', args={'name': [table]})))
 
 
 def add_session(df, duration=30, cutoff_buffer=0):
@@ -104,14 +106,14 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims={}):
 
 
 def create_column_if_not_exists(table, freq, conn):
+    # TODO: Use gdata
     for col in extra_columns:
-        for row in conn.execute(f'PRAGMA table_info({table(freq)})'):
-            if row[1] == col:
-                break
-        else:
-            query = f'ALTER TABLE {table(freq)} ADD COLUMN "{col}" TEXT DEFAULT ""'
-            conn.execute(query)
-            conn.commit()
+        gdata.alter(DB_URL, table(freq), columns={
+            col: {
+                'type': 'text',
+                'default': ''
+            }}
+        )
 
 
 def summarize(transforms=[], post_transforms=[], run=True,
@@ -130,23 +132,9 @@ def summarize(transforms=[], post_transforms=[], run=True,
     conn = sqlite3.connect(os.path.join(folder, 'logviewer.db'))
 
     for freq in levels:
-        try:
+        if table_exists(table(freq), conn):
             create_column_if_not_exists(table, freq, conn)
-        except sqlite3.OperationalError:
-            # Inform when table is created for the first time
-            app_log.info('logviewer: OperationalError: Table does not exist')
 
-    # drop agg tables from database
-    if run in ['drop', 'reload']:
-        droptable = 'DROP TABLE IF EXISTS {}'.format
-        for freq in levels:
-            app_log.info('logviewer: Dropping {} table'.format(table(freq)))
-            conn.execute(droptable(table(freq)))
-        conn.commit()
-        conn.execute('VACUUM')
-        if run == 'drop':
-            conn.close()
-            return
     # all log files sorted by modified time
     log_files = sorted(glob(log_file + '*'), key=os.path.getmtime)
     max_date = None
@@ -158,9 +146,10 @@ def summarize(transforms=[], post_transforms=[], run=True,
 
     # get this month log files if db is already created
     if table_exists(table(levels[-1]), conn):
-        query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec: table() is safe
-        max_date = pd.read_sql(query, conn).iloc[0, 0]
+        log_filter = gdata.filter(DB_URL, table=table(levels[-1]), args={})
+        max_date = log_filter.sort_values('time', ascending=False)['time'].iloc[0]
         app_log.info(f'logviewer: last processed till {max_date}')
+        max_date = max_date.strftime('%Y-%m-01')
         this_month = max_date[:8] + '01'
         log_files = [f for f in log_files if filesince(f, this_month)]
         max_date = pd.to_datetime(max_date)
@@ -199,9 +188,8 @@ def summarize(transforms=[], post_transforms=[], run=True,
                 date_from -= pd.offsets.MonthBegin(1)
             data = data[data.time.ge(date_from)]
             # delete old records
-            query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
-            conn.execute(query, (f'{date_from}',))
-            conn.commit()
+            # TODO: Use gdata.delete - Time >=
+            gdata.delete(DB_URL, table=table(freq), args={'time>~': [date_from]})
         groups[0]['freq'] = freq
         # get summary view
         app_log.info('logviewer: pdagg for {}'.format(table(freq)))
@@ -212,7 +200,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
             apply_transform(dff, spec)
         # insert new records
         try:
-            dff.to_sql(table(freq), conn, if_exists='append', index=False)
+            gdata.insert(DB_URL, table=table(freq), args=dff.to_dict())
         # dff columns should match with table columns
         # if not, call summarize run='reload' to
         # drop all the tables and rerun the job
@@ -229,7 +217,7 @@ def prepare_where(query, args, columns):
     '''prepare where clause'''
     wheres = []
     for key, vals in args.items():
-        col, agg, op = gramex.data._filter_col(key, columns)
+        col, agg, op = gdata._filter_col(key, columns)
         if col not in columns:
             continue
         if op == '':
