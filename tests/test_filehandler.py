@@ -7,7 +7,7 @@ import markdown
 from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.ml import r
-from gramex.transforms import badgerfish, rmarkdown
+from gramex.transforms import rmarkdown
 from nose.tools import ok_, eq_
 from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex, folder
@@ -181,13 +181,6 @@ class TestFileHandler(TestGramex):
             raise SkipTest('TODO: Once NumPy & rpy2 work together, remove this SkipTest. #259')
         htmlpath = str(server.info.folder / 'dir/rmarkdown.html')
         tempfiles[htmlpath] = htmlpath
-
-    def test_transform_badgerfish(self):
-        handler = AttrDict(file=server.info.folder / 'dir/badgerfish.yaml')
-        with (server.info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
-            result = yield badgerfish(f.read(), handler)
-            self.check('/dir/transform/badgerfish.yaml', text=result)
-            self.check('/dir/transform/badgerfish.yaml', text='imported file α')
 
     def test_transform_template(self):
         # gramex.yaml has configured template.* to take handler and x as params

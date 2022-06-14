@@ -80,7 +80,6 @@
       "cron-descriptor":          "OPT: admin/schedule to pretty-print cron",
       "orderedattrdict>=1.6.0":   "REQ: OrderedDict with attr access for configs",
       "tables":                   "REQ: HDF5 reading / writing",
-      "xmljson>=0.1.5":           "SRV: transforms.badgerfish to convert objects to/from XML",
       "redis>=2.10.0":            "SRV: RedisStore"
   },
 
