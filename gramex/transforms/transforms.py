@@ -10,6 +10,7 @@ from functools import wraps
 from types import GeneratorType
 from orderedattrdict import AttrDict
 from gramex.config import app_log, locate, variables, CustomJSONEncoder, merge
+from typing import Union
 
 
 def identity(x):
@@ -87,80 +88,131 @@ def module_names(node, vars):
     return modules
 
 
-def build_transform(conf, vars=None, filename='transform', cache=False, iter=True):
-    '''
-    Converts an expression into a callable function. For e.g.::
+def build_transform(
+        conf: dict,
+        vars: dict = None,
+        kwargs: Union[bool, str] = False,
+        filename: str = 'transform',
+        cache: bool = False,
+        iter: bool = True):
+    '''Converts an expression into a callable function.
 
-        function: json.dumps("x", separators: [",", ":"])
+    Examples:
+        >>> fn = build_transform({'function': 'json.dumps({"x": 1})'}, iter=False)
+        >>> fn()
+        ... '{"x": 1}'
 
-    translates to::
+    This compiles the expression into a callable function as follows:
 
-        fn = build_transform(conf={
-            'function': 'json.dumps("x", separators: [",", ":"])',
-        })
+    ```python
+    def transform(_val):
+        import json
+        result = json.dumps({"x": 1})
+        return result
+    ```
 
-    which becomes::
+    Parameters:
+        conf: Expression to compile
+        vars: Variables passed to the compiled function
+        kwargs: `True` to accept **kwargs. Any string to define the kwargs variable name
+        filename: Filename to print in case of errors
+        cache: `False` re-imports modules if changed. `True` caches module
+        iter: `True` always returns an iterable. `False` returns a single value
 
-        def transform(_val):
-            import json
-            result = json.dumps("x", separators=[",", ":""])
-            return result if isinstance(result, GeneratorType) else (result,)
+    `conf` is a dict with a `function` key with Python expression. This expression is compiled
+    and returned. If the expression uses modules (e.g. `json.dumps`), they are auto-imported.
 
-    The same can also be achieved via::
+    It optionally accepts an `args` list and a `kwargs` list if `function` is a function name.
 
-        function: json.dumps
-        args: ["x"]
-        kwargs:
-            separators: [",", ":"]
+    Examples:
+        >>> {'function': '1'}               # => 1
+        >>> {'function': 'x + y'}           # => x + y
+        >>> {'function': 'json.dumps(x)'}   # => json.dumps(s)
+        >>> {'function': 'json.dumps', 'args': ['x'], 'kwargs': {'indent': 2}}
+        >>> {'function': 'json.dumps("x", indent=2)`    # same as above
 
-    Any Python expression is also allowed. The following are valid functions::
+    `args` values and `kwargs` keys are treated as strings, not variables. But values starting with
+    `=` (e.g. `=handler`) are treated as variables. (Use `==x` to represent the string `=x`.)
 
-        function: 1                 # returns 1
-        function: _val.type         # Returns _val.type
-        function: _val + 1          # Increments the input parameter by 1
-        function: json.dumps(_val)  # Returns the input as a string
-        function: json.dumps        # This is the same as json.dumps(_val)
+    Examples:
+        >>> {'function': 'str', 'args': ['handler']}      # => str('handler')
+        >>> {'function': 'str', 'args': ['=handler']}     # => str(handler)
+        >>> {'function': 'str', 'args': ['==handler']}    # => str('=handler')
 
-    ``build_transform`` also takes an optional ``filename=`` parameter that sets
-    the "filename" of the returned function. This is useful for log messages.
+    `vars` defines the compiled function's signature. `vars={'x': 1, 'y': 2}` creates a
+    `def transform(x=1, y=2):`.
 
-    It takes an optional ``cache=True`` that permanently caches the transform.
-    The default is ``False`` that re-imports the function's module if changed.
+    `vars` defaults to `{'_val': None}`.
 
-    The returned function takes a single argument called ``_val`` by default. You
-    can change the arguments it accepts using ``vars``. For example::
+    Examples:
+        >>> add = build_transform({'function': 'x + y'}, vars={'x': 1, 'y': 2}, iter=False)
+        >>> add()
+        ... 3
+        >>> add(x=3)
+        ... 5
+        >>> add(x=3, y=4)
+        ... 7
+        >>> incr = build_transform({'function': '_val + 1'}, iter=False)
+        >>> incr(3)
+        ... 4
 
-        fn = build_transform(..., vars={'x': None, 'y': 1})
+    `kwargs=True` allows the compiled function to accept any keyword arguments as `**kwargs`.
+    Specify `kwargs='kw'` to use `kw` (or any string) as the keyword arguments variable instead.
 
-    creates::
+    Examples:
+        >>> params = build_transform({'function': 'kwargs'}, vars={}, kwargs=True, iter=False)
+        >>> params(x=1)
+        ... {'x': 1}
+        >>> params(x=1, y=2)
+        ... {'x': 1, 'y': 2}
+        >>> params = build_transform({'function': 'kw'}, vars={}, kwargs='kw', iter=False)
+        >>> params(x=1, y=2)
+        ... {'x': 1, 'y': 2}
 
-        def transform(x=None, y=1):
-            ...
+    `filename` defines the filename printed in error messages.
 
-    Or pass ``vars={}`` for function that does not accept any parameters.
+    Examples:
+        >>> error = build_transform({'function': '1/0'}, filename='zero-error', iter=False)
+        ... Traceback (most recent call last):
+        ...   File "<stdin>", line 1, in <module>
+        ...   File "zero-error", line 2, in transform
+        ... ZeroDivisionError: division by zero
 
-    The returned function returns an iterable containing the values. If the
-    function returns a single value, you can get it on the first iteration. If
-    the function returns a generator object, that is returned as-is.
+    `cache=False` re-imports the modules if changed. This is fairly efficient, and is the default.
+    Use `cache=True` to cache modules until Python is restarted.
 
-    But if ``iter=False`` is passed, the returned function just contains the
-    returned value as-is -- not as a list.
+    `iter=True` always returns an iterable. If the `function` is a generator (i.e. has a `yield`),
+    it is returned as-is. Else it is returned as an array, i.e. `[result]`.
 
-    In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
-    literally. But values starting with ``=`` like ``=args`` are treated as
-    variables. (Start ``==`` to represent a string that begins with ``=``.) For
-    example, when this is called with ``vars={"handler": None}``::
+    Examples:
+        `build_transform()` returns results wrapped as an array.
 
-        function: json.dumps
-        args: =handler
-        kwargs:
-            key: abc
-            name: =handler.name
+        >>> val = build_transform({'function': '4'})
+        >>> val()
+        ... [4]
+        >>> val = build_transform({'function': '[4, 5]'})
+        >>> val()
+        ... [[4, 5]]
 
-    becomes::
+        If the result is a generator, it is returned as-is.
 
-        def transform(handler=None):
-            return json.dumps(handler, key="abc", name=handler.name)
+        >>> def gen():
+        ...     for x in range(5):
+        ...         yield x
+        >>> val = build_transform({'function': 'fn()'}, vars={'fn': None})
+        >>> val(gen)
+        ... <generator object gen at 0x....>
+        >>> list(val(gen))
+        ... [0, 1, 2, 3, 4]
+
+        If `iter=False`, it returns the results as-is.
+
+        >>> val = build_transform({'function': '4'}, iter=False)
+        >>> val()
+        ... 4
+        >>> val = build_transform({'function': '[4, 5]'}, iter=False)
+        >>> val()
+        ... [4, 5]
     '''
     # Ensure that the transform is a dict with "function:" in it. (This is a common mistake)
     if not isinstance(conf, dict) or 'function' not in conf:
@@ -171,10 +223,13 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # The returned function takes a single argument by default
     if vars is None:
         vars = {'_val': None}
+    # Treat kwargs=True as kwargs=kwargs. It adds **kwargs to the function call
+    if kwargs is True:
+        kwargs = 'kwargs'
 
     # If the function is a list, treat it as a pipeline
     if isinstance(conf['function'], (list, tuple)):
-        return build_pipeline(conf['function'], vars, filename, cache, iter)
+        return build_pipeline(conf['function'], vars, kwargs, filename, cache, iter)
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
@@ -192,8 +247,9 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     function, doc = None, expr
     # If the module or function is one of the vars themselves, return it as-is
     # _val.type will be used as-is, then, rather than looking for an "_val" module
-    if module_name in vars:
+    if module_name in vars or (isinstance(kwargs, str) and module_name == kwargs):
         expr = function_name
+    # If it's a function call, construct the function signature
     elif function_name is not None:
         function = locate(function_name, modules=['gramex.transforms'])
         doc = function.__doc__
@@ -225,8 +281,11 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # Create the code
     modules = module_names(tree, vars)
     modulestr = ', '.join(sorted(modules))
+    signature = ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items())
+    if kwargs:
+        signature += (', ' if signature else '') + f'**{kwargs}'
     body = [
-        'def transform(', ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items()), '):\n',
+        f'def transform({signature}):\n',
         f'\timport {modulestr}\n' if modulestr else '',
         f'\treload_module({modulestr})\n' if modulestr and not cache else '',
         f'\tresult = {expr}\n',
@@ -259,7 +318,13 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     return result
 
 
-def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True):
+def build_pipeline(
+        conf: dict,
+        vars: dict = None,
+        kwargs: Union[bool, str] = False,
+        filename: str = 'pipeline',
+        cache: bool = False,
+        iter: bool = True):
     if not isinstance(conf, (list, tuple)):
         raise ValueError(f'pipeline:{filename}: must be a list, not {type(conf)}')
     if len(conf) == 0:
@@ -281,8 +346,8 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True)
             raise ValueError(f'pipeline:{filename}: {index}/{n}: missing "function"')
         # Compile the function, allowing use of all variables in current_scope
         stage['function'] = build_transform(
-            {'function': spec['function']},
-            vars=current_scope, filename=f'pipeline:{filename} {index}/{n}', iter=False)
+            {'function': spec['function']}, vars=current_scope, kwargs=kwargs,
+            filename=f'pipeline:{filename} {index}/{n}', cache=cache, iter=False)
         # If the stage defines a name, add it as a variable for current_scope
         if 'name' in spec:
             current_scope[spec['name']] = None
