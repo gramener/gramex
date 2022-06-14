@@ -8,7 +8,7 @@ from types import GeneratorType
 from tornado.gen import coroutine, sleep
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from gramex.transforms import build_transform, flattener, badgerfish, template, once
+from gramex.transforms import build_transform, flattener, template, once
 from gramex.cache import reload_module
 from nose.tools import eq_, assert_raises
 
@@ -420,38 +420,6 @@ class BuildPipelines(unittest.TestCase):
         ])
         with assert_raises(ZeroDivisionError):
             pipeline()
-
-
-class Badgerfish(unittest.TestCase):
-    'Test gramex.transforms.badgerfish'
-
-    def test_transform(self):
-        result = yield badgerfish('''
-        html:
-          "@lang": en
-          p: text
-          div:
-            p: text
-        ''')
-        eq_(
-            result,
-            '<!DOCTYPE html>\n<html lang="en"><p>text</p><div><p>text</p></div></html>')
-
-    def test_mapping(self):
-        result = yield badgerfish('''
-        html:
-          json:
-            x: 1
-            y: 2
-        ''', mapping={
-            'json': {
-                'function': 'json.dumps',
-                'kwargs': {'separators': [',', ':']},
-            }
-        })
-        eq_(
-            result,
-            '<!DOCTYPE html>\n<html><json>{"x":1,"y":2}</json></html>')
 
 
 class Template(unittest.TestCase):
