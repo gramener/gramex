@@ -17,7 +17,8 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform, build_log_info, CacheLoader
+from gramex.transforms import build_transform, build_log_info
+from gramex.transforms.template import CacheLoader
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED
 from gramex.cache import get_store
 # We don't use these, but these stores used to be defined here. Programs may import these

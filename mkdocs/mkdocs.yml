@@ -16,11 +16,12 @@ nav:
   - Python - Node bridge: pynode.md
   - Scheduler: scheduler.md
   - Emailer: emailer.md
+  - Transformation utilities: transforms.md
   - HTTP response codes: http.md
   - Install apps: install.md
   - License management: license.md
   - Machine learning: ml.md
-  - ml_api.md
+  - Machine learning API: ml_api.md
   - Visualization scales: scale.md
   - Secrets management: secrets.md
   - sm_api.md
@@ -33,8 +34,9 @@ extra_css:
 markdown_extensions:
     - smarty
     - toc:
-        permalink: True
+        permalink: true
     - sane_lists
+    - admonition
 
 theme:
   name: readthedocs
@@ -42,6 +44,8 @@ theme:
     tag: G-4GQV607K4E
 
 plugins:
+  - autorefs
+  - search
   - mkdocstrings:
       handlers:
         python:
@@ -55,24 +59,26 @@ plugins:
             # Show gramex.cache
             show_root_full_path: true
             # Don't show module name, e.g. cache, on the TOC on the left
-            # It creates Caching > cache > Functions -- which is too nested
+            # It creates a structure like Caching > cache > Functions -- which is TOO nested
             show_root_toc_entry: false
 
-            # In ToC and content, group into attributes, classes, and functions
+            # In ToC and content, group into attributes, classes, and functions.
+            # But don't display attributes, classes and functions as section headings.
             group_by_category: true
             show_category_heading: false
 
-            # Show gramex.cache.open instead of open
+            # Show `open()`, not `gramex.cache.open()`
             show_object_full_path: false
             show_bases: false
 
-            # Show the function parameters, but not types. Makes it too verbose
+            # Show the function parameters, but not types. Types makes it too verbose
             show_signature: true
             show_signature_annotations: false
             # Note: separate_signature: true raises
             # black.parsing.InvalidInput: Cannot parse: 1:10: def gramex.cache.Subprocess
             separate_signature: false
 
+            # For classes, use the constructor docs and class docs together
             merge_init_into_class: true
 
             # TODO: What does this do?
