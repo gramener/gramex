@@ -1,12 +1,22 @@
-'''
-Authentication transforms
-'''
+'''Authentication transforms'''
 from gramex.config import app_log
 
 
 def ensure_single_session(handler):
-    '''
-    Ensure that user in this session is logged out of all other sessions.
+    '''Log user out of all sessions except this handler's.
+
+    This is used in any auth handler, e.g. [SimpleAuth][gramex.handlers.SimpleAuth]
+    or [GoogleAuth][gramex.handlers.GoogleAuth], as a login action:
+
+    ```yaml
+    pattern: /login/
+    handler: GoogleAuth     # or any auth
+    kwargs:
+        action:
+            - function: ensure_single_session
+    ```
+
+    It removes the user object from all sessions except the session of this handler.
     '''
     user_id = handler.session.get(handler.session_user_key, {}).get('id')
     if user_id is None:

@@ -10,15 +10,15 @@ from tornado.httputil import HTTPHeaders, parse_response_start_line
 from urllib.parse import urlencode
 from gramex.config import app_log
 from gramex.transforms import flattener, build_transform
-from gramex.http import (RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT,
-                         INTERNAL_SERVER_ERROR, GATEWAY_TIMEOUT)
+from gramex.http import (
+    RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT, INTERNAL_SERVER_ERROR, GATEWAY_TIMEOUT)
 
 
 class TwitterStream(object):
     '''
     Starts a Twitter Streaming client. Sample usage::
 
-        >>> from gramex.transforms import TwitterStream
+        >>> from gramex.transforms.twitterstream import TwitterStream
         >>> stream = TwitterStream(
         ...     track='modi,mms',
         ...     path='save-as-file.json',
