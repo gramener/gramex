@@ -185,20 +185,19 @@ def summarize(
         for spec in post_transforms:
             apply_transform(dff, spec)
         # insert new records
-        # TODO: Discover if any datatypes are remaining for mapping
-        dtype_mapping = {
-            np.datetime64: 'timestamp',
-            np.bool_: 'boolean',
-            np.int32: 'integer',
-            np.int64: 'integer',
-            np.float32: 'real',
-            np.float64: 'real',
-            np.object_: 'text',
-            np.str_: 'text'
-        }
         cols = {}
         for col in dff.columns:
-            cols[col] = dtype_mapping[dff[col].dtype.type]
+            dt = dff[col].dtype.type
+            if pd.api.types.is_datetime64_any_dtype(dt):
+                cols[col] = 'DATETIME'
+            elif pd.api.types.is_bool_dtype(dt):
+                cols[col] = 'BOOLEAN'
+            elif pd.api.types.is_integer_dtype(dt):
+                cols[col] = 'INTEGER'
+            elif pd.api.types.is_numeric_dtype(dt):
+                cols[col] = 'REAL'
+            else:
+                cols[col] = 'TEXT'
         gramex.data.alter(**db, table=table(freq), columns=cols)
         gramex.data.insert(**db, table=table(freq), args=dff.to_dict())
     app_log.info('logviewer.summarize: completed')
