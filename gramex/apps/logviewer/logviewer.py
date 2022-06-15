@@ -106,12 +106,20 @@ def summarize(
         post_transforms: List[dict] = [],
         session_threshold: float = 15,
         cutoff_buffer: float = 0,
-        custom_dims: dict = None):
+        custom_dims: dict = None) -> None:
     '''Summarizes log files into a database periodically.
 
     Parameters:
-        db: SQLAlchemy database configuration
-        TODO: document rest
+        db: SQLAlchemy database configuration.
+        transforms: List of transforms to be applied on data.
+        post_transforms: List of post transforms to be applied on data.
+        session_threshold: Minimum threshold for the session.
+        cutoff_buffer: In minutes for first and last session requests.
+        custom_dims: Custom columns to be added to the logviewer.
+
+    This function is called by a scheduler and/or on start of gramex.
+    It will aggregate and update logs from requests.csv file by comparing the
+    timestamp of last added logs. It creates the aggregation tables if they don't exist.
     '''
     app_log.info('logviewer.summarize started')
     levels = DB_CONFIG['levels']
