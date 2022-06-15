@@ -135,13 +135,13 @@ def summarize(
     try:
         log_filter = gramex.data.filter(**db, table=table(levels[-1]), args={})
         max_date = log_filter.sort_values('time', ascending=False)['time'].iloc[0]
+        max_date = pd.to_datetime(max_date)
     except Exception:   # noqa
         max_date = None
     else:
         app_log.info(f'logviewer.summarize: processing since {max_date}')
         this_month = max_date.strftime('%Y-%m-01')
         log_files = [f for f in log_files if filesince(f, this_month)]
-        max_date = pd.to_datetime(max_date)
 
     if not log_files:
         app_log.info('logviewer.summarize: no log files to process')
@@ -177,7 +177,7 @@ def summarize(
                 date_from -= pd.offsets.MonthBegin(1)
             data = data[data.time.ge(date_from)]
             # delete old records
-            gramex.data.delete(**db, table=table(freq), args={'time>~': [date_from]})
+            gramex.data.delete(**db, table=table(freq), args={'time>~': [date_from]}, id=['time'])
         groups[0]['freq'] = freq
         # get summary view
         dff = pdagg(data, groups, aggfuncs)
