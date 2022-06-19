@@ -11,7 +11,42 @@ tests/**/gen.*
 tests/*.pkl
 testlib/**/gen.*
 testlib/**/*.temp.*
-.noseids
+tests/*.db
+tests/uploads/
+tests/drive/
+tests/watcher.txt
+
+# Don't commit data files, except what's required for testing or by Gramex apps
+*.csv
+*.xls*
+
+!tests/**/*.csv
+!tests/*.xlsx
+!testlib/**/*.csv
+!testlib/*.xlsx
+!gramex/apps/**/*.csv
+!gramex/apps/guide/**/*.xlsx
+
+tests/circles.csv
+tests/sales.xlsx.*.xlsx
+tests/login.xlsx
+testlib/insert.*
+testlib/translate.xlsx
+tests/login.csv
+tests/authtemplate.html
+tests/translate.xlsx
+
+*.ppt*
+!testlib/input.pptx
+!testlib/input2.pptx
+!tests/template.pptx
+!gramex/apps/guide/formhandler/input.pptx
+!gramex/apps/guide/pptxhandler/examples-input.pptx
+
+# Don't commit ZIP files, except what's required for testing
+*.7z
+*.zip
+!tests/*.zip
 
 # Ignore byte-compiled / optimised / DLL files
 *.py[cod]
@@ -30,49 +65,9 @@ testlib/**/*.temp.*
 # Ignore log files
 *.log*
 
-# Don't commit data files, except what's required for testing or by Gramex apps
-*.csv
-*.xls*
-!tests/**/*.csv
-!tests/*.xlsx
-!testlib/**/*.csv
-!testlib/*.xlsx
-!gramex/apps/**/*.csv
-!gramex/apps/guide/**/*.xlsx
-
-*.ppt*
-!testlib/input.pptx
-!testlib/input2.pptx
-!tests/template.pptx
-!gramex/apps/guide/formhandler/input.pptx
-!gramex/apps/guide/pptxhandler/examples-input.pptx
-
-# Don't commit databases created by test cases
-tests/*.db
-
-# Don't commit uploads created by test cases
-tests/uploads/
-tests/drive/
-tests/circles.csv
-tests/sales.xlsx.*.xlsx
-tests/watcher.txt
-tests/login.xlsx
-testlib/insert.*
-testlib/translate.xlsx
-tests/login.csv
-tests/authtemplate.html
-tests/translate.xlsx
-
-# Don't commit ZIP files, except what's required for testing
-*.7z
-*.zip
-!tests/*.zip
-
-# Documents
+# Avoid documents and media
 *.doc*
 *.pdf
-
-# Avoid media files
 *.avi
 *.mp*
 *.wmv
@@ -96,9 +91,6 @@ tests/translate.xlsx
 node_modules
 bower_components
 
-# Windows shortcut files
-*.lnk
-
 # Windows / Mac OS junk files
 Desktop.ini
 $RECYCLE.BIN/
@@ -108,27 +100,12 @@ $RECYCLE.BIN/
 # R history files
 .RHistory
 
-# C extensions
-*.so
-
 # Packages
 *.egg
 *.eggs
 *.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
-
-# Installer logs
-pip-log.txt
+dist/
+sdist/
 
 # Unit test / coverage reports
 .coverage
@@ -137,20 +114,8 @@ nosetests.xml
 htmlcov
 cover
 
-# Translations
-*.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
 # Pycharm
 .idea
-
-# Complexity
-output/*.html
-output/*/index.html
 
 # For Linux FUSE file system
 .fuse_hidden*

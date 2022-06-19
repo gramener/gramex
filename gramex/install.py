@@ -196,7 +196,7 @@ else:
             # os.listdir/scandir fails with a PATH_NOT_FOUND.
             # Delete these using win32com and try again.
             elif (exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and
-                  func in {os.listdir, os.scandir}):
+                    func in {os.listdir, os.scandir}):
                 app_log.error(f'Cannot delete {path}')
                 from win32com.shell import shell, shellcon  # type:ignore
                 options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
