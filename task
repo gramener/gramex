@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+
+# Print each command as it is run
+set -x
+
+clean () {
+  # Remove unnecessary / temporary files
+  rm -rf build/ dist/ .eggs/
+  rm -rf tests/uploads/ tests/htmlcov/ tests/.cache-url
+  rm -rf gramex-1.*
+  rm -f .coverage
+  find . \( -name '*.egg-info' -o -name '*.egg' -o -name '*.pyc' -o -name '*.pyo' -o -name '__pycache__' \) -exec rm -fr {} +
+}
+
+lint () {
+  # Python lint with flake8
+  command -v flake8 2>/dev/null 2>&1 || pip install flake8 pep8-naming flake8-blind-except flake8-print flake8-debugger
+  flake8 gramex testlib tests
+
+  # Python security check with bandit
+  command -v bandit 2>/dev/null 2>&1 || pip install bandit
+  bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' --quiet
+
+  # Install eslint and dependencies. Then test all apps
+  npm install
+  npx eslint --ext js,html gramex/
+
+  # Avoid eclint in package.json (npm audit issues). Install globally
+  command -v eclint 2>/dev/null 2>&1 || npm install -g eclint
+  # Run .editorconfig checks.
+  find . -type f ! -path '*/.git/*' ! -path '*/node_modules/*' ! -path '*/mkdocs/*' ! -path '*/__pycache__/*' ! -path '*/filemanager/test/tape.js' -print0 | xargs -0 eclint check
+
+  # Avoid htmllint-cli in package.json (npm audit issues). Install globally
+  command -v htmllint 2>/dev/null 2>&1 || npm install -g htmllint-cli
+  # Run HTML checks
+  find . -name '*.html' ! -path '*/node_modules/*' ! -path '*/mkdocs/*' ! -path '*/htmlcov/*' -print0 | xargs -0 htmllint
+}
+
+testsetup () {
+  # Install all test requirements
+  pip install -r tests/requirements.txt
+  # conda is required to detect R HOME for gramex.ml.r
+  # pywin32 is required for install.py and winservice
+  conda install -y pywin32 conda
+  # rpy2 and r-markdown are to test gramex.ml.r
+  # conda-forge has recent versions of rpy2. Old versions won't work with Pandas 1.x
+  # See https://github.com/rpy2/rpy2/issues/680
+  conda install -y -c conda-forge rpy2 r-markdown
+  # Yarn is used for tests.test_install. Install it if required
+  command -v yarn >/dev/null 2>&1 || npm install -g yarn
+}
+
+stats () {
+  # Count number of lines of code
+  PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
+  JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1`
+  TESTLOC=`find tests testlib -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
+  printf "Python: $PYLOC\nJavaScript: $JSLOC\nTests: $TESTLOC\n"
+}
+
+docs () {
+  (cd mkdocs; mkdocs build)
+}
+
+pushdocs () {
+  rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
+}
+
+pushpypi () {
+  clean
+  python setup.py sdist
+  # Note: if this fails, add '-p PASSWORD'
+  twine upload -u gramener dist/*
+}
+
+pushcoverage () {
+  rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/
+}
+
+update () {
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm update && npm audit fix'
+}
+
+security () {
+  bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
+  freshclam
+  clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=mkdocs --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm audit --parseable || true' > reports/npm-audit.txt
+  snyk test --dev --all-projects > reports/snyk.txt || true
+}
+
+conda () {
+  # conda install conda-build
+  conda build purge
+  pip install orderedattrdict tornado==5.1.1
+  python pkg/conda/conda-setup.py
+  conda build -c conda-forge pkg/conda/
+}
+
+pushdocker () {
+  pip install docker
+  python pkg/docker-py3/build.py
+  docker login                # log in as sanand0 / pratapvardhan
+  docker push gramener/gramex
+}
+
+# Run all commands from the same folder as this script
+cd "$(dirname "$0")"
+# Run all commands
+for cmd in "$@"; do
+  "$cmd"
+done

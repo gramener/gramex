@@ -5,7 +5,8 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^8.18.0",
     "eslint-plugin-html": "^6.2.0",
-    "eslint-plugin-template": "0.4"
+    "eslint-plugin-template": "^0.6.0"
   }
 }

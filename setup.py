@@ -87,13 +87,12 @@ setup(
     include_package_data=True,
     # Pick up dependencies from gramex/release.json
     # To ensure that pip install works, only include packages that work via pip (not conda)
-    install_requires=[req for part in ('lib', 'pip') for req in release[part]],
+    install_requires=[req for req in release['lib']],
     zip_safe=False,
     entry_points={
         'console_scripts': release['console']
     },
-    test_suite='tests',
-    # NOTE: Don't use tests_require. setup.py can't install nose plugins like coverage.
-    # Use `make test-setup` to install rest requirements from tests/requirements.txt.
+    # NOTE: tests_require is deprecated. Also, setup.py can't install nose plugins like coverage.
+    # Use `run testsetup` to install rest requirements from tests/requirements.txt.
     **release['info']
 )
