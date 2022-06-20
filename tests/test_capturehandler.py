@@ -83,6 +83,7 @@ class TestCaptureHandler(TestGramex):
 
     @classmethod
     def setupClass(cls):
+        # If PhantomJS is not installed, skip the entire test class
         if not paths['phantomjs']:
             raise SkipTest('phantomjs is not installed')
         cls.capture = get_capture('default', port=9402)
