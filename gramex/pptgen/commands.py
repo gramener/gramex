@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
-# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import fromstring   # nosec: lxml is fixed
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import fromstring   # nosec B410
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
@@ -73,8 +73,8 @@ def text(shape, spec, data):
     # Updating default css with css from config.
     default_css.update(style)
     default_css['color'] = default_css.get('color', '#0000000')
-    # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-    update_text = fromstring('<root>{}</root>'.format(template(spec['text'], data)))    # nosec
+    # B320: lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+    update_text = fromstring('<root>{}</root>'.format(template(spec['text'], data)))  # nosec B320
     paragraph.runs[0].text = update_text.text if update_text.text else ''
     utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
     index = 1
@@ -390,13 +390,14 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
+                    # B307:eval this is safe since `expr` is written by app developer
                     chart_css(
-                        eval(fillpoint).fill,             # nosec: developer-initiaated
+                        eval(fillpoint).fill,             # nosec B307
                         point_css, point_css['color'])
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
                     chart_css(
-                        eval(fillpoint).line.fill,        # nosec: developer-initiaated
+                        eval(fillpoint).line.fill,        # nosec B307
                         point_css, _stroke)
 
 

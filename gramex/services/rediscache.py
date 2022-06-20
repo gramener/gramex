@@ -1,4 +1,5 @@
-import pickle       # nosec: we only pickle Gramex internal objects
+# B403:import_public we only pickle Gramex internal objects
+import pickle   # nosec B403
 from redis import StrictRedis
 
 
@@ -51,7 +52,8 @@ class RedisCache():
     def __getitem__(self, key):
         key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
         result = self.store.get(key)
-        return None if result is None else pickle.loads(result)     # nosec: frozen input
+        # B301:pickle key is set by developers and safe to pickle
+        return None if result is None else pickle.loads(result)     # nosec B301
 
     def __setitem__(self, key, value, expire=None):
         key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
@@ -67,7 +69,8 @@ class RedisCache():
     def __iter__(self):
         for key in self.store.scan_iter():
             try:
-                yield pickle.loads(key)     # nosec: key is safe
+                # B301:pickle key is set by developers and safe to pickle
+                yield pickle.loads(key)     # nosec B301
             except pickle.UnpicklingError:
                 # If redis already has keys created by other apps, yield them as-is
                 yield key

@@ -14,8 +14,8 @@ import datetime
 import requests
 from shutilwhich import which
 from pathlib import Path
-# subprocess is safe since it runs developer-initiated commands
-from subprocess import Popen, check_output, CalledProcessError      # nosec: developer-initiated
+# B404:import_subprocess only developers can access this, not users
+from subprocess import Popen, check_output, CalledProcessError      # nosec B404
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
@@ -154,8 +154,8 @@ license: |
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
 '''
-# yaml.load is safe since it only reads the string above, not user-created content
-usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec: frozen input
+# B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
+usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec B506
 
 
 class TryAgainError(Exception):
@@ -322,11 +322,14 @@ def run_command(config):
     target = config.target
     cygcheck, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
     if cygcheck is not None and cygpath is not None:
-        # subprocess.check_output is safe here since these are developer-initiated
-        app_path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()   # nosec
-        is_cygwin_app = check_output([cygcheck, '-f', app_path], **kwargs).strip()      # nosec
+        # B404:import_subprocess check_output is safe here since these are developer-initiated
+        app_path = check_output(        # nosec 404
+            [cygpath, '-au', which(appcmd[0])], **kwargs).strip()
+        is_cygwin_app = check_output(   # nosec 404
+            [cygcheck, '-f', app_path], **kwargs).strip()
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target], **kwargs).strip()           # nosec
+            target = check_output(      # nosec 404
+                [cygpath, '-au', target], **kwargs).strip()
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
@@ -336,7 +339,8 @@ def run_command(config):
     if not safe_rmtree(config.target):
         app_log.error(f'Cannot delete target {config.target}. Aborting installation')
         return
-    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec: developer-initiated
+    # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec 603
     proc.communicate()
     return proc.returncode
 
@@ -578,7 +582,8 @@ def service(args, kwargs):
 def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
-        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec: developer-initiated
+        # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec B603
     # OSError is raised if the cmd is not found.
     # CalledProcessError is raised if the cmd returns an error.
     except (OSError, CalledProcessError):
@@ -589,7 +594,8 @@ def _run_console(cmd, **kwargs):
     '''Run cmd and pipe output to console. Log and raise error if cmd is not found'''
     cmd = shlex.split(cmd)
     try:
-        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)
+        # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)    # nosec B603
     except OSError:
         app_log.error(f'Cannot find command: {cmd[0]}')
         raise

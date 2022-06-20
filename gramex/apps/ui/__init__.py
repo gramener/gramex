@@ -6,7 +6,8 @@ import json
 import gramex
 import gramex.cache
 import string
-import subprocess       # nosec: only for JS compilation
+# B404:import_subprocess only for JS compilation
+import subprocess       # nosec B404
 from hashlib import md5
 from tornado.gen import coroutine, Return
 from functools import partial
@@ -29,7 +30,8 @@ if not os.path.exists(cache_dir):
 
 def get_cache_key(state):
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
-    return md5(cache_key).hexdigest()[:5]       # nosec: non-cryptographic use
+    # B303:md5 is safe here - it's not for cryptographic use
+    return md5(cache_key).hexdigest()[:5]       # nosec B303
 
 
 @coroutine

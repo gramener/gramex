@@ -124,8 +124,9 @@ class ProcessHandler(BaseHandler):
 
         proc = Subprocess(
             self.cmdargs,
+            # B604:any_other_function_with_shell_equals_true
             # NOTE: developer should sanitize args if shell=True
-            shell=self.shell,  # nosec: developer-initiated
+            shell=self.shell,  # nosec B604
             cwd=self.cwd,
             stream_stdout=self.stream_stdout,
             stream_stderr=self.stream_stderr,

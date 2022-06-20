@@ -904,8 +904,8 @@ def _get_cache_key(conf, name):
         'missing': '~',
         'argsep': ', ',         # join args using comma
     }
-    # exec() is safe here since the code is constructed entirely in this function
-    exec(method, context)       # nosec: frozen input
+    # B102:exec_used is safe since the code is constructed entirely in this function
+    exec(method, context)       # nosec B102
     return context['cache_key']
 
 

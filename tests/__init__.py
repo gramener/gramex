@@ -2,7 +2,9 @@ import os
 import requests
 import shutil
 import unittest
-from lxml import etree      # nosec: lxml is safe   # noqa: F401 - other modules use this
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+# F401: we import here since other modules use this
+from lxml import etree      # noqa: F401    # nosec B410
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict

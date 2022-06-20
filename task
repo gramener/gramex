@@ -19,7 +19,7 @@ lint () {
 
   # Python security check with bandit
   command -v bandit 2>/dev/null 2>&1 || pip install bandit
-  bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' --quiet
+  bandit gramex --aggregate vuln --recursive --quiet
 
   # Install linters. Then test all apps
   npm install

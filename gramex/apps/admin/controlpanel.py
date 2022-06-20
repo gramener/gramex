@@ -117,10 +117,11 @@ def evaluate(handler, code):
     # Run code and get the result. (Result is None for exec)
     try:
         context = contexts.setdefault(handler.session['id'], {})
+        # B307:eval B102:exec_used is safe since only admin can run this
         if mode == 'eval':
-            result = eval(co, context)  # nosec: only admin can run this
+            result = eval(co, context)  # nosec B307
         else:
-            exec(co, context)           # nosec: only admin can run this
+            exec(co, context)           # nosec B102
             result = None
     except Exception as e:
         result = e
