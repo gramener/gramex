@@ -7,6 +7,7 @@ import logging
 from PIL import Image
 from pptx import Presentation
 from pptx.util import Pt
+from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
@@ -70,7 +71,6 @@ def get_layout_elements(content):
 
 
 def test_dependencies():
-    assert paths['phantomjs'], 'phantomjs is not installed'
     assert paths['node'], 'node is not installed'
 
 
@@ -83,6 +83,8 @@ class TestCaptureHandler(TestGramex):
 
     @classmethod
     def setupClass(cls):
+        if not paths['phantomjs']:
+            raise SkipTest('phantomjs is not installed')
         cls.capture = get_capture('default', port=9402)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
