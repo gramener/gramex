@@ -99,6 +99,9 @@ def vue(content, handler):
 def rmarkdown(content, handler=None, **kwargs):
     '''Render an Rmarkdown file as HTML in a FileHandler.
 
+    !!! Deprecated
+        Support for R is being phased out in favor of Python ML libraries.
+
     This can be used as a transform in FileHandler:
 
     ```yaml
@@ -115,7 +118,9 @@ def rmarkdown(content, handler=None, **kwargs):
     '''
     import gramex.ml
     import gramex.services
+    from gramex.config import app_log
 
+    app_log.warning('rmarkdown: transform deprecated')
     rmdfilepath = str(handler.file)
     htmlpath = yield gramex.services.info.threadpool.submit(
         gramex.ml.r,
