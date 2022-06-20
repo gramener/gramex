@@ -75,10 +75,12 @@ class FileUpload(object):
 
     def addfiles(self, handler):
         filemetas = []
-        uploads = [upload for key in self.keys.get('file', [])
-                   for upload in handler.request.files.get(key, [])]
-        filenames = [name for key in self.keys.get('save', [])
-                     for name in handler.args.get(key, [])]
+        uploads = [
+            upload for key in self.keys.get('file', [])
+            for upload in handler.request.files.get(key, [])]
+        filenames = [
+            name for key in self.keys.get('save', [])
+            for name in handler.args.get(key, [])]
         if_exists = getattr(handler, 'if_exists', 'unique')
         for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
             filemeta = self.save_file(upload, filename, if_exists)
@@ -201,8 +203,9 @@ class UploadHandler(BaseHandler):
         upload = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
         delete = yield gramex.service.threadpool.submit(self.uploader.deletefiles, self)
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps({'upload': upload, 'delete': delete},
-                              ensure_ascii=True, separators=(',', ':')))
+        self.write(
+            json.dumps(
+                {'upload': upload, 'delete': delete}, ensure_ascii=True, separators=(',', ':')))
         if self.redirects:
             self.redirect_next()
 

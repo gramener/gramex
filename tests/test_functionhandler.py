@@ -36,10 +36,12 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/async/args', text=text, **etag)
         self.check('/func/async/args-split', text=text, **etag)
         self.check('/func/async/http', text='{"args": [["1", "2"]], "kwargs": {}}', **etag)
-        self.check('/func/async/http2',
-                   text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}', **etag)
-        self.check('/func/async/calc',
-                   text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]', **etag)
+        self.check(
+            '/func/async/http2',
+            text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}', **etag)
+        self.check(
+            '/func/async/calc',
+            text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]', **etag)
 
     def test_json(self):
         self.check('/func/numpytypes')

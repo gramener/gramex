@@ -54,24 +54,26 @@ class TestProxyHandler(TestWebSocketHandler):
             }, result['args'])
 
         # PATCH method does not work because /httpbin does not support it
-        r = self.check('/proxy/httpbin/', session=session, method='patch',
-                       request_headers={'X-Xsrftoken': xsrf_token},
-                       code=METHOD_NOT_ALLOWED,
-                       headers={
-                           'X-Proxy-Url': True,
-                           'X-Proxy-Custom': 'custom-header',
-                           'X-Modify': 'PATCH',
-                       })
+        r = self.check(
+            '/proxy/httpbin/', session=session, method='patch',
+            request_headers={'X-Xsrftoken': xsrf_token},
+            code=METHOD_NOT_ALLOWED,
+            headers={
+                'X-Proxy-Url': True,
+                'X-Proxy-Custom': 'custom-header',
+                'X-Modify': 'PATCH',
+            })
 
         # DELETE method does not work because /proxy/httpbin/ does not support it
-        r = self.check('/proxy/httpbin/', method='delete', session=session,
-                       request_headers={'X-Xsrftoken': xsrf_token},
-                       code=METHOD_NOT_ALLOWED,
-                       headers={
-                           'X-Proxy-Url': False,
-                           'X-Proxy-Custom': False,
-                           'X-Modify': False,
-                       })
+        r = self.check(
+            '/proxy/httpbin/', method='delete', session=session,
+            request_headers={'X-Xsrftoken': xsrf_token},
+            code=METHOD_NOT_ALLOWED,
+            headers={
+                'X-Proxy-Url': False,
+                'X-Proxy-Custom': False,
+                'X-Modify': False,
+            })
 
         # URL pattern wildcards
         result = self.check('/proxy/httpbinprefix/suffix', session=session).json()

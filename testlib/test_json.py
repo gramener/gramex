@@ -45,8 +45,9 @@ class TestJSON(unittest.TestCase):
             json.dumps(result, sort_keys=True))
 
     def test_decoder(self):
-        date = datetime.datetime(year=2001, month=2, day=3, hour=4, minute=5, second=6,
-                                 microsecond=0, tzinfo=dateutil.tz.tzutc())
+        date = datetime.datetime(
+            year=2001, month=2, day=3, hour=4, minute=5, second=6,
+            microsecond=0, tzinfo=dateutil.tz.tzutc())
         datestr = '"2001-02-03T04:05:06+0000"'
         eq_(json.loads(datestr, cls=CustomJSONDecoder), date)
 

@@ -32,9 +32,10 @@ class AuthHandler(BaseHandler):
     _RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
     @classmethod
-    def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, recaptcha=None,
-              rules=None, **kwargs):
+    def setup(
+            cls, prepare=None, action=None, delay=None, session_expiry=None,
+            session_inactive=None, user_key='user', lookup=None, recaptcha=None,
+            rules=None, **kwargs):
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])

@@ -68,7 +68,7 @@ def consolidate():
 
             # uname is a list. Convert into system data
             (row['system'], row['node'], row['release'], row['version'],
-             row['machine'], row['processor']) = row.pop('uname')
+                row['machine'], row['processor']) = row.pop('uname')
 
             row_data = row.pop('data')
             row_data = json.loads(row_data) if row_data else {}     # parse. Ignore missing data
@@ -98,12 +98,12 @@ def consolidate():
         engine.execute('''
             CREATE TABLE mau as
                 SELECT month, COUNT(DISTINCT node) as nodes FROM (
-                  SELECT SUBSTR(date, 0, 8) AS month, node, COUNT(node) AS times
-                  FROM logs
-                  WHERE node NOT LIKE 'travis-%'      /* Travis */
-                  AND node NOT LIKE 'runner-%'        /* Gitlab CI */
-                  AND release NOT LIKE '%-linuxkit'   /* Docker */
-                  GROUP BY month, node
+                    SELECT SUBSTR(date, 0, 8) AS month, node, COUNT(node) AS times
+                    FROM logs
+                    WHERE node NOT LIKE 'travis-%'      /* Travis */
+                    AND node NOT LIKE 'runner-%'        /* Gitlab CI */
+                    AND release NOT LIKE '%-linuxkit'   /* Docker */
+                    GROUP BY month, node
                 ) WHERE times > 2                     /* CI nodes startup/shutdown only once */
                 GROUP BY month
         ''')

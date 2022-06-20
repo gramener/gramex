@@ -38,16 +38,16 @@ class FileHandler(BaseHandler):
     :arg string path: Can be one of these:
 
         - The filename to serve. For all files matching the pattern, this
-          filename is returned.
+            filename is returned.
         - The root directory from which files are served. The first parameter of
-          the URL pattern is the file path under this directory. Relative paths
-          are specified from where gramex was run.
+            the URL pattern is the file path under this directory. Relative paths
+            are specified from where gramex was run.
         - A wildcard path where `*` is replaced by the URL pattern's first
-          `(..)` group.
+            `(..)` group.
         - A list of files to serve. These files are concatenated and served one
-          after the other.
+            after the other.
         - A dict of {regex: path}. If the URL matches the regex, the path is
-          served. The path is string formatted using the regex capture groups
+            served. The path is string formatted using the regex capture groups
 
     :arg string default_filename: If the URL maps to a directory, this filename
         is displayed by default. For example, ``index.html`` or ``README.md``.
@@ -100,8 +100,9 @@ class FileHandler(BaseHandler):
     '''
 
     @classmethod
-    def setup(cls, path, default_filename=None, index=None, index_template=None,
-              headers={}, default={}, **kwargs):
+    def setup(
+            cls, path, default_filename=None, index=None, index_template=None,
+            headers={}, default={}, **kwargs):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required

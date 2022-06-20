@@ -235,8 +235,8 @@ def alert(conf: dict) -> None:
         schedule['function'] = create_alert(name, alert)
         if schedule['function'] is not None:
             try:
-                _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
-                                              ioloop=info.main_ioloop)
+                _cache[_key] = scheduler.Task(
+                    name, schedule, info.threadpool, ioloop=info.main_ioloop)
                 info.alert[name] = _cache[_key]
             except Exception:
                 app_log.exception(f'Failed to initialize alert: {name}')
@@ -678,8 +678,9 @@ def create_alert(name, alert):
             elif hasattr(each_data, 'iterrows'):
                 each += list(each_data.iterrows())
             else:
-                raise ValueError(f'alert: {name}: each: data.{alert["each"]} must be ' +
-                                 'dict/list/DF, not {type(each_data)}')
+                raise ValueError(
+                    f'alert: {name}: each: data.{alert["each"]} must be ' +
+                    'dict/list/DF, not {type(each_data)}')
         else:
             each.append((0, None))
 
@@ -724,9 +725,10 @@ def create_alert(name, alert):
                         bytestoread = 80
                         first_line = temp_file.read(bytestoread)
                     # TODO: let admin know that the image was not processed
-                    app_log.error(f'alert: {name}: {cid}: {urldata["r"].status_code} '
-                                  f'({urldata["content_type"]}) not an image: {urlpath}\n'
-                                  f'{first_line!r}')
+                    app_log.error(
+                        f'alert: {name}: {cid}: {urldata["r"].status_code} '
+                        f'({urldata["content_type"]}) not an image: {urlpath}\n'
+                        f'{first_line!r}')
         if 'attachments' in alert:
             mail['attachments'] = [
                 urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
@@ -828,12 +830,12 @@ def _sort_url_patterns(entry):
     '''
     name, spec = entry
     pattern = spec.get('pattern', '')
+    wildcards = pattern.count('*') + pattern.count('+')
     # URLs are resolved in this order:
     return (
         spec.get('priority', 0),    # by explicity priority: parameter
         pattern.count('/'),         # by path depth (deeper paths are higher)
-        -(pattern.count('*') +
-          pattern.count('+')),      # by wildcards (wildcards get lower priority)
+        -wildcards,                 # by wildcards (wildcards get lower priority)
     )
     # TODO: patterns like (js/.*|css/.*|img/.*) will have path depth of 3.
     # But this should really count only as 1.
@@ -884,8 +886,9 @@ def _get_cache_key(conf, name):
             key_getters.append(
                 f'request.cookies[{val}].value if {val} in request.cookies else missing')
         elif parts[0].startswith('user'):
-            key_getters.append(f'str(handler.current_user.get({val}, missing)) '
-                               'if handler.current_user else missing')
+            key_getters.append(
+                f'str(handler.current_user.get({val}, missing)) '
+                'if handler.current_user else missing')
         elif parts[0].startswith('arg'):
             key_getters.append(f'argsep.join(handler.args.get({val}, [missing]))')
         else:
@@ -960,8 +963,9 @@ def _cache_generator(conf, name):
     # This method will be added to the handler class as "cache", and called as
     # self.cache()
     def get_cachefile(handler):
-        return cachefile_class(key=url_cache_key(handler), store=store,
-                               handler=handler, expire=cache_expiry_duration,
-                               statuses=set(cache_statuses))
+        return cachefile_class(
+            key=url_cache_key(handler), store=store,
+            handler=handler, expire=cache_expiry_duration,
+            statuses=set(cache_statuses))
 
     return get_cachefile

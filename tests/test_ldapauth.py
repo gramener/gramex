@@ -51,16 +51,19 @@ class TestLDAPAuth(TestGramex):
             self.assertEqual(r.status_code, OK)
 
     def test_ldap_wrong_user(self):
-        self.check('wrong-user', 'password', url='/auth/ldap', status_code=UNAUTHORIZED,
-                   headers={'Auth-Error': 'auth'})
+        self.check(
+            'wrong-user', 'password', url='/auth/ldap', status_code=UNAUTHORIZED,
+            headers={'Auth-Error': 'auth'})
 
     def test_ldap_wrong_password(self):
-        self.check('admin', 'wrong-password', url='/auth/ldap', status_code=UNAUTHORIZED,
-                   headers={'Auth-Error': 'auth'})
+        self.check(
+            'admin', 'wrong-password', url='/auth/ldap', status_code=UNAUTHORIZED,
+            headers={'Auth-Error': 'auth'})
 
     def test_ldap_search(self):
-        r = self.check('euler', 'password', url='/auth/ldap2-search', status_code=OK,
-                       redirect='/auth/session')
+        r = self.check(
+            'euler', 'password', url='/auth/ldap2-search', status_code=OK,
+            redirect='/auth/session')
         result = r.json()
         self.assertEqual(result['user']['attributes']['mail'], ['euler@ldap.forumsys.com'])
         self.assertIn('email:', result['user']['id'])
@@ -68,17 +71,21 @@ class TestLDAPAuth(TestGramex):
         self.check('euler', 'wrong-password', url='/auth/ldap2-search', status_code=UNAUTHORIZED)
 
     def test_ldap_bind(self):
-        self.check('gauss@ldap.forumsys.com', 'password', url='/auth/ldap2-bind',
-                   status_code=OK)
+        self.check(
+            'gauss@ldap.forumsys.com', 'password', url='/auth/ldap2-bind',
+            status_code=OK)
 
     def test_ldap_bind_wrong_bind(self):
-        self.check('anything', 'password', url='/auth/ldap2-bind-wrong-bind',
-                   status_code=UNAUTHORIZED, headers={'Auth-Error': 'bind'})
+        self.check(
+            'anything', 'password', url='/auth/ldap2-bind-wrong-bind',
+            status_code=UNAUTHORIZED, headers={'Auth-Error': 'bind'})
 
     def test_ldap_bind_wrong_search(self):
-        self.check('nonexistent@ldap.forumsys.com', 'password', url='/auth/ldap2-bind',
-                   status_code=UNAUTHORIZED, headers={'Auth-Error': 'search'})
+        self.check(
+            'nonexistent@ldap.forumsys.com', 'password', url='/auth/ldap2-bind',
+            status_code=UNAUTHORIZED, headers={'Auth-Error': 'search'})
 
     def test_ldap_bind_wrong_password(self):
-        self.check('gauss@ldap.forumsys.com', 'wrong-password', url='/auth/ldap2-bind',
-                   status_code=UNAUTHORIZED, headers={'Auth-Error': 'auth'})
+        self.check(
+            'gauss@ldap.forumsys.com', 'wrong-password', url='/auth/ldap2-bind',
+            status_code=UNAUTHORIZED, headers={'Auth-Error': 'auth'})

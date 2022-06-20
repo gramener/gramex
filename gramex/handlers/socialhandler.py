@@ -99,8 +99,7 @@ class SocialHandler(BaseHandler):
         Returns an access token / key / secret with the following priority:
 
         1. If YAML config specifies "persist" for the token, get it from the last
-           stored value. If none is stored, save and use the current session's
-           token
+            stored value. If none is stored, save and use the current session's token
         2. If YAML config specifies a token, use it
         3. If YAML config does NOT specify a token, use current sessions' token
 

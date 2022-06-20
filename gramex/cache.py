@@ -168,8 +168,9 @@ def open(
             _cache[key] = cached
         except ValueError:
             size = sys.getsizeof(data)
-            app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
-                              'Increase cache.memory.size in gramex.yaml')
+            app_log.exception(
+                f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
+                'Increase cache.memory.size in gramex.yaml')
         except Exception:
             app_log.exception(f'gramex.cache.open: {type(_cache)} cannot cache {data!r}')
 
@@ -202,8 +203,12 @@ def stat(path: str) -> Tuple[Union[float, None], Union[int, None]]:
     return (None, None)
 
 
-def save(data: pd.DataFrame, url: str, rel: bool = False, callback: Union[str, Callable] = None,
-         **kwargs: dict) -> None:
+def save(
+        data: pd.DataFrame,
+        url: str,
+        rel: bool = False,
+        callback: Union[str, Callable] = None,
+        **kwargs: dict) -> None:
     '''
     Saves a Pandas DataFrame into file at url.
 
@@ -212,9 +217,6 @@ def save(data: pd.DataFrame, url: str, rel: bool = False, callback: Union[str, C
 
         >>> type(data)
         <class 'pandas.core.frame.DataFrame'>
-        >>> data
-           a  b
-        0  1  2
         >>> save(data, 'sample.csv')
 
     Parameters:
@@ -247,10 +249,10 @@ def query(sql, engine, state=None, **kwargs):
     The state can be specified in 3 ways:
 
     1. A string. This must be as a lightweight SQL query. If the result changes,
-       the original SQL query is re-run.
+        the original SQL query is re-run.
     2. A function. This is called to determine the state of the database.
     3. A list of tables. This list of ["db.table"] names specifies which tables
-       to watch for. This is currently experimental.
+        to watch for. This is currently experimental.
     4. `None`: the default. The query is always re-run and not cached.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
@@ -1120,8 +1122,8 @@ def read_excel(
     if not any((range, name, table)):
         # Pandas defaults to xlrd, but we prefer openpyxl
         kwargs.setdefault('engine', 'openpyxl')
-        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is ... else header,
-                             **kwargs)
+        return pd.read_excel(
+            io, sheet_name=sheet_name, header=0 if header is ... else header, **kwargs)
 
     import openpyxl
     wb = openpyxl.load_workbook(io, data_only=True)
@@ -1285,20 +1287,24 @@ def _table_status(engine, tables):
         if dialect == 'mysql':
             # https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html
             # Works only on MySQL 5.7 and above
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
-                 _wheres('table_schema', 'table_name', db, tables))
+            q = (
+                'SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
+                _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'snowflake':
             # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
-            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec
-                 _wheres('table_schema', 'table_name', db, tables))
+            q = (
+                'SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec
+                _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +    # nosec
-                 _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
+            q = (
+                'SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +    # nosec
+                _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +  # nosec
-                 _wheres('schemaname', 'relname', 'public', tables))
+            q = (
+                'SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +  # nosec
+                _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
                 raise KeyError(f'gramex.cache.query: does not support memory sqlite "{dialect}"')

@@ -128,8 +128,8 @@ def _rgb(color):
     .. deprecated:: 0.1
         Use :func:`rgba` instead
     """
-    warnings.warn('Use color.rgba instead of color._rgb',
-                  FutureWarning, stacklevel=2)
+    warnings.warn(
+        'Use color.rgba instead of color._rgb', FutureWarning, stacklevel=2)
     return (int(color[-6:-4], BASE_16), int(color[-4:-2], BASE_16),
             int(color[-2:], BASE_16))
 
@@ -252,19 +252,19 @@ def distinct(count):
     Notes:
 
     - Colour conversion between RGB and HCL are available on
-      `color.py <http://2sn.org/python/color.py>`_ and
-      `python-colormath <http://python-colormath.readthedocs.org/>`_
+        `color.py <http://2sn.org/python/color.py>`_ and
+        `python-colormath <http://python-colormath.readthedocs.org/>`_
     - People seem to struggle with about
-      `26 colours
-      <http://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf>`_
-      so this may be an upper bound
+        `26 colours
+        <http://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf>`_
+        so this may be an upper bound
     - A good starting point for resources is on
-      `stackoverflow <http://stackoverflow.com/q/470690/100904>`_ and the
-      `graphic design <http://graphicdesign.stackexchange.com/q/3682>`_
-      stackexchange
+        `stackoverflow <http://stackoverflow.com/q/470690/100904>`_ and the
+        `graphic design <http://graphicdesign.stackexchange.com/q/3682>`_
+        stackexchange
     - More palettes are available from
-      `Kenneth Kelly (22) <http://www.iscc.org/pdf/PC54_1724_001.pdf>`_ and
-      `ggplot2 <http://learnr.wordpress.com/2009/04/15/ggplot2/>`_
+        `Kenneth Kelly (22) <http://www.iscc.org/pdf/PC54_1724_001.pdf>`_ and
+        `ggplot2 <http://learnr.wordpress.com/2009/04/15/ggplot2/>`_
     - See also: http://epub.wu.ac.at/1692/1/document.pdf
     """
     tens_count = 10
@@ -442,23 +442,27 @@ def rgba(color):
     result = []
     if color.startswith('#'):
         if len(color) == BASE_9:
-            result = [int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
-                      int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
-                      int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255),
-                      int(color[BASE_7:BASE_9], BASE_16) / float(BASE_255)]
+            result = [
+                int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
+                int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
+                int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255),
+                int(color[BASE_7:BASE_9], BASE_16) / float(BASE_255)]
         elif len(color) == BASE_7:
-            result = [int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
-                      int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
-                      int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255)]
+            result = [
+                int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
+                int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
+                int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255)]
         elif len(color) == BASE_5:
-            result = [int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
-                      int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
-                      int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15),
-                      int(color[BASE_4:BASE_5], BASE_16) / float(BASE_15)]
+            result = [
+                int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
+                int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
+                int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15),
+                int(color[BASE_4:BASE_5], BASE_16) / float(BASE_15)]
         elif len(color) == BASE_4:
-            result = [int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
-                      int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
-                      int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15)]
+            result = [
+                int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
+                int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
+                int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15)]
         else:
             result = []
 

@@ -166,8 +166,8 @@ class TestRedisStore(TestJSONStore):
             raise SkipTest('No redis server at %s' % host)
 
         cls.plainstore = RedisStore(path=host, flush=None)
-        cls.store = RedisStore(path='%s:6379' % host, flush=None,
-                               purge_keys=BaseMixin._purge_keys)
+        cls.store = RedisStore(
+            path='%s:6379' % host, flush=None, purge_keys=BaseMixin._purge_keys)
         cls.store2 = RedisStore(path='%s:6379:0' % host, flush=None,
                                 purge_keys=BaseMixin._purge_keys)
 

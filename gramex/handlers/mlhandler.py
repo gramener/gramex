@@ -55,8 +55,8 @@ class MLHandler(FormHandler):
     @classmethod
     def setup(cls, data=None, model={}, config_dir='', template=DEFAULT_TEMPLATE, **kwargs):
         if not config_dir:
-            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                                 slugify(cls.name))
+            config_dir = op.join(
+                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler', slugify(cls.name))
         cls.store = ml.ModelStore(config_dir)
 
         cls.template = template
@@ -104,8 +104,8 @@ class MLHandler(FormHandler):
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
-            cls.model = get_model(mclass, model_params, data=data, cats=cats,
-                                  nums=nums, target_col=target_col)
+            cls.model = get_model(
+                mclass, model_params, data=data, cats=cats, nums=nums, target_col=target_col)
             # train the model
             if issubclass(cls.model.__class__, TransformerMixin):
                 target = None

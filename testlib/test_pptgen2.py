@@ -239,9 +239,10 @@ class TestPPTGen(TestCase):
         # Rules are specified as rule-name={shape: {rule}, ...}
         data = {'x': [2, 3]}
         rule1 = {'slide-number': 1, 'Title 1': {'width': 10}}
-        rule2 = {'slide-number': {'expr': 'x'},
-                 'Title 1': {'width': 20},
-                 'Rectangle 1': {'width': 20}}
+        rule2 = {
+            'slide-number': {'expr': 'x'},
+            'Title 1': {'width': 20},
+            'Rectangle 1': {'width': 20}}
         prs = pptgen(source=self.input, only=slides, data=data, rules=[rule1, rule2])
         eq_(self.get_shape(prs.slides[0].shapes, 'Title 1').width, pptx.util.Inches(10))
         eq_(self.get_shape(prs.slides[1].shapes, 'Title 1').width, pptx.util.Inches(20))
@@ -330,12 +331,15 @@ class TestPPTGen(TestCase):
         eq_(self.get_shape(prs.slides[0].shapes, 'Chart 1').left, pptx.util.Inches(5))
 
     def test_name_position(self, slides=3):
-        pos = {'width': 4, 'height': 3, 'top': 2, 'left': 1, 'rotation': 30,
-               'name': {'expr': 'shape.name + " X"'}}
-        add = {'add-width': -0.1, 'add-height': 0.05, 'add-top': 0.3, 'add-left': -0.1,
-               'add-rotation': 30, 'name': {'expr': 'shape.name + " X"'}}
-        for name in ['Rectangle 1', 'TextBox 1', 'Picture 1', 'Chart 1', 'Group 1', 'Table 1',
-                     'Diagram 1', 'Audio 1', 'Freeform 1', 'Word Art 1']:
+        pos = {
+            'width': 4, 'height': 3, 'top': 2, 'left': 1, 'rotation': 30,
+            'name': {'expr': 'shape.name + " X"'}}
+        add = {
+            'add-width': -0.1, 'add-height': 0.05, 'add-top': 0.3, 'add-left': -0.1,
+            'add-rotation': 30, 'name': {'expr': 'shape.name + " X"'}}
+        for name in [
+                'Rectangle 1', 'TextBox 1', 'Picture 1', 'Chart 1', 'Group 1', 'Table 1',
+                'Diagram 1', 'Audio 1', 'Freeform 1', 'Word Art 1']:
             # 'Zoom 1', 'Equation 1' are not supported by python-pptx
             prs = pptgen(source=self.input, only=slides, rules=[{name: pos}])
             shp = self.get_shape(prs.slides[0].shapes, name + ' X')
@@ -384,8 +388,8 @@ class TestPPTGen(TestCase):
         width = shape.width
         for img, aspect in (('small-image.jpg', 1), ('small-image.png', 2)):
             path = os.path.join(folder, img)
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image': path}}])
+            prs = pptgen(
+                source=self.input, only=slides, rules=[{'Picture 1': {'image': path}}])
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             rid = shape._pic.blipFill.blip.rEmbed
             part = shape.part.related_parts[rid]
@@ -399,14 +403,14 @@ class TestPPTGen(TestCase):
         aspect = shape.width / shape.height
         for size in (3, '3 inches', '7.62 cm', '76.2 mm', '216 pt', '2743200 emu', '21600 cp'):
             # image-width preserves aspect ratio
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image-width': size}}])
+            prs = pptgen(
+                source=self.input, only=slides, rules=[{'Picture 1': {'image-width': size}}])
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             eq_(shape.width, pptx.util.Inches(3))
             self.assertAlmostEqual(shape.width / shape.height, aspect, places=5)
             # image-height preserves aspect ratio
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image-height': size}}])
+            prs = pptgen(
+                source=self.input, only=slides, rules=[{'Picture 1': {'image-height': size}}])
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             eq_(shape.height, pptx.util.Inches(3))
             self.assertAlmostEqual(shape.width / shape.height, aspect, places=5)
@@ -701,19 +705,23 @@ class TestPPTGen(TestCase):
             # 'end': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=endshow'},
             'back': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=lastslideviewed'},
             'noaction': {'target': '', 'action': 'ppaction://noaction'},
-            '1': {'target': self.prs.slides[1 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
-            '2': {'target': self.prs.slides[2 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
-            '4': {'target': self.prs.slides[4 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
+            '1': {
+                'target': self.prs.slides[1 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump'},
+            '2': {
+                'target': self.prs.slides[2 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump'},
+            '4': {
+                'target': self.prs.slides[4 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump'},
             'https://t.co/': {'target': 'https://t.co/', 'action': None},
-            'file.pptx': {'target': 'file.pptx',
-                          'action': 'ppaction://hlinkpres?slideindex=1&slidetitle='},
+            'file.pptx': {
+                'target': 'file.pptx',
+                'action': 'ppaction://hlinkpres?slideindex=1&slidetitle='},
             'file.xlsx': {'target': 'file.xlsx', 'action': 'ppaction://hlinkfile'},
         }
-        shape_rule = {prefix + val: {key: val}
-                      for val in vals for prefix, key in prefixes.items()}
+        shape_rule = {
+            prefix + val: {key: val} for val in vals for prefix, key in prefixes.items()}
         text_rule = {prefix + 'Text': {
             'replace': {val + '$': f'<a {key}="{val}">{val}</a>' for val in vals}
         } for prefix, key in prefixes.items()}
@@ -752,12 +760,13 @@ class TestPPTGen(TestCase):
     def test_table(self, slides=9):
         data = self.data.head(10)       # The 10th row has NaNs. Ensure the row is included
         headers = ['<a color="red">देश</a>', 'city', '<p>prod</p><p>uct</p>', 'Sales']
-        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr',
-                     data={'data': data},
-                     rules=[
-                         {'Table 1': {'table': {'data': 'data', 'header-row': headers}}},
-                         {'Table 2': {'table': {'data': 'data', 'width': 2}}},
-                     ])
+        prs = pptgen(
+            source=self.input, target=self.output, only=slides, mode='expr',
+            data={'data': data},
+            rules=[
+                {'Table 1': {'table': {'data': 'data', 'header-row': headers}}},
+                {'Table 2': {'table': {'data': 'data', 'width': 2}}},
+            ])
         for row_offset, shape_name in ((1, 'Table 1'), (0, 'Table 2')):
             table = self.get_shape(prs.slides[0].shapes, shape_name).table
             for i, (index, row) in enumerate(data.iterrows()):
@@ -1227,8 +1236,8 @@ class TestPPTGen(TestCase):
             ('slidesense-gramex.yaml', 'slidesense-test'),
         ):
             self.remove_output()
-            commandline([os.path.join(folder, args[0]), *args[1:],
-                         f'--target={target}', '--no-open'])
+            commandline([
+                os.path.join(folder, args[0]), *args[1:], f'--target={target}', '--no-open'])
             ok_(os.path.exists(target))
             ok_(not os.path.exists(non_target))
 

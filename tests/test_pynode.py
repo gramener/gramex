@@ -23,12 +23,14 @@ class TestPyNode(TestGramex):
         self.runjs('return require("lodash").repeat(x, y)', 'x.x.x.x.', x='x.', y=4, lib='lodash')
 
     def test_lib_dayjs(self):
-        self.runjs('return require("dayjs")(d).format("D-M-YY")', '1-2-21', d='2021-02-01',
-                   lib='dayjs')
+        self.runjs(
+            'return require("dayjs")(d).format("D-M-YY")', '1-2-21', d='2021-02-01',
+            lib='dayjs')
 
     def test_lib_moment(self):
-        self.runjs('return require("moment")(d).format("D-M-YY")', '1-2-21', d='2021-02-01',
-                   lib='moment')
+        self.runjs(
+            'return require("moment")(d).format("D-M-YY")', '1-2-21', d='2021-02-01',
+            lib='moment')
 
     def test_lib_numeraljs(self):
         self.runjs('return require("numeraljs")(d)', {'_value': 2300}, d='2,300', lib='numeraljs')

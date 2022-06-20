@@ -24,16 +24,17 @@ from typing import Union, List, Dict
 from . import commands
 
 
-def pptgen(source: Union[str, pptx.presentation.Presentation],
-           rules: List[dict] = [],
-           data: dict = {},
-           target: str = None,
-           only: Union[int, List[int]] = None,
-           register: Dict[str, str] = {},
-           unit: str = 'Inches',
-           mode: str = 'literal',
-           handler=None,
-           **config) -> pptx.presentation.Presentation:
+def pptgen(
+        source: Union[str, pptx.presentation.Presentation],
+        rules: List[dict] = [],
+        data: dict = {},
+        target: str = None,
+        only: Union[int, List[int]] = None,
+        register: Dict[str, str] = {},
+        unit: str = 'Inches',
+        mode: str = 'literal',
+        handler=None,
+        **config) -> pptx.presentation.Presentation:
     '''
     Process a configuration. This loads a Presentation from source, applies the
     (optional) configuration changes and (optionally) saves it into target. Returns the modified
@@ -75,8 +76,9 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         slides_in_rule = tuple(slide_filter(slides, rule, data))
         # If no slides matched, warn the user
         if len(slides_in_rule) == 0:
-            app_log.warn(f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
-                         f'slide-title: {rule.get("slide-title")}')
+            app_log.warn(
+                f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
+                f'slide-title: {rule.get("slide-title")}')
             continue
         # Copy slides after the last mapped position of the last slide in this rule
         max_index = max(index for index, slide in slides_in_rule)
@@ -150,8 +152,8 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                     el = copy.deepcopy(shape.element)
                     shape.element.addnext(el)
                     shape = pptx.shapes.autoshape.Shape(el, shape._parent)
-                clones.append(AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape,
-                                       parent=parent_clone))
+                clones.append(AttrDict(
+                    pos=i, key=clone_key, val=clone_val, shape=shape, parent=parent_clone))
             # Run commands in the spec on all cloned shapes
             is_group = shape.element.tag.endswith('}grpSp')
             for clone in clones:

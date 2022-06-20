@@ -668,8 +668,9 @@ class TestPPTGen(TestCase):
         eq_(len(target.slides), 1)
         gradient = matplotlib.cm.get_cmap(color)
         cross = pptgen.utils.scale(data.pivot(row, column, value))
-        colors_ex = [white if np.isnan(x) else matplotlib.colors.to_hex(gradient(x))
-                     for x in cross.flatten()]
+        colors_ex = [
+            white if np.isnan(x) else matplotlib.colors.to_hex(gradient(x))
+            for x in cross.flatten()]
         label_rows = np.sort(data[row].unique())
         label_cols = np.sort(data[column].unique())
         labels = label_cols
@@ -807,13 +808,13 @@ class TestPPTGen(TestCase):
                 frmt = pptgen.utils.decimals(weekly_mean.values)
                 weekly_mean = weekly_mean.map(('{:,.%df}' % frmt).format).tolist()
             if left:
-                weekday_mean = pd.Series([data['column'][(x - startweekday) % 7::7].mean()
-                                         for x in range(7)])
+                weekday_mean = pd.Series(
+                    [data['column'][(x - startweekday) % 7::7].mean() for x in range(7)])
                 frmt = pptgen.utils.decimals(weekday_mean.values)
                 weekday_mean = weekday_mean.map(('{:,.%df}' % frmt).format).tolist()
             gradient = matplotlib.cm.get_cmap('RdYlGn')
-            colors_ex = [matplotlib.colors.to_hex(gradient(x))
-                         for x in pptgen.utils.scale(data['column'])]
+            colors_ex = [
+                matplotlib.colors.to_hex(gradient(x)) for x in pptgen.utils.scale(data['column'])]
             texts_ppt, colors_ppt, toplabels_ppt, leftlabels_ppt = [], [], [], []
             for shape in target.slides[0].shapes:
                 # Rect cells text and color

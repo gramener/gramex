@@ -89,8 +89,9 @@ class AuthBase(TestGramex):
             headers['Referer'] = referer
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None, referer=None,
-              headers={}, post_args={}):
+    def login(
+            self, user, password, query_next=None, header_next=None, referer=None,
+            headers={}, post_args={}):
         params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
         tree = self.check_css(r.text, ('h1', 'Auth'))
@@ -103,8 +104,9 @@ class AuthBase(TestGramex):
         # Submitting the correct password redirects
         if headers is not None:
             params['headers'].update(headers)
-        return self.session.post(self.url, timeout=self.LOGIN_TIMEOUT,
-                                 data=data, headers=params['headers'])
+        return self.session.post(
+            self.url, timeout=self.LOGIN_TIMEOUT,
+            data=data, headers=params['headers'])
 
     def logout(self, query_next=None, header_next=None):
         url = server.base_url + '/auth/logout'
@@ -852,7 +854,8 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')
-        self.check('/auth/unauthorized-template', code=FORBIDDEN,
-                   text='403-template', session=self.session)
+        self.check(
+            '/auth/unauthorized-template', code=FORBIDDEN,
+            text='403-template', session=self.session)
         self.initialize('/auth/unauthorized-template', user='beta')
         self.check('/auth/unauthorized-template', path='dir/alpha.txt', session=self.session)

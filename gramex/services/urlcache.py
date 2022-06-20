@@ -3,7 +3,7 @@ The CacheFile object exposes a get, wrap and close interface to handlers.
 
 - ``.get()`` reads all data against the key
 - ``.wrap(handler)`` is used to wrap the ``.write()`` method to append into a
-  write queue, and the ``.on_finish()`` method to save the result.
+    write queue, and the ``.on_finish()`` method to save the result.
 
 Each type of store has a separate CacheFile. (MemoryCacheFile, DiskCacheFile,
 etc.) The parent CacheFile implements the no-caching behaviour.
@@ -68,8 +68,9 @@ class MemoryCacheFile(CacheFile):
 
         def finish(chunk=None):
             # Save the headers and body originally written
-            headers = [[name, value] for name, value in handler._headers.get_all()
-                       if name not in ignore_headers]
+            headers = [
+                [name, value] for name, value in handler._headers.get_all()
+                if name not in ignore_headers]
             body = b''.join(handler._write_buffer)
 
             # Call the original finish
@@ -105,8 +106,9 @@ class RedisCacheFile(CacheFile):
 
         def finish(chunk=None):
             # Save the headers and body originally written
-            headers = [[name, value] for name, value in handler._headers.get_all()
-                       if name not in ignore_headers]
+            headers = [
+                [name, value] for name, value in handler._headers.get_all()
+                if name not in ignore_headers]
             body = b''.join(handler._write_buffer)
 
             # Call the original finish

@@ -57,8 +57,9 @@ class TestUploadHandler(TestGramex):
         # Second upload creates a copy of the file with a new filename
         up(files={'text': open('userdata.csv', 'rb')}, names=['userdata.1.csv'], data=data)
         # Multiple uploads
-        up(files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
-           names=['userdata.2.csv', 'actors.csv'])
+        up(
+            files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
+            names=['userdata.2.csv', 'actors.csv'])
         # Filename with no extension, hence no MIME type
         up(files={'unknown': ('file', open('actors.csv', 'rb'))}, names=['file'])
         # Save uploaded file as specific filename
@@ -66,8 +67,9 @@ class TestUploadHandler(TestGramex):
         # Save file under a sub-directory
         up(files={'text': open('actors.csv', 'rb')}, names=['高/α'], data={'save': '高/α'})
         # Multiple uploads with renames
-        up(files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
-           names=['β', 'γ'], data={'save': ['β', 'γ']})
+        up(
+            files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
+            names=['β', 'γ'], data={'save': ['β', 'γ']})
         # Delete file
         up(files={}, data={'rm': 'file'})
 

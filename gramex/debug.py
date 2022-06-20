@@ -68,8 +68,8 @@ def print(*args, **kwargs):             # noqa
         <file>(line).<function>: hello world
         >>> print(x=1, y=2)                             # Use kwargs to print variable names
         <file>(line).<function>:
-         .. x = 1
-         .. y = 2
+        .. x = 1
+        .. y = 2
 
     It automatically pretty-prints complex variables.
     '''

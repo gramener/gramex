@@ -289,14 +289,12 @@ class TestConfig(unittest.TestCase):
         eq_(
             [key for key, val, node in result],
             list('cdbehigfjak'))
-        eq_(
-            [val for key, val, node in result],
-            [o.a.b.c, o.a.b.d, o.a.b, o.a.e, o.a.f.g.h, o.a.f.g.i, o.a.f.g,
-             o.a.f, o.a.j, o.a, o.k])
-        eq_(
-            [node for key, val, node in result],
-            [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
-             o.a, o.a, o, o])
+        eq_([val for key, val, node in result], [
+            o.a.b.c, o.a.b.d, o.a.b, o.a.e, o.a.f.g.h, o.a.f.g.i, o.a.f.g,
+            o.a.f, o.a.j, o.a, o.k])
+        eq_([node for key, val, node in result], [
+            o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
+            o.a, o.a, o, o])
 
     def test_walk_list(self):
         # Test gramex.config.walk with lists
@@ -320,11 +318,11 @@ class TestConfig(unittest.TestCase):
                 x: 3
         ''', Loader=ConfigYAMLLoader)
         result = list(walk(o))
-        eq_(
-            [('x', 1), (0, {'x': 1}),
-             ('x', 2), (1, {'x': 2}),
-             ('x', 3), (2, {'x': 3})],
-            [(key, val) for key, val, node in result])
+        eq_([
+            ('x', 1), (0, {'x': 1}),
+            ('x', 2), (1, {'x': 2}),
+            ('x', 3), (2, {'x': 3})
+        ], [(key, val) for key, val, node in result])
 
     def test_merge(self):
         # Test gramex.config.merge

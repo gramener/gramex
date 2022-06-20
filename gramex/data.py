@@ -217,8 +217,9 @@ def filter(
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['filter']
-        return method(url=url, controls=controls, args=args, meta=meta, query=query,
-                      columns=columns, **kwargs)
+        return method(
+            url=url, controls=controls, args=args, meta=meta, query=query,
+            columns=columns, **kwargs)
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
         state = kwargs.pop('state', None)
@@ -275,26 +276,27 @@ def delete(
     url, table, ext, query, queryfile, kwargs = _replace(
         engine, args, url, table, ext, query, queryfile, **kwargs)
     if engine == 'dataframe':
-        data_filtered = _filter_frame(url, meta=meta, controls=controls,
-                                      args=args, source='delete', id=id)
+        data_filtered = _filter_frame(
+            url, meta=meta, controls=controls, args=args, source='delete', id=id)
         return len(data_filtered)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
-        data_filtered = _filter_frame(data, meta=meta, controls=controls,
-                                      args=args, source='delete', id=id)
+        data_filtered = _filter_frame(
+            data, meta=meta, controls=controls, args=args, source='delete', id=id)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_filtered)
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['delete']
-        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
-                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
+        return method(
+            url=url, meta=meta, controls=controls, args=args, id=id, table=table,
+            columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
-                          source='delete', id=id)
+        return _filter_db(
+            engine, table, meta=meta, controls=controls, args=args, source='delete', id=id)
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
@@ -337,14 +339,15 @@ def update(
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['update']
-        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
-                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
+        return method(
+            url=url, meta=meta, controls=controls, args=args, id=id, table=table,
+            columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
-                          source='update', id=id)
+        return _filter_db(
+            engine, table, meta=meta, controls=controls, args=args, source='update', id=id)
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
@@ -1369,8 +1372,9 @@ def _filter_db(
                 cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
             # Apply filters
-            query = _filter_db_col(query, query.where, key, col, op, vals,
-                                   cols[col], cols[col].type.python_type, meta)
+            query = _filter_db_col(
+                query, query.where, key, col, op, vals, cols[col],
+                cols[col].type.python_type, meta)
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in cols or len(vals) == 0:
@@ -1419,8 +1423,8 @@ def _filter_db(
                 query = query.with_only_columns(agg_cols.values())
             # Apply HAVING operators
             for key, col, op, vals in cols_having:
-                query = _filter_db_col(query, query.having, key, col, op, vals,
-                                       agg_cols[col], typ[col], meta)
+                query = _filter_db_col(
+                    query, query.having, key, col, op, vals, agg_cols[col], typ[col], meta)
         elif '_c' in controls:
             show_cols = _filter_select_columns(controls, colslist, meta)
             query = query.with_only_columns([cols[col] for col in show_cols])
@@ -1711,8 +1715,9 @@ def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
     return 0
 
 
-def _influxdb_client(url, token, org, debug=None, timeout=60_000, enable_gzip=False,
-                     default_tags=None, **kwargs):
+def _influxdb_client(
+        url, token, org, debug=None, timeout=60_000, enable_gzip=False,
+        default_tags=None, **kwargs):
     from influxdb_client import InfluxDBClient
 
     url = re.sub(r"^influxdb:", "", url)

@@ -168,8 +168,8 @@ class TestOpen(unittest.TestCase):
         expected = pd.read_csv(path, encoding='utf-8')
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True,
-                                                 encoding='utf-8')
+            result, reloaded = gramex.cache.open(
+                path, 'csv', _reload_status=True, encoding='utf-8')
             eq_(reloaded, reload)
             afe(result, expected)
 
@@ -211,8 +211,8 @@ class TestOpen(unittest.TestCase):
             expected = json.load(handle, object_pairs_hook=OrderedDict)
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'json', _reload_status=True,
-                                                 object_pairs_hook=OrderedDict)
+            result, reloaded = gramex.cache.open(
+                path, 'json', _reload_status=True, object_pairs_hook=OrderedDict)
             eq_(reloaded, reload)
             ok_(isinstance(result, OrderedDict))
             eq_(result, expected)
@@ -541,8 +541,8 @@ class TestMySQLCacheQuery(TestSqliteCacheQuery):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_cache',
-                                          t1=cls.data, t2=cls.data)
+        cls.url = dbutils.mysql_create_db(
+            variables.MYSQL_SERVER, 'test_cache', t1=cls.data, t2=cls.data)
         cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
@@ -555,8 +555,9 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
-                                             **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
+        cls.url = dbutils.postgres_create_db(
+            variables.POSTGRES_SERVER, 'test_cache',
+            **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
         cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     def test_schema(self):

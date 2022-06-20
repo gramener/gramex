@@ -1,7 +1,5 @@
 # .editorconfig maintains consistent coding styles between different editors.
-# Get plugins at http://editorconfig.org/
-#   - Sublime text: https://github.com/sindresorhus/editorconfig-sublime
-#   - Notepad++: https://github.com/editorconfig/editorconfig-notepad-plus-plus
+# See http://editorconfig.org/
 
 root = true
 
@@ -18,12 +16,3 @@ indent_size = 2
 
 [*.py]
 indent_size = 4
-
-[Makefile]
-indent_style = tab
-indent_size = 4
-
-[testlib/test_config/config.empty.yaml]
-insert_final_newline = false
-[tests/dir/gramex.yaml]
-insert_final_newline = false

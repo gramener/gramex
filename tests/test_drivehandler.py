@@ -8,8 +8,8 @@ from shutil import rmtree
 from mimetypes import guess_type
 from tornado.web import create_signed_value
 from gramex import conf
-from gramex.http import (OK, BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE,
-                         UNSUPPORTED_MEDIA_TYPE)
+from gramex.http import (
+    OK, BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE)
 from gramex.install import _ensure_remove
 from nose.tools import eq_, ok_
 from . import server, TestGramex, afe
@@ -105,8 +105,9 @@ class TestDriveHandler(TestGramex):
         self.check_upload(dict(file='server.py'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
 
         # Multi-uploads are supported, with tags
-        self.check_upload(dict(file='userdata.csv', tag='t1'),
-                          dict(file='actors.csv', tag='t2'))
+        self.check_upload(
+            dict(file='userdata.csv', tag='t1'),
+            dict(file='actors.csv', tag='t2'))
         r = requests.post(self.url, files=(
             ('file', ('x.csv', open('userdata.csv', 'rb'))),
             ('file', ('y.csv', open('userdata.csv', 'rb'))),

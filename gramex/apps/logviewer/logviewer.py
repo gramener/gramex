@@ -20,8 +20,9 @@ if sys.version_info.major == 3:
 DB_CONFIG = {
     'table': 'agg{}',
     'levels': ['M', 'W', 'D'],
-    'dimensions': [{'key': 'time', 'freq': '?level'},
-                   'user.id', 'ip', 'status', 'uri'],
+    'dimensions': [
+        {'key': 'time', 'freq': '?level'},
+        'user.id', 'ip', 'status', 'uri'],
     'metrics': {
         'duration': ['count', 'sum'],
         'new_session': ['sum'],
@@ -68,8 +69,8 @@ def table_exists(table, conn):
 
 
 def add_session(df, duration=30, cutoff_buffer=0):
-    '''add new_session based on `duration` threshold
-       add cutoff_buffer in minutes for first and last session requests
+    '''add new_session based on `duration` threshold.
+    add cutoff_buffer in minutes for first and last session requests
     '''
     s = df.groupby('user.id')['time'].diff().dt.total_seconds()
     flag = s.isnull() | s.ge(duration * 60)
@@ -114,8 +115,9 @@ def create_column_if_not_exists(table, freq, conn):
             conn.commit()
 
 
-def summarize(transforms=[], post_transforms=[], run=True,
-              session_threshold=15, cutoff_buffer=0, custom_dims=None):
+def summarize(
+        transforms=[], post_transforms=[], run=True,
+        session_threshold=15, cutoff_buffer=0, custom_dims=None):
     '''summarize'''
     app_log.info('logviewer: Summarize started')
     levels = DB_CONFIG['levels']

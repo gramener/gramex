@@ -47,8 +47,9 @@ class GramexService(win32serviceutil.ServiceFramework):
         exe = win32serviceutil.GetServiceCustomOption(self, 'exe')
         gramexpath = win32serviceutil.GetServiceCustomOption(self, 'py')
         msg = f'\nPath: {cwd}. Python: {exe}. Gramex: {gramexpath}'
-        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                              servicemanager.PYS_SERVICE_STOPPED, (self._svc_name_, msg))
+        servicemanager.LogMsg(
+            servicemanager.EVENTLOG_INFORMATION_TYPE,
+            servicemanager.PYS_SERVICE_STOPPED, (self._svc_name_, msg))
 
     def SvcDoRun(self):
         # Change to cwd registry option

@@ -86,9 +86,9 @@ class TestFilter(unittest.TestCase):
         and sqlalchemy URLs
 
         - ``na_position`` indicates whether NA are moved to the end or not. Can
-          be 'first' or 'last'
+            be 'first' or 'last'
         - ``sum_na`` indicates whether SUM() over zero elements results in NA
-          (instead of 0)
+            (instead of 0)
         '''
         def eq(args, expected, **eqkwargs):
             meta = {}
@@ -105,12 +105,12 @@ class TestFilter(unittest.TestCase):
         eq_(meta['offset'], 0)
         eq_(meta['limit'], None)
 
-        m = eq({'देश': ['भारत']},
-               sales[sales['देश'] == 'भारत'])
+        m = eq({'देश': ['भारत']}, sales[sales['देश'] == 'भारत'])
         eq_(m['filters'], [('देश', '', ('भारत',))])
 
-        m = eq({'city': ['Hyderabad', 'Coimbatore']},
-               sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        m = eq(
+            {'city': ['Hyderabad', 'Coimbatore']},
+            sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         eq_(m['filters'], [('city', '', ('Hyderabad', 'Coimbatore'))])
 
         # ?col= is treated as non-null col values
@@ -126,70 +126,87 @@ class TestFilter(unittest.TestCase):
         m = eq({'sales!': ['']}, sales[pd.isnull(sales['sales'])], check_dtype=False)
         eq_(m['filters'], [('sales', '!', ())])
 
-        m = eq({'product!': ['Biscuit', 'Crème']},
-               sales[~sales['product'].isin(['Biscuit', 'Crème'])])
+        m = eq(
+            {'product!': ['Biscuit', 'Crème']},
+            sales[~sales['product'].isin(['Biscuit', 'Crème'])])
         eq_(m['filters'], [('product', '!', ('Biscuit', 'Crème'))])
 
-        m = eq({'city>': ['Bangalore'], 'city<': ['Singapore']},
-               sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
+        m = eq(
+            {'city>': ['Bangalore'], 'city<': ['Singapore']},
+            sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
         eq_(set(m['filters']), {('city', '>', ('Bangalore',)), ('city', '<', ('Singapore',))})
 
         # Ignore empty columns
-        m = eq({'city': ['Hyderabad', 'Coimbatore', ''], 'c1': [''], 'c2>': [''], 'city~': ['']},
-               sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        m = eq(
+            {'city': ['Hyderabad', 'Coimbatore', ''], 'c1': [''], 'c2>': [''], 'city~': ['']},
+            sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
 
-        m = eq({'city>~': ['Bangalore'], 'city<~': ['Singapore']},
-               sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
+        m = eq(
+            {'city>~': ['Bangalore'], 'city<~': ['Singapore']},
+            sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
         eq_(set(m['filters']), {('city', '>~', ('Bangalore',)), ('city', '<~', ('Singapore',))})
 
-        m = eq({'city~': ['ore']},
-               sales[sales['city'].str.contains('ore')])
+        m = eq(
+            {'city~': ['ore']},
+            sales[sales['city'].str.contains('ore')])
         eq_(m['filters'], [('city', '~', ('ore',))])
 
-        m = eq({'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
-               sales[(sales['product'] == 'Biscuit') & (sales['city'] == 'Bangalore') &
-                     (sales['देश'] == 'भारत')])
+        m = eq(
+            {'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
+            sales[
+                (sales['product'] == 'Biscuit') &
+                (sales['city'] == 'Bangalore') &
+                (sales['देश'] == 'भारत')])
         eq_(set(m['filters']), {('product', '', ('Biscuit',)), ('city', '', ('Bangalore',)),
                                 ('देश', '', ('भारत',))})
 
-        m = eq({'city!~': ['ore']},
-               sales[~sales['city'].str.contains('ore')])
+        m = eq(
+            {'city!~': ['ore']},
+            sales[~sales['city'].str.contains('ore')])
         eq_(m['filters'], [('city', '!~', ('ore',))])
 
-        m = eq({'sales>': ['100'], 'sales<': ['1000']},
-               sales[(sales['sales'] > 100) & (sales['sales'] < 1000)])
+        m = eq(
+            {'sales>': ['100'], 'sales<': ['1000']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000)])
         eq_(set(m['filters']), {('sales', '>', (100,)), ('sales', '<', (1000,))})
 
-        m = eq({'growth<': [0.5]},
-               sales[sales['growth'] < 0.5])
+        m = eq(
+            {'growth<': [0.5]},
+            sales[sales['growth'] < 0.5])
 
-        m = eq({'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
-               sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)])
+        m = eq(
+            {'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)])
 
-        m = eq({'देश': ['भारत'], '_sort': ['sales']},
-               sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position))
+        m = eq(
+            {'देश': ['भारत'], '_sort': ['sales']},
+            sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position))
         eq_(m['sort'], [('sales', True)])
 
-        m = eq({'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
-               sales[sales['product'] == 'Biscuit'].sort_values(
-                    ['देश', 'growth'], ascending=[False, False], na_position=na_position))
+        m = eq(
+            {'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
+            sales[sales['product'] == 'Biscuit'].sort_values(
+                ['देश', 'growth'], ascending=[False, False], na_position=na_position))
         eq_(m['filters'], [('product', '<~', ('Biscuit',))])
         eq_(m['sort'], [('देश', False), ('growth', False)])
 
-        m = eq({'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
-               sales[sales['देश'] == 'भारत'].iloc[4:12])
+        m = eq(
+            {'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
+            sales[sales['देश'] == 'भारत'].iloc[4:12])
         eq_(m['filters'], [('देश', '', ('भारत',))])
         eq_(m['offset'], 4)
         eq_(m['limit'], 8)
 
         cols = ['product', 'city', 'sales']
-        m = eq({'देश': ['भारत'], '_c': cols},
-               sales[sales['देश'] == 'भारत'][cols])
+        m = eq(
+            {'देश': ['भारत'], '_c': cols},
+            sales[sales['देश'] == 'भारत'][cols])
         eq_(m['filters'], [('देश', '', ('भारत',))])
 
         ignore_cols = ['product', 'city']
-        m = eq({'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
-               sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
+        m = eq(
+            {'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
+            sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
         eq_(m['filters'], [('देश', '', ('भारत',))])
 
         # Non-existent column does not raise an error for any operation
@@ -197,8 +214,9 @@ class TestFilter(unittest.TestCase):
             m = eq({'nonexistent' + op: ['']}, sales)
             eq_(m['ignored'], [('nonexistent' + op, [''])])
         # Non-existent sorts do not raise an error
-        m = eq({'_sort': ['nonexistent', 'sales']},
-               sales.sort_values('sales', na_position=na_position))
+        m = eq(
+            {'_sort': ['nonexistent', 'sales']},
+            sales.sort_values('sales', na_position=na_position))
         eq_(m['ignored'], [('_sort', ['nonexistent'])])
         eq_(m['sort'], [('sales', True)])
 
@@ -312,25 +330,29 @@ class TestFilter(unittest.TestCase):
         df = self.sales[self.sales['sales'] > 100]
         kwargs = {'na_position': na_position, 'sum_na': sum_na}
         self.check_filter(url=url, table='sales', **kwargs)
-        self.check_filter(url=url, table='sales',
-                          transform=lambda d: d[d['sales'] > 100], df=df, **kwargs)
-        self.check_filter(url=url, table='sales',
-                          query='SELECT * FROM sales WHERE sales > 100', df=df, **kwargs)
-        self.check_filter(url=url, table='sales',
-                          query='SELECT * FROM sales WHERE sales > 999999',
-                          queryfile=os.path.join(folder, 'sales-query.sql'), df=df, **kwargs)
-        self.check_filter(url=url, table=['sales', 'sales'],
-                          query='SELECT * FROM sales WHERE sales > 100',
-                          transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5], **kwargs)
-        self.check_filter(url=url,
-                          query='SELECT * FROM sales WHERE sales > 100',
-                          transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5], **kwargs)
-        self.check_filter(url=url, table='sales',
-                          query='SELECT * FROM sales WHERE sales > 100',
-                          transform=lambda d: d[d['growth'] < 0.5],
-                          df=df[df['growth'] < 0.5], **kwargs)
+        self.check_filter(
+            url=url, table='sales', transform=lambda d: d[d['sales'] > 100], df=df, **kwargs)
+        self.check_filter(
+            url=url, table='sales', query='SELECT * FROM sales WHERE sales > 100', df=df, **kwargs)
+        self.check_filter(
+            url=url, table='sales',
+            query='SELECT * FROM sales WHERE sales > 999999',
+            queryfile=os.path.join(folder, 'sales-query.sql'), df=df, **kwargs)
+        self.check_filter(
+            url=url, table=['sales', 'sales'],
+            query='SELECT * FROM sales WHERE sales > 100',
+            transform=lambda d: d[d['growth'] < 0.5],
+            df=df[df['growth'] < 0.5], **kwargs)
+        self.check_filter(
+            url=url,
+            query='SELECT * FROM sales WHERE sales > 100',
+            transform=lambda d: d[d['growth'] < 0.5],
+            df=df[df['growth'] < 0.5], **kwargs)
+        self.check_filter(
+            url=url, table='sales',
+            query='SELECT * FROM sales WHERE sales > 100',
+            transform=lambda d: d[d['growth'] < 0.5],
+            df=df[df['growth'] < 0.5], **kwargs)
         # Check both parameter substitutions -- {} formatting and : substitution
         afe(gramex.data.filter(url=url, table='{x}', args={'x': ['sales']}), self.sales)
         actual = gramex.data.filter(
@@ -342,8 +364,8 @@ class TestFilter(unittest.TestCase):
             },
             query='SELECT * FROM {兴} WHERE {col} > :val AND city = :city',
         )
-        expected = self.sales[(self.sales['growth'] > 0) &
-                              (self.sales['city'] == 'South Plainfield')]
+        expected = self.sales[
+            (self.sales['growth'] > 0) & (self.sales['city'] == 'South Plainfield')]
         eqframe(actual, expected)
 
         # _by= _sort= _c=agg(s)
@@ -366,8 +388,9 @@ class TestFilter(unittest.TestCase):
         with assert_raises(Exception):
             gramex.data.filter(url=url, table='{x}', args={'x': ['a b']})
         with assert_raises(Exception):
-            gramex.data.filter(url=url, table='{x}', args={'x': ['sales'], 'p': ['a b']},
-                               query='SELECT * FROM {x} WHERE {p} > 0')
+            gramex.data.filter(
+                url=url, table='{x}', args={'x': ['sales'], 'p': ['a b']},
+                query='SELECT * FROM {x} WHERE {p} > 0')
 
     def check_filter_dates(self, dbname, url):
         self.db.add(dbname)

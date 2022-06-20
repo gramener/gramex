@@ -63,8 +63,8 @@ class ModelHandler(BaseHandler):
             return
         # If no model columns are passed, return model info
         if not vars(model).get('input', '') or not any(col in self.args for col in model.input):
-            model_info = {k: v for k, v in vars(model).items()
-                          if k not in ('model', 'scaler')}
+            model_info = {
+                k: v for k, v in vars(model).items() if k not in ('model', 'scaler')}
             self.write(json.dumps(model_info, indent=4))
             return
         self._predict(model)

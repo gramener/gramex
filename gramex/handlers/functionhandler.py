@@ -55,6 +55,7 @@ class FunctionHandler(BaseHandler):
             # Strip trailing underscore (e.g. str_, bytes_)
             # Strip leading 'u' (e.g. uint, ulong)
             cls = type(item).__name__.rstrip('0123456789_').lstrip('u')
+            valid_types = ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str')
             if isinstance(item, (bytes, str)):
                 self.write(item)
                 if multipart:
@@ -67,10 +68,10 @@ class FunctionHandler(BaseHandler):
             # and numpy types, detected by cls in (...)
             # and anything with a to_dict, e.g. DataFrames
             elif (isinstance(item, (int, float, bool, list, tuple, dict)) or
-                  cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
-                  hasattr(item, 'to_dict')):
-                self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
-                                      cls=CustomJSONEncoder))
+                    cls in valid_types or hasattr(item, 'to_dict')):
+                self.write(
+                    json.dumps(
+                        item, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder))
                 if multipart:
                     self.flush()
             else:

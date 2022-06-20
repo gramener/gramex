@@ -48,15 +48,15 @@ def watch(name, paths, **events):
     Example::
 
         watch('test', ['test.txt'],
-              on_modified: lambda event: logging.info('Modified test.txt'),
-              on_created: lambda event: logging.info('Created test.txt'))
+            on_modified: lambda event: logging.info('Modified test.txt'),
+            on_created: lambda event: logging.info('Created test.txt'))
 
     When ``test.txt`` is modified or created, it logs one of the above messages.
 
     To replace the same handler with another, use the same ``name``::
 
         watch('test', ['test.txt'],
-              on_deleted: lambda event: logging.info('Deleted test.txt'))
+            on_deleted: lambda event: logging.info('Deleted test.txt'))
 
     Now, when ``test.txt`` is deleted, it logs a message. But when ``test.txt``
     is created or modified, no message is shown, since the old handler has been

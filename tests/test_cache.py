@@ -236,8 +236,9 @@ class TestCacheFunctionHandler(TestGramex):
         r1 = self.get('/cache/increment-headers-dummy', session=session1)
         # Scenario: Browser 1 had a cached copy. But Gramex restarted.
         # So now it requests the page again.
-        r2 = self.get('/cache/increment-headers', session=session1,
-                      headers={'If-None-Match': r1.headers['Etag']})
+        r2 = self.get(
+            '/cache/increment-headers', session=session1,
+            headers={'If-None-Match': r1.headers['Etag']})
         eq_(r2.status_code, NOT_MODIFIED)
         # Now, the server has re-cached the response. Since the response was a
         # 304 without headers, check that the server actually cached the original

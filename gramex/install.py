@@ -130,12 +130,12 @@ init: |
     Initializes a Gramex project at the current or target dir. Specifically, it:
     - Sets up a git repo
     - Install supporting files for a Gramex project from a template
-      - "gramex init" sets up dependencies for a local system
-      - "gramex init minimal" sets up minimal dependencies
+        - "gramex init" sets up dependencies for a local system
+        - "gramex init minimal" sets up minimal dependencies
     - Runs gramex setup (which runs npm install and other dependencies)
 
     Options:
-      --target <path>               # Location to install at. Defaults to
+        --target <path>             # Location to install at. Defaults to
 
 mail: |
     gramex mail <key>               # Send mail named <key>
@@ -147,7 +147,7 @@ mail: |
     $GRAMEXDATA/mail/gramexmail.yaml.
 
     Options:
-      --conf <path>                 # Specify a different conf file location
+        --conf <path>               # Specify a different conf file location
 
 license: |
     gramex license                  # Show Gramex license
@@ -549,13 +549,15 @@ def run(args, kwargs):
         save_user_config(appname, app_config)
         # Tell the user what configs are used
         cline = ' '.join('--%s=%s' % arg for arg in flatten_config(app_config.get('run', {})))
-        app_log.info('Gramex %s | %s %s | %s | Python %s', gramex.__version__, appname, cline,
-                     os.getcwd(), sys.version.replace('\n', ' '))
+        app_log.info(
+            'Gramex %s | %s %s | %s | Python %s', gramex.__version__, appname, cline,
+            os.getcwd(), sys.version.replace('\n', ' '))
         gramex.init(args=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
-        app_log.error(f'{appname}: no target path {app_config.target}. '
-                      f'Run "gramex uninstall {appname}" and try again.', )
+        app_log.error(
+            f'{appname}: no target path {app_config.target}. '
+            f'Run "gramex uninstall {appname}" and try again.', )
     else:
         app_log.error(f'{appname}: no target path {app_config.target}')
 
@@ -673,20 +675,20 @@ default_mail_config = r'''# Gramex mail configuration at
 
 # See https://gramener.com/gramex/guide/email/ for help
 email:
-  default-email:
-    type: gmail
-    email: $GRAMEXMAILUSER
-    password: $GRAMEXMAILPASSWORD
-    # Uncomment the next line to test the application without sending mails
-    # stub: log
+    default-email:
+        type: gmail
+        email: $GRAMEXMAILUSER
+        password: $GRAMEXMAILPASSWORD
+        # Uncomment the next line to test the application without sending mails
+        # stub: log
 
 # See https://gramener.com/gramex/guide/alert/
 alert:
-  hello-world:
-    to: admin@example.org
-    subject: Alert from Gramex
-    body: |
-      This is a test email
+    hello-world:
+        to: admin@example.org
+        subject: Alert from Gramex
+        body: |
+            This is a test email
 '''
 
 

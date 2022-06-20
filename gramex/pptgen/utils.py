@@ -57,8 +57,9 @@ def stack_elements(replica, shape, stack=False, margin=None):
     '''Function to extend elements horizontally or vertically.'''
     if not stack:
         return
-    config = {'vertical': {'axis': 'y', 'attr': 'height'},
-              'horizontal': {'axis': 'x', 'attr': 'width'}}
+    config = {
+        'vertical': {'axis': 'y', 'attr': 'height'},
+        'horizontal': {'axis': 'x', 'attr': 'width'}}
     grp_sp = shape.element
     # Adding a 15% default margin between original and new object.
     default_margin = 0.15
@@ -403,24 +404,24 @@ def cust_shape(x, y, w, h, _id):
     '''Custom shapes.'''
     return objectify.fromstring(f'''
         <p:sp {xmlns("p", "a")}>
-          <p:nvSpPr>
-            <p:cNvPr id='{_id}' name='Freeform {_id}'/>
-            <p:cNvSpPr/>
-            <p:nvPr/>
-          </p:nvSpPr>
-          <p:spPr>
-            <a:xfrm>
-              <a:off x='{x}' y='{y}'/>
-              <a:ext cx='{w}' cy='{h}'/>
-            </a:xfrm>
-            <a:custGeom>
-              <a:avLst/>
-              <a:gdLst/>
-              <a:ahLst/>
-              <a:cxnLst/>
-              <a:rect l='0' t='0' r='0' b='0'/>
-            </a:custGeom>
-          </p:spPr>
+            <p:nvSpPr>
+                <p:cNvPr id='{_id}' name='Freeform {_id}'/>
+                <p:cNvSpPr/>
+                <p:nvPr/>
+            </p:nvSpPr>
+            <p:spPr>
+                <a:xfrm>
+                    <a:off x='{x}' y='{y}'/>
+                    <a:ext cx='{w}' cy='{h}'/>
+                </a:xfrm>
+                <a:custGeom>
+                    <a:avLst/>
+                    <a:gdLst/>
+                    <a:ahLst/>
+                    <a:cxnLst/>
+                    <a:rect l='0' t='0' r='0' b='0'/>
+                </a:custGeom>
+            </p:spPr>
         </p:sp>''')
 
 
@@ -471,19 +472,19 @@ def squarified(x, y, w, h, data):
 
         # The result is a 2x2 numpy array::
         >>> squarified(x=0, y=0, w=6, h=4, data=[6, 6, 4, 3, 2, 2, 1])
-        array([[ 0.        ,  0.        ,  3.        ,  2.        ],
-               [ 0.        ,  2.        ,  3.        ,  2.        ],
-               [ 3.        ,  0.        ,  1.71428571,  2.33333333],
-               [ 4.71428571,  0.        ,  1.28571429,  2.33333333],
-               [ 3.        ,  2.33333333,  1.2       ,  1.66666667],
-               [ 4.2       ,  2.33333333,  1.2       ,  1.66666667],
-               [ 5.4       ,  2.33333333,  0.6       ,  1.66666667]])
+        array([ [ 0.        ,  0.        ,  3.        ,  2.        ],
+                [ 0.        ,  2.        ,  3.        ,  2.        ],
+                [ 3.        ,  0.        ,  1.71428571,  2.33333333],
+                [ 4.71428571,  0.        ,  1.28571429,  2.33333333],
+                [ 3.        ,  2.33333333,  1.2       ,  1.66666667],
+                [ 4.2       ,  2.33333333,  1.2       ,  1.66666667],
+                [ 5.4       ,  2.33333333,  0.6       ,  1.66666667]])
 
         >>> squarified(x=0, y=0, w=1, h=1, data=[np.nan, 0, 1, 2])
-        array([[ 0.        ,  0.        ,  0.        ,  0.        ],
-               [ 0.        ,  0.        ,  0.        ,  0.        ],
-               [ 0.        ,  0.        ,  0.33333333,  1.        ],
-               [ 0.33333333,  0.        ,  0.66666667,  1.        ]])
+        array([ [ 0.        ,  0.        ,  0.        ,  0.        ],
+                [ 0.        ,  0.        ,  0.        ,  0.        ],
+                [ 0.        ,  0.        ,  0.33333333,  1.        ],
+                [ 0.33333333,  0.        ,  0.66666667,  1.        ]])
     '''
     w, h = float(w), float(h)
     size = np.nan_to_num(np.array(data).astype(float))

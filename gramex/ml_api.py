@@ -155,7 +155,7 @@ def assemble_pipeline(
     sklearn.pipeline.Pipleline
         An sklearn pipeline containing two steps.
         1. A `sklearn.compose.ColumnTransformer` step that one-hot encodes categorical variables,
-           and StandardScales numerical ones.
+            and StandardScales numerical ones.
         2. An estimator
 
     Example
@@ -163,11 +163,9 @@ def assemble_pipeline(
     >>> df = pd.read_csv('superstore-sales.csv', usecols=['region', 'discount', 'profit'])
     >>> assemble_pipeline(df, 'profit', 'LogisticRegression', nums=['discount'], cats=['region'])
     Pipeline(steps=[('transform',
-                    ColumnTransformer(transformers=[('ohe',
-                                                     OneHotEncoder(sparse=False),
-                                                     ['region']),
-                                                    ('scaler', StandardScaler(),
-                                                     ['discount'])])),
+                    ColumnTransformer(transformers=[
+                        ('ohe', OneHotEncoder(sparse=False), ['region']),
+                        ('scaler', StandardScaler(), ['discount'])])),
                     ('LogisticRegression', LogisticRegression())])
     """
     if isinstance(model, str):

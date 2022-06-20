@@ -337,8 +337,8 @@ class TestFileHandler(TestGramex):
             for code, methods in results.items():
                 for method in methods:
                     r = getattr(requests, method)(server.base_url + url)
-                    self.assertEqual(r.status_code, code,
-                                     '%s %s should return %d' % (method, url, code))
+                    self.assertEqual(
+                        r.status_code, code, '%s %s should return %d' % (method, url, code))
 
     def test_headers(self):
         self.check('/header/', headers={

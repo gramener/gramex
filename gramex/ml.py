@@ -127,8 +127,9 @@ def _conda_r_home():
     return None
 
 
-def r(code=None, path=None, rel=True, conda=True, convert=True,
-      repo='https://cran.r-project.org/', **kwargs):
+def r(
+        code=None, path=None, rel=True, conda=True, convert=True,
+        repo='https://cran.r-project.org/', **kwargs):
     '''
     Runs the R script and returns the result.
 
@@ -188,8 +189,9 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
     return result
 
 
-def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
-               weight=None):
+def groupmeans(
+        data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
+        weight=None):
     '''
     **DEPRECATED**. Use TopCause() instead.
 
@@ -281,8 +283,9 @@ def _google_translate(q, source, target, key):
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
-        'source': [t.get('detectedSourceLanguage', params.get('source', None))
-                   for t in response['data']['translations']],
+        'source': [
+            t.get('detectedSourceLanguage', params.get('source', None))
+            for t in response['data']['translations']],
         'target': [target] * len(q),
     }
 

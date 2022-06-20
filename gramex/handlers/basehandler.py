@@ -34,11 +34,12 @@ Morsel._reserved.setdefault('samesite', 'SameSite')
 
 class BaseMixin(object):
     @classmethod
-    def setup(cls, transform={}, redirect={}, methods=None,
-              auth: Union[None, bool, dict] = None,
-              log=None, set_xsrf=None, error=None, xsrf_cookies=None,
-              cors: Union[None, bool, dict] = None,
-              **kwargs):
+    def setup(
+            cls, transform={}, redirect={}, methods=None,
+            auth: Union[None, bool, dict] = None,
+            log=None, set_xsrf=None, error=None, xsrf_cookies=None,
+            cors: Union[None, bool, dict] = None,
+            **kwargs):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -168,8 +169,9 @@ class BaseMixin(object):
         origin, cred = self.cors_origin()
         if not origin:
             origin = self.request.headers.get('Origin', '')
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS origin {origin} '
-                                         f'not in {self._cors["origins"]}')
+            raise HTTPError(
+                BAD_REQUEST, f'url:{self.name}: CORS origin {origin} '
+                f'not in {self._cors["origins"]}')
 
         # Check if method is in cors.methods
         method = self.request.headers.get('Access-Control-Request-Method', '').upper()
@@ -177,8 +179,9 @@ class BaseMixin(object):
             if fnmatch(method, pattern.upper()):
                 break
         else:
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS method {method} '
-                                         f'not in {self._cors["methods"]}')
+            raise HTTPError(
+                BAD_REQUEST, f'url:{self.name}: CORS method {method} '
+                f'not in {self._cors["methods"]}')
 
         # Check if headers is in cors.headers
         headers = self.request.headers.get('Access-Control-Request-Headers', '')
@@ -190,13 +193,15 @@ class BaseMixin(object):
                 if header.lower() not in allowed_headers:
                     diff.add(header)
         if diff:
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS headers {diff} '
-                                         f'not in {self._cors["headers"]}')
+            raise HTTPError(
+                BAD_REQUEST, f'url:{self.name}: CORS headers {diff} '
+                f'not in {self._cors["headers"]}')
 
         # If it succeeds, set relevant headers
         self.set_header('Access-Control-Allow-Origin', origin)
-        methods = (self._all_methods if '*' in self._cors['methods']
-                   else ', '.join(self._cors['methods']))
+        methods = (
+            self._all_methods if '*' in self._cors['methods']
+            else ', '.join(self._cors['methods']))
         self.set_header('Access-Control-Allow-Methods', methods)
         headers |= self._cors['headers']
         if '*' in headers:
@@ -637,9 +642,9 @@ class BaseMixin(object):
 
         - ``_t`` is the expiry time of the session
         - ``_l`` is the last time the user accessed a page. Updated by
-          :py:func:`BaseHandler.set_last_visited`
+            :py:func:`BaseHandler.set_last_visited`
         - ``_i`` is the inactive expiry duration in seconds, i.e. if ``now > _l +
-          _i``, the session has expired.
+            _i``, the session has expired.
 
         ``new=`` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
@@ -648,7 +653,7 @@ class BaseMixin(object):
 
         - If no old session exists, it returns a new session object.
         - If an old session exists, it creates a new "sid" and new session
-          object, copying all old contents, but updates the "id" and expiry (_t).
+            object, copying all old contents, but updates the "id" and expiry (_t).
         '''
         if expires_days is None:
             expires_days = self._session_expiry
@@ -941,7 +946,7 @@ class BaseHandler(RequestHandler, BaseMixin):
         - required: Whether or not the query parameter may be omitted
         - default: The value produced if the argument is missing. Implies required=False
         - nargs: The number of parameters that should be returned. '*' or '+'
-          return all values as a list.
+            return all values as a list.
         - type: Python type to which the parameter should be converted (e.g. `int`)
         - choices: A container of the allowable values for the argument (after type conversion)
 
@@ -1030,8 +1035,9 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def create_template_loader(self, template_path):
         settings = self.application.settings
-        return CacheLoader(template_path, autoescape=settings['autoescape'],
-                           whitespace=settings.get('template_whitespace', None))
+        return CacheLoader(
+            template_path, autoescape=settings['autoescape'],
+            whitespace=settings.get('template_whitespace', None))
 
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):

@@ -334,8 +334,9 @@ def chart(shape, spec, data):
                 info[prop]['function'] = '{}'.format(info[prop])
             info[prop] = compile_function(info, prop, data, handler)
 
-    style = {'color': info.pop('color', None), 'opacity': info.pop('opacity', None),
-             'stroke': info.pop('stroke', None)}
+    style = {
+        'color': info.pop('color', None), 'opacity': info.pop('opacity', None),
+        'stroke': info.pop('stroke', None)}
 
     for key in {'color', 'stroke', 'opacity'}:
         if key in style and isinstance(style[key], (dict,)):
@@ -361,8 +362,9 @@ def chart(shape, spec, data):
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
-        color_mapping = {'XyChartData': 'point.marker.format', 'ChartData': 'point.format',
-                         'BubbleChartData': 'point.format', 'area': 'series.format'}
+        color_mapping = {
+            'XyChartData': 'point.marker.format', 'ChartData': 'point.format',
+            'BubbleChartData': 'point.format', 'area': 'series.format'}
         is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
         chart_name = 'area' if chart_type in is_area else chart_name
         is_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
@@ -388,12 +390,14 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
-                    chart_css(eval(fillpoint).fill,             # nosec: developer-initiaated
-                              point_css, point_css['color'])
+                    chart_css(
+                        eval(fillpoint).fill,             # nosec: developer-initiaated
+                        point_css, point_css['color'])
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill,        # nosec: developer-initiaated
-                              point_css, _stroke)
+                    chart_css(
+                        eval(fillpoint).line.fill,        # nosec: developer-initiaated
+                        point_css, _stroke)
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
@@ -597,8 +601,8 @@ def calendarmap(shape, spec, data):
         [scaledata[(x - startweekday) % 7::7].mean() for x in range(7)])
     weekday_format = spec.get('format', '{:,.%df}' % utils.decimals(weekday_mean.values))
     # Weekly Mean and format
-    weekly_mean = pd.Series([scaledata[max(0, x):x + 7].mean()
-                             for x in range(-startweekday, len(scaledata), 7)])
+    weekly_mean = pd.Series(
+        [scaledata[max(0, x):x + 7].mean() for x in range(-startweekday, len(scaledata), 7)])
     weekly_format = spec.get('format', '{:,.%df}' % utils.decimals(weekly_mean.values))
     # Scale sizes as square roots from 0 to max (not lowest to max -- these
     # should be an absolute scale)
@@ -663,8 +667,9 @@ def calendarmap(shape, spec, data):
             bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
             bar.name = 'summary.top.bar'
-            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
-                         'stroke': stroke(val) if callable(stroke) else stroke}
+            rectstyle = {
+                'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
+                'stroke': stroke(val) if callable(stroke) else stroke}
             rect_css(bar, **rectstyle)
             label = shapes.add_textbox(px, shape_top - width, width, width)
             label.name = 'summary.top.label'
@@ -678,8 +683,9 @@ def calendarmap(shape, spec, data):
             bar = shapes.add_shape(
                 MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
             bar.name = 'summary.left.bar'
-            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
-                         'stroke': stroke(val) if callable(stroke) else stroke}
+            rectstyle = {
+                'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
+                'stroke': stroke(val) if callable(stroke) else stroke}
             rect_css(bar, **rectstyle)
             label = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
             label.name = 'summary.left.label'
@@ -717,8 +723,9 @@ def bullet(shape, spec, data):
     shapes = shape._parent
     shape._sp.delete()
     lo = spec.get('lo', 0)
-    hi = spec.get('hi', np.nanmax([spec['data'], spec['target'], spec['poor'],
-                                  spec['average'], spec['good']]))
+    hi = spec.get(
+        'hi', np.nanmax([
+            spec['data'], spec['target'], spec['poor'], spec['average'], spec['good']]))
     style = {}
     common_style = copy.deepcopy(spec.get('style', {}))
     data_text = common_style.get('data', {}).pop('text', spec.get('text', True))
@@ -728,9 +735,10 @@ def bullet(shape, spec, data):
     if target_text:
         target_text = compile_function({'text': target_text}, 'text', data, handler)
 
-    css = {'data': common_style.pop('data', {}), 'target': common_style.pop('target', {}),
-           'poor': common_style.pop('poor', {}), 'good': common_style.pop('good', {}),
-           'average': common_style.pop('average', {})}
+    css = {
+        'data': common_style.pop('data', {}), 'target': common_style.pop('target', {}),
+        'poor': common_style.pop('poor', {}), 'good': common_style.pop('good', {}),
+        'average': common_style.pop('average', {})}
 
     for key, val in css.items():
         _style = copy.deepcopy(common_style)
@@ -854,8 +862,7 @@ def heatgrid(shape, spec, data):
     left_margin = (width * spec.get('left-margin', 0.15))
     padding = spec.get('style', {}).get('padding', 5)
     if not isinstance(padding, (dict,)):
-        padding = {'left': padding, 'right': padding,
-                   'top': padding, 'bottom': padding}
+        padding = {'left': padding, 'right': padding, 'top': padding, 'bottom': padding}
 
     styles = copy.deepcopy(spec.get('style', {}))
 
@@ -884,8 +891,7 @@ def heatgrid(shape, spec, data):
         for _idx, _row in _data.iterrows():
             style = copy.deepcopy(styles)
             # Setting callable padding args
-            _vars = {'handler': None, 'row': None,
-                     'column': None, 'value': None}
+            _vars = {'handler': None, 'row': None, 'column': None, 'value': None}
             args = {'handler': handler, 'row': row,
                     'column': _row[spec['column']],
                     'value': _row[spec['value']]}
@@ -902,8 +908,7 @@ def heatgrid(shape, spec, data):
             # Adding cells
             xaxis = left + (_width * _idx) + left_margin + left_pad
             yaxis = top + (height * index) + (top_pad) * index
-            _rect = rect(parent, xaxis, yaxis, _width - left_pad - right_pad,
-                         height - top_pad)
+            _rect = rect(parent, xaxis, yaxis, _width - left_pad - right_pad, height - top_pad)
             # Adding color gradient to cell if gradient is True
             if style.get('gradient'):
                 grad_txt = scale_data(_row[spec['value']], _min, _max)

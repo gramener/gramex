@@ -608,8 +608,9 @@ class PathConfig(AttrDict):
                 reload = True
                 app_log.info(f'No config found: {imp.path}')
                 break
-            if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
-                           imp.path.stat().st_size != imp.stat.st_size):
+            if exists and (
+                    imp.path.stat().st_mtime > imp.stat.st_mtime or
+                    imp.path.stat().st_size != imp.stat.st_size):
                 reload = True
                 app_log.info(f'Updated config: {imp.path}')
                 break
@@ -654,8 +655,9 @@ class CustomJSONEncoder(JSONEncoder):
 
         if hasattr(obj, 'to_dict'):
             # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
-            return loads(obj.to_json(orient='records', date_format='iso'),
-                         object_pairs_hook=OrderedDict)
+            return loads(
+                obj.to_json(orient='records', date_format='iso'),
+                object_pairs_hook=OrderedDict)
         elif isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:
@@ -863,9 +865,10 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
     secrets_import = result.pop('SECRETS_IMPORT', None)
     if secrets_import:
         # Create a list of file patterns to import from
-        imports = (list(secrets_import.values()) if isinstance(secrets_import, dict) else
-                   secrets_import if isinstance(secrets_import, (list, tuple)) else
-                   [secrets_import])
+        imports = (
+            list(secrets_import.values()) if isinstance(secrets_import, dict) else
+            secrets_import if isinstance(secrets_import, (list, tuple)) else
+            [secrets_import])
         for pattern in imports:
             for import_path in path.parent.glob(pattern):
                 setup_secrets(import_path, max_age_days, clear=False)

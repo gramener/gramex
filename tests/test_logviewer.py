@@ -69,9 +69,7 @@ class TestLogViewer(TestGramex):
                 [{col: x} for x in sorted(df[col].unique().astype(str))]
                 )
         eq_(self.get('{}/filter{}/?_limit=10000'.format(base, 'users')).json(),
-            [{'user.id': x} for x in
-             sorted(df[df_user1]['user.id'].unique())]
-            )
+            [{'user.id': x} for x in sorted(df[df_user1]['user.id'].unique())])
         # ToDo: See https://github.com/gramener/gramex/issues/252
         ideal = df[df_uri1]['uri'].value_counts().astype(int)[:100]
         ideal = ideal.rename_axis('uri').reset_index(name='views')
@@ -102,10 +100,11 @@ class TestLogViewer(TestGramex):
         r = self.get('{}/kpi-{}/'.format(base, 'avgloadtime')).json()
         aae(r[0]['value'], df['duration'].mean(), 4)
         # check top10
-        topten = [{'col': 'user.id', 'url': 'users', 'values': 'views', 'flag': True},
-                  {'col': 'ip', 'url': 'ip', 'values': 'requests'},
-                  {'col': 'status', 'url': 'status', 'values': 'requests'},
-                  {'col': 'uri', 'url': 'uri', 'values': 'views', 'flag': True}]
+        topten = [
+            {'col': 'user.id', 'url': 'users', 'values': 'views', 'flag': True},
+            {'col': 'ip', 'url': 'ip', 'values': 'requests'},
+            {'col': 'status', 'url': 'status', 'values': 'requests'},
+            {'col': 'uri', 'url': 'uri', 'values': 'views', 'flag': True}]
         for top in topten:
             cond = (df[top['col'] + '_1'].eq(1)
                     if top.get('flag') else slice(None))
@@ -113,23 +112,20 @@ class TestLogViewer(TestGramex):
                 (df[cond][top['col']].value_counts()
                 .astype(int)
                 .rename_axis(top['col']).reset_index(name=top['values'])
-                .sort_values(by=[top['values'], top['col']],
-                             ascending=[False, True])[:10]
+                .sort_values(by=[top['values'], top['col']], ascending=[False, True])[:10]
                 .to_dict('r'))
                 )
         # check trend
-        dff = logviewer.pdagg(df[df_uri1],
-                              [{'key': 'time', 'freq': 'D'}],
-                              {'duration': ['count']})
+        dff = logviewer.pdagg(
+            df[df_uri1], [{'key': 'time', 'freq': 'D'}], {'duration': ['count']})
         dff['time'] = dff['time'].dt.strftime('%Y-%m-%d 00:00:00')
         dff['pageviews'] = dff['duration_count'].astype(int)
         dff = dff[dff['pageviews'].ne(0)]
         eq_(self.get('{}/{}/'.format(base, 'pageviewstrend')).json(),
             dff.drop('duration_count', 1).to_dict('r')
             )
-        dff = logviewer.pdagg(df[df_user1],
-                              [{'key': 'time', 'freq': 'D'}],
-                              {'new_session': ['sum']})
+        dff = logviewer.pdagg(
+            df[df_user1], [{'key': 'time', 'freq': 'D'}], {'new_session': ['sum']})
         dff['time'] = dff['time'].dt.strftime('%Y-%m-%d 00:00:00')
         dff['sessions'] = dff['new_session_sum'].astype(int)
         dff = dff[dff['sessions'].ne(0)]
@@ -142,8 +138,9 @@ class TestLogViewer(TestGramex):
                 self.check('{}/{}/'.format(base, q))
 
     def test_pdagg(self):
-        dfe = (self.df.groupby([pd.Grouper(key='time', freq='D')])
-               .agg({'duration': ['count']}).reset_index())
+        dfe = (
+            self.df.groupby([pd.Grouper(key='time', freq='D')])
+            .agg({'duration': ['count']}).reset_index())
         dfe.columns = ['time', 'duration_count']
         afe(logviewer.pdagg(
             self.df,

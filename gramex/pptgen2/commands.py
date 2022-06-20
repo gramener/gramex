@@ -132,7 +132,7 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     - a tuple or list of RGB values, like ``(255, 255, 0)`` or ``[255, 255, 0]``
     - a theme color, like ``ACCENT_1``, ``ACCENT_2``, ``BACKGROUND_1``, ``DARK_1``, ``LIGHT_2``
     - a theme color with a brightness modifier, like ``ACCENT_1+40``, which is 40% brighter than
-      Accent 1, or ``ACCENT_2-20`` which is 20% darker than Accent 2
+        Accent 1, or ``ACCENT_2-20`` which is 20% darker than Accent 2
     - ``'none'`` clears the color, i.e. makes it transparent
     '''
     fill.solid()
@@ -383,16 +383,18 @@ def baseline(run, val, data):
     if isinstance(val, str):
         val = val.strip().lower()
         # See https://github.com/scanny/python-pptx/pull/601 for unit values
-        val = (0.3 if val.startswith('sup') else    # noqa
-               -0.25 if val.startswith('sub') else  # noqa
-               ST_Percentage._convert_from_percent_literal(val))
+        val = (
+            0.3 if val.startswith('sup') else    # noqa
+            -0.25 if val.startswith('sub') else  # noqa
+            ST_Percentage._convert_from_percent_literal(val))
     run.font._rPr.set('baseline', ST_Percentage.convert_to_xml(val))
 
 
 def strike(run, val, data):
-    val = ('sngStrike' if val.startswith('s') else
-           'dblStrike' if val.startswith('d') else
-           'noStrike' if val.startswith('n') else val)
+    val = (
+        'sngStrike' if val.startswith('s') else
+        'dblStrike' if val.startswith('d') else
+        'noStrike' if val.startswith('n') else val)
     run.font._rPr.set('strike', val)
 
 
@@ -705,8 +707,9 @@ def chart(shape, spec, data: dict):
         raise ValueError(f'Chart data {chart_data:r} is not a DataFrame on shape: {shape.name}')
     # If it's not specified, use the existing data
     if chart_data is None:
-        chart_data = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
-                                   index_col=0, engine='openpyxl')
+        chart_data = pd.read_excel(
+            io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+            index_col=0, engine='openpyxl')
     else:
         chart_type = conf['chart-type'][chart_tag]
         # Create a new instance of CategoryChartData(), XYChartData() or BubbleChartData()

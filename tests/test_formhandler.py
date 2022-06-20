@@ -52,51 +52,68 @@ class TestFormHandler(TestGramex):
         sales = self.sales if df is None else df
 
         eq({}, sales)
-        eq({'देश': ['भारत']},
-           sales[sales['देश'] == 'भारत'])
-        eq({'city': ['Hyderabad', 'Coimbatore']},
-           sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
-        eq({'product!': ['Biscuit', 'Crème']},
-           sales[~sales['product'].isin(['Biscuit', 'Crème'])])
-        eq({'city>': ['Bangalore'], 'city<': ['Singapore']},
-           sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
-        eq({'city>~': ['Bangalore'], 'city<~': ['Singapore']},
-           sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
-        eq({'city~': ['ore']},
-           sales[sales['city'].str.contains('ore')])
-        eq({'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
-           sales[(sales['product'] == 'Biscuit') & (sales['city'] == 'Bangalore') &
-                 (sales['देश'] == 'भारत')])
-        eq({'city!~': ['ore']},
-           sales[~sales['city'].str.contains('ore')])
-        eq({'sales>': ['100'], 'sales<': ['1000']},
-           sales[(sales['sales'] > 100) & (sales['sales'] < 1000)])
-        eq({'growth<': [0.5]},
-           sales[sales['growth'] < 0.5])
-        eq({'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
-           sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)])
-        eq({'देश': ['भारत'], '_sort': ['sales']},
-           sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position))
-        eq({'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
-           sales[sales['product'] == 'Biscuit'].sort_values(
+        eq({'देश': ['भारत']}, sales[sales['देश'] == 'भारत'])
+        eq(
+            {'city': ['Hyderabad', 'Coimbatore']},
+            sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        eq(
+            {'product!': ['Biscuit', 'Crème']},
+            sales[~sales['product'].isin(['Biscuit', 'Crème'])])
+        eq(
+            {'city>': ['Bangalore'], 'city<': ['Singapore']},
+            sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
+        eq(
+            {'city>~': ['Bangalore'], 'city<~': ['Singapore']},
+            sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
+        eq(
+            {'city~': ['ore']},
+            sales[sales['city'].str.contains('ore')])
+        eq(
+            {'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
+            sales[
+                (sales['product'] == 'Biscuit') &
+                (sales['city'] == 'Bangalore') &
+                (sales['देश'] == 'भारत')])
+        eq(
+            {'city!~': ['ore']},
+            sales[~sales['city'].str.contains('ore')])
+        eq(
+            {'sales>': ['100'], 'sales<': ['1000']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000)])
+        eq(
+            {'growth<': [0.5]},
+            sales[sales['growth'] < 0.5])
+        eq(
+            {'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)])
+        eq(
+            {'देश': ['भारत'], '_sort': ['sales']},
+            sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position))
+        eq(
+            {'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
+            sales[sales['product'] == 'Biscuit'].sort_values(
                 ['देश', 'growth'], ascending=[False, False], na_position=na_position))
-        eq({'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
-           sales[sales['देश'] == 'भारत'].iloc[4:12])
+        eq(
+            {'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
+            sales[sales['देश'] == 'भारत'].iloc[4:12])
 
         cols = ['product', 'city', 'sales']
-        eq({'देश': ['भारत'], '_c': cols},
-           sales[sales['देश'] == 'भारत'][cols])
+        eq(
+            {'देश': ['भारत'], '_c': cols},
+            sales[sales['देश'] == 'भारत'][cols])
 
         ignore_cols = ['product', 'city']
-        eq({'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
-           sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
+        eq(
+            {'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
+            sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
 
         # Non-existent column does not raise an error for any operation
         for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
             eq({'nonexistent' + op: ['']}, sales)
         # Non-existent sorts do not raise an error
-        eq({'_sort': ['nonexistent', 'sales']},
-           sales.sort_values('sales', na_position=na_position))
+        eq(
+            {'_sort': ['nonexistent', 'sales']},
+            sales.sort_values('sales', na_position=na_position))
         # Non-existent _c does not raise an error
         eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
 
@@ -153,24 +170,30 @@ class TestFormHandler(TestGramex):
     def test_file(self):
         self.check_filter('/formhandler/file', na_position='last')
         self.check_filter('/formhandler/url', na_position='last')
-        self.check_filter('/formhandler/file-multi', na_position='last', key='big',
-                          df=self.sales[self.sales['sales'] > 100])
-        self.check_filter('/formhandler/file-multi', na_position='last', key='by-growth',
-                          df=self.sales.sort_values('growth'))
+        self.check_filter(
+            '/formhandler/file-multi', na_position='last', key='big',
+            df=self.sales[self.sales['sales'] > 100])
+        self.check_filter(
+            '/formhandler/file-multi', na_position='last', key='by-growth',
+            df=self.sales.sort_values('growth'))
         self.check_filter('/formhandler/exceltable', na_position='last')
 
     def test_sqlite(self):
         self.check_filter('/formhandler/sqlite', na_position='first')
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big',
-                          df=self.sales[self.sales['sales'] > 100])
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='by-growth',
-                          df=self.sales.sort_values('growth'))
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
-                          df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
+        self.check_filter(
+            '/formhandler/sqlite-multi', na_position='last', key='big',
+            df=self.sales[self.sales['sales'] > 100])
+        self.check_filter(
+            '/formhandler/sqlite-multi', na_position='last', key='by-growth',
+            df=self.sales.sort_values('growth'))
+        self.check_filter(
+            '/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
+            df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
         self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
-        self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
-                          na_position='last',
-                          df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        self.check_filter(
+            '/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
+            na_position='last',
+            df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
         self.check_columns('/formhandler/columns/sqlite')
 
         # Check the state: functionality. Every time /formhandler/sqlite-state is called,
@@ -610,14 +633,15 @@ class TestFormHandler(TestGramex):
         afe(actual, expected, check_like=True)
 
         # Files with ../ etc should be skipped
-        self.check('/formhandler/arg-url?path=../sales',
-                   code=500, text='KeyError')
+        self.check('/formhandler/arg-url?path=../sales', code=500, text='KeyError')
         # Test that the ?skip= parameter is used to find the table.
-        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
-                   code=500, text='NoSuchTableError')
+        self.check(
+            '/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
+            code=500, text='NoSuchTableError')
         # Spaces are ignored in SQLAlchemy query. So ?skip= will be a missing key
-        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
-                   code=500, text='KeyError')
+        self.check(
+            '/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
+            code=500, text='KeyError')
 
     def test_path_arg(self):
         url = '/formhandler/%s/formhandler/sales?group=product&col=city&val=Bangalore'

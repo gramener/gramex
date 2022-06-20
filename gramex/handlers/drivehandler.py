@@ -29,8 +29,9 @@ class DriveHandler(FormHandler):
     File metadata is stored in <path>/.meta.db as SQLite
     '''
     @classmethod
-    def setup(cls, path, user_fields=None, tags=None, allow=None, ignore=None, max_file_size=None,
-              **kwargs):
+    def setup(
+            cls, path, user_fields=None, tags=None, allow=None, ignore=None, max_file_size=None,
+            **kwargs):
         cls.path = path
         cls.user_fields = cls._ensure_type('user_fields', user_fields)
         cls.tags = cls._ensure_type('tags', tags)

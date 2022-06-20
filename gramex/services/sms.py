@@ -35,8 +35,9 @@ class AmazonSNS(Notifier):
         ...     sender='gramex')
     '''
 
-    def __init__(self, aws_access_key_id, aws_secret_access_key,
-                 smstype='Transactional', **kwargs):
+    def __init__(
+            self, aws_access_key_id, aws_secret_access_key,
+            smstype='Transactional', **kwargs):
         import boto3
         self.client = boto3.client(
             'sns',

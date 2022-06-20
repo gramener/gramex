@@ -69,8 +69,9 @@ class TwitterStream(object):
         while True:
             # Set .enabled to False to temporarily disable streamer
             if self.enabled:
-                params = {key: val.encode('utf-8') for key, val in self.params.items()
-                          if key in self.valid_params}
+                params = {
+                    key: val.encode('utf-8') for key, val in self.params.items()
+                    if key in self.valid_params}
                 if 'follow' not in params and 'track' not in params and 'locations' not in params:
                     self.enabled = False
                     self.delay = 5
@@ -107,13 +108,15 @@ class TwitterStream(object):
             # For rate limiting, start with 1 minute and double each attempt
             if e.code in {RATE_LIMITED, TOO_MANY_REQUESTS}:
                 self.delay = self.delay * 2 if self.delay else 60
-                app_log.error(f'TwitterStream HTTP {e.code} (rate limited): {e.response}. '
-                              f'Retry: {self.delay}s')
+                app_log.error(
+                    f'TwitterStream HTTP {e.code} (rate limited): {e.response}. '
+                    f'Retry: {self.delay}s')
             # For Tornado timeout errors, reconnect immediately
             elif e.code == CLIENT_TIMEOUT:
                 self.delay = 0
-                app_log.error(f'TwitterStream HTTP {e.code} (timeout): {e.response}. '
-                              f'Retry: {self.delay}s')
+                app_log.error(
+                    f'TwitterStream HTTP {e.code} (timeout): {e.response}. '
+                    f'Retry: {self.delay}s')
             # For server errors, start with 5 seconds and double until 320 seconds
             elif INTERNAL_SERVER_ERROR <= e.code <= GATEWAY_TIMEOUT:
                 self.delay = min(320, self.delay * 2 if self.delay else 1)      # noqa: 320 seconds

@@ -40,8 +40,9 @@ class TestGramex(unittest.TestCase):
         req = session or requests
         return getattr(req, method)(server.base_url + url, timeout=timeout, **kwargs)
 
-    def check(self, url, data=None, path=None, code=200, text=None, no_text=None,
-              request_headers=None, headers=None, session=None, method='get', timeout=10):
+    def check(
+            self, url, data=None, path=None, code=200, text=None, no_text=None,
+            request_headers=None, headers=None, session=None, method='get', timeout=10):
         '''
         check(url) checks if the url returns the correct response. Parameters:
 
@@ -63,8 +64,9 @@ class TestGramex(unittest.TestCase):
 
         If any of the checks do not match, raises an assertion error.
         '''
-        r = self.get(url, session=session, data=data, method=method, timeout=timeout,
-                     headers=request_headers)
+        r = self.get(
+            url, session=session, data=data, method=method, timeout=timeout,
+            headers=request_headers)
         eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))

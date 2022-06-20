@@ -266,6 +266,6 @@ class FormHandler(BaseHandler):
         prefix = 'FH-{}-{}'
         for dataset, metadata in meta.items():
             for key, value in metadata.items():
-                string_value = json.dumps(value, separators=(',', ':'),
-                                          ensure_ascii=True, cls=CustomJSONEncoder)
+                string_value = json.dumps(
+                    value, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder)
                 self.set_header(prefix.format(dataset, key), string_value)
