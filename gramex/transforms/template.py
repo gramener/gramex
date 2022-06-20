@@ -101,6 +101,7 @@ def rmarkdown(content, handler=None, **kwargs):
 
     !!! Deprecated
         Support for R is being phased out in favor of Python ML libraries.
+        It will be removed by Gramex 1.82 (Aug 2022)
 
     This can be used as a transform in FileHandler:
 
@@ -120,7 +121,7 @@ def rmarkdown(content, handler=None, **kwargs):
     import gramex.services
     from gramex.config import app_log
 
-    app_log.warning('rmarkdown: transform deprecated')
+    app_log.warning('rmarkdown: transform deprecated, expires v1.82 Aug 2022')
     rmdfilepath = str(handler.file)
     htmlpath = yield gramex.services.info.threadpool.submit(
         gramex.ml.r,
