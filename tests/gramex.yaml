@@ -502,11 +502,6 @@ url:
           function: rmarkdown(content, handler)
           headers:
             Content-Type: text/html; charset=UTF-8
-        "*.yaml":
-          encoding: utf-8
-          function: badgerfish(content, handler)
-          headers:
-            Content-Type: text/html; charset=UTF-8
         "template.*":
           encoding: utf-8
           function: template(content, handler=handler, param='x')

@@ -56,8 +56,8 @@ atexit.register(_delete_temp_files)
 def open(
         path: str, callback: Union[str, Callable] = None, transform: Callable = None,
         rel: bool = False, **kwargs: dict):
-    '''
-    Reads a file, processes it via a callback, caches the result and returns it.
+    '''Reads a file, processes it via a callback, caches the result and returns it.
+
     When called again, returns the cached result unless the file has updated.
 
     By default, it determine the file type using the extension. For example:
@@ -70,7 +70,7 @@ def open(
     - `bin`: reads binary files using io.open
     - `text` or `txt`: reads text files using io.open
     - `yaml`: reads files using yaml.safe_load via io.open
-    - `config`: reads files using using :py:class:`gramex.config.PathConfig`.
+    - `config`: reads files using using [gramex.config.PathConfig]
         Same as `yaml`, but allows `import:` and variable substitution.
     - `json`: reads files using json.load via io.open
     - `jsondata`: reads files using pd.read_json
@@ -582,16 +582,15 @@ _regex_type = type(re.compile(''))
 
 
 def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
-    '''
-    This is the same as :py:class:`Subprocess`, but has a few additional checks.
+    '''This is the same as [Subprocess], but has a few additional checks.
 
-    1. If we have already called :py:class:`Subprocess` with the same arguments,
-       re-use the same instance.
+    1. If we have already called [Subprocess] with the same arguments,
+        re-use the same instance.
     2. Send the process STDOUT and STDERR to this application's STDERR. This
-       makes it easy to see what errors the application reports.
+        makes it easy to see what errors the application reports.
     3. Supports retry attempts.
     4. Checks if the first line of output is a matches a string / re -- ensuring
-       that the application started properly.
+        that the application started properly.
     '''
     arg_str = args if isinstance(args, str) else ' '.join(args)
     try:

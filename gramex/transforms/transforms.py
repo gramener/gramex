@@ -10,6 +10,7 @@ from functools import wraps
 from types import GeneratorType
 from orderedattrdict import AttrDict
 from gramex.config import app_log, locate, variables, CustomJSONEncoder, merge
+from typing import Union, Any, List
 
 
 def identity(x):
@@ -18,9 +19,9 @@ def identity(x):
 
 def _arg_repr(arg):
     '''
-    Arguments starting with ``=`` are converted into the variable. Otherwise,
-    values are treated as strings. For example, ``=x`` is the variable ``x`` but
-    ``x`` is the string ``"x"``. ``==x`` is the string ``"=x"``.
+    Arguments starting with `=` are converted into the variable. Otherwise,
+    values are treated as strings. For example, `=x` is the variable `x` but
+    `x` is the string `"x"`. `==x` is the string `"=x"`.
     '''
     if isinstance(arg, str):
         if arg.startswith('=='):
@@ -87,80 +88,131 @@ def module_names(node, vars):
     return modules
 
 
-def build_transform(conf, vars=None, filename='transform', cache=False, iter=True):
-    '''
-    Converts an expression into a callable function. For e.g.::
+def build_transform(
+        conf: dict,
+        vars: dict = None,
+        kwargs: Union[bool, str] = False,
+        filename: str = 'transform',
+        cache: bool = False,
+        iter: bool = True):
+    '''Converts an expression into a callable function.
 
-        function: json.dumps("x", separators: [",", ":"])
+    Examples:
+        >>> fn = build_transform({'function': 'json.dumps({"x": 1})'}, iter=False)
+        >>> fn()
+        ... '{"x": 1}'
 
-    translates to::
+    This compiles the expression into a callable function as follows:
 
-        fn = build_transform(conf={
-            'function': 'json.dumps("x", separators: [",", ":"])',
-        })
+    ```python
+    def transform(_val):
+        import json
+        result = json.dumps({"x": 1})
+        return result
+    ```
 
-    which becomes::
+    Parameters:
+        conf: expression to compile
+        vars: variables passed to the compiled function
+        kwargs: `True` to accept **kwargs. Any string to define the kwargs variable name
+        filename: filename to print in case of errors
+        cache: `False` re-imports modules if changed. `True` caches module
+        iter: `True` always returns an iterable. `False` returns a single value
 
-        def transform(_val):
-            import json
-            result = json.dumps("x", separators=[",", ":""])
-            return result if isinstance(result, GeneratorType) else (result,)
+    `conf` is a dict with a `function` key with Python expression. This expression is compiled
+    and returned. If the expression uses modules (e.g. `json.dumps`), they are auto-imported.
 
-    The same can also be achieved via::
+    It optionally accepts an `args` list and a `kwargs` list if `function` is a function name.
 
-        function: json.dumps
-        args: ["x"]
-        kwargs:
-            separators: [",", ":"]
+    Examples:
+        >>> {'function': '1'}               # => 1
+        >>> {'function': 'x + y'}           # => x + y
+        >>> {'function': 'json.dumps(x)'}   # => json.dumps(s)
+        >>> {'function': 'json.dumps', 'args': ['x'], 'kwargs': {'indent': 2}}
+        >>> {'function': 'json.dumps("x", indent=2)`    # same as above
 
-    Any Python expression is also allowed. The following are valid functions::
+    `args` values and `kwargs` keys are treated as strings, not variables. But values starting with
+    `=` (e.g. `=handler`) are treated as variables. (Use `==x` to represent the string `=x`.)
 
-        function: 1                 # returns 1
-        function: _val.type         # Returns _val.type
-        function: _val + 1          # Increments the input parameter by 1
-        function: json.dumps(_val)  # Returns the input as a string
-        function: json.dumps        # This is the same as json.dumps(_val)
+    Examples:
+        >>> {'function': 'str', 'args': ['handler']}      # => str('handler')
+        >>> {'function': 'str', 'args': ['=handler']}     # => str(handler)
+        >>> {'function': 'str', 'args': ['==handler']}    # => str('=handler')
 
-    ``build_transform`` also takes an optional ``filename=`` parameter that sets
-    the "filename" of the returned function. This is useful for log messages.
+    `vars` defines the compiled function's signature. `vars={'x': 1, 'y': 2}` creates a
+    `def transform(x=1, y=2):`.
 
-    It takes an optional ``cache=True`` that permanently caches the transform.
-    The default is ``False`` that re-imports the function's module if changed.
+    `vars` defaults to `{'_val': None}`.
 
-    The returned function takes a single argument called ``_val`` by default. You
-    can change the arguments it accepts using ``vars``. For example::
+    Examples:
+        >>> add = build_transform({'function': 'x + y'}, vars={'x': 1, 'y': 2}, iter=False)
+        >>> add()
+        ... 3
+        >>> add(x=3)
+        ... 5
+        >>> add(x=3, y=4)
+        ... 7
+        >>> incr = build_transform({'function': '_val + 1'}, iter=False)
+        >>> incr(3)
+        ... 4
 
-        fn = build_transform(..., vars={'x': None, 'y': 1})
+    `kwargs=True` allows the compiled function to accept any keyword arguments as `**kwargs`.
+    Specify `kwargs='kw'` to use `kw` (or any string) as the keyword arguments variable instead.
 
-    creates::
+    Examples:
+        >>> params = build_transform({'function': 'kwargs'}, vars={}, kwargs=True, iter=False)
+        >>> params(x=1)
+        ... {'x': 1}
+        >>> params(x=1, y=2)
+        ... {'x': 1, 'y': 2}
+        >>> params = build_transform({'function': 'kw'}, vars={}, kwargs='kw', iter=False)
+        >>> params(x=1, y=2)
+        ... {'x': 1, 'y': 2}
 
-        def transform(x=None, y=1):
-            ...
+    `filename` defines the filename printed in error messages.
 
-    Or pass ``vars={}`` for function that does not accept any parameters.
+    Examples:
+        >>> error = build_transform({'function': '1/0'}, filename='zero-error', iter=False)
+        ... Traceback (most recent call last):
+        ...   File "<stdin>", line 1, in <module>
+        ...   File "zero-error", line 2, in transform
+        ... ZeroDivisionError: division by zero
 
-    The returned function returns an iterable containing the values. If the
-    function returns a single value, you can get it on the first iteration. If
-    the function returns a generator object, that is returned as-is.
+    `cache=False` re-imports the modules if changed. This is fairly efficient, and is the default.
+    Use `cache=True` to cache modules until Python is restarted.
 
-    But if ``iter=False`` is passed, the returned function just contains the
-    returned value as-is -- not as a list.
+    `iter=True` always returns an iterable. If the `function` is a generator (i.e. has a `yield`),
+    it is returned as-is. Else it is returned as an array, i.e. `[result]`.
 
-    In the ``conf`` parameter, ``args`` and ``kwargs`` values are interpreted
-    literally. But values starting with ``=`` like ``=args`` are treated as
-    variables. (Start ``==`` to represent a string that begins with ``=``.) For
-    example, when this is called with ``vars={"handler": None}``::
+    Examples:
+        `build_transform()` returns results wrapped as an array.
 
-        function: json.dumps
-        args: =handler
-        kwargs:
-            key: abc
-            name: =handler.name
+        >>> val = build_transform({'function': '4'})
+        >>> val()
+        ... [4]
+        >>> val = build_transform({'function': '[4, 5]'})
+        >>> val()
+        ... [[4, 5]]
 
-    becomes::
+        If the result is a generator, it is returned as-is.
 
-        def transform(handler=None):
-            return json.dumps(handler, key="abc", name=handler.name)
+        >>> def gen():
+        ...     for x in range(5):
+        ...         yield x
+        >>> val = build_transform({'function': 'fn()'}, vars={'fn': None})
+        >>> val(gen)
+        ... <generator object gen at 0x....>
+        >>> list(val(gen))
+        ... [0, 1, 2, 3, 4]
+
+        If `iter=False`, it returns the results as-is.
+
+        >>> val = build_transform({'function': '4'}, iter=False)
+        >>> val()
+        ... 4
+        >>> val = build_transform({'function': '[4, 5]'}, iter=False)
+        >>> val()
+        ... [4, 5]
     '''
     # Ensure that the transform is a dict with "function:" in it. (This is a common mistake)
     if not isinstance(conf, dict) or 'function' not in conf:
@@ -171,10 +223,13 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # The returned function takes a single argument by default
     if vars is None:
         vars = {'_val': None}
+    # Treat kwargs=True as kwargs=kwargs. It adds **kwargs to the function call
+    if kwargs is True:
+        kwargs = 'kwargs'
 
     # If the function is a list, treat it as a pipeline
     if isinstance(conf['function'], (list, tuple)):
-        return build_pipeline(conf['function'], vars, filename, cache, iter)
+        return build_pipeline(conf['function'], vars, kwargs, filename, cache, iter)
 
     # Get the name of the function in case it's specified as a function call
     # expr is the full function / expression, e.g. str("abc")
@@ -192,8 +247,9 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     function, doc = None, expr
     # If the module or function is one of the vars themselves, return it as-is
     # _val.type will be used as-is, then, rather than looking for an "_val" module
-    if module_name in vars:
+    if module_name in vars or (isinstance(kwargs, str) and module_name == kwargs):
         expr = function_name
+    # If it's a function call, construct the function signature
     elif function_name is not None:
         function = locate(function_name, modules=['gramex.transforms'])
         doc = function.__doc__
@@ -225,8 +281,11 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     # Create the code
     modules = module_names(tree, vars)
     modulestr = ', '.join(sorted(modules))
+    signature = ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items())
+    if kwargs:
+        signature += (', ' if signature else '') + f'**{kwargs}'
     body = [
-        'def transform(', ', '.join('{:s}={!r:}'.format(k, v) for k, v in vars.items()), '):\n',
+        f'def transform({signature}):\n',
         f'\timport {modulestr}\n' if modulestr else '',
         f'\treload_module({modulestr})\n' if modulestr and not cache else '',
         f'\tresult = {expr}\n',
@@ -259,7 +318,46 @@ def build_transform(conf, vars=None, filename='transform', cache=False, iter=Tru
     return result
 
 
-def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True):
+def build_pipeline(
+        conf: dict,
+        vars: dict = None,
+        kwargs: Union[bool, str] = False,
+        filename: str = 'pipeline',
+        cache: bool = False,
+        iter: bool = True):
+    '''Converts an expression list into a callable function (called a pipeline).
+
+    Examples:
+        >>> fn = build_pipeline([
+        ...     {'name': 'x', 'function': '1 + 2'},
+        ...     {'name': 'y', 'function': '3 + 4'},
+        ...     {'function': 'x + y'},
+        ... ], iter=False)
+        >>> fn()
+        ... 10
+
+    This compiles the expression list into a callable function roughty as follows:
+
+    ```python
+    def pipeline(_val):
+        x = 1 + 2
+        y = 3 + 4
+        return x + y
+    ```
+
+    Parameters:
+        conf: expression list to compile
+        vars: variables passed to the compiled function
+        kwargs: `True` to accept **kwargs. Any string to define the kwargs variable name
+        filename: filename to print in case of errors
+        cache: `False` re-imports modules if changed. `True` caches module
+        iter: `True` always returns an iterable. `False` returns a single value
+
+    `conf` is a **list** of the same `conf` that
+    [build_transform][gramex.transforms.build_transform] accepts.
+
+    Other parameters are the same as [build_transform][gramex.transforms.build_transform].
+    '''
     if not isinstance(conf, (list, tuple)):
         raise ValueError(f'pipeline:{filename}: must be a list, not {type(conf)}')
     if len(conf) == 0:
@@ -281,8 +379,8 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True)
             raise ValueError(f'pipeline:{filename}: {index}/{n}: missing "function"')
         # Compile the function, allowing use of all variables in current_scope
         stage['function'] = build_transform(
-            {'function': spec['function']},
-            vars=current_scope, filename=f'pipeline:{filename} {index}/{n}', iter=False)
+            {'function': spec['function']}, vars=current_scope, kwargs=kwargs,
+            filename=f'pipeline:{filename} {index}/{n}', cache=cache, iter=False)
         # If the stage defines a name, add it as a variable for current_scope
         if 'name' in spec:
             current_scope[spec['name']] = None
@@ -293,10 +391,9 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True)
         This returned function actually runs the pipeline.
         It loops through each pipeline step, runs the function, and returns the last value.
 
-        Any ``kwargs`` passed are used as globals.
-        (They default to the ``vars`` in :py:func:`build_pipeline`.)
+        Any `kwargs` passed are used as globals. (They default to the `vars` in build_pipeline.)
 
-        If a step specifies a ``name``, the result is stored in ``kwargs[name]``,
+        If a step specifies a `name`, the result is stored in `kwargs[name]`,
         making it available as a global to the next step.
 
         Logs the time taken for each step (and errors, if any) in storelocations.pipeline.
@@ -341,9 +438,10 @@ def build_pipeline(conf, vars=None, filename='pipeline', cache=False, iter=True)
 
 def condition(*args):
     '''
-    DEPRECATED. Use the ``if`` construct in config keys instead.
+    !!! Deprecated
+        Use the `if` construct in config keys instead.
 
-    Variables can also be computed based on conditions::
+    Variables can also be computed based on conditions:
 
         variables:
             OS:
@@ -385,28 +483,31 @@ def condition(*args):
         return args[-1]
 
 
-def flattener(fields, default=None, filename='flatten'):
-    '''
-    Generates a function that flattens deep dictionaries. For example::
+def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
+    '''Generates a function that flattens deep dictionaries.
+
+    Examples:
 
         >>> flat = flattener({
-                'id': 'id',
-                'name': 'user.screen_name'
-            })
+        ...     'id': 'id',
+        ...     'name': 'user.screen_name'
+        ... })
         >>> flat({'id': 1, 'user': {'screen_name': 'name'}})
-        {'id': 1, 'name': 'name'}
+        ... {'id': 1, 'name': 'name'}
 
-    Fields map as follows::
+    Parameters:
+        fields: a mapping of keys to object paths
+        default: the value to use if the object path is not found
+        filename: filename to print in case of errors
 
-        ''    => obj
-        True  => obj
-        1     => obj[1]
-        'x'   => obj['x']
-        'x.y' => obj['x']['y']
-        '1.x' => obj[1]['x']
+    Object paths are dot-seperated, and constructed as follows:
 
-    Missing values map to ``None``. You can change ``None`` to '' passing a
-    ``default=''`` or any other default value.
+    ```text
+    '1'   => obj[1]
+    'x'   => obj['x']
+    'x.y' => obj['x']['y']
+    '1.x' => obj[1]['x']
+    ```
     '''
     body = [
         f'def {filename}(obj):\n',
@@ -450,8 +551,8 @@ _once_info = {}
 
 
 def once(*args, **kwargs):
-    '''
-    Returns False if once() has been called before with these arguments. Else True.
+    '''Returns `False` if once() has been called before with these arguments. Else `True`.
+
     Data is stored in a persistent SQLite dict.
     '''
     if 'db' not in _once_info:
@@ -510,26 +611,30 @@ class Header(str):
 
 
 def handler(func):
-    """Wrap a function to make it compatible with a tornado.web.RequestHandler
+    """Wrap a function to make it compatible with a FunctionHandler.
 
     Use this decorator to expose a function as a REST API, with path or URL parameters mapped to
     function arguments with type conversion.
 
-    Suppose you have the following function in ``greet.py``::
+    Suppose you have the following function in `greet.py`:
 
-        @handler
-        def birthday(name: str, age: int):
-            return f'{name} turns {age:d} today! Happy Birthday!'
+    ```python
+    @handler
+    def birthday(name: str, age: int):
+        return f'{name} turns {age:d} today! Happy Birthday!'
+    ```
 
-    Then, in ``gramex.yaml``, you can use it as a FunctionHandler as follows::
+    Then, in `gramex.yaml`, you can use it as a FunctionHandler as follows::
 
-        url:
-            pattern: /$YAMLURL/greet
-            handler: FunctionHandler
-            kwargs:
-                function: greet.birthday
+    ```yaml
+    url:
+        pattern: /$YAMLURL/greet
+        handler: FunctionHandler
+        kwargs:
+            function: greet.birthday
+    ```
 
-    Now, ``/greet?name=Gramex&age=0010`` returns "Gramex turns 10 today! Happy Birthday!".
+    Now, `/greet?name=Gramex&age=0010` returns "Gramex turns 10 today! Happy Birthday!".
     It converts the URL parameters into the types found in the annotations, e.g. `0010` into 10.
 
     An alternate way of configuring this is as follows::
@@ -542,22 +647,23 @@ def handler(func):
                 # but ensure that handler is the first argument in the config.
                 function: greet.birthday(handler, name='Name', age=10)
 
-    Now, ``/greet/name/Gramex/age/0010`` returns "Gramex turns 10 today! Happy Birthday!".
+    Now, `/greet/name/Gramex/age/0010` returns "Gramex turns 10 today! Happy Birthday!".
 
     The function args and kwargs are taken from these sources this in order.
 
-    1. From the YAML function, e.g. ``function: greet.birthday('Name', age=10)`` sets
-        ``name='Name'`` and ``age=10``
-    2. Over-ridden by YAML URL pattern, e.g. ``pattern: /$YAMLPATH/(.*)/(?P<age>.*)`` when called
-        with ``/greet/Name/10`` sets ``name='Name'`` and ``age=10``
-    3. Over-ridden by URL query parameters, e.g. ``/greet?name=Name&age=10`` sets ``name='Name'``
-        and ``age=10``
-    4. Over-ridden by URL POST body parameters, e.g. ``curl -X POST /greet -d "?name=Name&age=10"``
-        sets ``name='Name'`` and ``age=10``
+    1. From the YAML function
+        - e.g. `function: greet.birthday('Name', age=10)` sets `name='Name'` and `age=10`
+    2. Over-ridden by YAML URL pattern
+        - e.g. `pattern: /$YAMLPATH/(.*)/(?P<age>.*)`
+        - URL `/greet/Name/10` sets `name='Name'` and `age=10`
+    3. Over-ridden by URL query parameters
+        - e.g. URL `/greet?name=Name&age=10` sets `name='Name'` and `age=10`
+    4. Over-ridden by URL POST body parameters
+        - e.g. `curl -X POST /greet -d "?name=Name&age=10"` sets `name='Name'` and `age=10`
 
-    ``handler`` is also available as a kwarg. You can use this as the last positional argument or
-    a keyword argument. Both ``def birthday(name, age, handler)`` and
-    ``def birthday(name, age, handler=None)`` are valid.
+    `handler` is also available as a kwarg. You can use this as the last positional argument or
+    a keyword argument. Both `def birthday(name, age, handler)` and
+    `def birthday(name, age, handler=None)` are valid.
     """
     from inspect import signature
     from typing import get_type_hints
@@ -615,11 +721,39 @@ def handler(func):
     return wrapper
 
 
-def build_log_info(keys, *vars):
-    '''
-    Creates a ``handler.method(vars)`` that returns a dictionary of computed
-    values. ``keys`` defines what keys are returned in the dictionary. The values
-    are computed using the formulas in the code.
+def build_log_info(keys: List, *vars: List):
+    '''Utility to create logging values.
+
+    Returns a function that accepts a handler and returns a dict of values to log.
+
+    Examples:
+        >>> log_info = build_log_info(['time', 'ip', 'cookies.sid', 'user.email'])
+        >>> log_info(handler)
+        ... {"time": 1655280440, "ip": "::1", "cookies.sid": "...", "user.email": "..."}
+
+    Parameters:
+        keys: list of keys to include in the log.
+        *vars: additional variables to include in the log.
+
+    `keys` can include: `name`, `class`, `time`, `datetime`, `method`, `uri`, `ip`, `status`,
+    `duration`, port, `user`, `session`, `error`.
+
+    It can also include:
+
+    - `args.*`: value of the URL query parameter ?arg=
+    - `request.*`: value of `handler.request.*`
+    - `headers.*`: value of the HTTP header
+    - `cookies.*`: value of the HTTP cookie
+    - `user.*`: key in the user object
+    - `env.*`: value of the environment variable
+
+    `vars` can be any list of any variables. When you pass these to the function, they're added to
+    the returned value as-is. (This is used internally in [gramex.handlers.AuthHandler.setup])
+
+    Examples:
+        >>> log_info = build_log_info(['time'], 'event')
+        >>> log_info(handler, event='x')
+        ... {"time": 1655280440, "event": "x"}
     '''
     from gramex import conf
 
@@ -646,8 +780,9 @@ def build_log_info(keys, *vars):
         'args': 'handler.get_argument("{val}", "")',
         'request': 'getattr(handler.request, "{val}", "")',
         'headers': 'handler.request.headers.get("{val}", "")',
-        'cookies': 'handler.request.cookies["{val}"].value ' +
-                   'if "{val}" in handler.request.cookies else ""',
+        'cookies': (
+            'handler.request.cookies["{val}"].value ' +
+            'if "{val}" in handler.request.cookies else ""'),
         'user': '(handler.current_user or {{}}).get("{val}", "")',
         'env': 'os.environ.get("{val}", "")',
     }
@@ -665,8 +800,9 @@ def build_log_info(keys, *vars):
                 vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
                 continue
         app_log.error(f'Skipping unknown key {key}')
-    code = compile('def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
-                   filename='log', mode='exec')
+    code = compile(
+        'def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
+        filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     # exec() is safe here since the code is constructed entirely in this function
     exec(code, context)     # nosec: developer-initiated
