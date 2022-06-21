@@ -58,6 +58,9 @@ class MLHandler(FormHandler):
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  slugify(cls.name))
         cls.store = ml.ModelStore(config_dir)
+        cls.is_cv_request = False
+        if 'cv_model' in config_dir:
+            cls.is_cv_request = True
 
         cls.template = template
         super(MLHandler, cls).setup(**kwargs)
@@ -95,7 +98,10 @@ class MLHandler(FormHandler):
         model_params = model.get('params', {})
         cls.store.dump('class', mclass)
         cls.store.dump('params', model_params)
-        if op.exists(cls.store.model_path):  # If the pkl exists, load it
+        if cls.is_cv_request:
+            pass
+        elif hasattr(cls.store, 'model_path') and op.exists(cls.store.model_path):
+            # If the pkl exists, load it
             if op.isdir(cls.store.model_path):
                 mclass, wrapper = ml.search_modelclass(mclass)
                 cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
@@ -184,7 +190,38 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
-        self._check_model_path()
+        if self.is_cv_request:
+            from tensorflow.keras.applications.resnet50 import ResNet50
+            from tensorflow.keras.preprocessing import image
+            from tensorflow.keras.models import load_model
+            from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
+
+            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                                 slugify(self.name))
+            if op.exists(config_dir) and 'keras_metadata.pb' in os.listdir(config_dir):
+                model = load_model(config_dir)
+            else:
+                model = ResNet50(include_top=True,
+                                 weights="imagenet",
+                                 input_tensor=None,
+                                 input_shape=None,
+                                 pooling=None,
+                                 classes=1000)
+            x = image.img_to_array(data)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
+
+            preds = model.predict(x)
+            # decode the results into a list of tuples (class, description, probability)
+            # (one such list for each sample in the batch)
+            try:
+                results = decode_predictions(preds)
+            except Exception:
+                class_names = []
+                class_names = json.load(open(op.join(config_dir, 'class_names.json')))
+                results = dict(zip(class_names, preds[0]))
+            return results
+
         metric = self.get_argument('_metric', False)
         if metric:
             scorer = get_scorer(metric)
@@ -208,7 +245,8 @@ class MLHandler(FormHandler):
     def _check_model_path(self):
         try:
             klass, wrapper = ml.search_modelclass(self.store.load('class'))
-            self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
+            if hasattr(self.store, 'model_path'):
+                self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
 
@@ -239,15 +277,29 @@ class MLHandler(FormHandler):
         elif '_cache' in self.args:
             self.write(self.store.load_data().to_json(orient='records'))
         else:
-            self._check_model_path()
+            if not self.is_cv_request:
+                self._check_model_path()
             if '_download' in self.args:
-                self.set_header('Content-Type', 'application/octet-strem')
+                self.set_header('Content-Type', 'application/octet-stream')
                 self.set_header('Content-Disposition',
                                 f'attachment; filename={op.basename(self.store.model_path)}')
                 with open(self.store.model_path, 'rb') as fout:
                     self.write(fout.read())
             elif '_model' in self.args:
                 self.write(json.dumps(self.model.get_params(), indent=2))
+            elif len(self.request.files.keys()) and \
+                self.request.files['image'][0].content_type in \
+                    ['image/jpeg', 'image/jpg', 'image/png']:
+                if '_action' in self.args and self.args['_action'] == 'predict':
+                    import cv2
+                    import imutils
+                    data = imutils.resize(cv2.imdecode(np.fromstring(
+                        self.request.files['image'][0].body, np.uint8), cv2.IMREAD_UNCHANGED),
+                        width=224)
+                    data = cv2.resize(data, (224, 224))
+                    prediction = yield gramex.service.threadpool.submit(
+                        self._predict, data)
+                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
             else:
                 try:
                     data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
@@ -259,10 +311,15 @@ class MLHandler(FormHandler):
                     app_log.debug(err.msg)
                     data = []
                 if len(data) > 0:
-                    data = data.drop([self.store.load('target_col')], axis=1, errors='ignore')
-                    prediction = yield gramex.service.threadpool.submit(
-                        self._predict, data)
-                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
+                    if 'training_data' in data.keys():
+                        training_results = yield gramex.service.threadpool.submit(
+                            self._train, data=data['training_data'].iloc[0])
+                        self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
+                    else:
+                        data = data.drop([self.store.load('target_col')], axis=1, errors='ignore')
+                        prediction = yield gramex.service.threadpool.submit(
+                            self._predict, data)
+                        self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
                 else:
                     self.set_header('Content-Type', 'text/html')
                     self.render(self.template, handler=self, data=self.store.load_data())
@@ -271,26 +328,84 @@ class MLHandler(FormHandler):
     def _append(self):
         self._parse_data(_cache=True, append=True)
 
-    def _train(self, data=None):
-        target_col = self.get_argument('target_col', self.store.load('target_col'))
-        index_col = self.get_argument('index_col', self.store.load('index_col'))
-        self.store.dump('target_col', target_col)
-        data = self._parse_data(False) if data is None else data
-        data = self._filtercols(data)
-        data = self._filterrows(data)
-        self.model = get_model(
-            self.store.load('class'), self.store.load('params'),
-            data=data, target_col=target_col,
-            nums=self.store.load('nums'), cats=self.store.load('cats')
+    def _train_keras(self, data):
+        import tensorflow as tf
+        from tensorflow.keras.optimizers import Adam
+        from tensorflow.keras.models import Sequential
+        from tensorflow.python.keras.layers import Dense, Flatten
+        import pathlib
+        data_dir = pathlib.Path(data)
+
+        config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
+                             slugify(self.name))
+
+        img_height, img_width = 224, 224
+        batch_size = 32
+        train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+            data_dir,
+            validation_split=0.2,
+            subset="training",
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+            data_dir,
+            validation_split=0.2,
+            subset="validation",
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        class_names = train_ds.class_names
+        keras_model = Sequential()
+        pretrained_model = tf.keras.applications.ResNet50(include_top=False,
+                                                          input_shape=(224, 224, 3),
+                                                          pooling='avg', classes=5,
+                                                          weights='imagenet')
+        for layer in pretrained_model.layers:
+            layer.trainable = False
+
+        keras_model.add(pretrained_model)
+        keras_model.add(Flatten())
+        keras_model.add(Dense(512, activation='relu'))
+        keras_model.add(Dense(5, activation='softmax'))
+        keras_model.compile(optimizer=Adam(lr=0.001),
+                            loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        epochs = 1
+        keras_model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=epochs
         )
-        if not isinstance(self.model, ml.SklearnTransformer):
-            target = data[target_col]
-            train = data[[c for c in data if c not in (target_col, index_col)]]
-            self.model.fit(train, target, self.store.model_path)
-            result = {'score': self.model.score(train, target)}
+        with open(op.join(config_dir, 'class_names.json'), 'w') as fout:
+            json.dump(class_names, fout)
+        keras_model.save(config_dir)
+        return class_names
+
+    def _train(self, data=None):
+        if self.is_cv_request:
+            result = self._train_keras(data)
         else:
-            self.model.fit(data, None, self.store.model_path)
-            result = self.model.get_attributes()
+            target_col = self.get_argument('target_col', self.store.load('target_col'))
+            index_col = self.get_argument('index_col', self.store.load('index_col'))
+            self.store.dump('target_col', target_col)
+            data = self._parse_data(False) if data is None else data
+            data = self._filtercols(data)
+            data = self._filterrows(data)
+            self.model = get_model(
+                self.store.load('class'), self.store.load('params'),
+                data=data, target_col=target_col,
+                nums=self.store.load('nums'), cats=self.store.load('cats')
+            )
+            if not isinstance(self.model, ml.SklearnTransformer):
+                target = data[target_col]
+                train = data[[c for c in data if c not in (target_col, index_col)]]
+                self.model.fit(train, target, self.store.model_path)
+                result = {'score': self.model.score(train, target)}
+            else:
+                self.model.fit(data, None, self.store.model_path)
+                result = self.model.get_attributes()
         return result
 
     def _retrain(self):
