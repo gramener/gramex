@@ -608,9 +608,10 @@ class PathConfig(AttrDict):
         # ... or if an imported file is deleted / updated
         for imp in self.__info__.imports:
             exists = imp.path.exists()
+            # If the path existed but has now been deleted, log it
             if not exists and imp.stat is not None:
                 reload = True
-                app_log.info(f'No config found: {imp.path}')
+                app_log.debug(f'Config deleted: {imp.path}')
                 break
             if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
                            imp.path.stat().st_size != imp.stat.st_size):
