@@ -19,16 +19,11 @@ lint () {
 
   # Python security check with bandit
   command -v bandit 2>/dev/null 2>&1 || pip install bandit
-  bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' --quiet
+  bandit gramex --aggregate vuln --recursive --quiet
 
-  # Install eslint and dependencies. Then test all apps
+  # Install linters. Then test all apps
   npm install
-  npx eslint --ext js,html gramex/
-
-  # Avoid eclint in package.json (npm audit issues). Install globally
-  command -v eclint 2>/dev/null 2>&1 || npm install -g eclint
-  # Run .editorconfig checks.
-  find . -type f ! -path '*/.git/*' ! -path '*/node_modules/*' ! -path '*/mkdocs/*' ! -path '*/__pycache__/*' ! -path '*/filemanager/test/tape.js' -print0 | xargs -0 eclint check
+  npx editorconfig-checker
 
   # Avoid htmllint-cli in package.json (npm audit issues). Install globally
   command -v htmllint 2>/dev/null 2>&1 || npm install -g htmllint-cli
