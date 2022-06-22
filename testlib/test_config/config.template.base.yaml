@@ -11,13 +11,18 @@ variables:
         default:
             function: str
             args: ['base']
+    DEFAULT_OBJECT:
+        default:
+            x: $THIS
     FUNCTION_VAR:
         function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
     DERIVED: $THIS/derived
     NUMERIC: 1
     BOOLEAN: true
     OBJECT: {x: 1}
+    OBJECT_CALC: {x: $THIS}
     LIST: [1, 2]
+    LIST_CALC: [$THIS]
 
     CONDITION1:
         function: condition
@@ -93,7 +98,10 @@ path: $YAMLPATH
 numeric: "$NUMERIC"
 boolean: '$BOOLEAN'
 object: $OBJECT
+object_calc: $OBJECT_CALC
+object_default: $DEFAULT_OBJECT
 list: $LIST
+list_calc: $LIST_CALC
 numeric_subst: "/${NUMERIC}"
 boolean_subst: "/${BOOLEAN}"
 object_subst: "/${OBJECT}"

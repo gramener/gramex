@@ -14,6 +14,7 @@ from tornado.escape import json_encode
 from typing import Callable, List, Union
 from gramex.config import merge, app_log
 from orderedattrdict import AttrDict
+from urllib.parse import urlparse
 
 _ENGINE_CACHE = {}
 _METADATA_CACHE = {}
@@ -904,6 +905,11 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
     engine = create_engine(url, **kwargs)
     if columns is None:
         return engine
+    # alter is not required for schema-less databases. For now, hard-code engine names
+    scheme = urlparse(url).scheme
+    if scheme in {'mongodb', 'elasticsearch', 'influxdb'}:
+        app_log.info(f'alter() not required for schema-less DB {engine.driver}')
+        return engine
     try:
         db_table = get_table(engine, table)
     except sa.exc.NoSuchTableError:
@@ -1783,7 +1789,6 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 def _filter_servicenow(url, controls, args, meta, table=None, columns=None, query=None, **kwargs):
     import pysnow
     from gramex.config import locate
-    from urllib.parse import urlparse
 
     urlinfo = urlparse(url)
     c = pysnow.Client(instance=urlinfo.hostname, user=urlinfo.username, password=urlinfo.password)

@@ -1,7 +1,6 @@
 import re
 import sys
 import os.path
-import sqlite3
 from glob import glob
 # lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
 from lxml.etree import Element              # nosec: lxml is fixed
@@ -13,6 +12,7 @@ import gramex.cache
 from gramex import conf
 from gramex.config import app_log
 from gramex.transforms import build_transform
+from typing import List
 
 if sys.version_info.major == 3:
     unicode = str
@@ -20,8 +20,10 @@ if sys.version_info.major == 3:
 DB_CONFIG = {
     'table': 'agg{}',
     'levels': ['M', 'W', 'D'],
-    'dimensions': [{'key': 'time', 'freq': '?level'},
-                   'user.id', 'ip', 'status', 'uri'],
+    'dimensions': [
+        {'key': 'time', 'freq': '?level'},
+        'user.id', 'ip', 'status', 'uri'
+    ],
     'metrics': {
         'duration': ['count', 'sum'],
         'new_session': ['sum'],
@@ -29,6 +31,7 @@ DB_CONFIG = {
     }
 }
 
+# TODO: extra_columns should not be a global. Once instance may use multiple logviewers!
 extra_columns = []
 for key in conf.get('schedule', []):
     if 'kwargs' in conf.schedule[key] and 'custom_dims' in conf.schedule[key].kwargs:
@@ -59,12 +62,6 @@ def pdagg(df, groups, aggfuncs):
     if isinstance(dff.columns, pd.MultiIndex):
         dff.columns = dff.columns.map('_'.join)
     return dff.reset_index()
-
-
-def table_exists(table, conn):
-    '''check if table exists in sqlite db'''
-    query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-    return not pd.read_sql(query, conn, params=[table]).empty
 
 
 def add_session(df, duration=30, cutoff_buffer=0):
@@ -103,21 +100,28 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims={}):
     return df
 
 
-def create_column_if_not_exists(table, freq, conn):
-    for col in extra_columns:
-        for row in conn.execute(f'PRAGMA table_info({table(freq)})'):
-            if row[1] == col:
-                break
-        else:
-            query = f'ALTER TABLE {table(freq)} ADD COLUMN "{col}" TEXT DEFAULT ""'
-            conn.execute(query)
-            conn.commit()
+def summarize(
+        db: dict,
+        transforms: List[dict] = [],
+        post_transforms: List[dict] = [],
+        session_threshold: float = 15,
+        cutoff_buffer: float = 0,
+        custom_dims: dict = None) -> None:
+    '''Summarizes log files into a database periodically.
 
+    Parameters:
+        db: SQLAlchemy database configuration.
+        transforms: List of transforms to be applied on data.
+        post_transforms: List of post transforms to be applied on data.
+        session_threshold: Minimum threshold for the session.
+        cutoff_buffer: In minutes for first and last session requests.
+        custom_dims: Custom columns to be added to the logviewer.
 
-def summarize(transforms=[], post_transforms=[], run=True,
-              session_threshold=15, cutoff_buffer=0, custom_dims=None):
-    '''summarize'''
-    app_log.info('logviewer: Summarize started')
+    This function is called by a scheduler and/or on start of gramex.
+    It will aggregate and update logs from requests.csv file by comparing the
+    timestamp of last added logs. It creates the aggregation tables if they don't exist.
+    '''
+    app_log.info('logviewer.summarize started')
     levels = DB_CONFIG['levels']
     table = DB_CONFIG['table'].format
     # dimensions and metrics to summarize
@@ -126,70 +130,52 @@ def summarize(transforms=[], post_transforms=[], run=True,
     log_file = conf.log.handlers.requests.filename
     # Handle for multiple instances requests.csv$LISTENPORT
     log_file = '{0}{1}'.format(*log_file.partition('.csv'))
-    folder = os.path.dirname(log_file)
-    conn = sqlite3.connect(os.path.join(folder, 'logviewer.db'))
 
-    for freq in levels:
-        try:
-            create_column_if_not_exists(table, freq, conn)
-        except sqlite3.OperationalError:
-            # Inform when table is created for the first time
-            app_log.info('logviewer: OperationalError: Table does not exist')
-
-    # drop agg tables from database
-    if run in ['drop', 'reload']:
-        droptable = 'DROP TABLE IF EXISTS {}'.format
-        for freq in levels:
-            app_log.info('logviewer: Dropping {} table'.format(table(freq)))
-            conn.execute(droptable(table(freq)))
-        conn.commit()
-        conn.execute('VACUUM')
-        if run == 'drop':
-            conn.close()
-            return
     # all log files sorted by modified time
     log_files = sorted(glob(log_file + '*'), key=os.path.getmtime)
-    max_date = None
 
     def filesince(filename, date):
         match = re.search(r'(\d{4}-\d{2}-\d{2})$', filename)
         backupdate = match.group() if match else ''
         return backupdate >= date or backupdate == ''
 
-    # get this month log files if db is already created
-    if table_exists(table(levels[-1]), conn):
-        query = 'SELECT MAX(time) FROM {}'.format(table(levels[-1]))    # nosec: table() is safe
-        max_date = pd.read_sql(query, conn).iloc[0, 0]
-        app_log.info(f'logviewer: last processed till {max_date}')
-        this_month = max_date[:8] + '01'
-        log_files = [f for f in log_files if filesince(f, this_month)]
+    # get most recent log files if db is already created
+    try:
+        log_filter = gramex.data.filter(**db, table=table(levels[-1]), args={})
+        max_date = log_filter.sort_values('time', ascending=False)['time'].iloc[0]
         max_date = pd.to_datetime(max_date)
+    except Exception:   # noqa
+        max_date = None
+    else:
+        app_log.info(f'logviewer.summarize: processing since {max_date}')
+        this_month = max_date.strftime('%Y-%m-01')
+        log_files = [f for f in log_files if filesince(f, this_month)]
 
     if not log_files:
-        app_log.info('logviewer: no log files to process')
+        app_log.info('logviewer.summarize: no log files to process')
         return
     # Create dataframe from log files
     columns = conf.log.handlers.requests['keys']
-    # TODO: avoid concat?
-    app_log.info(f'logviewer: files to process {log_files}')
+    app_log.info(f'logviewer.summarize: processing {log_files}')
     data = pd.concat([
         pd.read_csv(f, names=columns, encoding='utf-8').fillna('-')
         for f in log_files
     ], ignore_index=True)
     app_log.info(
-        'logviewer: prepare_logs {} rows with {} mint session_threshold'.format(
+        'logviewer.summarize: prepare_logs {} rows with session_threshold={}'.format(
             len(data.index), session_threshold))
     data = prepare_logs(df=data,
                         session_threshold=session_threshold,
                         cutoff_buffer=cutoff_buffer,
                         custom_dims=custom_dims)
-    app_log.info('logviewer: processed and returned {} rows'.format(len(data.index)))
+    app_log.info('logviewer.summarize: processed {} rows'.format(len(data.index)))
     # apply transforms on raw data
-    app_log.info('logviewer: applying transforms')
+    app_log.info('logviewer.summarize: applying transforms')
     for spec in transforms:
         apply_transform(data, spec)  # applies on copy
     # levels should go from M > W > D
     for freq in levels:
+        app_log.info('logviewer.summarize: aggregating {}'.format(table(freq)))
         # filter dataframe for max_date.level
         if max_date:
             date_from = max_date
@@ -199,29 +185,30 @@ def summarize(transforms=[], post_transforms=[], run=True,
                 date_from -= pd.offsets.MonthBegin(1)
             data = data[data.time.ge(date_from)]
             # delete old records
-            query = f'DELETE FROM {table(freq)} WHERE time >= ?'    # nosec: table() is safe
-            conn.execute(query, (f'{date_from}',))
-            conn.commit()
+            gramex.data.delete(**db, table=table(freq), args={'time>~': [date_from]}, id=['time'])
         groups[0]['freq'] = freq
         # get summary view
-        app_log.info('logviewer: pdagg for {}'.format(table(freq)))
         dff = pdagg(data, groups, aggfuncs)
         # apply post_transforms here
-        app_log.info('logviewer: applying post_transforms')
         for spec in post_transforms:
             apply_transform(dff, spec)
         # insert new records
-        try:
-            dff.to_sql(table(freq), conn, if_exists='append', index=False)
-        # dff columns should match with table columns
-        # if not, call summarize run='reload' to
-        # drop all the tables and rerun the job
-        except sqlite3.OperationalError:
-            app_log.info('logviewer: OperationalError: run: reload')
-            summarize(transforms=transforms, run='reload')
-            return
-    conn.close()
-    app_log.info('logviewer: Summarize completed')
+        cols = {}
+        for col in dff.columns:
+            dt = dff[col].dtype.type
+            if pd.api.types.is_datetime64_any_dtype(dt):
+                cols[col] = 'DATETIME'
+            elif pd.api.types.is_bool_dtype(dt):
+                cols[col] = 'BOOLEAN'
+            elif pd.api.types.is_integer_dtype(dt):
+                cols[col] = 'INTEGER'
+            elif pd.api.types.is_numeric_dtype(dt):
+                cols[col] = 'REAL'
+            else:
+                cols[col] = 'TEXT'
+        gramex.data.alter(**db, table=table(freq), columns=cols)
+        gramex.data.insert(**db, table=table(freq), args=dff.to_dict())
+    app_log.info('logviewer.summarize: completed')
     return
 
 
