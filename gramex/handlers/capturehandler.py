@@ -9,7 +9,8 @@ import requests
 import tornado.gen
 from orderedattrdict import AttrDict
 from threading import Thread, Lock
-from subprocess import Popen, PIPE, STDOUT      # nosec: only for JS compilation
+# B404:import_subprocess only for JS compilation
+from subprocess import Popen, PIPE, STDOUT      # nosec B404
 from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
@@ -125,8 +126,9 @@ class Capture(object):
             # Try starting the process again
             app_log.info(f'Starting {script} via {self.cmd}')
             self.close()
-            # self.cmd is taken from the YAML configuration. Safe to run
-            self.proc = Popen(      # nosec: frozen input
+            # B603:subprocess_without_shell_equals_true is safe since self.cmd is taken from
+            # the YAML configuration (from developers)
+            self.proc = Popen(      # nosec B603
                 shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)
             self.proc.poll()
             atexit.register(self.close)
