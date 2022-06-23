@@ -2,9 +2,9 @@ import re
 import sys
 import os.path
 from glob import glob
-# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import Element              # nosec: lxml is fixed
-from lxml.html import fromstring, tostring  # nosec: lxml is fixed
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import Element              # nosec B410
+from lxml.html import fromstring, tostring  # nosec B410
 import numpy as np
 import pandas as pd
 import gramex.data

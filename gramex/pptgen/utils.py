@@ -5,9 +5,9 @@ import copy
 import platform
 import numpy as np
 import pandas as pd
-# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml import objectify              # nosec: lxml is fixed
-from lxml.builder import ElementMaker   # nosec: lxml is fixed
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml import objectify              # nosec B410
+from lxml.builder import ElementMaker   # nosec B410
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.enum.base import EnumValue

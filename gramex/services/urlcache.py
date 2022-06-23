@@ -10,7 +10,8 @@ etc.) The parent CacheFile implements the no-caching behaviour.
 
 See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
-import pickle           # nosec: only pickling internal state
+# B403:import_public we only pickle Gramex internal objects
+import pickle   # nosec B403
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 from .rediscache import RedisCache
@@ -61,7 +62,8 @@ class CacheFile(object):
 class MemoryCacheFile(CacheFile):
     def get(self):
         result = self.store.get(self.key)
-        return None if result is None else pickle.loads(result)     # nosec: only internal state
+        # B301:pickle key is an internal state string and safe to pickle
+        return None if result is None else pickle.loads(result)     # nosec B301
 
     def wrap(self, handler):
         self._finish = handler.finish

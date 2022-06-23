@@ -306,8 +306,8 @@ def build_transform(
         **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
     )
     code = compile(''.join(body), filename=filename, mode='exec')
-    # exec() is safe here since the code is written by app developer
-    exec(code, context)     # nosec: developer-initiated
+    # B102:exec_used is safe since the code is written by app developer
+    exec(code, context)         # nosec B102
 
     # Return the transformed function
     result = context['transform']
@@ -470,8 +470,8 @@ def condition(*args):
         pairs = zip(args[0::2], args[1::2])
     for cond, val in pairs:
         if isinstance(cond, str):
-            # eval() is safe here since `cond` is written by app developer
-            if eval(Template(cond).substitute(var_defaults)):    # nosec: developer-initiated
+            # B307:eval is safe here since `cond` is written by app developer
+            if eval(Template(cond).substitute(var_defaults)):    # nosec B307
                 return val
         elif bool(cond):
             return val
@@ -542,8 +542,8 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
     body.append('\treturn r')
     code = compile(''.join(body), filename=f'flattener:{filename}', mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
-    # eval() is safe here since the code is constructed entirely in this function
-    eval(code, context)     # nosec: developer-initiated
+    # B307:eval is safe here since the code is constructed entirely in this function
+    eval(code, context)     # nosec B307
     return context[filename]
 
 
@@ -804,6 +804,6 @@ def build_log_info(keys: List, *vars: List):
         'def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
         filename='log', mode='exec')
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
-    # exec() is safe here since the code is constructed entirely in this function
-    exec(code, context)     # nosec: developer-initiated
+    # B102:exec_used is safe here since the code is constructed entirely in this function
+    exec(code, context)     # nosec B102
     return context['fn']

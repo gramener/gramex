@@ -37,7 +37,7 @@ def accept(force=False):
     gramex.console(EULA)
     result = 'y' if force or not sys.stdin else ''
     while not result:
-        result = input('Do you accept the license (Y/N): ').strip()     # nosec: safe in PY3
+        result = input('Do you accept the license (Y/N): ').strip()
     if result.lower().startswith('y'):
         store.dump('accepted', time.time())
         store.flush()

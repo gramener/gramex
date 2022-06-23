@@ -257,7 +257,8 @@ _valid_key_chars = string.ascii_letters + string.digits
 
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    return ''.join(choice(chars) for index in range(size))   # nosec: non-cryptographic use
+    # B311:random random() is safe since it's for non-cryptographic use
+    return ''.join(choice(chars) for index in range(size))   # nosec B311
 
 
 RANDOM_KEY = r'$*'
@@ -329,7 +330,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     app_log.debug(f'Loading config: {path}')
     with path.open(encoding='utf-8') as handle:
         try:
-            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec: SafeLoader
+            # B506:yaml_load we use a safe loader
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec B506
         except Exception:
             app_log.exception(f'Config error: {path}')
             return default
@@ -377,8 +379,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
             # Evaluate conditional
             base, expr = key.split(' if ', 2)
             try:
-                # eval() is safe here since `expr` is written by app developer
-                condition = eval(expr, globals(), frozen_vars)  # nosec: developer-initiated
+                # B307:eval this is safe since `expr` is written by app developer
+                condition = eval(expr, globals(), frozen_vars)  # nosec B307
             except Exception:
                 condition = False
                 app_log.exception(f'Failed condition evaluation: {key}')
@@ -860,7 +862,8 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         from tornado.web import decode_signed_value
         app_log.info(f'Fetching remote secrets from {secrets_url}')
         # Load string from the URL -- but ignore comments. file:// URLs are fine too
-        value = yaml.safe_load(urlopen(secrets_url))    # nosec: allow file:// URLs
+        # B310:urllib_urlopen secrets can be local files or URLs
+        value = yaml.safe_load(urlopen(secrets_url))    # nosec B310
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.
