@@ -58,9 +58,6 @@ class MLHandler(FormHandler):
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  slugify(cls.name))
         cls.store = ml.ModelStore(config_dir)
-        cls.is_cv_request = False
-        if 'cv_model' in config_dir:
-            cls.is_cv_request = True
 
         cls.template = template
         super(MLHandler, cls).setup(**kwargs)
@@ -98,15 +95,9 @@ class MLHandler(FormHandler):
         model_params = model.get('params', {})
         cls.store.dump('class', mclass)
         cls.store.dump('params', model_params)
-        if cls.is_cv_request:
-            pass
-        elif hasattr(cls.store, 'model_path') and op.exists(cls.store.model_path):
-            # If the pkl exists, load it
-            if op.isdir(cls.store.model_path):
-                mclass, wrapper = ml.search_modelclass(mclass)
-                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
-            else:
-                cls.model = get_model(cls.store.model_path, {})
+        # If the pkl exists, load it
+        if op.isdir(cls.store.model_path):
+            cls.model = get_model(mclass, model_params)
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
@@ -190,38 +181,9 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
-        if self.is_cv_request:
-            from tensorflow.keras.applications.resnet50 import ResNet50
-            from tensorflow.keras.preprocessing import image
-            from tensorflow.keras.models import load_model
-            from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
-
-            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                                 slugify(self.name))
-            if op.exists(config_dir) and 'keras_metadata.pb' in os.listdir(config_dir):
-                model = load_model(config_dir)
-            else:
-                model = ResNet50(include_top=True,
-                                 weights="imagenet",
-                                 input_tensor=None,
-                                 input_shape=None,
-                                 pooling=None,
-                                 classes=1000)
-            x = image.img_to_array(data)
-            x = np.expand_dims(x, axis=0)
-            x = preprocess_input(x)
-
-            preds = model.predict(x)
-            # decode the results into a list of tuples (class, description, probability)
-            # (one such list for each sample in the batch)
-            try:
-                results = decode_predictions(preds)
-            except Exception:
-                class_names = []
-                class_names = json.load(open(op.join(config_dir, 'class_names.json')))
-                results = dict(zip(class_names, preds[0]))
-            return results
-
+        if type(data) == np.ndarray:
+            data = self.model.predict(data=data, mclass=self.store.load('class'))
+            return data
         metric = self.get_argument('_metric', False)
         if metric:
             scorer = get_scorer(metric)
@@ -245,7 +207,7 @@ class MLHandler(FormHandler):
     def _check_model_path(self):
         try:
             klass, wrapper = ml.search_modelclass(self.store.load('class'))
-            if hasattr(self.store, 'model_path'):
+            if hasattr(self.store, 'model_path') and not op.isdir(self.store.model_path):
                 self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
@@ -277,8 +239,7 @@ class MLHandler(FormHandler):
         elif '_cache' in self.args:
             self.write(self.store.load_data().to_json(orient='records'))
         else:
-            if not self.is_cv_request:
-                self._check_model_path()
+            self._check_model_path()
             if '_download' in self.args:
                 self.set_header('Content-Type', 'application/octet-stream')
                 self.set_header('Content-Disposition',
@@ -384,28 +345,25 @@ class MLHandler(FormHandler):
         return class_names
 
     def _train(self, data=None):
-        if self.is_cv_request:
-            result = self._train_keras(data)
+        target_col = self.get_argument('target_col', self.store.load('target_col'))
+        index_col = self.get_argument('index_col', self.store.load('index_col'))
+        self.store.dump('target_col', target_col)
+        data = self._parse_data(False) if data is None else data
+        data = self._filtercols(data)
+        data = self._filterrows(data)
+        self.model = get_model(
+            self.store.load('class'), self.store.load('params'),
+            data=data, target_col=target_col,
+            nums=self.store.load('nums'), cats=self.store.load('cats')
+        )
+        if not isinstance(self.model, ml.SklearnTransformer):
+            target = data[target_col]
+            train = data[[c for c in data if c not in (target_col, index_col)]]
+            self.model.fit(train, target, self.store.model_path)
+            result = {'score': self.model.score(train, target)}
         else:
-            target_col = self.get_argument('target_col', self.store.load('target_col'))
-            index_col = self.get_argument('index_col', self.store.load('index_col'))
-            self.store.dump('target_col', target_col)
-            data = self._parse_data(False) if data is None else data
-            data = self._filtercols(data)
-            data = self._filterrows(data)
-            self.model = get_model(
-                self.store.load('class'), self.store.load('params'),
-                data=data, target_col=target_col,
-                nums=self.store.load('nums'), cats=self.store.load('cats')
-            )
-            if not isinstance(self.model, ml.SklearnTransformer):
-                target = data[target_col]
-                train = data[[c for c in data if c not in (target_col, index_col)]]
-                self.model.fit(train, target, self.store.model_path)
-                result = {'score': self.model.score(train, target)}
-            else:
-                self.model.fit(data, None, self.store.model_path)
-                result = self.model.get_attributes()
+            self.model.fit(data, None, self.store.model_path)
+            result = self.model.get_attributes()
         return result
 
     def _retrain(self):

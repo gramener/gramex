@@ -46,6 +46,10 @@ SEARCH_MODULES = {
         "statsmodels.tsa.statespace.sarimax",
     ],
     "gramex.ml_api.HFTransformer": ["gramex.transformers"],
+    "gramex.ml_api.KerasApplications": [
+        "tensorflow.keras.applications.vgg16",
+        "tensorflow.keras.applications.resnet50"
+    ]
 }
 
 
@@ -203,8 +207,12 @@ class ModelStore(cache.JSONStore):
 
     def __init__(self, path, *args, **kwargs):
         _mkdir(path)
-        self.data_store = op.join(path, "data.h5")
-        self.model_path = op.join(path, op.basename(path) + ".pkl")
+        if op.exists(op.join(path, "data.h5")):
+            self.data_store = op.join(path, "data.h5")
+            self.model_path = op.join(path, op.basename(path) + ".pkl")
+        else:
+            self.data_store = path
+            self.model_path = path
         self.path = path
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
@@ -397,18 +405,19 @@ class SklearnTransformer(SklearnModel):
 
 
 class HFTransformer(SklearnModel):
+    @classmethod
+    def from_disk(cls, path, klass):
+        # Load model from disk
+        model = op.join(path, "model")
+        tokenizer = op.join(path, "tokenizer")
+        return cls(klass(model, tokenizer))
+
     def __init__(self, model, params=None, data=None, **kwargs):
         self.model = model
         if params is None:
             params = {"text_col": "text", "target_col": "label"}
         self.params = params
         self.kwargs = kwargs
-
-    @classmethod
-    def from_disk(cls, path, klass):
-        model = op.join(path, "model")
-        tokenizer = op.join(path, "tokenizer")
-        return cls(klass(model, tokenizer))
 
     def fit(
         self,
@@ -426,3 +435,49 @@ class HFTransformer(SklearnModel):
     ):
         text = X["text"]
         return self.model.predict(text)
+
+
+class KerasApplications(AbstractModel):
+    def __init__(self, model, params=None, data=None, **kwargs):
+        self.model = model
+        if params is None:
+            params = {}
+        self.params = params
+        self.kwargs = kwargs
+
+    @classmethod
+    def from_disk(cls, path, klass):
+        # Load model from disk
+        return cls
+
+    def predict(self, data=None, **kwargs):
+        from tensorflow.keras.preprocessing import image
+
+        mclass, wrapper = search_modelclass(kwargs['mclass'])
+        module_imp = __import__(mclass.__module__, fromlist=SEARCH_MODULES[wrapper])
+        model = mclass(include_top=True,
+                       weights="imagenet",
+                       input_tensor=None,
+                       input_shape=None,
+                       pooling=None,
+                       classes=1000)
+        x = image.img_to_array(data)
+        x = np.expand_dims(x, axis=0)
+        x = module_imp.preprocess_input(x)
+
+        preds = model.predict(x)
+        # decode the results into a list of tuples (class, description, probability)
+        results = module_imp.decode_predictions(preds)
+        return results
+
+    def fit(self, *args, **kwargs):
+        super().fit(*args, **kwargs)
+
+    def get_params(self, **kwargs):
+        super().get_params(**kwargs)
+
+    def score(self, X, y_true, **kwargs):
+        super().score(X, y_true, **kwargs)
+
+    def get_attributes(self):
+        super().get_attributes()
