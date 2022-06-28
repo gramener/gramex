@@ -122,6 +122,8 @@ class MLHandler(FormHandler):
             for f in files:
                 buff = BytesIO(f['body'])
                 try:
+                    if f['content_type'] in ['image/jpeg', 'image/jpg', 'image/png']:
+                        return buff
                     ext = re.sub(r'^.', '', op.splitext(f['filename'])[-1])
                     xdf = cache.open_callback['jsondata' if ext == 'json' else ext](buff)
                     dfs.append(xdf)
@@ -181,7 +183,8 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
-        if type(data) == np.ndarray:
+        import io
+        if type(data) == io.BytesIO:
             data = self.model.predict(data=data, mclass=self.store.load('class'))
             return data
         metric = self.get_argument('_metric', False)
@@ -248,16 +251,14 @@ class MLHandler(FormHandler):
                     self.write(fout.read())
             elif '_model' in self.args:
                 self.write(json.dumps(self.model.get_params(), indent=2))
-            elif len(self.request.files.keys()) and \
-                self.request.files['image'][0].content_type in \
-                    ['image/jpeg', 'image/jpg', 'image/png']:
-                if '_action' in self.args and self.args['_action'] == 'predict':
-                    import cv2
-                    import imutils
-                    data = imutils.resize(cv2.imdecode(np.fromstring(
-                        self.request.files['image'][0].body, np.uint8), cv2.IMREAD_UNCHANGED),
-                        width=224)
-                    data = cv2.resize(data, (224, 224))
+            elif isinstance(self.model, ml.KerasApplication):
+                if 'training_data' in self.args:
+                    data = self.args['training_data']
+                    training_results = yield gramex.service.threadpool.submit(
+                        self._train, data=data)
+                    self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
+                else:
+                    data = self._parse_multipart_form_data()
                     prediction = yield gramex.service.threadpool.submit(
                         self._predict, data)
                     self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
@@ -289,73 +290,22 @@ class MLHandler(FormHandler):
     def _append(self):
         self._parse_data(_cache=True, append=True)
 
-    def _train_keras(self, data):
-        import tensorflow as tf
-        from tensorflow.keras.optimizers import Adam
-        from tensorflow.keras.models import Sequential
-        from tensorflow.python.keras.layers import Dense, Flatten
-        import pathlib
-        data_dir = pathlib.Path(data)
-
-        config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                             slugify(self.name))
-
-        img_height, img_width = 224, 224
-        batch_size = 32
-        train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-            data_dir,
-            validation_split=0.2,
-            subset="training",
-            seed=123,
-            image_size=(img_height, img_width),
-            batch_size=batch_size)
-
-        val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-            data_dir,
-            validation_split=0.2,
-            subset="validation",
-            seed=123,
-            image_size=(img_height, img_width),
-            batch_size=batch_size)
-
-        class_names = train_ds.class_names
-        keras_model = Sequential()
-        pretrained_model = tf.keras.applications.ResNet50(include_top=False,
-                                                          input_shape=(224, 224, 3),
-                                                          pooling='avg', classes=5,
-                                                          weights='imagenet')
-        for layer in pretrained_model.layers:
-            layer.trainable = False
-
-        keras_model.add(pretrained_model)
-        keras_model.add(Flatten())
-        keras_model.add(Dense(512, activation='relu'))
-        keras_model.add(Dense(5, activation='softmax'))
-        keras_model.compile(optimizer=Adam(lr=0.001),
-                            loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-        epochs = 1
-        keras_model.fit(
-            train_ds,
-            validation_data=val_ds,
-            epochs=epochs
-        )
-        with open(op.join(config_dir, 'class_names.json'), 'w') as fout:
-            json.dump(class_names, fout)
-        keras_model.save(config_dir)
-        return class_names
-
     def _train(self, data=None):
         target_col = self.get_argument('target_col', self.store.load('target_col'))
         index_col = self.get_argument('index_col', self.store.load('index_col'))
         self.store.dump('target_col', target_col)
-        data = self._parse_data(False) if data is None else data
-        data = self._filtercols(data)
-        data = self._filterrows(data)
-        self.model = get_model(
-            self.store.load('class'), self.store.load('params'),
-            data=data, target_col=target_col,
-            nums=self.store.load('nums'), cats=self.store.load('cats')
-        )
+        if isinstance(self.model, ml.KerasApplication):
+            result = self.model.fit(data, self.store.model_path)
+            return result
+        else:
+            data = self._parse_data(False) if data is None else data
+            data = self._filtercols(data)
+            data = self._filterrows(data)
+            self.model = get_model(
+                self.store.load('class'), self.store.load('params'),
+                data=data, target_col=target_col,
+                nums=self.store.load('nums'), cats=self.store.load('cats')
+            )
         if not isinstance(self.model, ml.SklearnTransformer):
             target = data[target_col]
             train = data[[c for c in data if c not in (target_col, index_col)]]

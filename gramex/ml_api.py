@@ -46,9 +46,8 @@ SEARCH_MODULES = {
         "statsmodels.tsa.statespace.sarimax",
     ],
     "gramex.ml_api.HFTransformer": ["gramex.transformers"],
-    "gramex.ml_api.KerasApplications": [
-        "tensorflow.keras.applications.vgg16",
-        "tensorflow.keras.applications.resnet50"
+    "gramex.ml_api.KerasApplication": [
+        "tensorflow.keras.applications"
     ]
 }
 
@@ -405,13 +404,6 @@ class SklearnTransformer(SklearnModel):
 
 
 class HFTransformer(SklearnModel):
-    @classmethod
-    def from_disk(cls, path, klass):
-        # Load model from disk
-        model = op.join(path, "model")
-        tokenizer = op.join(path, "tokenizer")
-        return cls(klass(model, tokenizer))
-
     def __init__(self, model, params=None, data=None, **kwargs):
         self.model = model
         if params is None:
@@ -436,8 +428,15 @@ class HFTransformer(SklearnModel):
         text = X["text"]
         return self.model.predict(text)
 
+    @classmethod
+    def from_disk(cls, path, klass):
+        # Load model from disk
+        model = op.join(path, "model")
+        tokenizer = op.join(path, "tokenizer")
+        return cls(klass(model, tokenizer))
 
-class KerasApplications(AbstractModel):
+
+class KerasApplication(AbstractModel):
     def __init__(self, model, params=None, data=None, **kwargs):
         self.model = model
         if params is None:
@@ -452,7 +451,14 @@ class KerasApplications(AbstractModel):
 
     def predict(self, data=None, **kwargs):
         from tensorflow.keras.preprocessing import image
+        import cv2
+        import imutils
 
+        data = imutils.resize(cv2.imdecode(np.fromstring(data.getvalue(),
+                                                         np.uint8),
+                                           cv2.IMREAD_UNCHANGED),
+                              width=224)
+        data = cv2.resize(data, (224, 224))
         mclass, wrapper = search_modelclass(kwargs['mclass'])
         module_imp = __import__(mclass.__module__, fromlist=SEARCH_MODULES[wrapper])
         model = mclass(include_top=True,
@@ -470,8 +476,58 @@ class KerasApplications(AbstractModel):
         results = module_imp.decode_predictions(preds)
         return results
 
-    def fit(self, *args, **kwargs):
-        super().fit(*args, **kwargs)
+    def fit(self, data, model_path, *args, **kwargs):
+        import tensorflow as tf
+        from tensorflow.keras.optimizers import Adam
+        from tensorflow.keras.models import Sequential
+        from tensorflow.python.keras.layers import Dense, Flatten
+        import pathlib
+        import json
+
+        data_dir = pathlib.Path(data)
+        img_height, img_width = 224, 224
+        batch_size = 32
+        train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+            data_dir,
+            validation_split=0.2,
+            subset="training",
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+            data_dir,
+            validation_split=0.2,
+            subset="validation",
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size)
+
+        class_names = train_ds.class_names
+        keras_model = Sequential()
+        pretrained_model = tf.keras.applications.ResNet50(include_top=False,
+                                                          input_shape=(224, 224, 3),
+                                                          pooling='avg', classes=5,
+                                                          weights='imagenet')
+        for layer in pretrained_model.layers:
+            layer.trainable = False
+
+        keras_model.add(pretrained_model)
+        keras_model.add(Flatten())
+        keras_model.add(Dense(512, activation='relu'))
+        keras_model.add(Dense(5, activation='softmax'))
+        keras_model.compile(optimizer=Adam(lr=0.001),
+                            loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        epochs = 1
+        keras_model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=epochs
+        )
+        with open(op.join(model_path, 'class_names.json'), 'w') as fout:
+            json.dump(class_names, fout)
+        keras_model.save(model_path)
+        return class_names
 
     def get_params(self, **kwargs):
         super().get_params(**kwargs)
