@@ -224,6 +224,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Invalid functions switch to defaults
+            eq_(conf['%s_INVALID_FUNCTION' % key], 'DEFAULT')
             # Functions can use variables using gramex.config.variables
             eq_(conf['%s_FUNCTION_VAR' % key], conf.base_ROOT + key)
             # Derived variables
