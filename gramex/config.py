@@ -240,9 +240,12 @@ def _calc_value(val, key):
         if val.get('function'):
             from .transforms import build_transform
             function = build_transform(val, vars={'key': None}, filename=f'config:{key}')
-            for result in function(key):
-                if result is not None:
-                    return result
+            try:
+                for result in function(key):
+                    if result is not None:
+                        return result
+            except Exception:
+                app_log.exception(f'Error in calculated variable: {key}: {val}')
             return _calc_value(val.get('default', None), key)
         else:
             return {k: _calc_value(v, k) for k, v in val.items()}

@@ -11,6 +11,9 @@ variables:
         default:
             function: str
             args: ['base']
+    INVALID_FUNCTION:
+        function: nonexistent()
+        default: DEFAULT
     DEFAULT_OBJECT:
         default:
             x: $THIS
@@ -85,6 +88,7 @@ base_THIS: $THIS
 base_DEFAULT: $BASE_DEFAULT
 base_FUNCTION: $FUNCTION
 base_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+base_INVALID_FUNCTION: $INVALID_FUNCTION
 base_FUNCTION_VAR: $FUNCTION_VAR
 base_DERIVED: $DERIVED
 base_YAMLURL_VAR: $YAMLURL_VAR
