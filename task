@@ -18,11 +18,12 @@ lint () {
   flake8 gramex testlib tests
 
   # Python security check with bandit
-  command -v bandit 2>/dev/null 2>&1 || pip install bandit
+  pip install 'bandit>=1.7.0' --quiet
   bandit . --recursive --quiet
 
   # Install linters. Then test all apps
   npm install
+  npx eslint --ext js,html gramex/
   npx editorconfig-checker
 
   # Avoid htmllint-cli in package.json (npm audit issues). Install globally
@@ -61,9 +62,12 @@ pushdocs () {
   rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
 }
 
-pushpypi () {
+buildpypi() {
   clean
   python setup.py sdist
+}
+
+pushpypi () {
   # Note: if this fails, add '-p PASSWORD'
   twine upload -u gramener dist/*
 }
@@ -84,10 +88,16 @@ security () {
   snyk test --dev --all-projects > reports/snyk.txt || true
 }
 
+buildconda () {
+  conda install -y conda-build
+  conda
+  ls -l /opt/conda/conda-bld/linux-64/*
+  cp /opt/conda/conda-bld/linux-64/gramex*.tar.bz2 pkg/
+}
+
 conda () {
   # conda install conda-build
   conda build purge
-  pip install orderedattrdict tornado==5.1.1
   python pkg/conda/conda-setup.py
   conda build -c conda-forge pkg/conda/
 }

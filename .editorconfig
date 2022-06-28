@@ -15,3 +15,7 @@ charset = utf-8
 # Stick to 2-space indenting by default, to conserve space
 indent_style = space
 indent_size = 2
+
+# Use 4-space indenting for Python files
+[*.py]
+indent_size = 4

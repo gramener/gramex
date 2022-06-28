@@ -20,6 +20,15 @@ variables:
   MYSQL_SERVER: mysql
   REDIS_SERVER: redis
 
+# On all branches, run tests before deploying
+test:
+  script:
+    - bash task lint
+  cache:
+    key: gramex-node-cache
+    paths:
+      - node_modules/
+
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
   only: [master, release]
@@ -59,7 +68,8 @@ deploy-uat:
 build-pypi:
   only: [release, /^build-.*/]
   script:
-    - bash pkg/build_pypi.sh
+    - bash task buildpypi
+    - ls -l dist/*
   artifacts:
     paths:
       - "dist/gramex*.tar.gz"
@@ -67,7 +77,8 @@ build-pypi:
 build-conda:
   only: [release, /^build-.*/]
   script:
-    - bash pkg/build_conda.sh
+    - bash task buildconda
+    - ls -l pkg/
   artifacts:
     paths:
       - "pkg/gramex*.tar.bz2"
