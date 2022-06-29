@@ -736,7 +736,8 @@ class TestPPTGen(TestCase):
             grpobj = data.groupby(grp)
             frame = pd.DataFrame({
                 'size': grpobj[grp].count(),
-                'seq': eval(grp_order)(grpobj),  # nosec: test case
+                # B307:eval is safe here since we've constructed `grp_order`
+                'seq': eval(grp_order)(grpobj),  # nosec B307
             })
             frame['width'] = frame['size'] / float(frame['size'].sum()) * width
             frame = frame.sort_values(by=['seq'])

@@ -9,7 +9,8 @@ import os
 import pandas as pd
 import re
 import requests
-import subprocess       # nosec: only enabled via app developer
+# B404:import_subprocess only developers can access this, not users
+import subprocess       # nosec B404
 import sys
 import tempfile
 import time
@@ -480,7 +481,8 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
-        self.proc = subprocess.Popen(args, **kwargs)        # nosec - developer-initiated
+        # B603:subprocess_without_shell_equals_true: only developers can access this, not users
+        self.proc = subprocess.Popen(args, **kwargs)        # nosec B603
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
@@ -618,14 +620,16 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
 
     # If process was never started, start it
     if key not in _daemons:
-        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec: developer-initiated
+        # B404:import_subprocess only developers can access this, not users
+        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec B404
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
     restart = int(restart)
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec: developer-initiated
+        # B404:import_subprocess only developers can access this, not users
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec B404
     if proc.proc.returncode is not None:
         raise RuntimeError(f'Error {proc.proc.returncode} starting {arg_str}')
     if started:
@@ -1089,7 +1093,8 @@ def _markdown(handle, **kwargs):
 def _yaml(handle, **kwargs):
     import yaml
     kwargs.setdefault('Loader', yaml.SafeLoader)
-    return yaml.load(handle.read(), **kwargs)   # nosec: kwargs uses SafeLoader
+    # B506:yaml_load we load safely using SafeLoader
+    return yaml.load(handle.read(), **kwargs)   # nosec B506
 
 
 def _template(path, **kwargs):
@@ -1285,20 +1290,21 @@ def _table_status(engine, tables):
         if dialect == 'mysql':
             # https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html
             # Works only on MySQL 5.7 and above
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec
+            # B608:hardcoded_sql_expressions only used internally
+            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec B608
                  _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'snowflake':
             # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
-            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec
+            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec B608
                  _wheres('table_schema', 'table_name', db, tables))
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +    # nosec
+            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +  # nosec B608
                  _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +  # nosec
-                 _wheres('schemaname', 'relname', 'public', tables))
+            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables ' +  # nosec B608
+                 'WHERE ' + _wheres('schemaname', 'relname', 'public', tables))
         elif dialect == 'sqlite':
             if not db:
                 raise KeyError(f'gramex.cache.query: does not support memory sqlite "{dialect}"')

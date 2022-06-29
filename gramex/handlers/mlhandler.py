@@ -95,9 +95,12 @@ class MLHandler(FormHandler):
         model_params = model.get('params', {})
         cls.store.dump('class', mclass)
         cls.store.dump('params', model_params)
-        # If the pkl exists, load it
-        if op.isdir(cls.store.model_path):
-            cls.model = get_model(mclass, model_params)
+        if op.exists(cls.store.model_path):  # If the pkl exists, load it
+            if op.isdir(cls.store.model_path):
+                mclass, wrapper = ml.search_modelclass(mclass)
+                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+            else:
+                cls.model = get_model(cls.store.model_path, {})
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
@@ -210,7 +213,7 @@ class MLHandler(FormHandler):
     def _check_model_path(self):
         try:
             klass, wrapper = ml.search_modelclass(self.store.load('class'))
-            if hasattr(self.store, 'model_path') and not op.isdir(self.store.model_path):
+            if op.isdir(getattr(self.store, 'model_path', '')):
                 self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
@@ -273,15 +276,10 @@ class MLHandler(FormHandler):
                     app_log.debug(err.msg)
                     data = []
                 if len(data) > 0:
-                    if 'training_data' in data.keys():
-                        training_results = yield gramex.service.threadpool.submit(
-                            self._train, data=data['training_data'].iloc[0])
-                        self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
-                    else:
-                        data = data.drop([self.store.load('target_col')], axis=1, errors='ignore')
-                        prediction = yield gramex.service.threadpool.submit(
-                            self._predict, data)
-                        self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
+                    data = data.drop([self.store.load('target_col')], axis=1, errors='ignore')
+                    prediction = yield gramex.service.threadpool.submit(
+                        self._predict, data)
+                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
                 else:
                     self.set_header('Content-Type', 'text/html')
                     self.render(self.template, handler=self, data=self.store.load_data())

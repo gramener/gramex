@@ -5,6 +5,7 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "editorconfig-checker": "^4.0.2",
     "eslint": "^8.18.0",
     "eslint-plugin-html": "^6.2.0",
     "eslint-plugin-template": "^0.6.0"

@@ -224,6 +224,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Invalid functions switch to defaults
+            eq_(conf['%s_INVALID_FUNCTION' % key], 'DEFAULT')
             # Functions can use variables using gramex.config.variables
             eq_(conf['%s_FUNCTION_VAR' % key], conf.base_ROOT + key)
             # Derived variables
@@ -246,6 +248,10 @@ class TestPathConfig(unittest.TestCase):
         eq_(conf['boolean'], True)
         eq_(conf['object'], {'x': 1})
         eq_(conf['list'], [1, 2])
+        # Check if substitutions work inside dicts and lists
+        eq_(conf['object_calc'], {'x': 'base'})
+        eq_(conf['list_calc'], ['base'])
+        eq_(conf['object_default'], {'x': 'base'})
 
         # Check if variables of different types are string substituted
         eq_(conf['numeric_subst'], '/1')

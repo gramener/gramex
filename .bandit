@@ -1,0 +1,5 @@
+[bandit]
+; Only test the Gramex source folder, not tests or testlib
+exclude = */tests/*,*/testlib/*,*/node_modules/*
+; B101:assert_used - assertions are used in test cases and are harmless in code
+skips = B101

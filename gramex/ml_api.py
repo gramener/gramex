@@ -447,33 +447,30 @@ class KerasApplication(AbstractModel):
     @classmethod
     def from_disk(cls, path, klass):
         # Load model from disk
-        return cls
+        return cls(path)
 
     def predict(self, data=None, **kwargs):
         from tensorflow.keras.preprocessing import image
-        import cv2
-        import imutils
+        import PIL
+        import io
 
-        data = imutils.resize(cv2.imdecode(np.fromstring(data.getvalue(),
-                                                         np.uint8),
-                                           cv2.IMREAD_UNCHANGED),
-                              width=224)
-        data = cv2.resize(data, (224, 224))
         mclass, wrapper = search_modelclass(kwargs['mclass'])
-        module_imp = __import__(mclass.__module__, fromlist=SEARCH_MODULES[wrapper])
         model = mclass(include_top=True,
                        weights="imagenet",
                        input_tensor=None,
                        input_shape=None,
                        pooling=None,
                        classes=1000)
+        preprocess_input = locate('preprocess_input', [mclass.__module__])
+        decode_predictions = locate('decode_predictions', [mclass.__module__])
+        data = PIL.Image.open(io.BytesIO(data.getvalue()))\
+                  .resize((model.input_shape[1], model.input_shape[2]))
         x = image.img_to_array(data)
         x = np.expand_dims(x, axis=0)
-        x = module_imp.preprocess_input(x)
-
+        x = preprocess_input(x)
         preds = model.predict(x)
         # decode the results into a list of tuples (class, description, probability)
-        results = module_imp.decode_predictions(preds)
+        results = decode_predictions(preds)
         return results
 
     def fit(self, data, model_path, *args, **kwargs):
