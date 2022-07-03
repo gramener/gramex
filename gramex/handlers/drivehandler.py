@@ -2,7 +2,6 @@ import os
 import time
 import tornado.gen
 import gramex.data
-import sqlalchemy as sa
 from string import ascii_lowercase, digits
 from random import choice
 from mimetypes import guess_type
@@ -47,30 +46,20 @@ class DriveHandler(FormHandler):
         super().setup(**kwargs)
 
         # Ensure all tags and user_fields are present in "drive" table
-        engine = sa.create_engine(url)
-        meta = sa.MetaData(bind=engine)
-        meta.reflect()
         cls._db_cols = {
-            'id': sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
-            'file': sa.Column('file', sa.Text),             # Original file name
-            'ext': sa.Column('ext', sa.Text),               # Original file extension
-            'path': sa.Column('path', sa.Text),             # Saved file relative path
-            'size': sa.Column('size', sa.Integer),          # File size
-            'mime': sa.Column('mime', sa.Text),             # MIME type
-            'date': sa.Column('date', sa.Integer),          # Uploaded date
+            'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+            'file': {'type': 'text'},   # Original file name
+            'ext': {'type': 'text'},    # Original file extension
+            'path': {'type': 'text'},   # Saved file relative path
+            'size': {'type': 'int'},    # File size
+            'mime': {'type': 'text'},   # MIME type
+            'date': {'type': 'int'},    # Uploaded date
         }
         for s in cls.user_fields:
-            cls._db_cols[f'user_{s}'] = sa.Column(f'user_{s}', sa.String)
+            cls._db_cols[f'user_{s}'] = {'type': 'text'}
         for s in cls.tags:
-            cls._db_cols.setdefault(s, sa.Column(s, sa.String))
-        if table in meta.tables:
-            with engine.connect() as conn:
-                with conn.begin():
-                    for col, coltype in cls._db_cols.items():
-                        if col not in meta.tables[table].columns:
-                            conn.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
-        else:
-            sa.Table(table, meta, *cls._db_cols.values()).create(engine)
+            cls._db_cols.setdefault(s, {'type': 'text'})
+        gramex.data.alter(url, table, cls._db_cols)
 
         # If ?_download=...&id=..., then download the file via modify:
         def download_plugin(data, key, handler):
@@ -108,9 +97,10 @@ class DriveHandler(FormHandler):
         user = self.current_user or {}
         uploads = self.request.files.get('file', [])
         n = len(uploads)
-        # Initialize all DB columns (except ID) to have the same number of rows as uploads
-        for key, col in list(self._db_cols.items())[1:]:
-            self.args[key] = self.args.get(key, []) + [col.type.python_type()] * n
+        # Initialize all DB columns (except ID) to have the same number of rows as uploads.
+        # Add `n` rows, and then clip to `n` rows. Effective way to pad AND trim.
+        for key in list(self._db_cols.keys())[1:]:
+            self.args[key] = self.args.get(key, []) + [''] * n
         for key in self.args:
             self.args[key] = self.args[key][:n]
         for i, upload in enumerate(uploads):
