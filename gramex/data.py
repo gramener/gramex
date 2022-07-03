@@ -911,7 +911,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
         app_log.info(f'alter() not required for schema-less DB {engine.driver}')
         return engine
     try:
-        db_table = get_table(engine, table)
+        db_table = get_table(engine, table, extend_existing=True)
     except sa.exc.NoSuchTableError:
         # If the table's not in the DB, create it
         cols = []
@@ -927,7 +927,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
             if 'default' in row:
                 row['server_default'] = str(row.pop('default'))
             cols.append(sa.Column(**row))
-        sa.Table(table, _METADATA_CACHE[engine], *cols).create(engine)
+        sa.Table(table, _METADATA_CACHE[engine], *cols, extend_existing=True).create(engine)
     else:
         quote = engine.dialect.identifier_preparer.quote_identifier
         # If the table's already in the DB, add new columns. We can't change column types
