@@ -73,14 +73,14 @@ pushcoverage () {
 }
 
 update () {
-  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm update && npm audit fix'
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$0" && npm update && npm audit fix'
 }
 
 security () {
   bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
   freshclam
   clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=mkdocs --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
-  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$$0" && npm audit --parseable || true' > reports/npm-audit.txt
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$0" && npm audit --parseable || true' > reports/npm-audit.txt
   snyk test --dev --all-projects > reports/snyk.txt || true
 }
 

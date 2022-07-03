@@ -1,16 +1,16 @@
-/d/site/gramener.com/viz/async-gramex/gramex/apps/admin
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/admin2
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin2
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/capture
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/capture
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/filemanager
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/filemanager
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/pynode
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/pynode
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/ui
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/ui
 found 0 vulnerabilities
-/d/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
 found 0 vulnerabilities
