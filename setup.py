@@ -89,6 +89,8 @@ setup(
     # Pick up dependencies from gramex/release.json
     # To ensure that pip install works, only include packages that work via pip (not conda)
     install_requires=[req for req in release['lib']],
+    # Gramex cannot be installed from a ZIP file. setup() reads from gramex/release.json and
+    # README.md. So Gramex must be unzipped first, and THEN installed.
     zip_safe=False,
     entry_points={
         'console_scripts': release['console']
