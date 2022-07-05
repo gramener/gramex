@@ -1,4 +1,3 @@
-import io
 import os
 import six
 import time
@@ -295,11 +294,14 @@ class BaseMixin(object):
         cls._session_expiry = session_conf.get('expiry')
         cls._session_cookie_id = session_conf.get('cookie', 'sid')
         cls._session_cookie = {
-            # Note: We cannot use path: to specify the Cookie path attribute.
-            # session.path is used for the session (JSONStore) file location.
             key: session_conf[key] for key in ('httponly', 'secure', 'samesite', 'domain')
             if key in session_conf
         }
+        # Note: We cannot use path: to specify the Cookie path attribute.
+        # session.path is used for the session (JSONStore) file location.
+        # So use cookiepath: instead.
+        if 'cookiepath' in session_conf:
+            cls._session_cookie['path'] = session_conf['cookiepath']
         cls._on_init_methods.append(cls.override_user)
         cls._on_finish_methods.append(cls.set_last_visited)
         # Ensure that session is saved AFTER we set last visited
@@ -1123,13 +1125,3 @@ def _check_condition(condition, user):
         elif node not in values:
             return False
     return True
-
-
-handle_cache = {}
-
-
-def _handle(path):
-    '''Returns a cached append-binary handle to path'''
-    if path not in handle_cache:
-        handle_cache[path] = io.open(path, 'a', encoding='utf-8')
-    return handle_cache[path]
