@@ -213,8 +213,7 @@ class MLHandler(FormHandler):
     def _check_model_path(self):
         try:
             klass, wrapper = ml.search_modelclass(self.store.load('class'))
-            if op.isdir(getattr(self.store, 'model_path', '')):
-                self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
+            self.model = locate(wrapper).from_disk(self.store.model_path, klass=klass)
         except FileNotFoundError:
             raise HTTPError(NOT_FOUND, f'No model found at {self.store.model_path}')
 
@@ -293,7 +292,7 @@ class MLHandler(FormHandler):
         index_col = self.get_argument('index_col', self.store.load('index_col'))
         self.store.dump('target_col', target_col)
         if isinstance(self.model, ml.KerasApplication):
-            result = self.model.fit(data, self.store.model_path)
+            result = self.model.fit(data, self.kwargs['config_dir'])
             return result
         else:
             data = self._parse_data(False) if data is None else data
