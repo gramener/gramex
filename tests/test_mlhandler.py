@@ -2,7 +2,6 @@ from io import BytesIO, StringIO
 import os
 from unittest import skipUnless
 import logging
-import warnings
 
 import joblib
 import shutil
@@ -57,9 +56,9 @@ class TestTransformers(TestGramex):
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
+    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
     def test_train_sentiment(self):
         """Train with some vague sentences."""
-        warnings.warn("This test takes a LONG time. Leave while you can.")
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
@@ -87,8 +86,8 @@ class TestTransformers(TestGramex):
             ents, [[("Narendra Modi", "PER"), ("India", "LOC")], [("Joe Biden", "PER")]]
         )
 
+    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
     def test_train_ner(self):
-        warnings.warn("This test takes a LONG time. Leave while you can.")
         df = pd.read_json("https://bit.ly/3wZYsf5")
         resp = self.get(
             "/ner?_action=train&target_col=labels",
