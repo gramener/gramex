@@ -9,6 +9,9 @@ from gramex import cache
 from sklearn.metrics import roc_auc_score
 
 
+_CACHE = {}
+
+
 def biluo2iob(tags: List[str]) -> List[str]:
     """Convert BILOU tags to IOB tags.
 
@@ -110,7 +113,11 @@ def load_pretrained(klass, path, default, **kwargs):
             model = cache.open(default, klass.from_pretrained, **kwargs)
     else:
         app_log.info(f"{path} not found on disk; loading default...")
-        model = klass.from_pretrained(default, **kwargs)
+        key = klass.__name__ + default
+        if key in _CACHE:
+            model = _CACHE[key]
+        else:
+            model = _CACHE[key] = klass.from_pretrained(default, **kwargs)
     return model
 
 
