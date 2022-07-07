@@ -50,7 +50,7 @@ def recursive_include(root, path, ignores=[], allows=[]):
 
 ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
 
-with open('README.rst', encoding='utf-8') as handle:
+with open('README.md', encoding='utf-8') as handle:
     long_description = handle.read() + '\n\n'
 
 # release.json contains release info (name, description, version), packages to install, etc
@@ -75,6 +75,7 @@ gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
 setup(
     python_requires='~=3.7',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     # Auto-detect, but ignore test packages (tests, testlib)
     packages=[pkg for pkg in find_packages() if not pkg.startswith('test')],
 

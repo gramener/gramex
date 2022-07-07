@@ -26,6 +26,8 @@ app:
     domain: .localhost.local    # RequestCookieJar uses this domain for localhost
     secure: false               # Don't set this to true. We're using HTTP, so it will fail
     samesite: Strict            # Check if SameSite=Strict is sent
+    cookiepath: /               # NOTE: This is not tested automatically, only manually.
+                                # That's because tests NEED the cookie path to be / to work
     # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:

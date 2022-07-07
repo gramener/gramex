@@ -24,7 +24,7 @@ graft gramex/apps
 include .gitignore
 
 # Include core docs
-include README.rst
+include README.md
 
 # Include test cases
 graft tests
