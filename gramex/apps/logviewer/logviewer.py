@@ -173,7 +173,7 @@ def summarize(transforms=[], post_transforms=[], run=True,
     # TODO: avoid concat?
     app_log.info(f'logviewer: files to process {log_files}')
     data = pd.concat([
-        pd.read_csv(f, names=columns, encoding='utf-8').fillna('-')
+        pd.read_csv(f, names=columns, index_col=False, encoding='utf-8').fillna('-')
         for f in log_files
     ], ignore_index=True)
     app_log.info(
