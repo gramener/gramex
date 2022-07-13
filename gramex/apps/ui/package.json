@@ -24,7 +24,7 @@
     "jquery": "~3",
     "leaflet": "1.6",
     "lodash": "4",
-    "moment": "^2.29.3",
+    "moment": "^2.29.4",
     "morphdom": "2",
     "noty": "3",
     "numeral": "2",
