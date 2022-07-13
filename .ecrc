@@ -1,0 +1,3 @@
+{
+  "Exclude": ["node_modules", "mkdocs"]
+}
