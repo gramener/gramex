@@ -158,7 +158,7 @@ def summarize(
     columns = conf.log.handlers.requests['keys']
     app_log.info(f'logviewer.summarize: processing {log_files}')
     data = pd.concat([
-        pd.read_csv(f, names=columns, encoding='utf-8').fillna('-')
+        pd.read_csv(f, names=columns, index_col=False, encoding='utf-8').fillna('-')
         for f in log_files
     ], ignore_index=True)
     app_log.info(
