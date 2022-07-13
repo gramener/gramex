@@ -21,4 +21,4 @@ fs.readdirSync(__dirname, { withFileTypes: true })
     })
 
 // Write to snippets.json
-fs.writeFileSync(path.join(__dirname, 'snippets.json'), JSON.stringify(config))
+fs.writeFileSync(path.join(__dirname, 'snippets.json'), JSON.stringify(config) + '\n')
