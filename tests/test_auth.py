@@ -297,6 +297,14 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
 
+        # Revoke an OTP
+        self.session.get(server.base_url + f'/auth/revoke?otp={otp1}')
+        # Fetching the session info raises a HTTP 400 because of the invalid OTP
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp1})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-OTP': otp1})
+        eq_(r.status_code, 400)
+
     def test_apikey(self):
         # Get an API key as the user "alpha"
         self.session = requests.Session()
@@ -327,6 +335,14 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         check_key({'user': 'new', 'role': 'x'}, params={'gramex-key': apikey})
         # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
         check_key({'user': 'new', 'role': 'x'}, headers={'X-Gramex-Key': apikey})
+
+        # Revoke an API key
+        self.session.get(server.base_url + f'/auth/revoke?key={apikey}')
+        # Fetching the session info raises a HTTP 400 because of the invalid key
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-key': apikey})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-Key': apikey})
+        eq_(r.status_code, 400)
 
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open

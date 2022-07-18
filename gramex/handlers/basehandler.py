@@ -702,9 +702,17 @@ class BaseMixin(object):
         self._session_store.dump(f'{prefix}:{otp}', {'user': user, '_t': time.time() + expire})
         return otp
 
+    def revoke_otp(self, key, prefix='otp'):
+        '''Revoke an OTP.'''
+        self._session_store.dump(f'{prefix}:{key}', None)
+
     def apikey(self, expire=1e9, user=None):
         '''Return new API Key. To be used with the X-Gramex-Key header.'''
         return self.otp(expire=expire, prefix='key', user=user)
+
+    def revoke_apikey(self, key):
+        '''Revoke an API key.'''
+        self.revoke_otp(key, prefix='key')
 
     def override_user(self):
         '''
@@ -734,7 +742,7 @@ class BaseMixin(object):
                 raise HTTPError(BAD_REQUEST, f'{self.name}: invalid Gramex OTP: {otp}')
             elif otp_data['_t'] < time.time():
                 raise HTTPError(BAD_REQUEST, f'{self.name}: expired Gramex OTP: {otp}')
-            self._session_store.dump(f'otp:{otp}', None)
+            self.revoke_otp(otp)
             self.session['user'] = otp_data['user']
         # If API Key is specified, set the user from the API key
         key = headers.get('X-Gramex-Key') or self.get_argument('gramex-key', None)

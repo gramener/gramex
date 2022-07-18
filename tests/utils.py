@@ -262,6 +262,13 @@ def apikey(handler):
     return json.dumps(handler.apikey(user=user or None))
 
 
+def revoke(handler):
+    if 'otp' in handler.args:
+        handler.revoke_otp(handler.args['otp'][-1])
+    elif 'key' in handler.args:
+        handler.revoke_apikey(handler.args['key'][-1])
+
+
 def increment(handler):
     '''
     This function is used to check the cache. Suppose we fetch a page, then

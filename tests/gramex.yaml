@@ -1629,6 +1629,12 @@ url:
       headers:
         Content-Type: application/json
 
+  auth/revoke:
+    pattern: /auth/revoke
+    handler: FunctionHandler
+    kwargs:
+      function: utils.revoke
+
   auth/authorize:
     pattern: /auth/authorize
     handler: SimpleAuth
