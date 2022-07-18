@@ -81,7 +81,7 @@ class TestStatsmodels(TestGramex):
             for f in [
                 "mlhandler-sarimax/config.json",
                 "mlhandler-sarimax/data.h5",
-                "mlhandler-sarimax/mlhandler-sarimax.pkl",
+                "mlhandler-sarimax/model.pkl",
             ]
         ]
         for p in paths:
@@ -137,7 +137,7 @@ class TestSklearn(TestGramex):
             op.join(folder, "..", "testlib", "iris.csv"), encoding="utf8"
         )
         cls.root = op.join(gramex.config.variables["GRAMEXDATA"], "apps", "mlhandler")
-        cls.model_path = op.join(cls.root, "mlhandler-config", "mlhandler-config.pkl")
+        cls.model_path = op.join(cls.root, "mlhandler-config", "model.pkl")
         paths = [
             op.join(cls.root, f)
             for f in [
@@ -145,25 +145,25 @@ class TestSklearn(TestGramex):
                 "mlhandler-nopath/data.h5",
                 "mlhandler-blank/config.json",
                 "mlhandler-blank/data.h5",
-                "mlhandler-blank/mlhandler-blank.pkl",
+                "mlhandler-blank/model.pkl",
                 "mlhandler-config/config.json",
                 "mlhandler-config/data.h5",
                 "mlhandler-incr/config.json",
                 "mlhandler-incr/data.h5",
-                "mlhandler-incr/mlhandler-incr.pkl",
+                "mlhandler-incr/model.pkl",
                 "mlhandler-xform/config.json",
                 "mlhandler-xform/data.h5",
-                "mlhandler-xform/mlhandler-xform.pkl",
-                "mlhandler-nopath/mlhandler-nopath.pkl",
+                "mlhandler-xform/model.pkl",
+                "mlhandler-nopath/model.pkl",
                 "mlhandler-badcol/config.json",
                 "mlhandler-badcol/data.h5",
-                "mlhandler-badcol/mlhandler-badcol.pkl",
+                "mlhandler-badcol/model.pkl",
                 "mlhandler-decompositions/config.json",
                 "mlhandler-decompositions/data.h5",
-                "mlhandler-decompositions/mlhandler-decompositions.pkl",
+                "mlhandler-decompositions/model.pkl",
                 "mlhandler-pipeline/config.json",
                 "mlhandler-pipeline/data.h5",
-                "mlhandler-pipeline/mlhandler-pipeline.pkl",
+                "mlhandler-pipeline/model.pkl",
             ]
         ]
         paths += [op.join(folder, "model.pkl")]
@@ -240,7 +240,7 @@ class TestSklearn(TestGramex):
 
     def test_blank_slate(self):
         # Assert that a model doesn't have to exist
-        model_path = op.join(self.root, "mlhandler-blank", "mlhandler-blank.pkl")
+        model_path = op.join(self.root, "mlhandler-blank", "model.pkl")
         self.assertFalse(op.exists(model_path))
         r = self.get(
             "/mlblank?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8"
@@ -531,7 +531,7 @@ class TestSklearn(TestGramex):
 
     def test_model_default_path(self):
         clf = joblib.load(
-            op.join(self.root, "mlhandler-nopath", "mlhandler-nopath.pkl")
+            op.join(self.root, "mlhandler-nopath", "model.pkl")
         )
         self.assertIsInstance(clf, LogisticRegression)
         resp = self.get(
@@ -661,7 +661,7 @@ class TestSklearn(TestGramex):
 
         # Assert that the model is a pipeline
         model = joblib.load(
-            op.join(self.root, "mlhandler-blank", "mlhandler-blank.pkl")
+            op.join(self.root, "mlhandler-blank", "model.pkl")
         )
         self.assertIsInstance(model, Pipeline)
         self.assertIsInstance(model["transform"], ColumnTransformer)

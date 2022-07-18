@@ -58,7 +58,6 @@ class MLHandler(FormHandler):
             config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
                                  slugify(cls.name))
         cls.store = ml.ModelStore(config_dir)
-
         cls.template = template
         super(MLHandler, cls).setup(**kwargs)
         index_col = None
