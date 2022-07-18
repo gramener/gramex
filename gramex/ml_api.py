@@ -204,7 +204,7 @@ class ModelStore(cache.JSONStore):
     def __init__(self, path, *args, **kwargs):
         _mkdir(path)
         self.data_store = op.join(path, "data.h5")
-        self.model_path = op.join(path, op.basename(path) + ".pkl")
+        self.model_path = op.join(path, "model.pkl")
         self.path = path
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
