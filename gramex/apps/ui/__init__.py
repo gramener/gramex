@@ -12,6 +12,7 @@ from hashlib import md5
 from tornado.gen import coroutine, Return
 from functools import partial
 from gramex.config import variables, app_log, merge
+from urllib.parse import urlparse, parse_qs, urlencode
 
 
 def join(*args):
@@ -94,9 +95,9 @@ valid_sass_key = re.compile(r'[_a-zA-Z][_a-zA-Z0-9\-]*')
 
 @coroutine
 def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
-    '''
-    Compile a SASS file using custom variables from URL query parameters.
-    The special variables ``@import``, ``@use`` and ``@forward`` can be a str/list of URLs or
+    '''Compile a SASS file using custom variables from URL query parameters.
+
+    The special variables `@import`, `@use` and `@forward` can be a str/list of URLs or
     libraries to import.
     '''
     # Get valid variables from URL query parameters
@@ -104,6 +105,9 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
     for key, vals in handler.args.items():
         if key in {'@import', '@use', '@forward'}:
             commands[key] = vals
+        # Ignore ?_map which is used for sourceMappingURL
+        elif key == '_map':
+            pass
         # Allow only alphanumeric SASS keys
         elif not valid_sass_key.match(key):
             app_log.warning('sass: "${key}" key not allowed. Use alphanumeric')
@@ -120,12 +124,12 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
     # Create cache key based on state = path + imports + args. Output to <cache-key>.css
     path = os.path.normpath(path).replace('\\', '/')
     cache_key = get_cache_key([path, commands, vars])
-    cache_file = join(cache_dir, f'theme-{cache_key}.css')
+    target = join(cache_dir, f'theme-{cache_key}.css')
+    source = target[:-4] + '.scss'
 
-    # Recompile if output cache_file is missing, or path has been updated
-    if not os.path.exists(cache_file) or os.stat(path).st_mtime > os.stat(cache_file).st_mtime:
+    # Recompile if target is missing, or path has been updated
+    if not os.path.exists(target) or os.stat(path).st_mtime > os.stat(target).st_mtime:
         # Create an SCSS file
-        scss_path = cache_file[:-4] + '.scss'
         # ... whose contents include all variables
         content = [f'${key}: {val};' for key, val in vars.items()]
         # ... and commands @import, @use, @forward (convert \ to / to handle Windows paths)
@@ -135,11 +139,11 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
             for url in urls]
         # ... and the main SCSS file we want to use
         content.append(f'@import "{path}";')
-        with open(scss_path, 'w', encoding='utf-8') as handle:
+        with open(source, 'w', encoding='utf-8') as handle:
             handle.write('\n'.join(content))
         # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir, CWD
         proc = yield gramex.service.threadpool.submit(subprocess.run, [
-            'node', sass_bin, scss_path, cache_file,
+            'node', sass_bin, source, target,
             '--style', 'compressed',
             '--load-path', os.path.dirname(path),
             '--load-path', ui_dir,
@@ -148,13 +152,9 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
         ], capture_output=True, input='\n'.join(content), encoding='utf-8')
         if proc.returncode:
             # If there's an error, remove the generated files and raise an error
-            os.unlink(cache_file)
-            os.unlink(scss_path)
-            gramex.console(proc.stderr)
-            raise RuntimeError('sass compilation failure')
-
-    handler.set_header('Content-Type', 'text/css')
-    return gramex.cache.open(cache_file, 'bin', mode='rb')
+            os.remove(source)
+            raise RuntimeError(f'.sass compilation failure:\n{proc.stderr}\n{proc.stdout}')
+    return _sourcemap(handler, target, 'text/css')
 
 
 @coroutine
@@ -175,22 +175,10 @@ def jscompiler(handler, path: str, ext: str, target_ext: str, exe: str, cmd: str
         proc = yield gramex.service.threadpool.submit(
             subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8')
         if proc.returncode:
-            raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}')
+            raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}\n{proc.stdout}')
 
-    source = os.path.split(path)[-1]
-    target = os.path.split(path)[-1].replace(f'.{ext}', f'.{target_ext}')
-    if 'map' in handler.args:
-        # Serve map file if browser requested component-name.ext?map
-        handler.set_header('Content-Type', 'application/json')
-        return gramex.cache.open(os.path.join(target_dir, target + '.map'), 'bin', mode='rb')
-    else:
-        # Serve compiled JS if browser requested just .JS
-        handler.set_header('Content-Type', 'text/javascript')
-        content = gramex.cache.open(os.path.join(target_dir, target), 'bin', mode='rb')
-        # ... but replace the map file with component-name.<type>?map
-        return content.replace(
-            f'//# sourceMappingURL={target}.map'.encode('utf-8'),
-            f'//# sourceMappingURL={source}?map'.encode('utf-8'))
+    target = os.path.join(target_dir, os.path.basename(path[:-len(ext)] + target_ext))
+    return _sourcemap(handler, target, 'text/javascript')
 
 
 ts = partial(
@@ -199,3 +187,23 @@ ts = partial(
 vue = partial(
     jscompiler, ext='vue', target_ext='min.js', exe=vue_path,
     cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')
+
+
+def _sourcemap(handler, target, mime):
+    if '_map' in handler.args:
+        # Serve JSON sourcemap if requested
+        handler.set_header('Content-Type', 'application/json')
+        return gramex.cache.open(target + '.map', 'bin', mode='rb')
+    else:
+        # Serve compiled file if there's no ?_map
+        handler.set_header('Content-Type', mime)
+        content = gramex.cache.open(target, 'bin', mode='rb')
+        # ... but replace the sourceMappingURL with URL + ?_map
+        url = urlparse(handler.request.uri)
+        query = parse_qs(url.query, keep_blank_values=True)
+        query.setdefault('_map', [''])
+        source_map = os.path.basename(url.path) + '?' + urlencode(query, doseq=True)
+        return re.sub(
+            rb' sourceMappingURL=(\S+)',
+            rb' sourceMappingURL=' + source_map.encode('utf-8'),
+            content)

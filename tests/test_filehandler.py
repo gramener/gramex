@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import json
 import pathlib
 import requests
@@ -7,6 +8,7 @@ import markdown
 from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
 from orderedattrdict import AttrDict
 from gramex.transforms import rmarkdown
+from urllib.parse import urljoin
 from nose.tools import ok_, eq_
 from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex, folder
@@ -182,25 +184,34 @@ class TestFileHandler(TestGramex):
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
 
+    def check_sourcemap(self, url, text):
+        match = re.search(r' sourceMappingURL=(\S+)', text)
+        ok_(match.group(1), 'sourcemap is defined')
+        source = self.check(urljoin(url, match.group(1))).json()
+        eq_(source['version'], 3, 'sourcemap is valid')
+
     def test_sass(self):
         for dir in ('/dir/transform-sass', '/dir/sass-file'):
             for file in ('import.scss', 'import.sass'):
-                text = self.check(f'{dir}/{file}?primary=red&color-alpha=purple').text
+                url = f'{dir}/{file}?primary=red&color-alpha=purple'
+                text = self.check(url, timeout=30, headers={'Content-Type': 'text/css'}).text
                 ok_('.ui-import-a{color:red}' in text, f'{dir}.{file}: import a.scss with vars')
                 ok_('--primary: red' in text, f'{dir}.{file}: import bootstrap with vars')
                 ok_('--alpha: purple' in text, f'{dir}.{file}: import gramexui with vars')
+                self.check_sourcemap(url, text)
         self.check('/dir/transform-sass/a.scss?primary=blue', text='.ui-import-a{color:blue}')
         self.check('/dir/transform-sass/b.scss?primary=blue', text='.ui-import-b{color:blue}')
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
 
     def test_vue(self):
         for dir in ('/dir/transform-vue', '/dir/vue-file'):
             for name in ('a', 'b'):
                 url = f'{dir}/comp-{name}.vue'
-                text = self.check(url, timeout=30).text
+                text = self.check(
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
                 ok_(f'Component: {name}' in text, f'{url}: has component name')
-                ok_(f'//# sourceMappingURL=comp-{name}.vue?map' in text, f'{url}: has sourcemap')
-                source = self.check(url + '?map').json()
-                eq_(source['version'], 3)
+                self.check_sourcemap(url, text)
         # TODO: Invalid file should generate a compilation failure
         # TODO: Changing file should recompile
 
@@ -208,14 +219,14 @@ class TestFileHandler(TestGramex):
         for dir in ('/dir/transform-ts', '/dir/ts-file'):
             for name in ('a', 'b'):
                 url = f'{dir}/{name}.ts'
-                text = self.check(url, timeout=30).text
+                text = self.check(
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
                 # TypeScript transpiles into ES3 by default, converting const to var.
                 # So check for 'var a =' in output, though source uses 'const a ='
-
                 ok_(f'var {name} = ' in text, f'{url}: has correct content')
-                ok_(f'//# sourceMappingURL={name}.ts?map' in text, f'{url}: has sourcemap')
-                source = self.check(url + '?map').json()
-                eq_(source['version'], 3)
+                self.check_sourcemap(url, text)
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
 
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')
