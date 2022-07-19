@@ -15,31 +15,31 @@ from gramex.config import variables, app_log, merge
 from urllib.parse import urlparse, parse_qs, urlencode
 
 
-def join(*args):
+def _join(*args):
     return os.path.normpath(os.path.join(*args))
 
 
 ui_dir = os.path.dirname(os.path.abspath(__file__))
-config_file = join(ui_dir, 'config.yaml')
-cache_dir = join(variables['GRAMEXDATA'], 'apps', 'ui')
-sass_bin = join(ui_dir, 'node_modules', 'sass', 'sass.js')
-ts_path = join(ui_dir, 'node_modules', 'typescript', 'bin', 'tsc')
-vue_path = join(ui_dir, 'node_modules', '@vue', 'cli-service', 'bin', 'vue-cli-service')
+config_file = _join(ui_dir, 'config.yaml')
+cache_dir = _join(variables['GRAMEXDATA'], 'apps', 'ui')
+sass_bin = _join(ui_dir, 'node_modules', 'sass', 'sass.js')
+ts_path = _join(ui_dir, 'node_modules', 'typescript', 'bin', 'tsc')
+vue_path = _join(ui_dir, 'node_modules', '@vue', 'cli-service', 'bin', 'vue-cli-service')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
 
 
-def get_cache_key(state):
+def _get_cache_key(state):
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     # B303:md5 is safe here - it's not for cryptographic use
     return md5(cache_key).hexdigest()[:5]       # nosec B303
 
 
 @coroutine
-def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
-    '''
-    Return a bootstrap theme based on the custom SASS variables provided.
-    '''
+def sass(
+        handler: gramex.handlers.FileHandler,
+        template: str = _join(ui_dir, 'bootstrap-theme.scss')):
+    '''Return a bootstrap theme based on the custom SASS variables provided.'''
     args = dict(variables.get('ui-bootstrap', {}))
     args.update({key: handler.get_arg(key) for key in handler.args})
     args = {key: val for key, val in args.items() if val}
@@ -48,7 +48,7 @@ def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
     config = gramex.cache.open(config_file)
     merge(args, config.get('defaults'), mode='setdefault')
 
-    cache_key = get_cache_key({'template': template, 'args': args})
+    cache_key = _get_cache_key({'template': template, 'args': args})
 
     # Replace fonts from config file, if available
     google_fonts = set()
@@ -61,10 +61,10 @@ def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
 
     # Cache based on the dict and config as template.<cache-key>.css
     base = os.path.splitext(os.path.basename(template))[0] + '.' + cache_key
-    cache_file = join(cache_dir, base + '.css')
+    cache_file = _join(cache_dir, base + '.css')
     if not os.path.exists(cache_file) or os.stat(template).st_mtime > os.stat(cache_file).st_mtime:
         # Create a SCSS file based on the args
-        scss_path = join(cache_dir, base + '.scss')
+        scss_path = _join(cache_dir, base + '.scss')
         with io.open(scss_path, 'wb') as handle:
             result = gramex.cache.open(template, 'template').generate(
                 variables=args,
@@ -88,17 +88,37 @@ def sass(handler, template=join(ui_dir, 'bootstrap-theme.scss')):
     raise Return(gramex.cache.open(cache_file, 'bin', mode='rb'))
 
 
-bootstrap_dir = join(ui_dir, 'node_modules', 'bootstrap', 'scss')
+bootstrap_dir = _join(ui_dir, 'node_modules', 'bootstrap', 'scss')
 # We only allow alphanumeric SASS keys (though SASS allows more)
 valid_sass_key = re.compile(r'[_a-zA-Z][_a-zA-Z0-9\-]*')
 
 
 @coroutine
-def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
+def sass2(
+        handler: gramex.handlers.FileHandler,
+        path: str = _join(ui_dir, 'gramexui.scss')) -> bytes:
     '''Compile a SASS file using custom variables from URL query parameters.
 
-    The special variables `@import`, `@use` and `@forward` can be a str/list of URLs or
-    libraries to import.
+    Examples:
+        >>> sass2(handler, 'x.sass')
+
+    Parameters:
+
+        handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
+        path: absolute path of input SASS file to compile into CSS
+
+    Returns:
+
+        compiled CSS file or source map if ?_map is specified
+
+    URL query parameters in `handler.args` are converted into SASS variables.
+    For example, `?primary=red` becomes `primary: red;` at the start of the SASS file.
+
+    You can specify
+    [`?@import=`](https://sass-lang.com/documentation/at-rules/import),
+    [`?@use=`](https://sass-lang.com/documentation/at-rules/use) and
+    [`?@forward=`](https://sass-lang.com/documentation/at-rules/forward)
+    with 1 or more URLs. These URLs are imported as libraries.
     '''
     # Get valid variables from URL query parameters
     vars, commands, theme_colors = {}, {}, []
@@ -123,8 +143,8 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
 
     # Create cache key based on state = path + imports + args. Output to <cache-key>.css
     path = os.path.normpath(path).replace('\\', '/')
-    cache_key = get_cache_key([path, commands, vars])
-    target = join(cache_dir, f'theme-{cache_key}.css')
+    cache_key = _get_cache_key([path, commands, vars])
+    target = _join(cache_dir, f'theme-{cache_key}.css')
     source = target[:-4] + '.scss'
 
     # Recompile if target is missing, or path has been updated
@@ -158,15 +178,39 @@ def sass2(handler, path: str = join(ui_dir, 'gramexui.scss')):
 
 
 @coroutine
-def jscompiler(handler, path: str, ext: str, target_ext: str, exe: str, cmd: str):
-    '''Compile a file (Vue, TypeScript), etc into a JS file with source mapping'''
+def jscompiler(
+        handler: gramex.handlers.FileHandler,
+        path: str, ext: str, target_ext: str, exe: str, cmd: str) -> bytes:
+    '''Compile a file (Vue, TypeScript), etc into a JS file using Node.js
+
+    Examples:
+        >>> jscompiler(
+        ...     handler, 'x.ts', ext='ts', target_ext='js', exe='/path/to/tsc',
+        ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
+
+    Parameters:
+
+        handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
+        path: absolute path of input file to compile into JavaScript
+        ext: extension of input file (e.g. `.ts`, `.vue`)
+        target_ext: extension of output file (e.g. `.js`, `.min.js`)
+        exe: path to the compiler's JS executable (e.g. `/path/to/tsc`)
+        cmd: command line to run. This substitutes 3 variables:
+            - `$exe` for the `exe` parameter
+            - `$filename` for the absolute path to the input file
+            - `$targetDir` for the absolute path to the output directory
+
+    Returns:
+
+        compiled JS file or source map if ?_map is specified
+    '''
     # Get valid variables from URL query parameters
     # Create cache key based on state = path. Output to <cache-key>.js
     path = os.path.normpath(path).replace('\\', '/')
-    cache_key = get_cache_key([path])
-    target_dir = join(cache_dir, f'{ext}-{cache_key}')
+    cache_key = _get_cache_key([path])
+    target_dir = _join(cache_dir, f'{ext}-{cache_key}')
 
-    # Recompile if output cache_file is missing, or path has been updated
+    # Recompile if output target is missing, or path has been updated
     if not os.path.exists(target_dir) or os.stat(path).st_mtime > os.stat(target_dir).st_mtime:
         cwd, filename = os.path.split(path)
         subs = {'exe': exe, 'filename': filename, 'targetDir': target_dir}
@@ -189,9 +233,30 @@ vue = partial(
     cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')
 
 
-def _sourcemap(handler, target, mime):
+def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> bytes:
+    '''Returns the compiled target file OR the source map if ?_map is set.
+
+    Examples:
+        >>> _sourcemap(handler, 'output.js', 'text/javascript')
+
+    Parameters:
+
+        handler: the [FileHandler][gramex.handlers.FileHandler] serving this file
+        target: absolute path of compiled output
+        mime: MIME type of compiled output
+
+    Returns:
+
+        source map or target file contents
+
+    This is used by FileHandlers compiling Vue, TS, SASS, etc.
+
+    If the URL has a ?_map, it serves `{target}.map` as a JSON file.
+    Else it serves the `{target}` as `mime` type,
+    replacing `sourceMappingURL` with the current URL + `?_map`.
+    '''
     if '_map' in handler.args:
-        # Serve JSON sourcemap if requested
+        # Serve JSON source map if requested
         handler.set_header('Content-Type', 'application/json')
         return gramex.cache.open(target + '.map', 'bin', mode='rb')
     else:
