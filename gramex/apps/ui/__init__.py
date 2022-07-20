@@ -180,19 +180,18 @@ def sass2(
 @coroutine
 def jscompiler(
         handler: gramex.handlers.FileHandler,
-        path: str, ext: str, target_ext: str, exe: str, cmd: str) -> bytes:
+        path: str, target_ext: str, exe: str, cmd: str) -> bytes:
     '''Compile a file (Vue, TypeScript), etc into a JS file using Node.js
 
     Examples:
         >>> jscompiler(
-        ...     handler, 'x.ts', ext='ts', target_ext='js', exe='/path/to/tsc',
+        ...     handler, path='x.ts', target_ext='js', exe='/path/to/tsc',
         ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
 
     Parameters:
 
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
         path: absolute path of input file to compile into JavaScript
-        ext: extension of input file (e.g. `.ts`, `.vue`)
         target_ext: extension of output file (e.g. `.js`, `.min.js`)
         exe: path to the compiler's JS executable (e.g. `/path/to/tsc`)
         cmd: command line to run. This substitutes 3 variables:
@@ -207,6 +206,7 @@ def jscompiler(
     # Get valid variables from URL query parameters
     # Create cache key based on state = path. Output to <cache-key>.js
     path = os.path.normpath(path).replace('\\', '/')
+    ext = os.path.splitext(path)[-1]
     cache_key = _get_cache_key([path])
     target_dir = _join(cache_dir, f'{ext}-{cache_key}')
 
@@ -226,10 +226,10 @@ def jscompiler(
 
 
 ts = partial(
-    jscompiler, ext='ts', target_ext='js', exe=ts_path,
+    jscompiler, target_ext='js', exe=ts_path,
     cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap')
 vue = partial(
-    jscompiler, ext='vue', target_ext='min.js', exe=vue_path,
+    jscompiler, target_ext='min.js', exe=vue_path,
     cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')
 
 
