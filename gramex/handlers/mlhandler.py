@@ -124,6 +124,8 @@ class MLHandler(FormHandler):
             for f in files:
                 buff = BytesIO(f['body'])
                 try:
+                    if f['content_type'] in ['image/jpeg', 'image/jpg', 'image/png']:
+                        return buff
                     ext = re.sub(r'^.', '', op.splitext(f['filename'])[-1])
                     xdf = cache.open_callback['jsondata' if ext == 'json' else ext](buff)
                     dfs.append(xdf)
@@ -183,7 +185,10 @@ class MLHandler(FormHandler):
         return data
 
     def _predict(self, data=None, score_col=''):
-        self._check_model_path()
+        import io
+        if type(data) == io.BytesIO:
+            data = self.model.predict(data=data, mclass=self.store.load('class'))
+            return data
         metric = self.get_argument('_metric', False)
         if metric:
             scorer = get_scorer(metric)
@@ -240,13 +245,24 @@ class MLHandler(FormHandler):
         else:
             self._check_model_path()
             if '_download' in self.args:
-                self.set_header('Content-Type', 'application/octet-strem')
+                self.set_header('Content-Type', 'application/octet-stream')
                 self.set_header('Content-Disposition',
                                 f'attachment; filename={op.basename(self.store.model_path)}')
                 with open(self.store.model_path, 'rb') as fout:
                     self.write(fout.read())
             elif '_model' in self.args:
                 self.write(json.dumps(self.model.get_params(), indent=2))
+            elif isinstance(self.model, ml.KerasApplication):
+                if 'training_data' in self.args:
+                    data = self.args['training_data']
+                    training_results = yield gramex.service.threadpool.submit(
+                        self._train, data=data)
+                    self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
+                else:
+                    data = self._parse_multipart_form_data()
+                    prediction = yield gramex.service.threadpool.submit(
+                        self._predict, data)
+                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
             else:
                 try:
                     data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
@@ -274,14 +290,18 @@ class MLHandler(FormHandler):
         target_col = self.get_argument('target_col', self.store.load('target_col'))
         index_col = self.get_argument('index_col', self.store.load('index_col'))
         self.store.dump('target_col', target_col)
-        data = self._parse_data(False) if data is None else data
-        data = self._filtercols(data)
-        data = self._filterrows(data)
-        self.model = get_model(
-            self.store.load('class'), self.store.load('params'),
-            data=data, target_col=target_col,
-            nums=self.store.load('nums'), cats=self.store.load('cats')
-        )
+        if isinstance(self.model, ml.KerasApplication):
+            result = self.model.fit(data, self.kwargs['config_dir'])
+            return result
+        else:
+            data = self._parse_data(False) if data is None else data
+            data = self._filtercols(data)
+            data = self._filterrows(data)
+            self.model = get_model(
+                self.store.load('class'), self.store.load('params'),
+                data=data, target_col=target_col,
+                nums=self.store.load('nums'), cats=self.store.load('cats')
+            )
         if not isinstance(self.model, ml.SklearnTransformer):
             target = data[target_col]
             train = data[[c for c in data if c not in (target_col, index_col)]]
