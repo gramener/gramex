@@ -144,7 +144,7 @@ def open(
         hashfn(transform),
         frozenset(((k, hashed(v)) for k, v in kwargs.items())),
     )
-    cached = _cache.get(key, None)
+    cached = _cache.get(key, _FALLBACK_MEMORY_CACHE.get(key, None))
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):
         reloaded = True
@@ -167,6 +167,10 @@ def open(
         cached = {'data': data, 'stat': fstat}
         try:
             _cache[key] = cached
+        except TypeError as e:
+            # Redis / Disk caches can't pickle templates, etc. Fall back quietly to memory cache
+            app_log.debug(f'gramex.cache.open: {e} on {callback}. Using fallback memory cache')
+            _FALLBACK_MEMORY_CACHE[key] = cached
         except ValueError:
             size = sys.getsizeof(data)
             app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
@@ -1179,6 +1183,8 @@ def hashed(val):
 # gramex.cache.open() stores its cache here.
 # {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
+# If _OPEN_CACHE is a Redis/Disk/... cache that can't store the object, use fallback memory cache
+_FALLBACK_MEMORY_CACHE = {}
 open_callback = dict(
     bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
     txt=opener(None, read=True),
