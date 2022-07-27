@@ -91,9 +91,15 @@ class TestCacheConstructor(unittest.TestCase):
         def lock(x):
             return Lock()       # Non Picklable object
 
+        # Non-pickable object should not be cached in Redis cache, but in fallback cache
         cache.store.flushall()
+        gramex.cache._FALLBACK_MEMORY_CACHE.clear()
         gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache)
-        eq_(len(cache), 0)  # It should not be cached
+        eq_(len(cache), 0, 'Redis Cache does not store non-pickeable objects')
+        eq_(len(gramex.cache._FALLBACK_MEMORY_CACHE), 1, 'Fallback cache is set')
+        result, reloaded = gramex.cache.open(
+            os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache, _reload_status=True)
+        eq_(reloaded, True, 'Fallback cache returns non-pickleable objects')
 
         r = StrictRedis()                   # Connect to redis without gramex cache
         r.set('Unpickled', 'Test')          # Set a key that is not pickled
