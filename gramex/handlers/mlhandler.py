@@ -98,7 +98,7 @@ class MLHandler(FormHandler):
         if op.exists(cls.store.model_path):  # If the pkl exists, load it
             if op.isdir(cls.store.model_path):
                 mclass, wrapper = ml.search_modelclass(mclass)
-                cls.model = locate(wrapper).from_disk(mclass, cls.store.model_path)
+                cls.model = locate(wrapper).from_disk(path=cls.store.model_path, klass=mclass)
             else:
                 cls.model = get_model(cls.store.model_path, {})
         elif data is not None:
@@ -187,7 +187,7 @@ class MLHandler(FormHandler):
 
     def _predict(self, data=None, score_col=''):
         import io
-        if type(data) == io.BytesIO:
+        if isinstance(data, io.BytesIO):
             data = self.model.predict(data=data, mclass=self.store.load('class'))
             return data
         metric = self.get_argument('_metric', False)
@@ -254,16 +254,10 @@ class MLHandler(FormHandler):
             elif '_model' in self.args:
                 self.write(json.dumps(self.model.get_params(), indent=2))
             elif isinstance(self.model, ml.KerasApplication):
-                if 'training_data' in self.args:
-                    data = self.args['training_data']
-                    training_results = yield gramex.service.threadpool.submit(
-                        self._train, data=data)
-                    self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
-                else:
-                    data = self._parse_multipart_form_data()
-                    prediction = yield gramex.service.threadpool.submit(
-                        self._predict, data)
-                    self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
+                data = self._parse_multipart_form_data()
+                prediction = yield gramex.service.threadpool.submit(
+                    self._predict, data)
+                self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
             else:
                 try:
                     data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
@@ -326,11 +320,17 @@ class MLHandler(FormHandler):
     @coroutine
     def post(self, *path_args, **path_kwargs):
         action = self.args.pop('_action', 'predict')
-        if action not in ACTIONS:
-            raise HTTPError(BAD_REQUEST, f'Action {action} not supported.')
-        res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
-        self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
+        if 'training_data' in self.args and action == 'train':
+            data = self.args['training_data']
+            training_results = yield gramex.service.threadpool.submit(
+                self._train, data=data)
+            self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
+        else:
+            if action not in ACTIONS:
+                raise HTTPError(BAD_REQUEST, f'Action {action} not supported.')
+            res = yield gramex.service.threadpool.submit(getattr(self, f"_{action}"))
+            self.set_header('Content-Type', 'application/json')
+            self.write(json.dumps(res, indent=2, cls=CustomJSONEncoder))
         super(MLHandler, self).post(*path_args, **path_kwargs)
 
     @coroutine

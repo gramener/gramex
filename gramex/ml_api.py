@@ -207,7 +207,10 @@ class ModelStore(cache.JSONStore):
     def __init__(self, path, *args, **kwargs):
         _mkdir(path)
         self.data_store = op.join(path, "data.h5")
-        self.model_path = op.join(path, op.basename(path) + ".pkl")
+        if op.exists(op.join(path, op.basename(path) + ".pkl")):
+            self.model_path = op.join(path, op.basename(path) + ".pkl")
+        else:
+            self.model_path = path
         self.path = path
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
@@ -434,37 +437,36 @@ class HFTransformer(SklearnModel):
 
 class KerasApplication(AbstractModel):
     def __init__(self, model, params=None, data=None, **kwargs):
-        self.model = model
         if params is None:
             params = {}
         self.params = params
         self.kwargs = kwargs
+        self.model = model(include_top=True,
+                           weights="imagenet",
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000)
 
     @classmethod
     def from_disk(cls, path, klass):
         # Load model from disk
-        return cls(path)
+        return cls(klass)
 
     def predict(self, data=None, **kwargs):
         from tensorflow.keras.preprocessing import image
         import PIL
         import io
 
-        mclass, wrapper = search_modelclass(kwargs['mclass'])
-        model = mclass(include_top=True,
-                       weights="imagenet",
-                       input_tensor=None,
-                       input_shape=None,
-                       pooling=None,
-                       classes=1000)
+        mclass, _ = search_modelclass(kwargs['mclass'])
         preprocess_input = locate('preprocess_input', [mclass.__module__])
         decode_predictions = locate('decode_predictions', [mclass.__module__])
         data = PIL.Image.open(io.BytesIO(data.getvalue()))\
-                  .resize((model.input_shape[1], model.input_shape[2]))
+                  .resize((self.model.input_shape[1], self.model.input_shape[2]))
         x = image.img_to_array(data)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
-        preds = model.predict(x)
+        preds = self.model.predict(x)
         # decode the results into a list of tuples (class, description, probability)
         results = decode_predictions(preds)
         return results
