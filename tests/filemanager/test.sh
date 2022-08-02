@@ -1,7 +1,6 @@
-# Create test/tape.js dynamically. It's not committed
-node_modules/.bin/browserify -s tape -r tape -o test/tape.js
+# Create tape.js dynamically. It's not committed
+node_modules/.bin/browserify -s tape -r tape -o tape.js
 
-cd test/
 rm -rf gramex.log drive*
 gramex --listen.port=9999 2>&1 | tee gramex.log &
 GRAMEX_PID=$!
@@ -33,4 +32,4 @@ do
 done
 
 # Run test cases
-node puppet.js | ../node_modules/.bin/tap-merge
+node puppet.js | node_modules/.bin/tap-merge

@@ -45,6 +45,11 @@ testsetup () {
   command -v yarn >/dev/null 2>&1 || npm install -g yarn
 }
 
+test () {
+  nosetests
+  (cd tests/filemanager; npm install; npm test)
+}
+
 stats () {
   # Count number of lines of code
   PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
