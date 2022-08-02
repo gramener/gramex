@@ -1,4 +1,5 @@
 C:\site\gramener.com\viz\async-gramex\.bandit: OK
+C:\site\gramener.com\viz\async-gramex\.ecrc: OK
 C:\site\gramener.com\viz\async-gramex\.editorconfig: OK
 C:\site\gramener.com\viz\async-gramex\.eslintignore: OK
 C:\site\gramener.com\viz\async-gramex\.git: Excluded
@@ -43,7 +44,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\package-lock.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\README.md: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\configeditor\node_modules: Excluded
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\drivehandler-snippet.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\filemanager-snippet.html: OK
@@ -53,26 +53,7 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\filemanager.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\navbar.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\node_modules: Excluded
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\package-lock.json: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\README.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\default-drive.csv: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive-empty\.meta.db: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive1\.meta.db: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive1\drive1a.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive1\drive1b.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive1\drive1c.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive2\.meta.db: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive2\drive2a.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive2\drive2b.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\drive2\drive2c.txt: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\gramex.log: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\gramex.yaml: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\puppet.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\tape-stream.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\test-filemanager.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\test\test.sh: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\$appname.py: Empty file
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.editorconfig: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.flake8: OK
@@ -397,11 +378,11 @@ C:\site\gramener.com\viz\async-gramex\pkg\conda\template.post-link.sh: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-py3\build.py: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-py3\Dockerfile.tmpl: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-py3\README.md: OK
-C:\site\gramener.com\viz\async-gramex\README.rst: OK
+C:\site\gramener.com\viz\async-gramex\README.md: OK
 C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\npm-audit.txt: OK
-C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: Empty file
+C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: OK
 C:\site\gramener.com\viz\async-gramex\setup.cfg: OK
 C:\site\gramener.com\viz\async-gramex\setup.py: OK
 C:\site\gramener.com\viz\async-gramex\task: OK
@@ -484,12 +465,15 @@ C:\site\gramener.com\viz\async-gramex\testlib\test_watch.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db: OK
+C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-shm: OK
+C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-wal: Empty file
 C:\site\gramener.com\viz\async-gramex\tests\.secrets.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
+C:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
 C:\site\gramener.com\viz\async-gramex\tests\dir\.hidden: Empty file
@@ -541,8 +525,30 @@ C:\site\gramener.com\viz\async-gramex\tests\dir\template-handler.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\template.sub.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\template.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\text.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\drive\.meta.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\error-404.json: OK
 C:\site\gramener.com\viz\async-gramex\tests\events.db: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\.gitignore: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\default-drive.csv: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive-empty\.meta.db: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive1\.meta.db: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive1\drive1a.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive1\drive1b.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive1\drive1c.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive2\.meta.db: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive2\drive2a.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive2\drive2b.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\drive2\drive2c.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\gramex.log: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\node_modules: Excluded
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\package-lock.json: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\package.json: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\puppet.js: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\tape-stream.js: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\tape.js: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\test-filemanager.html: OK
+C:\site\gramener.com\viz\async-gramex\tests\filemanager\test.sh: OK
 C:\site\gramener.com\viz\async-gramex\tests\filetest.template.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\filetest.tmpl.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\functionutils.py: OK
@@ -619,6 +625,7 @@ C:\site\gramener.com\viz\async-gramex\tests\test_websockethandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\throwerror.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\a.ts: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\b.ts: OK
+C:\site\gramener.com\viz\async-gramex\tests\uploads\.meta.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\userdata.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\utils.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\vega-lite.yaml: OK
@@ -634,11 +641,11 @@ C:\site\gramener.com\viz\async-gramex\TODO: OK
 ----------- SCAN SUMMARY -----------
 Known viruses: 8620283
 Engine version: 0.103.3
-Scanned directories: 81
-Scanned files: 584
+Scanned directories: 84
+Scanned files: 591
 Infected files: 0
-Data scanned: 7.55 MB
-Data read: 3.59 MB (ratio 2.11:1)
-Time: 18.934 sec (0 m 18 s)
-Start Date: 2022:07:03 11:47:50
-End Date:   2022:07:03 11:48:08
+Data scanned: 8.16 MB
+Data read: 3.91 MB (ratio 2.09:1)
+Time: 51.105 sec (0 m 51 s)
+Start Date: 2022:08:02 22:33:11
+End Date:   2022:08:02 22:34:02
