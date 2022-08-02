@@ -14,7 +14,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 
 TRANSFORMS = {
     "include": [],
@@ -437,38 +437,48 @@ class HFTransformer(SklearnModel):
 
 class KerasApplication(AbstractModel):
     def __init__(self, model, params=None, data=None, **kwargs):
+        from tensorflow.keras.models import load_model
         if params is None:
             params = {}
         self.params = params
         self.kwargs = kwargs
-        self.model = model(include_top=True,
-                           weights="imagenet",
-                           input_tensor=None,
-                           input_shape=None,
-                           pooling=None,
-                           classes=1000)
+        self.preprocess_input = locate('preprocess_input', [model.__module__])
+        self.decode_predictions = locate('decode_predictions', [model.__module__])
+        self.model_path = kwargs['path']
+
+        try:
+            self.model = load_model(self.model_path)
+            self.custom_model = True
+        except OSError:
+            self.custom_model = False
+            self.model = model(include_top=True,
+                               weights="imagenet",
+                               input_tensor=None,
+                               input_shape=None,
+                               pooling=None,
+                               classes=1000)
 
     @classmethod
     def from_disk(cls, path, klass):
         # Load model from disk
-        return cls(klass)
+        return cls(klass, path=path)
 
     def predict(self, data=None, **kwargs):
         from tensorflow.keras.preprocessing import image
-        import PIL
-        import io
 
-        mclass, _ = search_modelclass(kwargs['mclass'])
-        preprocess_input = locate('preprocess_input', [mclass.__module__])
-        decode_predictions = locate('decode_predictions', [mclass.__module__])
-        data = PIL.Image.open(io.BytesIO(data.getvalue()))\
-                  .resize((self.model.input_shape[1], self.model.input_shape[2]))
+        _, height, width, _ = self.model.input_shape
+        data = data.resize((height, width))
         x = image.img_to_array(data)
         x = np.expand_dims(x, axis=0)
-        x = preprocess_input(x)
+        x = self.preprocess_input(x)
         preds = self.model.predict(x)
-        # decode the results into a list of tuples (class, description, probability)
-        results = decode_predictions(preds)
+        if not self.custom_model:
+            # decode the results into a list of tuples (class, description, probability)
+            results = self.decode_predictions(preds)[0][0][1]
+        else:
+            # If the model is trained, provide it with the relevant class names
+            class_names = joblib.load(op.join(self.model_path, 'class_names.pkl'))
+            results = class_names.inverse_transform([np.argmax(preds)])[0]
         return results
 
     def fit(self, data, model_path, *args, **kwargs):
@@ -477,7 +487,6 @@ class KerasApplication(AbstractModel):
         from tensorflow.keras.models import Sequential
         from tensorflow.python.keras.layers import Dense, Flatten
         import pathlib
-        import json
 
         data_dir = pathlib.Path(data)
         img_height, img_width = 224, 224
@@ -502,7 +511,7 @@ class KerasApplication(AbstractModel):
         keras_model = Sequential()
         pretrained_model = tf.keras.applications.ResNet50(include_top=False,
                                                           input_shape=(224, 224, 3),
-                                                          pooling='avg', classes=5,
+                                                          pooling='avg', classes=len(class_names),
                                                           weights='imagenet')
         for layer in pretrained_model.layers:
             layer.trainable = False
@@ -510,7 +519,7 @@ class KerasApplication(AbstractModel):
         keras_model.add(pretrained_model)
         keras_model.add(Flatten())
         keras_model.add(Dense(512, activation='relu'))
-        keras_model.add(Dense(5, activation='softmax'))
+        keras_model.add(Dense(len(class_names), activation='softmax'))
         keras_model.compile(optimizer=Adam(lr=0.001),
                             loss='sparse_categorical_crossentropy', metrics=['accuracy'])
         epochs = 1
@@ -519,9 +528,10 @@ class KerasApplication(AbstractModel):
             validation_data=val_ds,
             epochs=epochs
         )
-        with open(op.join(model_path, 'class_names.json'), 'w') as fout:
-            json.dump(class_names, fout)
+        le = LabelEncoder()
+        le.fit(class_names)
         keras_model.save(model_path)
+        joblib.dump(le, op.join(self.model_path, 'class_names.pkl'))
         return class_names
 
     def get_params(self, **kwargs):

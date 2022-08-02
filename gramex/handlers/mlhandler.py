@@ -138,6 +138,13 @@ class MLHandler(FormHandler):
     def _parse_application_json(self):
         return pd.read_json(self.request.body.decode('utf8'))
 
+    def _parse_image_jpeg(self):
+        from PIL import Image
+        buff = BytesIO(self.request.body)
+        return Image.open(buff)
+
+    _parse_image_jpg = _parse_image_png = _parse_image_jpeg
+
     def _parse_data(self, _cache=True, append=False):
         header = self.request.headers.get('Content-Type', '').split(';')[0]
         header = slugify(header).replace('-', '_')
@@ -178,6 +185,9 @@ class MLHandler(FormHandler):
         return data
 
     def _transform(self, data, **kwargs):
+        if not isinstance(data, (pd.DataFrame, pd.Series)):
+            return data
+
         orgdata = self.store.load_data()
         for col in np.intersect1d(data.columns, orgdata.columns):
             data[col] = data[col].astype(orgdata[col].dtype)
@@ -209,6 +219,8 @@ class MLHandler(FormHandler):
             except Exception as exc:
                 app_log.exception(exc)
             return data
+        except AttributeError:
+            return self.model.predict(data)
 
     def _check_model_path(self):
         try:
@@ -253,11 +265,11 @@ class MLHandler(FormHandler):
                     self.write(fout.read())
             elif '_model' in self.args:
                 self.write(json.dumps(self.model.get_params(), indent=2))
-            elif isinstance(self.model, ml.KerasApplication):
-                data = self._parse_multipart_form_data()
-                prediction = yield gramex.service.threadpool.submit(
-                    self._predict, data)
-                self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
+            # elif isinstance(self.model, ml.KerasApplication):
+            #     data = self._parse_multipart_form_data()
+            #     prediction = yield gramex.service.threadpool.submit(
+            #         self._predict, data)
+            #     self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
             else:
                 try:
                     data_args = {k: v for k, v in self.args.items() if not k.startswith('_')}
@@ -324,6 +336,7 @@ class MLHandler(FormHandler):
             data = self.args['training_data']
             training_results = yield gramex.service.threadpool.submit(
                 self._train, data=data)
+            self.set_header('Content-Type', 'application/json')
             self.write(json.dumps(training_results, indent=2, cls=CustomJSONEncoder))
         else:
             if action not in ACTIONS:
