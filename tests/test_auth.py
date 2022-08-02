@@ -576,7 +576,9 @@ class TestRulesFile(TestRules):
             self.login_ok(user, upass.get(user, user), check_next='/')
             session = self.session.get(server.base_url + '/auth/session').json()
             eq_(session['user']['cookie_expires'], expires_duration)
-            eq_(session['user']['expiry'], '2050-12-31T00:00:00+05:30')
+            # Strip out the time zone (e.g. +05:30) before comparing expiry.
+            # Ensures tests will run in any country.
+            eq_(session['user']['expiry'][:19], '2050-12-31T00:00:00')
 
 
 class TestNoRules(AuthBase):

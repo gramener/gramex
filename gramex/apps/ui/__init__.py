@@ -5,6 +5,7 @@ import os
 import json
 import gramex
 import gramex.cache
+import gramex.handlers
 import string
 # B404:import_subprocess only for JS compilation
 import subprocess       # nosec B404
@@ -185,7 +186,7 @@ def jscompiler(
 
     Examples:
         >>> jscompiler(
-        ...     handler, path='x.ts', target_ext='js', exe='/path/to/tsc',
+        ...     handler, path='x.ts', target_ext='.js', exe='/path/to/tsc',
         ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
 
     Parameters:
@@ -226,10 +227,10 @@ def jscompiler(
 
 
 ts = partial(
-    jscompiler, target_ext='js', exe=ts_path,
+    jscompiler, target_ext='.js', exe=ts_path,
     cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap')
 vue = partial(
-    jscompiler, target_ext='min.js', exe=vue_path,
+    jscompiler, target_ext='.min.js', exe=vue_path,
     cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')
 
 
