@@ -8,13 +8,13 @@
     "url": "git@github.com:gramener/gramex.git"
   },
   "scripts": {
-    "test": "bash test/test.sh"
+    "test": "bash test.sh"
   },
   "eslintConfig": {
     "overrides": [
       {
         "files": [
-          "test/puppet.js"
+          "puppet.js"
         ]
       }
     ],
