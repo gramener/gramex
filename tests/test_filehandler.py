@@ -6,11 +6,8 @@ import pathlib
 import requests
 import markdown
 from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
-from orderedattrdict import AttrDict
-from gramex.transforms import rmarkdown
 from urllib.parse import urljoin
 from nose.tools import ok_, eq_
-from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex, folder
 
 
@@ -163,21 +160,6 @@ class TestFileHandler(TestGramex):
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
-
-    def test_rmarkdown(self):
-        def _callback(f):
-            f = f.result()
-            return f
-
-        path = server.info.folder / 'dir/rmarkdown.Rmd'
-        handler = AttrDict(file=path)
-        result = rmarkdown('', handler).add_done_callback(_callback)
-        try:
-            self.check('/dir/transform/rmarkdown.Rmd', text=result, timeout=30)
-        except AssertionError:
-            raise SkipTest('rmarkdown deprecated')
-        htmlpath = str(server.info.folder / 'dir/rmarkdown.html')
-        tempfiles[htmlpath] = htmlpath
 
     def test_transform_template(self):
         # gramex.yaml has configured template.* to take handler and x as params

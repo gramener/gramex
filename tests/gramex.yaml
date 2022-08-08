@@ -499,11 +499,6 @@ url:
           function: markdown.markdown(content)
           headers:
             Content-Type: text/html; charset=UTF-8
-        "*.Rmd":
-          encoding: utf-8
-          function: rmarkdown(content, handler)
-          headers:
-            Content-Type: text/html; charset=UTF-8
         "template.*":
           encoding: utf-8
           function: template(content, handler=handler, param='x')
