@@ -26,10 +26,6 @@ include .gitignore
 # Include core docs
 include README.md
 
-# Include test cases
-graft tests
-graft testlib
-
 # Include documentation
 recursive-include docs *.rst conf.py Makefile make.bat
 
