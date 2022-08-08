@@ -1,7 +1,7 @@
 '''Utility functions for actions or conversions'''
 
 from .auth import ensure_single_session
-from .template import template, sass, scss, ts, vue, rmarkdown
+from .template import template, sass, scss, ts, vue
 from .transforms import build_transform, build_pipeline, build_log_info, condition, flattener, once
 from .transforms import handler, Header
 # Import common libraries with their popular abbreviations.
@@ -18,7 +18,6 @@ __all__ = [
     'scss',
     'ts',
     'vue',
-    'rmarkdown',
     'ensure_single_session',
     'condition',
     'flattener',
