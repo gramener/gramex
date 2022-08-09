@@ -427,11 +427,10 @@ def build_pipeline(
             # Log pipeline execution (and error, if any)
             from gramex.services import info
             if 'pipeline' in info.storelocations:
-                from gramex.data import insert
-                end = datetime.datetime.utcnow().isoformat()
-                insert(**info.storelocations.pipeline, id=['name', 'start'], args={
-                    'name': [f'{filename}'], 'start': [start], 'end': [end], 'error': [error],
-                })
+                info.storelocations.pipeline.insert(
+                    name=filename, start=start, error=error,
+                    end=datetime.datetime.utcnow().isoformat(),
+                )
 
     return run_pipeline
 

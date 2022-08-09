@@ -1,13 +1,15 @@
 import os
 import six
+import json
 import time
 import logging
 import mimetypes
 import traceback
 import tornado.gen
+import gramex
 import gramex.cache
 from typing import Union
-from binascii import b2a_base64, hexlify
+from binascii import b2a_base64
 from fnmatch import fnmatch
 from http.cookies import Morsel
 from orderedattrdict import AttrDict
@@ -692,27 +694,25 @@ class BaseMixin(object):
         if getattr(self, '_session', None) is not None:
             self._session_store.dump(self._session['id'], self._session)
 
-    def otp(self, expire=60, prefix='otp', user=None):
+    def otp(self, expire=60, user=None, email='OTP'):
         '''Return one-time password valid for ``expire`` seconds. Use with X-Gramex-OTP header'''
         user = self.current_user if user is None else user
         if not user:
             raise HTTPError(UNAUTHORIZED)
-        nbits = 16
-        otp = hexlify(os.urandom(nbits)).decode('ascii')
-        self._session_store.dump(f'{prefix}:{otp}', {'user': user, '_t': time.time() + expire})
-        return otp
+        return gramex.service.storelocations.otp.insert(
+            user=user, email=email, expire=time.time() + expire)
 
-    def revoke_otp(self, key, prefix='otp'):
+    def revoke_otp(self, key):
         '''Revoke an OTP.'''
-        self._session_store.dump(f'{prefix}:{key}', None)
+        gramex.service.storelocations.otp.pop(token=key)
 
     def apikey(self, expire=1e9, user=None):
         '''Return new API Key. To be used with the X-Gramex-Key header.'''
-        return self.otp(expire=expire, prefix='key', user=user)
+        return self.otp(expire=expire, user=user, email='Key')
 
     def revoke_apikey(self, key):
         '''Revoke an API key.'''
-        self.revoke_otp(key, prefix='key')
+        self.revoke_otp(key)
 
     def override_user(self):
         '''
@@ -723,7 +723,6 @@ class BaseMixin(object):
         headers = self.request.headers
         cipher = headers.get('X-Gramex-User')
         if cipher:
-            import json
             try:
                 user = json.loads(decode_signed_value(
                     conf.app.settings['cookie_secret'], 'user', cipher,
@@ -734,23 +733,22 @@ class BaseMixin(object):
                 app_log.debug(f'{self.name}: Overriding user to {user!r}')
                 self.session['user'] = user
                 return
-        # If valid OTP is specified, set the user from the API key
-        otp = headers.get('X-Gramex-OTP') or self.get_argument('gramex-otp', None)
-        if otp:
-            otp_data = self._session_store.load('otp:' + otp, None)
-            if not isinstance(otp_data, dict) or '_t' not in otp_data or 'user' not in otp_data:
-                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid Gramex OTP: {otp}')
-            elif otp_data['_t'] < time.time():
-                raise HTTPError(BAD_REQUEST, f'{self.name}: expired Gramex OTP: {otp}')
-            self.revoke_otp(otp)
-            self.session['user'] = otp_data['user']
-        # If API Key is specified, set the user from the API key
-        key = headers.get('X-Gramex-Key') or self.get_argument('gramex-key', None)
-        if key:
-            key_data = self._session_store.load('key:' + key, None)
-            if not isinstance(key_data, dict) or 'user' not in key_data:
-                raise HTTPError(BAD_REQUEST, f'{self.name}: invalid Gramex Key: {key}')
-            self.session['user'] = key_data['user']
+        # OTP is specified as an X-Gramex-OTP header or ?gramex-otp argument.
+        # API Key is specified as an X-Gramex-Key header or ?gramex-key argument.
+        # Override the user if either is specified.
+        for key in ('OTP', 'Key'):
+            token = (
+                headers.get(f'X-Gramex-{key}') or
+                self.get_argument(f'gramex-{key.lower()}', None))
+            if token:
+                row = gramex.service.storelocations.otp.filter(token=token)
+                if not row:
+                    raise HTTPError(
+                        BAD_REQUEST, f'{self.name}: invalid/expired Gramex {key}: {token}')
+                # Revoke OTP keys. Don't revoke API keys
+                if row['email'] == 'OTP':
+                    self.revoke_otp(token)
+                self.session['user'] = row['user']
 
     def set_last_visited(self):
         '''

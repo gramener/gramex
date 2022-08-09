@@ -44,6 +44,7 @@ from . import urlcache
 from .ttlcache import MAXTTL
 from .emailer import SMTPMailer
 from .sms import AmazonSNS, Exotel, Twilio
+from .storelocations import storetypes
 
 # Service information, available as gramex.service after gramex.init() is called
 info = AttrDict(
@@ -539,10 +540,21 @@ def gramexlog(conf: dict) -> None:
 
 
 def storelocations(conf: dict) -> None:
-    '''Initialize the store locations'''
+    '''Initialize the store locations.
+
+    `gramex.service.storelocation[location]` holds a StoreLocation class. You can `.insert()`
+    a row into that store using `.insert(col=val, col=val, ...)`.
+
+    Specialized stores, like `otp`, provide more functionality, e.g. `.insert()` creates a token,
+    `.pop()` pops a token, etc.
+
+    Examples:
+        >>> gramex.service.storelocation.pipeline.insert(name='abc', start=now, ...)
+        >>> gramex.service.storelocation.otp.pop(token=token)
+    '''
     for key, subconf in conf.items():
-        info.storelocations[key] = subconf
-        gramex.data.alter(**subconf)
+        store_class = storetypes.get(key, storetypes['default'])
+        info.storelocations[key] = store_class(**subconf)
 
 
 class GramexApp(tornado.web.Application):

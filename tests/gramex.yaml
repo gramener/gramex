@@ -23,7 +23,7 @@ app:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
     cookie: sid2                # Name the cookie differently from "sid"
-    domain: .localhost.local    # RequestCookieJar uses this domain for localhost
+    domain: .localhost.local    # RequestCookieJar uses this domain for localhost. Remove to test sessions manually
     secure: false               # Don't set this to true. We're using HTTP, so it will fail
     samesite: Strict            # Check if SameSite=Strict is sent
     cookiepath: /               # NOTE: This is not tested automatically, only manually.
