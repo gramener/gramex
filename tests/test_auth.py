@@ -230,8 +230,8 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
     # Run additional tests for session and login features
     def get_session(self, headers=None, params={}):
-        r = self.session.get(server.base_url + '/auth/session', headers=headers, params=params)
-        return r.json()
+        return self.session.get(server.base_url + '/auth/session',
+                                headers=headers, params=params).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -754,11 +754,11 @@ class TestDBAuthSignup(DBAuthBase):
         eq_(user['email'], 'any@example.org')
 
         # Check that the recovery database is at the custom location
-        ok_(gramex.service.storelocations.otp.store['url'].endswith('otp.db'))
+        ok_(gramex.service.storelocations.otp['url'].endswith('otp.db'))
         # Check that the user has been added to the recovery database
-        token_row = gramex.service.storelocations.otp.filter(token=token)
-        eq_(token_row['user'], 'newuser')
-        eq_(token_row['email'], 'any@example.org')
+        tokens = gramex.data.filter(**gramex.service.storelocations.otp).set_index('token')
+        eq_(tokens['user'][token], json.dumps('newuser'))
+        eq_(tokens['type'][token], 'DBAuth')
 
         # Log in with the URL sent in the email. That should take us to the
         # change password page. Change the password

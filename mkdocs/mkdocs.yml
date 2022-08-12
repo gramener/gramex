@@ -24,7 +24,6 @@ nav:
   - Machine learning API: ml_api.md
   - Visualization scales: scale.md
   - Secrets management: secrets.md
-  - Store locations: storelocations.md
   - sm_api.md
   - TopCause: topcause.md
   - Windows Services: winservice.md

@@ -1,6 +1,6 @@
 '''Handlers set up the micro-services for [gramex.services.url][].'''
 
-from .basehandler import BaseHandler, BaseWebSocketHandler, SetupFailedHandler
+from .basehandler import BaseMixin, BaseHandler, BaseWebSocketHandler, SetupFailedHandler
 from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
@@ -43,6 +43,7 @@ Websocket = WebSocketHandler
 __all__ = [
     'BaseHandler',
     'BaseWebSocketHandler',
+    'BaseMixin',
     'Capture',
     'CaptureHandler',
     'Command',

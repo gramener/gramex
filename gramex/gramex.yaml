@@ -289,7 +289,7 @@ storelocations:
       table: users
       columns:
         user: TEXT
-        email: TEXT
+        type: TEXT
         token: TEXT
         expire: REAL    # Seconds since epoch
   # Store pipeline execution runs
