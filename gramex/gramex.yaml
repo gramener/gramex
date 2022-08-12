@@ -313,6 +313,20 @@ schedule:
         dates: '*'
         thread: true
 
+    # Every day and on startup, purge expired keys from storelocations.otp
+    gramex_purge_otp:
+        function: >
+          gramex.data.delete(
+              **gramex.service.storelocations.otp,
+              id=['token'],
+              args={'expire<': [time.time()]},
+          )
+        startup: true
+        minutes: 1
+        hours: 0
+        dates: '*'
+        thread: true
+
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 # Define this section at the end, to allow it to use previous services.
 url:
