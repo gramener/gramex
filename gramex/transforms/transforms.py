@@ -430,7 +430,7 @@ def build_pipeline(
                 from gramex.data import insert
                 end = datetime.datetime.utcnow().isoformat()
                 insert(**info.storelocations.pipeline, id=['name', 'start'], args={
-                    'name': [f'{filename}'], 'start': [start], 'end': [end], 'error': [error],
+                    'name': [filename], 'start': [start], 'end': [end], 'error': [error],
                 })
 
     return run_pipeline

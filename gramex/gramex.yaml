@@ -289,7 +289,7 @@ storelocations:
       table: users
       columns:
         user: TEXT
-        email: TEXT
+        type: TEXT
         token: TEXT
         expire: REAL    # Seconds since epoch
   # Store pipeline execution runs
@@ -309,6 +309,20 @@ schedule:
         function: gramex.gramex_update(url='https://gramener.com/gramex-update/')
         startup: true
         minutes: 0
+        hours: 0
+        dates: '*'
+        thread: true
+
+    # Every day and on startup, purge expired keys from storelocations.otp
+    gramex_purge_otp:
+        function: >
+          gramex.data.delete(
+              **gramex.service.storelocations.otp,
+              id=['token'],
+              args={'expire<': [time.time()]},
+          )
+        startup: true
+        minutes: 1
         hours: 0
         dates: '*'
         thread: true
