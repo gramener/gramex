@@ -315,12 +315,7 @@ schedule:
 
     # Every day and on startup, purge expired keys from storelocations.otp
     gramex_purge_otp:
-        function: >
-          gramex.data.delete(
-              **gramex.service.storelocations.otp,
-              id=['token'],
-              args={'expire<': [time.time()]},
-          )
+        function: gramex.services._storelocations_purge()
         startup: true
         minutes: 1
         hours: 0
