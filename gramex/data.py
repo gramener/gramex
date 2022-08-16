@@ -883,7 +883,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
     Parameters:
         url: sqlalchemy URL
         table: table name
-        columns: column names, with values are SQL types, or dicts
+        columns: column names, with values as SQL types or type objects
         **kwargs: passed to `sqlalchemy.create_engine()`.
 
     `columns` can be SQL type strings (e.g. `"REAL"` or `"VARCHAR(10)"`) or a dict with keys:
@@ -897,11 +897,23 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
     Returns:
         SQLAlchemy engine
 
-    If the table exists, any new columns are added. Existing columns are unchanged.
+    If the table exists, new columns (if any) are added. Existing columns are unchanged.
 
     If the table does not exist, the table is created with the specified columns.
 
-    Note: `primary_key` and `autoincrement` don't work on existing tables because
+    `columns` is a dict like `{key: type, key: type, ...}`.
+
+    - `key` is the column name
+    - `type` can be a SQL type valid for that database e.g.: `REAL`, `TEXT`, `VARCHAR(10)`, etc.
+    - `type` can also by a dict like `{"type": "VARCHAR(10)", "default": "NA"}`, with these keys:
+        - `type` (str): SQL type, e.g. `"VARCHAR(10)"`
+        - `default` (str/int/float/bool): default value, e.g. `"none@example.org"`
+        - `nullable` (bool): whether column can have null values, e.g. `False`
+        - `primary_key` (bool): whether column is a primary key, e.g. `True`
+        - `autoincrement` (bool): whether column automatically increments, e.g. `True`
+
+    `primary_key` and `autoincrement` are used **only** when creating new tables. They do not
+    change existing primary keys or autoincrements. This is because
     [SQLite disallows PRIMARY KEY with ALTER](https://stackoverflow.com/a/1120030/100904)
     and AUTO_INCREMENT doesn't work without PRIMARY KEY in MySQL.
     '''
