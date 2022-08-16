@@ -553,6 +553,15 @@ def storelocations(conf: dict) -> None:
         gramex.data.alter(**subconf)
 
 
+def _storelocations_purge() -> None:
+    import time
+    gramex.data.delete(
+        **gramex.service.storelocations.otp,
+        id=['token'],
+        args={'expire<': [time.time()]},
+    )
+
+
 class GramexApp(tornado.web.Application):
     def log_request(self, handler):
         # BaseHandler defines a a custom log format. If that's present, use it.
