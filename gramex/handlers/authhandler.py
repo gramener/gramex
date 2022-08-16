@@ -3,8 +3,6 @@ import io
 import os
 import csv
 import json
-import time
-import uuid
 import logging
 import tornado.escape
 import tornado.httpclient
@@ -392,38 +390,6 @@ class SimpleAuth(AuthHandler):
             self.log_user_event(event='fail')
             self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
-
-
-class OTP(object):
-    '''
-    OTP: One-time password. Also used for password recovery
-    '''
-    def __init__(self, size=None):
-        '''
-        Set up the database that stores password recovery tokens.
-        ``size`` is the length of the OTP in characters. Defaults to the
-        full hashing string
-        '''
-        self.size = size
-        self.store = gramex.service.storelocations.otp
-
-    def token(self, user, email, expire):
-        '''Generate a one-tie token, store it in the recovery database, and return it'''
-        token = uuid.uuid4().hex[:self.size]
-        gramex.data.insert(**self.store, id=['token'], args={
-            'user': [user], 'email': [email], 'token': [token], 'expire': [expire],
-        })
-        return token
-
-    def pop(self, token):
-        '''Return the row matching the token, and deletes it from the list'''
-        rows = gramex.data.filter(**self.store, args={'token': [token]})
-        if len(rows) > 0:
-            row = rows.iloc[0].to_dict()
-            if row['expire'] > time.time():
-                gramex.data.delete(**self.store, id=['token'], args={'token': [token]})
-                return row
-        return None
 
 
 def csv_encode(values, *args, **kwargs):

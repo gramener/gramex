@@ -95,44 +95,6 @@ def vue(content, handler):
     return result.decode('utf-8')
 
 
-@tornado.gen.coroutine
-def rmarkdown(content, handler=None, **kwargs):
-    '''Render an Rmarkdown file as HTML in a FileHandler.
-
-    !!! Deprecated
-        Support for R is being phased out in favor of Python ML libraries.
-        It will be removed by Gramex 1.82 (Aug 2022)
-
-    This can be used as a transform in FileHandler:
-
-    ```yaml
-    pattern: /file.rmd
-    handler: FileHandler
-    kwargs:
-        ...
-        transform:
-            "*.rmd":
-                function: rmarkdown(content, handler)
-                headers:
-                    Content-Type: text/html
-    ```
-    '''
-    import gramex.ml
-    import gramex.services
-    from gramex.config import app_log
-
-    app_log.warning('rmarkdown: transform deprecated, expires v1.82 Aug 2022')
-    rmdfilepath = str(handler.file)
-    htmlpath = yield gramex.services.info.threadpool.submit(
-        gramex.ml.r,
-        '''
-        library(rmarkdown)
-        rmarkdown::render("{}", output_format="html_document", quiet=TRUE)
-        '''.format(rmdfilepath.replace('\\', '/'))
-    )
-    return gramex.cache.open(htmlpath[0], 'bin').decode('utf-8')
-
-
 class CacheLoader(tornado.template.Loader):
     # Like tornado.template.Loader, but caching only until underlying file is changed.
     # Used internally by BaseHandler to override the Tornado default template loader.

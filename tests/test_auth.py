@@ -757,8 +757,8 @@ class TestDBAuthSignup(DBAuthBase):
         ok_(gramex.service.storelocations.otp['url'].endswith('otp.db'))
         # Check that the user has been added to the recovery database
         tokens = gramex.data.filter(**gramex.service.storelocations.otp).set_index('token')
-        eq_(tokens['user'][token], 'newuser')
-        eq_(tokens['email'][token], 'any@example.org')
+        eq_(tokens['user'][token], json.dumps('newuser'))
+        eq_(tokens['type'][token], 'DBAuth')
 
         # Log in with the URL sent in the email. That should take us to the
         # change password page. Change the password

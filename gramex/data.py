@@ -886,6 +886,14 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
         columns: column names, with values as SQL types or type objects
         **kwargs: passed to `sqlalchemy.create_engine()`.
 
+    `columns` can be SQL type strings (e.g. `"REAL"` or `"VARCHAR(10)"`) or a dict with keys:
+
+    - `type` (str), e.g. `"VARCHAR(10)"`
+    - `default` (str/int/float/bool), e.g. `"none@example.org"`
+    - `nullable` (bool), e.g. `False`
+    - `primary_key` (bool), e.g. `True` -- used only when creating new tables
+    - `autoincrement` (bool), e.g. `True` -- used only when creating new tables
+
     Returns:
         SQLAlchemy engine
 

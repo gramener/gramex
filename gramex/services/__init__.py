@@ -539,10 +539,27 @@ def gramexlog(conf: dict) -> None:
 
 
 def storelocations(conf: dict) -> None:
-    '''Initialize the store locations'''
+    '''Initialize the store locations.
+
+    `gramex.service.storelocation[location]` holds a database storage location that works with
+    [`gramex.data.alter`][gramex.data.alter]. It MUST have the following keys:
+
+    - `url`: SQLAlchemy URL
+    - `table`: table name
+    - `columns`: column names, with values are SQL types, or dicts
+    '''
     for key, subconf in conf.items():
         info.storelocations[key] = subconf
         gramex.data.alter(**subconf)
+
+
+def _storelocations_purge() -> None:
+    import time
+    gramex.data.delete(
+        **gramex.service.storelocations.otp,
+        id=['token'],
+        args={'expire<': [time.time()]},
+    )
 
 
 class GramexApp(tornado.web.Application):
