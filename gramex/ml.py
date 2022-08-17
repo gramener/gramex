@@ -16,13 +16,21 @@ load = joblib.load                      # noqa
 
 
 class Classifier(object):
-    '''Train and predict machine learning models in sklearn.'''
+    '''Train and predict machine learning models in sklearn.
+
+    <!-- TODO: Provide an example of how this works -->
+
+    '''
+
     def __init__(self, **kwargs: dict):
         '''
         Parameters:
-            kwargs: should have the parameters mentioned below.
+            **kwargs: should have the parameters mentioned below.
 
-        Kwargs:
+        `kwargs` should include:
+
+        <!-- TODO: Add these with types and defaults to the signature -->
+
         - data: data to train / re-train the model with.
         - model_class: model class to use (default: `sklearn.naive_bayes.BernoulliNB`).
         - model_kwargs: kwargs to pass to model class constructor (defaults: `{}`).
@@ -109,6 +117,8 @@ class Classifier(object):
             >>> cls_obj = Classifer()
             >>> cls_obj.predict(data)
 
+        <!-- TODO: Show what the output might look like -->
+
         Parameters:
             data: data for prediction using the model.
 
@@ -128,6 +138,8 @@ class Classifier(object):
         Examples:
             >>> cls_obj = Classifer()
             >>> cls_obj.save('C:\\Users\\username\\Downloads')
+
+        <!-- TODO: Show how to load the model after saving -->
 
         Parameters:
             path: path where the model is to be saved.
@@ -158,9 +170,10 @@ def _conda_r_home():
 
 
 def r(code: str = None, path: str = None, rel: bool = True, conda: bool = True,
-      convert: bool = True, repo='https://cran.r-project.org/', **kwargs: dict) -> str:
-    '''
-    Runs the R script and returns the result.
+      convert: bool = True, repo: str = 'https://cran.r-project.org/', **kwargs: dict) -> str:
+    '''Runs the R script and returns the result.
+
+    <!-- TODO: Provide an example -->
 
     Parameters:
         code: R code to execute.
@@ -221,8 +234,7 @@ def r(code: str = None, path: str = None, rel: bool = True, conda: bool = True,
 
 def groupmeans(data: pd.DataFrame, groups: list, numbers: list, cutoff: float = .01,
                quantile: float = .95, minsize: int = None, weight: float = None) -> pd.DataFrame:
-    '''
-    **DEPRECATED**. Use TopCause() instead.
+    '''**DEPRECATED**. Use TopCause() instead.
 
     Yields the significant differences in average between every pair of
     groups and numbers.
@@ -291,9 +303,7 @@ def groupmeans(data: pd.DataFrame, groups: list, numbers: list, cutoff: float = 
 
 
 def weighted_avg(data, numeric_cols, weight):
-    '''
-    Computes weighted average for specificied columns
-    '''
+    '''Computes weighted average for specificied columns.'''
     sumprod = data[numeric_cols].multiply(data[weight], axis=0).sum()
     return sumprod / data[weight].sum()
 
