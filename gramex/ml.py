@@ -9,22 +9,35 @@ from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
 from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
+from typing import Union
 
 # Expose joblob.load via gramex.ml
 load = joblib.load                      # noqa
 
 
 class Classifier(object):
-    '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
+    '''Train and predict machine learning models in sklearn.
+
+    <!-- TODO: Provide an example of how this works -->
+
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: dict):
+        '''
+        Parameters:
+            **kwargs: should have the parameters mentioned below.
+
+        `kwargs` should include:
+
+        <!-- TODO: Add these with types and defaults to the signature -->
+
+        - data: data to train / re-train the model with.
+        - model_class: model class to use (default: `sklearn.naive_bayes.BernoulliNB`).
+        - model_kwargs: kwargs to pass to model class constructor (defaults: `{}`).
+        - output: output column name (default: last column in training data).
+        - input: input column names (default: all columns except `output`).
+        - labels: list of possible output values (default: unique `output` in training).
+        '''
         vars(self).update(kwargs)
         self.model_class = kwargs.get('model_class', 'sklearn.naive_bayes.BernoulliNB')
         self.trained = False  # Boolean Flag
@@ -32,7 +45,16 @@ class Classifier(object):
     def __str__(self):
         return repr(vars(self))
 
-    def update_params(self, params):
+    def update_params(self, params: dict) -> None:
+        '''Update model training parameters.
+
+        Examples:
+            >>> cls_obj = Classifier()
+            >>> cls_obj.update_params(params={'model_class': 'sklearn.naive_bayes.GaussianNB'})
+
+        Parameters:
+            params: model training parameters to be updated.
+        '''
         model_keys = ('model_class', 'url', 'input', 'output', 'trained', 'query', 'model_kwargs')
         model_params = {k: v[0] if isinstance(v, list) and k != 'input' else v
                         for k, v in params.items() if k in model_keys}
@@ -40,17 +62,17 @@ class Classifier(object):
             self.trained = params.get('trained', False)
         vars(self).update(model_params)
 
-    def train(self, data):
-        '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
+    def train(self, data: pd.DataFrame) -> None:
+        '''Train a machine learning model with custom data.
 
-        Notes:
-        - If model has already been trained, extend the model. Else create it
+        Examples:
+            >>> cls_obj = Classifer()
+            >>> cls_obj.train(data)
+
+        Parameters:
+            data: data to train / re-train the model with.
+
+        If model has already been trained, extend the model. Else create it.
         '''
         self.output = vars(self).get('output', data.columns[-1])
         self.input = vars(self).get('input', list(data.columns[:-1]))
@@ -88,9 +110,20 @@ class Classifier(object):
             self.model.partial_fit(self.scaler.transform(x), y)
         self.trained = True
 
-    def predict(self, data):
-        '''
-        Return a Series that has the results of the classification of data
+    def predict(self, data: pd.DataFrame) -> Union[pd.Series, np.ndarray]:
+        '''Return a Series that has the results of the classification of data.
+
+        Examples:
+            >>> cls_obj = Classifer()
+            >>> cls_obj.predict(data)
+
+        <!-- TODO: Show what the output might look like -->
+
+        Parameters:
+            data: data for prediction using the model.
+
+        Returns:
+            Prediction results from classification of data.
         '''
         # Convert list of lists or numpy arrays into DataFrame. Assume columns are as per input
         if not isinstance(data, pd.DataFrame):
@@ -98,9 +131,18 @@ class Classifier(object):
         # Take only trained input columns
         return self.model.predict(self.scaler.transform(data))
 
-    def save(self, path):
+    def save(self, path: str) -> None:
         '''
-        Serializes the model and associated parameters
+        Serializes the model and associated parameters.
+
+        Examples:
+            >>> cls_obj = Classifer()
+            >>> cls_obj.save('C:\\Users\\username\\Downloads')
+
+        <!-- TODO: Show how to load the model after saving -->
+
+        Parameters:
+            path: path where the model is to be saved.
         '''
         joblib.dump(self, path, compress=9)
 
@@ -127,19 +169,21 @@ def _conda_r_home():
     return None
 
 
-def r(code=None, path=None, rel=True, conda=True, convert=True,
-      repo='https://cran.r-project.org/', **kwargs):
-    '''
-    Runs the R script and returns the result.
+def r(code: str = None, path: str = None, rel: bool = True, conda: bool = True,
+      convert: bool = True, repo: str = 'https://cran.r-project.org/', **kwargs: dict) -> str:
+    '''Runs the R script and returns the result.
 
-    :arg str code: R code to execute.
-    :arg str path: R script path. Cannot be used if code is specified
-    :arg bool rel: True treats path as relative to the caller function's file
-    :arg bool conda: True overrides R_HOME to use the Conda R
-    :arg bool convert: True converts R objects to Pandas and vice versa
-    :arg str repo: CRAN repo URL
+    <!-- TODO: Provide an example -->
 
-    All other keyword arguments as passed as parameters
+    Parameters:
+        code: R code to execute.
+        path: R script path. Cannot be used if code is specified.
+        rel: True treats path as relative to the caller function's file.
+        conda: True overrides R_HOME to use the Conda R.
+        convert: True converts R objects to Pandas and vice versa.
+        repo: CRAN repo URL.
+
+    All other keyword arguments as passed as parameters.
     '''
     # Use Conda R if possible
     if conda:
@@ -188,25 +232,25 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
     return result
 
 
-def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
-               weight=None):
-    '''
-    **DEPRECATED**. Use TopCause() instead.
+def groupmeans(data: pd.DataFrame, groups: list, numbers: list, cutoff: float = .01,
+               quantile: float = .95, minsize: int = None, weight: float = None) -> pd.DataFrame:
+    '''**DEPRECATED**. Use TopCause() instead.
 
     Yields the significant differences in average between every pair of
     groups and numbers.
 
-    :arg DataFrame data: pandas.DataFrame to analyze
-    :arg list groups: category column names to group data by
-    :arg list numbers: numeric column names in to summarize data by
-    :arg float cutoff: ignore anything with prob > cutoff.
-        cutoff=None ignores significance checks, speeding it up a LOT.
-    :arg float quantile: number that represents target improvement. Defaults to .95.
-        The ``diff`` returned is the % impact of everyone moving to the 95th
-        percentile
-    :arg int minsize: each group should contain at least minsize values.
-        If minsize=None, automatically set the minimum size to
-        1% of the dataset, or 10, whichever is larger.
+    Parameters:
+        data: pandas.DataFrame to analyze.
+        groups: category column names to group data by.
+        numbers: numeric column names in to summarize data by
+        cutoff: ignore anything with prob > cutoff.
+            cutoff=None ignores significance checks, speeding it up a LOT.
+        quantile: number that represents target improvement. Defaults to .95.
+            The `diff` returned is the % impact of everyone moving to the 95th
+            percentile.
+        minsize: each group should contain at least minsize values.
+            If minsize=None, automatically set the minimum size to
+            1% of the dataset, or 10, whichever is larger.
     '''
     from scipy.stats.mstats import ttest_ind
     if minsize is None:
@@ -259,9 +303,7 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
 
 
 def weighted_avg(data, numeric_cols, weight):
-    '''
-    Computes weighted average for specificied columns
-    '''
+    '''Computes weighted average for specificied columns.'''
     sumprod = data[numeric_cols].multiply(data[weight], axis=0).sum()
     return sumprod / data[weight].sum()
 
@@ -295,7 +337,7 @@ translate_api = {
 _translate_cache_lock = threading.Lock()
 
 
-def translate(*q, **kwargs):
+def translate(*q: str, **kwargs: dict):
     '''
     Translate strings using the Google Translate API. Example::
 
