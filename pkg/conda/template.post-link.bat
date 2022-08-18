@@ -1,7 +1,7 @@
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 {% for entry in release.lib %}
-"!PREFIX!\Scripts\pip.exe" install {% raw entry %}
+"!PREFIX!\Scripts\pip.exe" install "{% raw entry %}"
 {% end %}
 
 call "!PREFIX!\Library\bin\yarn.cmd" config set ignore-engines true
