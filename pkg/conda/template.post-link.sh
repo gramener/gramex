@@ -1,4 +1,4 @@
-{% for entry in release.pip %}
+{% for entry in release.lib %}
 "$PREFIX/bin/pip" install {% raw entry %}
 {% end %}
 
