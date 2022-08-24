@@ -97,11 +97,18 @@ conda () {
   conda build -c conda-forge pkg/conda/
 }
 
+# Usage: VERSION=1.xx.0 bash task pushdocker
 pushdocker () {
-  pip install docker
-  python pkg/docker-py3/build.py
+  docker build pkg/docker-gramex-base \
+    --build-arg VERSION=$VERSION \
+    --tag gramener/gramex-base:$VERSION \
+    --tag gramener/gramex-base:latest
+  docker build pkg/docker-gramex \
+    --build-arg VERSION=$VERSION \
+    --tag gramener/gramex:$VERSION \
+    --tag gramener/gramex:latest
   docker login                # log in as sanand0 / pratapvardhan
-  docker push gramener/gramex
+  docker push gramener/gramex-base
 }
 
 # Run all commands from the same folder as this script
