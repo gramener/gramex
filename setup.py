@@ -69,6 +69,7 @@ gramex_files = [
     'pptgen2/config.yaml',
 ]
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
+gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.yaml']))
 gramex_files += list(recursive_include('gramex', 'pptgen', ignore_patterns, ['*.json']))
 gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
 
