@@ -1,10 +1,6 @@
 # Pin miniconda3 version to the latest one that has Python 3.7 in the base env
 FROM continuumio/miniconda3:4.8.2
 
-LABEL description="Gramex: Low Code Data Solutions Platform (Base)"
-LABEL version="$VERSION"
-LABEL maintainer="cto@gramener.com"
-
 # Use VERSION from environment
 ARG VERSION
 ENV VERSION=$VERSION
