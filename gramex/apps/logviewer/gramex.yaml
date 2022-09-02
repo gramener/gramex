@@ -150,7 +150,7 @@ url:
       import.merge: $LOGVIEWER_CAPTURE_KWARGS
 
 schedule:
-  apps/logviewer-$* if '--listen.port=' + LOGVIEWER_SCHEDULER_PORT in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
+  apps/logviewer-$* if f'--listen.port={LOGVIEWER_SCHEDULER_PORT}' in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
     function: logviewer.summarize
     kwargs:
       db: $LOGVIEWER_DB
