@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 from inspect import signature, _empty
-import os.path as op
+import os
 import re
-from typing import Any, Optional, Union, List
+from typing import Any, Optional, Union
 import warnings
 
 from gramex import cache
 from gramex.config import locate, app_log
-from gramex.install import _mkdir
+from gramex.data import filter as gfilter
+from gramex.install import safe_rmtree
+from gramex.transforms import build_transform
 import joblib
 import pandas as pd
 import numpy as np
@@ -15,7 +17,9 @@ from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.metrics import get_scorer
 
+op = os.path
 TRANSFORMS = {
     "include": [],
     "exclude": [],
@@ -26,6 +30,7 @@ TRANSFORMS = {
     "cats": [],
     "target_col": None,
     "index_col": None,
+    "built_transform": False
 }
 SEARCH_MODULES = {
     "gramex.ml_api.SklearnModel": [
@@ -80,6 +85,8 @@ def search_modelclass(mclass: str) -> Any:
     >>> print(wrapper)
     <class 'gramex.ml_api.SklearnModel'>
     """
+    if not mclass:
+        raise ValueError('mclass cannot be an empty string.')
     for wrapper, modules in SEARCH_MODULES.items():
         klass = locate(mclass, modules)
         if klass:
@@ -171,10 +178,8 @@ def assemble_pipeline(
                     ('LogisticRegression', LogisticRegression())])
     """
     if isinstance(model, str):
-        model, _ = search_modelclass(model)(**kwargs)
-    # if is_statsmodel(model):
-    #     warnings.warn("Pipelines are not supported for statsmodels.")
-    #     return model
+        model, _ = search_modelclass(model)
+    model = model(**kwargs)
     nums = set(nums) - {target_col} if nums else set()
     cats = set(cats) - {target_col} if cats else set()
     both = nums & cats
@@ -201,11 +206,17 @@ def assemble_pipeline(
 class ModelStore(cache.JSONStore):
     """A hybrid version of keystore that stores models, data and parameters."""
 
-    def __init__(self, path, *args, **kwargs):
-        _mkdir(path)
+    def __init__(self, path, model_config, *args, **kwargs):
         self.data_store = op.join(path, "data.h5")
         self.model_path = op.join(path, "model.pkl")
-        self.path = path
+
+        # Transformers are stored in directories, not files
+        klass = model_config.get('class', False)
+        if klass:
+            klass, wrapper = search_modelclass(klass)
+            if wrapper == 'gramex.ml_api.HFTransformer':
+                self.model_path = [op.join(path, k) for k in ['model', 'tokenizer']]
+
         super(ModelStore, self).__init__(op.join(path, "config.json"), *args, **kwargs)
 
     def model_kwargs(self):
@@ -219,6 +230,12 @@ class ModelStore(cache.JSONStore):
             TRANSFORMS.get(key, self.load("model").get(key, default)),
         )
 
+    def remove_model(self):
+        if isinstance(self.model_path, list):
+            [safe_rmtree(k) for k in self.model_path]
+        else:
+            safe_rmtree(self.model_path)
+
     def dump(self, key, value):
         if key in TRANSFORMS:
             transform = super(ModelStore, self).load("transform", {})
@@ -228,8 +245,9 @@ class ModelStore(cache.JSONStore):
             model = super(ModelStore, self).load("model", {})
             model[key] = value
             if key == "class":
-                warnings.warn("Model changed, removing old parameters.")
+                warnings.warn("Model parameters changed, removing old model.")
                 model["params"] = {}
+            self.remove_model()
             super(ModelStore, self).dump("model", model)
         self.flush()
 
@@ -279,31 +297,104 @@ class SklearnModel(AbstractModel):
     """SklearnModel."""
 
     @classmethod
-    def from_disk(cls, path, **kwargs):
-        model = cache.open(path, joblib.load)
+    def from_disk(cls, store, **kwargs):
+        model = cache.open(store.model_path, joblib.load)
         if isinstance(model, Pipeline):
             _, wrapper = search_modelclass(model[-1].__class__.__name__)
         else:
             _, wrapper = search_modelclass(model.__class__.__name__)
-        return cls(model, params={})
+        return cls(model, store)
 
     def __init__(
         self,
         model: Any,
-        data: Optional[pd.DataFrame] = None,
-        target_col: Optional[str] = None,
-        nums: Optional[List[str]] = None,
-        cats: Optional[List[str]] = None,
+        store: ModelStore = None,
+        data_config: Any = None,
         params: Any = None,
         **kwargs,
     ):
+        self.store = store
+        if data_config is None:
+            data_config = {}
+
+        # Store the data, if any
+        try:
+            data = gfilter(**data_config)
+            self.store.store_data(data)
+        except TypeError:
+            data = self.store.load_data()
+
+        # Store the config defaults
+        for key in TRANSFORMS:
+            self.store.dump(key, kwargs.pop(key, self.store.load(key)))
+
+        data_transform = data_config.get('transform', self.store.load('built_transform', False))
+        self.store.dump('built_transform', data_transform)
+        # Remove target_col if it appears in cats or nums
+        target_col = kwargs.pop('target_col', self.store.load('target_col'))
+        self.store.dump('target_col', target_col)
+        nums = list(set(self.store.load('nums')) - {target_col})
+        cats = list(set(self.store.load('cats')) - {target_col})
+        self.store.dump('cats', cats)
+        self.store.dump('nums', nums)
+
+        # Store model params
+        if params is None:
+            params = self.store.load('params', {})
+        else:
+            self.store.dump('params', params)
+
+        data = self.store.load_data()
+        data = self._preprocess(data)
+
         if not isinstance(model, Pipeline) and any([nums, cats]):
             self.model = assemble_pipeline(
-                data, target_col, model, nums, cats, **kwargs
+                data, target_col, model, nums, cats, **params
             )
+        elif not isinstance(model, BaseEstimator):
+            self.model = model(**params)
         else:
             self.model = model
         self.kwargs = kwargs
+
+    @property
+    def data_transform(self):
+        xform = self.store.load('built_transform', False)
+        if xform:
+            func = build_transform(
+                {'function': xform}, vars={'data': None},
+                filename="MLHandler:data", iter=False
+            )
+        else:
+            func = lambda x: x  # NOQA: E731
+        return func
+
+    def _init_fit(self, name=''):
+        """Initial fit of the model, if the data and the right params exist."""
+        data = self.store.load_data()
+        if not len(data):
+            return
+        self.fit(data, self.store.model_path, name)
+
+    def _filterrows(self, data, **kwargs):
+        for method in 'dropna drop_duplicates'.split():
+            action = kwargs.get(method, self.store.load(method, True))
+            if action:
+                subset = action if isinstance(action, list) else None
+                data = getattr(data, method)(subset=subset)
+        return data
+
+    def _filtercols(self, data):
+        include = self.store.load('include', [])
+        if include:
+            include += [self.store.load('target_col')]
+            data = data[list(set(include))]
+        else:
+            exclude = self.store.load('exclude', [])
+            to_exclude = [c for c in exclude if c in data]
+            if to_exclude:
+                data = data.drop(to_exclude, axis=1)
+        return data
 
     def _fit(self, X, y):
         if hasattr(self.model, "partial_fit"):
@@ -312,8 +403,7 @@ class SklearnModel(AbstractModel):
 
     def fit(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        data: Union[pd.DataFrame, np.ndarray],
         model_path: str = "",
         name: str = "",
         **kwargs,
@@ -322,16 +412,22 @@ class SklearnModel(AbstractModel):
 
         Parameters
         ----------
-        X : array-like
-            Training features.
-        y : array-like
-            Training labels
+        data : array-like
+            Training data.
         model_path : str, optional
             If specified, the model is saved at this path.
         name : str, optional
             Name of the handler instance calling this method.
         kwargs : Additional parameters for `model.fit`
         """
+        target_col = self.store.load('target_col', None)
+        data = self._preprocess(data)
+        if target_col is not None:
+            X = data.drop([target_col], axis=1)
+            y = data[target_col]
+        else:
+            X = data
+            y = None
         app_log.info("Starting training...")
         try:
             result = self._fit(X, y)
@@ -342,6 +438,7 @@ class SklearnModel(AbstractModel):
         if model_path:
             joblib.dump(self.model, model_path)
             app_log.info(f"{name}: Model saved at {model_path}.")
+
         return result
 
     def _predict(self, X, **kwargs):
@@ -366,6 +463,7 @@ class SklearnModel(AbstractModel):
             If specified, predictions are added as a column to `X`, with this as the column name.
         kwargs : Additionnal parameters for `model.predict`
         """
+        X = self._preprocess(X, drop_duplicates=False)
         p = self._predict(X, **kwargs)
         if target_col:
             X[target_col] = p
@@ -377,8 +475,22 @@ class SklearnModel(AbstractModel):
         model = self.model[-1] if isinstance(self.model, Pipeline) else self.model
         return model.get_params(**kwargs)
 
-    def score(self, X, y_true, **kwargs):
-        return self.model.score(X, y_true, **kwargs)
+    def _preprocess(self, data, **kwargs):
+        data = self.data_transform(data)
+        orgdata = self.store.load_data()
+        for col in np.intersect1d(data.columns, orgdata.columns):
+            data[col] = data[col].astype(orgdata[col].dtype)
+        data = self._filtercols(data)
+        data = self._filterrows(data, **kwargs)
+        return data
+
+    def score(self, data, target_col, metric='', **kwargs):
+        data = self._preprocess(data, drop_duplicates=False)
+        X = data.drop([target_col], axis=1)
+        y_true = data[target_col]
+        if not metric:
+            return self.model.score(X, y_true, **kwargs)
+        return get_scorer(metric)(self.model, X, y_true)
 
     def get_attributes(self):
         if isinstance(self.model, Pipeline):
@@ -395,29 +507,35 @@ class SklearnTransformer(SklearnModel):
         """Sklearn transformers don't have a "predict", they have a "transform"."""
         return self.model.transform(X, **kwargs)
 
+    def score(self, *args, **kwargs):
+        """Transformers don't have a score - simply return fitted attributes."""
+        return self.get_attributes()
+
 
 class HFTransformer(SklearnModel):
-    def __init__(self, model, params=None, data=None, **kwargs):
-        self.model = model
+    def __init__(self, klass, store, params=None, data=None, **kwargs):
+        self.model = klass(**kwargs)
+        self.store = store
         if params is None:
             params = {"text_col": "text", "target_col": "label"}
         self.params = params
         self.kwargs = kwargs
 
     @classmethod
-    def from_disk(cls, path, klass):
-        model = op.join(path, "model")
-        tokenizer = op.join(path, "tokenizer")
-        return cls(klass(model, tokenizer))
+    def from_disk(cls, store, klass, **kwargs):
+        model, tokenizer = store.model_path
+        return cls(klass, store, model=model, tokenizer=tokenizer, **kwargs)
 
     def fit(
         self,
-        X: Union[pd.DataFrame, np.ndarray],
-        y: Union[pd.Series, np.ndarray],
+        data: Union[pd.DataFrame, np.ndarray],
         model_path: str = "",
         name: str = "",
         **kwargs,
     ):
+        target_col = self.store.load('target_col')
+        X = data.drop([target_col], axis=1)
+        y = data[target_col]
         text = X.squeeze("columns")
         self.model.fit(text, y, model_path, **kwargs)
 

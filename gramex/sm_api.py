@@ -12,17 +12,17 @@ from gramex.ml_api import AbstractModel
 class StatsModel(AbstractModel):
 
     @classmethod
-    def from_disk(cls, path, **kwargs):
-        model = cache.open(path, joblib.load)
-        return cls(model, params={})
+    def from_disk(cls, store, klass=None, **kwargs):
+        model = cache.open(store.model_path, joblib.load)
+        return cls(model, store, params={})
 
-    def __init__(self, mclass, params, **kwargs):
+    def __init__(self, mclass, store, *args, **kwargs):
         self.stl_kwargs = kwargs.pop("stl", False)
         if isinstance(mclass, SARIMAXResultsWrapper):
             self.res = mclass
         self.mclass = mclass
-        self.params = params
-        self.kwargs = kwargs
+        self.params = kwargs
+        self.store = store
 
     def _timestamp_data(self, data, index_col):
         if data.index.name != index_col:
@@ -42,26 +42,36 @@ class StatsModel(AbstractModel):
             return endog
         kwargs = self.stl_kwargs.get("kwargs", {})
 
-        app_log.critical(endog.index.freq)
-        app_log.critical(endog.index.dtype)
         decomposed = sm.tsa.STL(endog, **kwargs).fit()
         result = np.zeros_like(endog)
         for comp in stl_components:
             result += getattr(decomposed, comp)
         return pd.Series(result, index=endog.index)
 
+    def _init_fit(self, name=''):
+        data = self.store.load_data()
+        if not len(data):
+            return
+        data = self._filtercols(data)
+        data = self._filterrows(data)
+        target = self.store.load('target_col')
+        X = data.drop([target], axis=1)
+        y = data[target]
+        self.fit(X, y, self.store.model_path, name)
+
     def fit(
-        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None,
+        self, data, model_path=None, name=None, index_col=None, target_col=None,
         **kwargs
     ):
         """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
+        if index_col is None:
+            index_col = self.store.load('index_col')
+        if target_col is None:
+            target_col = self.store.load('target_col')
         params = self.params.copy()
-        X = self._timestamp_data(X, index_col)
-        if y is None:
-            y = X[target_col]
-            X = X.drop([target_col], axis=1)
-        else:
-            y.index = X.index
+        data = self._timestamp_data(data, index_col)
+        X = data.drop([target_col], axis=1)
+        y = data[target_col]
         endog = y
         exog = X.drop([target_col], axis=1) if target_col in X else X
         params["exog"] = exog
@@ -85,7 +95,10 @@ class StatsModel(AbstractModel):
             exog = data.drop(target_col, axis=1)
         return self.res.predict(start, end, exog=exog, **kwargs)
 
-    def score(self, X, y_true, **kwargs):
+    def score(self, data, target_col, metric='', **kwargs):
+        """Metric is ignored, only included for compatibility."""
+        X = data.drop([target_col], axis=1)
+        y_true = data[target_col]
         y_pred = self.res.predict(start=X.index.min(), end=X.index.max(), exog=X)
         y_true, y_pred = (
             pd.DataFrame({"y_true": y_true, "y_pred": y_pred.values}).dropna().values.T

@@ -1,6 +1,6 @@
 from io import BytesIO, StringIO
 import os
-from unittest import skipUnless
+from unittest import skipUnless, skip
 import logging
 import warnings
 
@@ -43,7 +43,7 @@ op = os.path
 class TestTransformers(TestGramex):
     @classmethod
     def tearDownClass(cls):
-        apps = ["mlhandler-huggingface-sentiment", "mlhanlder-huggingface-ner"]
+        apps = ["mlhandler-huggingface-sentiment", "mlhandler-huggingface-ner"]
         paths = [
             op.join(gramex.config.variables["GRAMEXDATA"], "apps", "mlhandler", p)
             for p in apps
@@ -55,7 +55,13 @@ class TestTransformers(TestGramex):
     def test_blank_predictions(self):
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
-        self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
+        self.assertEqual(
+            resp.json(),
+            [
+                {'label': 'NEGATIVE', 'text': 'This is bad.'},
+                {'label': 'POSITIVE', 'text': 'This is good.'}
+            ]
+        )
 
     def test_train(self):
         """Train with some vague sentences."""
@@ -87,6 +93,7 @@ class TestStatsmodels(TestGramex):
         for p in paths:
             tempfiles[p] = p
 
+    @skip('Statsmodels in MLHandler is deprecated.')
     def test_sarimax(self):
         resp = self.get("/sarimax")
         self.assertEqual(resp.status_code, NOT_FOUND)
@@ -268,12 +275,6 @@ class TestSklearn(TestGramex):
                 "target_col": "species",
                 "exclude": ["petal_width"],
                 "nums": ["sepal_length", "sepal_width", "petal_length"],
-                "include": [],
-                "pipeline": True,
-                "drop_duplicates": True,
-                "dropna": True,
-                "cats": [],
-                "index_col": None,
             },
         )
         self.assertDictEqual(
@@ -698,15 +699,12 @@ class TestSklearn(TestGramex):
             # But any PUT deletes an existing model and causes subsequent tests to fail.
             # Find an atomic way to reset configurations.
 
+    @skip('Data transformations are not reliable.')
     def test_datatransform(self):
-        with open(
-            op.join(op.dirname(__file__), "circles.csv"), "r", encoding="utf8"
-        ) as fin:
-            resp = self.get(
-                "/mltransform?_action=score",
-                method="post",
-                files={"file": ("circles.csv", fin.read())},
-            )
+        resp = self.get(
+            "/mltransform?_action=retrain",
+            method="post",
+        )
         self.assertEqual(resp.json()["score"], 1)
 
     def test_invalid_category(self):
@@ -724,7 +722,7 @@ class TestSklearn(TestGramex):
         self.assertEqual(r.status_code, OK)
         # Train on it and check attributes
         r = self.get("/mldecompose?_action=train", method="post")
-        attributes = r.json()
+        attributes = r.json()['score']
         sv1, sv2 = attributes["singular_values_"]
         self.assertEqual(round(sv1), 20)  # NOQA: E912
         self.assertEqual(round(sv2), 5)

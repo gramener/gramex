@@ -43,6 +43,8 @@ class SentimentAnalysis(BaseTransformer):
     task = "sentiment-analysis"
 
     def fit(self, text, labels, model_path, **kwargs):
+        model_dir, tokenizer_dir = model_path
+        model_path = op.dirname(model_dir)
         if pd.api.types.is_object_dtype(labels):
             labels = labels.map(self.model.config.label2id.get)
         ds = Dataset.from_dict({"text": text, "label": labels})
@@ -56,8 +58,8 @@ class SentimentAnalysis(BaseTransformer):
         )
         trainer.train()
         self.model.to("cpu")
-        self.model.save_pretrained(op.join(model_path, "model"))
-        self.tokenizer.save_pretrained(op.join(model_path, "tokenizer"))
+        self.model.save_pretrained(model_dir)
+        self.tokenizer.save_pretrained(tokenizer_dir)
         self.pipeline = trf.pipeline(
             self.task,
             model=self.model,
