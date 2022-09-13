@@ -2,7 +2,6 @@ from io import BytesIO, StringIO
 import os
 from unittest import skipUnless
 import logging
-import warnings
 
 import joblib
 import shutil
@@ -52,23 +51,54 @@ class TestTransformers(TestGramex):
             if op.isdir(path):
                 shutil.rmtree(path)
 
-    def test_blank_predictions(self):
+    def test_default_sentiment(self):
         """Ensure that the default model predicts something."""
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
-    def test_train(self):
+    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
+    def test_train_sentiment(self):
         """Train with some vague sentences."""
-        warnings.warn("This test takes a LONG time. Leave while you can.")
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
-            method='post',
+            method="post",
             data=df.to_json(orient="records"),
             headers={"Content-Type": "application/json"},
             timeout=300,
         )
-        self.assertGreaterEqual(resp.json()['score'], 0.9)
+        self.assertGreaterEqual(resp.json()["score"], 0.9)
+
+    def test_default_ner(self):
+        """Ensure that the default model predicts something."""
+        labels = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300).json()
+        ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
+        self.assertIn(("Narendra Modi", "PER"), ents[0])
+        self.assertIn(("India", "LOC"), ents[0])
+
+        labels = self.get(
+            "/ner?text=Narendra Modi is the PM of India.&text=Joe Biden is POTUS.",
+            timeout=300,
+        ).json()
+        ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
+        self.assertIn(("Narendra Modi", "PER"), ents[0])
+        self.assertIn(("India", "LOC"), ents[0])
+        self.assertIn(("Joe Biden", "PER"), ents[1])
+
+    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
+    def test_train_ner(self):
+        df = pd.read_json("https://bit.ly/3wZYsf5")
+        resp = self.get(
+            "/ner?_action=train&target_col=labels",
+            method="post",
+            data=df.to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+            timeout=300,
+        )
+        # Ensure that f1, precision and recall are > 0.6 for all NEs
+        metrics = pd.DataFrame.from_records(resp.json()["score"]).set_index("index")
+        metrics = metrics.drop(["number"], axis=0).mean(axis=1)
+        self.assertTrue((metrics > 0.6).all())
 
 
 @skipUnless(STATSMODELS_INSTALLED, "Please install statsmodels to run these tests.")
