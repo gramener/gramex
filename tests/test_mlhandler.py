@@ -71,20 +71,19 @@ class TestTransformers(TestGramex):
 
     def test_default_ner(self):
         """Ensure that the default model predicts something."""
-        resp = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300)
-        labels = [c["labels"] for c in resp.json()]
+        labels = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300).json()
         ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
-        self.assertListEqual(ents, [[("Narendra Modi", "PER"), ("India", "LOC")]])
+        self.assertIn(("Narendra Modi", "PER"), ents[0])
+        self.assertIn(("India", "LOC"), ents[0])
 
-        resp = self.get(
+        labels = self.get(
             "/ner?text=Narendra Modi is the PM of India.&text=Joe Biden is POTUS.",
             timeout=300,
-        )
-        labels = [c["labels"] for c in resp.json()]
+        ).json()
         ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
-        self.assertListEqual(
-            ents, [[("Narendra Modi", "PER"), ("India", "LOC")], [("Joe Biden", "PER")]]
-        )
+        self.assertIn(("Narendra Modi", "PER"), ents[0])
+        self.assertIn(("India", "LOC"), ents[0])
+        self.assertIn(("Joe Biden", "PER"), ents[1])
 
     @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
     def test_train_ner(self):
