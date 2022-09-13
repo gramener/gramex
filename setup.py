@@ -50,7 +50,7 @@ def recursive_include(root, path, ignores=[], allows=[]):
 
 ignore_patterns = list(read_gitignore('.gitignore', exclude={'node_modules'}))
 
-with open('README.rst', encoding='utf-8') as handle:
+with open('README.md', encoding='utf-8') as handle:
     long_description = handle.read() + '\n\n'
 
 # release.json contains release info (name, description, version), packages to install, etc
@@ -69,12 +69,14 @@ gramex_files = [
     'pptgen2/config.yaml',
 ]
 gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.html']))
+gramex_files += list(recursive_include('gramex', 'handlers', ignore_patterns, ['*.yaml']))
 gramex_files += list(recursive_include('gramex', 'pptgen', ignore_patterns, ['*.json']))
 gramex_files += list(recursive_include('gramex', 'apps', ignore_patterns))
 
 setup(
     python_requires='~=3.7',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     # Auto-detect, but ignore test packages (tests, testlib)
     packages=[pkg for pkg in find_packages() if not pkg.startswith('test')],
 
@@ -87,14 +89,14 @@ setup(
     include_package_data=True,
     # Pick up dependencies from gramex/release.json
     # To ensure that pip install works, only include packages that work via pip (not conda)
-    install_requires=[req for part in ('lib', 'pip') for req in release[part]],
+    install_requires=[req for req in release['lib']],
+    # Gramex cannot be installed from a ZIP file. setup() reads from gramex/release.json and
+    # README.md. So Gramex must be unzipped first, and THEN installed.
     zip_safe=False,
     entry_points={
-        'console_scripts': release['console'],
-        'pytest11': ['gramextest = gramex.gramextest']
+        'console_scripts': release['console']
     },
-    test_suite='tests',
-    # NOTE: Don't use tests_require. setup.py can't install nose plugins like coverage.
-    # Use `make test-setup` to install rest requirements from tests/requirements.txt.
+    # NOTE: tests_require is deprecated. Also, setup.py can't install nose plugins like coverage.
+    # Use `run testsetup` to install rest requirements from tests/requirements.txt.
     **release['info']
 )

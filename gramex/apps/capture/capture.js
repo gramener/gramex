@@ -59,7 +59,9 @@ if (phantom_version < '2.1.1') {
 function render(q, callback) {
   error = {status: '', msg: []}
   q.ext = q.ext || 'pdf'
-  q.file = (q.file || 'screenshot') + '.' + q.ext
+
+  // q.file = path.basename(q.file || 'screenshot') + '.' + q.ext
+  q.file = (q.file || 'screenshot').split('/').reverse()[0] + '.' + q.ext
   if (fs.exists(q.file))
     fs.remove(q.file)
 
@@ -72,7 +74,7 @@ function render(q, callback) {
       header: header(q),
       footer: footer(q)
     }
-  } else {
+  } else if (q.ext.match(/^(jpg|jpeg|png|gif|bmp|ppm)$/i)) {
     var scale = parseFloat(q.scale || '1'),
         width = parseFloat(q.width || '1200'),
         height = 768
@@ -105,7 +107,7 @@ function render(q, callback) {
   }
 
   // In case PhantomJS is unable to load the page, log the error
-  page.onResourceError = function(r) {
+  page.onResourceError = page.onResourceTimeout = function(r) {
     error.msg.push(r)
     console.error('ERR:', r.errorCode, r.url, r.errorString)
   }

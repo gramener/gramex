@@ -4,11 +4,11 @@ variables:
     CHILD_DEFAULT: {default: child}
     YAMLURL_VAR: $YAMLURL
     FUNCTION:
-        function: six.text_type
+        function: str
         args: ['child']
     DEFAULT_FUNCTION:
         default:
-            function: six.text_type
+            function: str
             args: ['child']
     FUNCTION_VAR:
         function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
@@ -25,6 +25,7 @@ child_THIS: $THIS
 child_DEFAULT: $CHILD_DEFAULT
 child_FUNCTION: $FUNCTION
 child_DEFAULT_FUNCTION: $DEFAULT_FUNCTION
+child_INVALID_FUNCTION: $INVALID_FUNCTION
 child_FUNCTION_VAR: $FUNCTION_VAR
 child_DERIVED: $DERIVED
 child_URLROOT: $URLROOT

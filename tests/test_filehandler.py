@@ -1,16 +1,13 @@
 import io
 import os
-import six
+import re
 import json
 import pathlib
 import requests
 import markdown
 from gramex.http import OK, FORBIDDEN, METHOD_NOT_ALLOWED
-from orderedattrdict import AttrDict
-from gramex.ml import r
-from gramex.transforms import badgerfish, rmarkdown
+from urllib.parse import urljoin
 from nose.tools import ok_, eq_
-from nose.plugins.skip import SkipTest
 from . import server, tempfiles, TestGramex, folder
 
 
@@ -21,8 +18,8 @@ def write(path, text):
 
 def setUpModule():
     # Create a unicode filename to test if FileHandler's directory listing shows it
-    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', u'unicode–file.txt')
-    write(tempfiles.unicode_file, six.text_type(tempfiles.unicode_file))
+    tempfiles.unicode_file = os.path.join(folder, 'dir', 'subdir', 'unicode–file.txt')
+    write(tempfiles.unicode_file, str(tempfiles.unicode_file))
 
     # Create a symlink to test if these are displayed in a directory listing without errors
     # If os.symlink does not exist (Linux), raises an AttributeError
@@ -60,10 +57,14 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/text.txt', path='dir/text.txt')
         self.check('/dir/noindex/subdir/text.txt', path='dir/subdir/text.txt')
 
+        # Check default filenames support default.template.html and default.tmpl.html
+        self.check('/dir/def1/', text='7\ndefault.template.html')
+        self.check('/dir/def2/', text='7\ndefault.tmpl.html')
+
         # Check unicode filenames only if pathlib supports them
         try:
             pathlib.Path(tempfiles.unicode_file)
-            self.check(u'/dir/noindex/subdir/unicode–file.txt')
+            self.check('/dir/noindex/subdir/unicode–file.txt')
         except UnicodeError:
             pass
 
@@ -136,6 +137,10 @@ class TestFileHandler(TestGramex):
         self.check('/dir/indextemplate/subdir/', text='text.txt</a>')
         # Non-existent index templates default to Gramex filehandler.template.html
         self.check('/dir/no-indextemplate/', text='File list by Gramex')
+        # Add non-existent template and check live load
+        tempfiles.index_template = os.path.join(folder, 'nonexistent.template.html')
+        write(tempfiles.index_template, 'newtemplate: $path $body')
+        self.check('/dir/no-indextemplate/', text='newtemplate')
 
     def test_url_normalize(self):
         self.check('/dir/normalize/slash/index.html/', path='dir/index.html')
@@ -149,60 +154,61 @@ class TestFileHandler(TestGramex):
         self.check('/dir/noindex/../nonexistent', code=404)
         self.check('/dir/noindex/../../gramex.yaml', code=403)
 
+    def test_gramex_cache_rel(self):
+        self.check('/dir/cache.template.html', text='α.txt')
+
     def test_markdown(self):
         with (server.info.folder / 'dir/markdown.md').open(encoding='utf-8') as f:
             self.check('/dir/transform/markdown.md', text=markdown.markdown(f.read()))
-
-    def test_rmarkdown(self):
-        # rmarkdown must be installed
-        ok_(r('"rmarkdown" %in% installed.packages()')[0],
-            'rmarkdown must be installed. Run conda install -c r r-rmarkdown')
-
-        def _callback(f):
-            f = f.result()
-            return f
-
-        path = server.info.folder / 'dir/rmarkdown.Rmd'
-        handler = AttrDict(file=path)
-        result = rmarkdown('', handler).add_done_callback(_callback)
-        try:
-            self.check('/dir/transform/rmarkdown.Rmd', text=result)
-        except AssertionError:
-            raise SkipTest('TODO: Once NumPy & rpy2 work together, remove this SkipTest. #259')
-        htmlpath = str(server.info.folder / 'dir/rmarkdown.html')
-        tempfiles[htmlpath] = htmlpath
-
-    def test_transform_badgerfish(self):
-        handler = AttrDict(file=server.info.folder / 'dir/badgerfish.yaml')
-        with (server.info.folder / 'dir/badgerfish.yaml').open(encoding='utf-8') as f:
-            result = yield badgerfish(f.read(), handler)
-            self.check('/dir/transform/badgerfish.yaml', text=result)
-            self.check('/dir/transform/badgerfish.yaml', text='imported file α')
 
     def test_transform_template(self):
         # gramex.yaml has configured template.* to take handler and x as params
         self.check('/dir/transform/template.txt?x=►', text='x – ►')
         self.check('/dir/transform/template.txt?x=λ', text='x – λ')
 
+    def check_sourcemap(self, url, text):
+        match = re.search(r' sourceMappingURL=(\S+)', text)
+        ok_(match.group(1), 'sourcemap is defined')
+        source = self.check(urljoin(url, match.group(1))).json()
+        eq_(source['version'], 3, 'sourcemap is valid')
+
     def test_sass(self):
         for dir in ('/dir/transform-sass', '/dir/sass-file'):
             for file in ('import.scss', 'import.sass'):
-                text = self.check(f'{dir}/{file}?primary=red&color-alpha=purple').text
+                url = f'{dir}/{file}?primary=red&color-alpha=purple'
+                text = self.check(url, timeout=30, headers={'Content-Type': 'text/css'}).text
                 ok_('.ui-import-a{color:red}' in text, f'{dir}.{file}: import a.scss with vars')
                 ok_('--primary: red' in text, f'{dir}.{file}: import bootstrap with vars')
                 ok_('--alpha: purple' in text, f'{dir}.{file}: import gramexui with vars')
+                self.check_sourcemap(url, text)
         self.check('/dir/transform-sass/a.scss?primary=blue', text='.ui-import-a{color:blue}')
         self.check('/dir/transform-sass/b.scss?primary=blue', text='.ui-import-b{color:blue}')
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
 
     def test_vue(self):
         for dir in ('/dir/transform-vue', '/dir/vue-file'):
             for name in ('a', 'b'):
                 url = f'{dir}/comp-{name}.vue'
-                text = self.check(url, timeout=30).text
+                text = self.check(
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
                 ok_(f'Component: {name}' in text, f'{url}: has component name')
-                ok_(f'//# sourceMappingURL=comp-{name}.vue?map' in text, f'{url}: has sourcemap')
-                source = self.check(url + '?map').json()
-                eq_(source['version'], 3)
+                self.check_sourcemap(url, text)
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
+
+    def test_ts(self):
+        for dir in ('/dir/transform-ts', '/dir/ts-file'):
+            for name in ('a', 'b'):
+                url = f'{dir}/{name}.ts'
+                text = self.check(
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
+                # TypeScript transpiles into ES3 by default, converting const to var.
+                # So check for 'var a =' in output, though source uses 'const a ='
+                ok_(f'var {name} = ' in text, f'{url}: has correct content')
+                self.check_sourcemap(url, text)
+        # TODO: Invalid file should generate a compilation failure
+        # TODO: Changing file should recompile
 
     def test_template(self):
         self.check('/dir/template/index-template.txt?arg=►', text='– ►')

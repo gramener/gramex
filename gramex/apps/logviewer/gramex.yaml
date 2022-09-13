@@ -1,4 +1,5 @@
 # Configurable variables
+# LOGVIEWER_DB
 # LOGVIEWER_PATH_UI
 # LOGVIEWER_PATH_RENDER
 # $LOGVIEWER_FORMHANDLER_KWARGS
@@ -9,6 +10,9 @@
 # $LOGVIEWER_SCHEDULER_KWARGS
 
 variables:
+  LOGVIEWER_DB:
+    default:
+      url: sqlite:///$GRAMEXDATA/logs/logviewer.db
   LOGVIEWER_SCHEDULER_PORT:
     default: ''
   LOGVIEWER_PATH_UI:
@@ -146,9 +150,12 @@ url:
       import.merge: $LOGVIEWER_CAPTURE_KWARGS
 
 schedule:
-  apps/logviewer-$* if '--listen.port=' + LOGVIEWER_SCHEDULER_PORT in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
+  apps/logviewer-$* if f'--listen.port={LOGVIEWER_SCHEDULER_PORT}' in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
     function: logviewer.summarize
     kwargs:
+      db: $LOGVIEWER_DB
+      custom_dims:
+        import.merge: $LOGVIEWER_CUSTOM_DIMENSIONS
       session_threshold: 15
       transforms:
       - type: derive
@@ -185,6 +192,7 @@ schedule:
           op: NOTCONTAINS
           value: '\.js|\.css|\.ico|\.png|\.jpg|\.jpeg|\.gif|\.otf|\.woff.*|\.eot'
         as: uri_1
+      # TODO: this may not work as logviewer.summarize() does not accept any kwargs!
       import.merge: $LOGVIEWER_SCHEDULER_KWARGS
     startup: true
     # Run at 6pm local time. In India, this is a bit after 0:00 UTC,

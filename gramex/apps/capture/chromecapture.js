@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 
 const puppeteer = require('puppeteer')
-const image_size = require('fast-image-size')
+const imageSize = require('fast-image-size')
 const bodyParser = require('body-parser')
 const minimist = require('minimist')
 const express = require('express')
@@ -87,9 +87,7 @@ const browser_setup = async (args) => {
 async function render(q) {
   console.log('Opening', q.url)
 
-  let ext = q.ext || 'pdf'
-  let media = q.media || 'screen'
-  let file = (q.file || 'screenshot') + '.' + ext
+  let file = path.basename(q.file || 'screenshot') + '.' + q.ext
   let headers = q.headers || {}
   let target = tmp.tmpNameSync({ dir: render_dir, postfix: file })
   let pdf_options = {
@@ -148,7 +146,7 @@ async function render(q) {
     .on('pageerror', error => console.log(`ERROR: ${error.message}`))
     .on('response', response => {
       if (response.status() >= 400)
-        console.log(`HTTP ${response.status()}: ${response.url()}`)
+        console.log(`HTTP ${response.status()}: ${response.request().method()} ${response.url()}`)
     })
     .on('requestfailed', request => console.log(`${request.failure().errorText}: ${request.url()}`))
 
@@ -160,8 +158,12 @@ async function render(q) {
   if (q.cookie) {
     let cookieList = []
     let cookieObj = cookie.parse(q.cookie)
-    for (let key in cookieObj)
-      cookieList.push({name: key, value: cookieObj[key], url: q.url})
+    for (let key in cookieObj) {
+      let cookie = { name: key, value: cookieObj[key], url: q.url }
+      if (q.domain)
+        cookie.domain = q.domain
+      cookieList.push(cookie)
+    }
     await page.setCookie(...cookieList)
     delete headers.cookie
   }
@@ -188,17 +190,17 @@ async function render(q) {
     await page.waitForFunction('window.renderComplete')
   else if (!isNaN(+q.delay))
     await new Promise(res => setTimeout(res, +q.delay))
-  if (ext == 'pdf') {
+  if (q.ext == 'pdf') {
     // TODO: header / footer
-    if (media != 'print')
-      await page.emulateMedia(media)
+    if (q.media != 'print')
+      await page.emulateMediaType(q.media)
     await page.pdf(pdf_options)
   } else {
     const options = {
       path: target,
       fullPage: !q.height && !q.selector  // If height and selector not specified, use full height
     }
-    if (ext == 'pptx') {
+    if (q.ext == 'pptx') {
       const officegen = require('officegen')
       const pptx = officegen('pptx')
       const repeat_cols = ['selector', 'title', 'title_size', 'x', 'y', 'dpi']
@@ -225,7 +227,7 @@ async function render(q) {
         pptx.setSlideSize(fmt[0] * 72, fmt[1] * 72)
         const scale = 72 / (+dpi || 96)
         const slide = pptx.makeNewSlide()
-        const size = image_size(options.path)
+        const size = imageSize(options.path)
         slide.addImage(options.path, {
           x: typeof x == 'undefined' ? 'c' : x * scale,
           y: typeof y == 'undefined' ? 'c' : y * scale,
@@ -235,10 +237,10 @@ async function render(q) {
         if (typeof title != 'undefined')
           slide.addText(title, {x: 0, y: 0, cx: '100%', font_size: +title_size || 18})
       }
-      await new Promise(res => {
+      await new Promise(resolve => {
         const out = fs.createWriteStream(target)
+        out.on('close', resolve)
         pptx.generate(out)
-        out.on('close', res)
       })
       image_files.forEach(path => fs.unlinkSync(path))
     } else {
@@ -254,10 +256,17 @@ async function render(q) {
 }
 
 function webapp(req, res) {
-  let q = Object.assign({}, req.query, req.body)
+  function error(code, message, extra='') {
+    console.log(message, extra)
+    res.setHeader('Content-Type', 'text/plain')
+    res.status(500).send(message)
+  }
+
+  let q = Object.assign({ ext: 'pdf', media: 'screen', cookie: req.headers.cookie }, req.query, req.body)
   if (!q.url)
     return res.sendFile(homepage)
-  q.cookie = q.cookie || req.headers.cookie
+  if (!q.ext.match(/pdf|png|jpg|jpeg|pptx/i))
+    return error(400, `Invalid ext=${q.ext}.`)
   q.headers = req.headers
   render(q)
     .then((info) => {
@@ -268,16 +277,11 @@ function webapp(req, res) {
             console.error('Error sending file', err)
           fs.unlinkSync(info.path)
         })
-      } else {
-        console.error('Missing file', info.path)
-        res.setHeader('Content-Type', 'text/plain')
-        res.status(500).send('Missing output file.')
-      }
+      } else
+        error(500, `'Missing output file`, info.path)
     })
     .catch((e) => {
-      console.error(e)
-      res.setHeader('Content-Type', 'text/plain')
-      res.status(500).send(e.toString())
+      error(500, e.toString())
     })
 }
 

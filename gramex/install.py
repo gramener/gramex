@@ -3,7 +3,6 @@ Defines command line services to install, setup and run apps.
 '''
 import io
 import os
-import re
 import sys
 import time
 import yaml
@@ -13,15 +12,14 @@ import string
 import shutil
 import datetime
 import requests
-from glob import glob
 from shutilwhich import which
 from pathlib import Path
-from subprocess import Popen, check_output, CalledProcessError      # nosec
+# B404:import_subprocess only developers can access this, not users
+from subprocess import Popen, check_output, CalledProcessError      # nosec B404
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
 from tornado.template import Template
-from orderedattrdict.yamlutils import from_yaml         # noqa
 import gramex
 import gramex.license
 from gramex.config import ChainConfig, PathConfig, variables, app_log, slug
@@ -45,7 +43,7 @@ install: |
     replaced by the target directory.
 
     After installation, runs "gramex setup" which runs the Makefile, setup.ps1,
-    setup.sh, requirements.txt, setup.py, yarn/npm install and bower install.
+    setup.sh, requirements.txt, setup.py, bower install, npm install, yarn install.
 
     Installed apps:
     {apps}
@@ -64,8 +62,9 @@ setup: |
         - bash setup.sh
         - pip install --upgrade -r requirements.txt
         - python setup.py
-        - yarn/npm install
-        - bower install
+        - bower --allow-root install
+        - npm install
+        - yarn install --prefer-offline
 
 run: |
     usage: gramex run <app> [--target=DIR] [--dir=DIR] [--<options>=<value>]
@@ -125,12 +124,18 @@ service: |
         gramex service stop
 
 init: |
-    usage: gramex init [--target=DIR]
+    gramex init [--target=DIR]
+    gramex init minimal [--target=DIR]
 
     Initializes a Gramex project at the current or target dir. Specifically, it:
     - Sets up a git repo
-    - Install supporting files for a gramex project
-    - Runs gramex setup (which runs yarn/npm install and other dependencies)
+    - Install supporting files for a Gramex project from a template
+      - "gramex init" sets up dependencies for a local system
+      - "gramex init minimal" sets up minimal dependencies
+    - Runs gramex setup (which runs npm install and other dependencies)
+
+    Options:
+      --target <path>               # Location to install at. Defaults to
 
 mail: |
     gramex mail <key>               # Send mail named <key>
@@ -149,7 +154,8 @@ license: |
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
 '''
-usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec
+# B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
+usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec B506
 
 
 class TryAgainError(Exception):
@@ -165,7 +171,7 @@ except NameError:
         raise exc_info[1]
 else:
     # On Windows systems, try harder
-    def _ensure_remove(function, path, exc_info):
+    def _ensure_remove(func, path, exc_info):
         '''onerror callback for rmtree that tries hard to delete files'''
         if issubclass(exc_info[0], WindowsError):
             import winerror
@@ -187,10 +193,12 @@ else:
                     except WindowsError:
                         pass
             # npm creates windows shortcuts that shutil.rmtree cannot delete.
-            # os.listdir failes with a PATH_NOT_FOUND. Delete these and try again
-            elif function == os.listdir and exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND:
-                app_log.error('Cannot delete %s', path)
-                from win32com.shell import shell, shellcon
+            # os.listdir/scandir fails with a PATH_NOT_FOUND.
+            # Delete these using win32com and try again.
+            elif (exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and
+                    func in {os.listdir, os.scandir}):
+                app_log.error(f'Cannot delete {path}')
+                from win32com.shell import shell, shellcon  # type:ignore
                 options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
                 code, err = shell.SHFileOperation((0, shellcon.FO_DELETE, path, None, options))
                 if code == 0:
@@ -230,7 +238,7 @@ def safe_rmtree(target, retries=100, delay=0.05, gramexdata=True):
             _try_remove(target, retries, delay, func, **kwargs)
             return True
         else:
-            app_log.warning('Not removing directory %s (outside $GRAMEXDATA)', target)
+            app_log.warning(f'Not removing directory {target} (outside $GRAMEXDATA)')
             return False
     else:
         _try_remove(target, retries, delay, func, **kwargs)
@@ -273,7 +281,7 @@ def run_install(config):
                     return
         if url != target:
             shutil.copytree(url, target)
-            app_log.info('Copied %s into %s', url, target)
+            app_log.info(f'Copied {url} into {target}')
         config.url = url
         return
 
@@ -282,7 +290,7 @@ def run_install(config):
         handle = url
     else:
         # Otherwise, assume that it's a URL containing a ZIP file
-        app_log.info('Downloading: %s', url)
+        app_log.info(f'Downloading: {url}')
         response = requests.get(url)
         response.raise_for_status()
         handle = io.BytesIO(response.content)
@@ -298,7 +306,7 @@ def run_install(config):
     # Extract relevant files from ZIP file
     if safe_rmtree(target):
         zipfile.extractall(target, files)
-        app_log.info('Extracted %d files into %s', len(files), target)
+        app_log.info(f'Extracted {len(files)} files into {target}')
 
 
 def run_command(config):
@@ -312,50 +320,44 @@ def run_command(config):
         appcmd = shlex.split(appcmd)
     # If the app is a Cygwin app, TARGET should be a Cygwin path too.
     target = config.target
-    cygcheck, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
-    if cygcheck is not None and cygpath is not None:
-        app_path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()   # nosec
-        is_cygwin_app = check_output([cygcheck, '-f', app_path], **kwargs).strip()      # nosec
+    cygwin, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
+    if cygwin is not None and cygpath is not None:
+        # subprocess.check_output is safe here since these are developer-initiated
+        # B404:import_subprocess check_output is safe here since these are developer-initiated
+        path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()   # nosec 404
+        is_cygwin_app = check_output([cygwin, '-f', path], **kwargs).strip()        # nosec 404
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target], **kwargs).strip()           # n osec
+            target = check_output([cygpath, '-au', target], **kwargs).strip()       # nosec 404
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
     else:
         appcmd.append(target)
-    app_log.info('Running %s', ' '.join(appcmd))
+    app_log.info(f'Running {" ".join(appcmd)}')
     if not safe_rmtree(config.target):
-        app_log.error('Cannot delete target %s. Aborting installation', config.target)
+        app_log.error(f'Cannot delete target {config.target}. Aborting installation')
         return
-    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec
+    # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec 603
     proc.communicate()
     return proc.returncode
 
 
-# Setup file configurations.
-# Structure: {File: {exe: cmd}}
-# If File exists, then if exe exists, run cmd.
-# For example, if package.json exists:
-#   then if yarn exists, run yarn install
-#   else if npm exists, run npm install
-setup_paths = '''
-Makefile:
-    make: '"{EXE}"'
-setup.ps1:
-    powershell: '"{EXE}" -File "{FILE}"'
-setup.sh:
-    bash: '"{EXE}" "{FILE}"'
-requirements.txt:
-    pip: '"{EXE}" install -r "{FILE}"'
-setup.py:
-    python: '"{EXE}" "{FILE}"'
-package.json:
-    yarn: '"{EXE}" install --prefer-offline'
-    npm: '"{EXE}" install'
-bower.json:
-    bower: '"{EXE}" --allow-root install'
-'''
-setup_paths = yaml.load(setup_paths, Loader=AttrDictYAMLLoader)     # nosec
+# Setup file configurations. If {file} exists, then if {exe} exists, run {cmd}.
+setup_paths = [
+    [{'file': 'Makefile', 'exe': 'make', 'cmd': '"{exe}"'}],
+    [{'file': 'setup.ps1', 'exe': 'powershell', 'cmd': '"{exe}" -File "{file}"'}],
+    [{'file': 'setup.sh', 'exe': 'bash', 'cmd': '"{exe}" "{file}"'}],
+    [{'file': 'requirements.txt', 'exe': 'pip', 'cmd': '"{exe}" install -r "{file}"'}],
+    [{'file': 'setup.py', 'exe': 'python', 'cmd': '"{exe}" "{file}"'}],
+    [{'file': 'bower.json', 'exe': 'bower', 'cmd': '"{exe}" --allow-root install'}],
+    [
+        {'file': 'package-lock.json', 'exe': 'npm', 'cmd': '"{exe}" ci'},
+        {'file': 'yarn.lock', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+        {'file': 'package.json', 'exe': 'npm', 'cmd': '"{exe}" install'},
+        {'file': 'package.json', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
+    ]
+]
 
 
 def run_setup(target):
@@ -367,37 +369,29 @@ def run_setup(target):
     - A relative path to the Gramex apps/ folder
 
     Returns the absolute path of the final target path.
-
-    This supports:
-
-    - ``make`` (if Makefile exists)
-    - ``powershell -File setup.ps1``
-    - ``bash setup.sh``
-    - ``pip install -r requirements.txt``
-    - ``python setup.py``
-    - ``yarn install`` else ``npm install``
-    - ``bower --allow-root install``
     '''
     if not os.path.exists(target):
         app_target = os.path.join(variables['GRAMEXPATH'], 'apps', target)
         if not os.path.exists(app_target):
-            raise OSError('No directory %s' % target)
+            raise OSError(f'No directory {target}')
         target = app_target
     target = os.path.abspath(target)
-    app_log.info('Setting up %s', target)
-    for file, runners in setup_paths.items():
-        setup_file = os.path.join(target, file)
-        if not os.path.exists(setup_file):
-            continue
-        for exe, cmd in runners.items():
-            exe_path = which(exe)
-            if exe_path is not None:
-                cmd = cmd.format(FILE=setup_file, EXE=exe_path)
-                app_log.info('Running %s', cmd)
+    app_log.info(f'Setting up {target}')
+    for configs in setup_paths:
+        config_match, ran_cmd = None, False
+        for config in configs:
+            setup_file = os.path.join(target, config['file'])
+            exe_path = which(config['exe'])
+            if os.path.exists(setup_file):
+                config_match = config
+            if config_match and exe_path is not None:
+                cmd = config['cmd'].format(file=setup_file, exe=exe_path)
+                app_log.info(f'Running {cmd}')
                 _run_console(cmd, cwd=target)
+                ran_cmd = True
                 break
-        else:
-            app_log.warning('Skipping %s. No %s found', setup_file, exe)
+        if config_match and not ran_cmd:
+            app_log.warning(f'Skipping {config_match["file"]}. No {config_match["exe"]} found')
 
 
 app_dir = Path(variables.get('GRAMEXDATA')) / 'apps'
@@ -475,7 +469,7 @@ def install(args, kwargs):
         return
 
     appname = args[0]
-    app_log.info('Installing: %s', appname)
+    app_log.info(f'Installing: {appname}')
     app_config = get_app_config(appname, kwargs)
     if len(args) == 2:
         app_config.url = args[1]
@@ -485,17 +479,17 @@ def install(args, kwargs):
     elif 'cmd' in app_config:
         returncode = run_command(app_config)
         if returncode != 0:
-            app_log.error('Command failed with return code %d. Aborting installation', returncode)
+            app_log.error(f'Command failed with return code {returncode}. Aborting installation')
             return
     else:
-        app_log.error('Use --url=... or --cmd=... to specific source of %s', appname)
+        app_log.error(f'Use --url=... or --cmd=... to specific source of {appname}')
         return
 
     # Post-installation
     app_config.target = run_setup(app_config.target)
     app_config['installed'] = {'time': datetime.datetime.utcnow()}
     save_user_config(appname, app_config)
-    app_log.info('Installed. Run `gramex run %s`', appname)
+    app_log.info(f'Installed. Run `gramex run {appname}`')
 
 
 def setup(args, kwargs):
@@ -518,18 +512,18 @@ def uninstall(args, kwargs):
         app_log.error(show_usage('uninstall'))
         return
     if len(args) > 1 and kwargs:
-        app_log.error('Arguments allowed only with single app. Ignoring %s', ', '.join(args[1:]))
+        app_log.errorf(f'Arguments allowed only with single app. Ignoring {", ".join(args[1:])}')
         args = args[:1]
 
     for appname in args:
-        app_log.info('Uninstalling: %s', appname)
+        app_log.info(f'Uninstalling: {appname}')
 
         # Delete the target directory if it exists
         app_config = get_app_config(appname, kwargs)
         if os.path.exists(app_config.target):
             safe_rmtree(app_config.target)
         else:
-            app_log.error('No directory %s to remove', app_config.target)
+            app_log.error(f'No directory {app_config.target} to remove')
         save_user_config(appname, None)
 
 
@@ -538,7 +532,7 @@ def run(args, kwargs):
         app_log.error(show_usage('run'))
         return
     if len(args) > 1:
-        app_log.error('Can only run one app. Ignoring %s', ', '.join(args[1:]))
+        app_log.error(f'Can only run one app. Ignoring {", ".join(args[1:])}')
 
     appname = args.pop(0)
     app_config = get_app_config(appname, kwargs)
@@ -562,13 +556,14 @@ def run(args, kwargs):
         gramex.init(args=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
-        app_log.error('%s: no directory %s', appname, app_config.target)
-        app_log.error('Run "gramex uninstall %s" and try again.', appname)
+        app_log.error(f'{appname}: no target path {app_config.target}. '
+                      f'Run "gramex uninstall {appname}" and try again.', )
     else:
-        app_log.error('%s: no directory %s', appname, app_config.target)
+        app_log.error(f'{appname}: no target path {app_config.target}')
 
 
 def service(args, kwargs):
+    '''Install, remove, start or stop Gramex as a Windows service.'''
     try:
         import gramex.winservice
     except ImportError:
@@ -583,7 +578,8 @@ def service(args, kwargs):
 def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
-        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec
+        # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec B603
     # OSError is raised if the cmd is not found.
     # CalledProcessError is raised if the cmd returns an error.
     except (OSError, CalledProcessError):
@@ -594,9 +590,10 @@ def _run_console(cmd, **kwargs):
     '''Run cmd and pipe output to console. Log and raise error if cmd is not found'''
     cmd = shlex.split(cmd)
     try:
-        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)
+        # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
+        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)    # nosec B603
     except OSError:
-        app_log.error('Cannot find command: %s', cmd[0])
+        app_log.error(f'Cannot find command: {cmd[0]}')
         raise
     proc.communicate()
 
@@ -607,38 +604,19 @@ def _mkdir(path):
         os.makedirs(path)
 
 
-def _copy(source, target, template_data=None):
-    '''
-    Copy single directory or file (as binary) from source to target.
-    Warn if target exists, or source is not file/directory, and exit.
-    If template_data is specified, treat source as a Tornado template.
-    '''
-    if os.path.exists(target):
-        app_log.warning('Skip existing %s', target)
-    elif os.path.isdir(source):
-        _mkdir(target)
-    elif os.path.isfile(source):
-        app_log.info('Copy file %s', source)
-        with io.open(source, 'rb') as handle:
-            result = handle.read()
-            if template_data is not None:
-                from mimetypes import guess_type
-                filetype = guess_type(source)[0] or 'text/unknown'
-                if re.match('text/.*|application/(json|javascript)', filetype):
-                    result = Template(result).generate(**template_data)
-        with io.open(target, 'wb') as handle:
-            handle.write(result)
-    else:
-        app_log.warning('Skip unknown file %s', source)
-
-
 def init(args, kwargs):
     '''Create Gramex scaffolding files.'''
-    if len(args) > 1:
+    if len(args) > 2:
         app_log.error(show_usage('init'))
         return
+    if len(args) == 0:
+        args.append('default')
+    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init', args[0])
+    if not os.path.exists(source_dir):
+        app_log.error(f'Unknown init template {args[0]}')
+
     kwargs.setdefault('target', os.getcwd())
-    app_log.info('Initializing Gramex project at %s', kwargs.target)
+    app_log.info(f'Initializing Gramex project at {kwargs.target}')
     data = {
         'appname': os.path.basename(kwargs.target),
         'author': _check_output('git config user.name', default='Author'),
@@ -666,22 +644,30 @@ def init(args, kwargs):
         except OSError:
             data['git_lfs'] = None
 
-    # Copy all directories & files (as templates)
-    source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init')
+    # Copy all directories & files. Files with '.template.' are treated as templates.
     for root, dirs, files in os.walk(source_dir):
+        relpath = os.path.relpath(root, start=source_dir)
         for name in dirs + files:
             source = os.path.join(root, name)
-            relpath = os.path.relpath(root, start=source_dir)
-            target = os.path.join(kwargs.target, relpath, name.replace('appname', appname))
-            _copy(source, target, template_data=data)
-    for empty_dir in ('img', 'data'):
-        _mkdir(os.path.join(kwargs.target, 'assets', empty_dir))
-    # Copy error files as-is (not as templates)
-    error_dir = os.path.join(kwargs.target, 'error')
-    _mkdir(error_dir)
-    for source in glob(os.path.join(variables['GRAMEXPATH'], 'handlers', '?0?.html')):
-        target = os.path.join(error_dir, os.path.basename(source))
-        _copy(source, target)
+            targetname = name.replace('$appname', appname)
+            template_data = None
+            if '.template.' in name:
+                targetname, template_data = name.replace('.template.', '.'), data
+            target = os.path.join(kwargs.target, relpath, targetname)
+            if os.path.exists(target):
+                app_log.warning(f'Skip existing {target}')
+            elif os.path.isdir(source):
+                _mkdir(target)
+            elif os.path.isfile(source):
+                app_log.info(f'Copy file {source}')
+                with io.open(source, 'rb') as handle:
+                    result = handle.read()
+                    if template_data is not None:
+                        result = Template(result).generate(**template_data)
+                with io.open(target, 'wb') as handle:
+                    handle.write(result)
+            else:
+                app_log.warning(f'Skip unknown file {source}')
 
     run_setup(kwargs.target)
 
@@ -689,7 +675,7 @@ def init(args, kwargs):
 default_mail_config = r'''# Gramex mail configuration at
 # List keys with "gramex mail --list --conf={confpath}"
 
-# See https://learn.gramener.com/guide/email/ for help
+# See https://gramener.com/gramex/guide/email/ for help
 email:
   default-email:
     type: gmail
@@ -698,7 +684,7 @@ email:
     # Uncomment the next line to test the application without sending mails
     # stub: log
 
-# See https://learn.gramener.com/guide/alert/
+# See https://gramener.com/gramex/guide/alert/
 alert:
   hello-world:
     to: admin@example.org
@@ -723,11 +709,11 @@ def mail(args, kwargs):
         if 'init' in kwargs:
             with io.open(confpath, 'w', encoding='utf-8') as handle:
                 handle.write(default_mail_config.format(confpath=confpath))
-            app_log.info('Initialized %s', confpath)
+            app_log.info(f'Initialized {confpath}')
         elif not args and not kwargs:
             app_log.error(show_usage('mail'))
         else:
-            app_log.error('Missing config %s. Use --init to generate skeleton', confpath)
+            app_log.error(f'Missing config {confpath}. Use --init to generate skeleton')
         return
 
     conf = PathConfig(confpath)
@@ -740,7 +726,7 @@ def mail(args, kwargs):
         return
 
     if 'init' in kwargs:
-        app_log.error('Config already exists at %s', confpath)
+        app_log.error(f'Config already exists at {confpath}')
         return
 
     if len(args) < 1:
@@ -754,7 +740,7 @@ def mail(args, kwargs):
     sys.path += os.path.dirname(confpath)
     for key in args:
         if key not in alert_conf:
-            app_log.error('Missing key %s in %s', key, confpath)
+            app_log.error(f'Missing key {key} in {confpath}')
             continue
         alert = create_alert(key, alert_conf[key])
         alert()
@@ -772,4 +758,4 @@ def license(args, kwargs):
     elif args[0] == 'reject':
         gramex.license.reject()
     else:
-        app_log.error('Invalid command license %s', args[0])
+        app_log.error(f'Invalid command license {args[0]}')

@@ -8,7 +8,7 @@ const { execSync } = require('child_process')
 // Create themes
 // --------------------------------------------------------------------
 const theme_dir = mkdir(__dirname, 'theme')
-const themes = ['default']
+const themes = ['default', 'bootstrap5']
 
 // https://bootswatch.com/
 // For each bootswatch/dist/<theme>/ directory, add a theme/bootswatch/<theme>.scss that imports
@@ -41,14 +41,14 @@ fs.readdirSync(themes_guide_root).forEach(function (dir) {
       fs.readFileSync(theme_file, 'utf8')
         .replace('@import "bootstrap";', '@import "gramexui";')
         // Themes Guide disables grid classes. But we want to use them, so kill this line
-        .replace('$enable-grid-classes:false;\n', ''))
+        .replace('$enable-grid-classes:false;\n', '') + '\n')
     themes.push(`themes-guide/${dir}`)
   }
 })
 execSync('rm -rf bootstrap-themes', { cwd: tmp })
 
 // Save list of themes
-fs.writeFileSync('theme/themes.json', JSON.stringify({ 'themes': themes }))
+fs.writeFileSync('theme/themes.json', JSON.stringify({ 'themes': themes }) + '\n')
 
 
 // Utility functions

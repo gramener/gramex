@@ -3,7 +3,6 @@ Debugging and profiling tools for Gramex
 '''
 import os
 import gc
-import six
 import sys
 import pprint
 import timeit
@@ -11,6 +10,7 @@ import inspect
 import logging
 import functools
 from trace import Trace
+from textwrap import indent
 try:
     import line_profiler
 except ImportError:
@@ -18,22 +18,10 @@ except ImportError:
 from gramex.config import app_log
 
 
-def _indent(text, prefix, predicate=None):
-    '''Backport of textwrap.indent for Python 2.7'''
-    if predicate is None:
-        def predicate(line):
-            return line.strip()
-
-    def prefixed_lines():
-        for line in text.splitlines(True):
-            yield (prefix + line if predicate(line) else line)
-    return ''.join(prefixed_lines())
-
-
 def _caller():
     '''_caller() returns the "file:function:line" of the calling function'''
     parent = inspect.getouterframes(inspect.currentframe())[2]
-    return '[%s:%s:%d]' % (parent[1], parent[3], parent[2])
+    return f'[{parent[1]}:{parent[3]}:{parent[2]}]'
 
 
 class Timer(object):
@@ -57,15 +45,15 @@ class Timer(object):
         end = timeit.default_timer()
         if self.gc_old:
             gc.enable()
-        app_log.log(self.level, '%0.3fs %s %s', end - self.start, self.msg, _caller())
+        app_log.log(self.level, f'{end - self.start:0.3f}s {self.msg} {_caller()}')
 
 
 def _write(obj, prefix=None, stream=sys.stdout):
     text = pprint.pformat(obj, indent=4)
     if prefix is None:
-        stream.write(_indent(text, ' .. '))
+        stream.write(indent(text, ' .. '))
     else:
-        text = _indent(text, ' .. ' + ' ' * len(prefix) + '   ')
+        text = indent(text, ' .. ' + ' ' * len(prefix) + '   ')
         stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix):])
     stream.write('\n')
 
@@ -111,7 +99,7 @@ def trace(trace=True, exclude=None, **kwargs):
     '''
     if exclude is None:
         ignoredirs = (sys.prefix, )
-    elif isinstance(exclude, six.string_types):
+    elif isinstance(exclude, str):
         ignoredirs = (sys.prefix, os.path.abspath(exclude))
     elif isinstance(exclude, (list, tuple)):
         ignoredirs = [sys.prefix] + [os.path.abspath(path) for path in exclude]
@@ -219,7 +207,7 @@ def _make_timer():
 
     def timer(msg, level=logging.WARNING):
         end = timeit.default_timer()
-        app_log.log(level, '%0.3fs %s %s', end - Context.start, msg, _caller())
+        app_log.log(level, f'{end - Context.start:0.3f}s {msg} {_caller()}')
         Context.start = end
 
     timer.__doc__ = _make_timer.__doc__

@@ -33,11 +33,10 @@ requirements:
     - lxml
     - matplotlib
     - pandas
-    - pytest
     - seaborn
     - sqlalchemy
     - tzlocal
-    - scikit-learn
+    - scikit-learn<1.0
     - pyyaml>=5.1
   run:
     - python          # REQ: conda: Base Python

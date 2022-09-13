@@ -1,6 +1,6 @@
 import os
 import tempfile
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 import requests
 import numpy as np
 import pandas as pd
@@ -16,9 +16,8 @@ from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from unittest import TestCase
 from nose.tools import eq_, ok_, assert_raises
 from nose.plugins.skip import SkipTest
-from pandas.util.testing import assert_frame_equal
 from gramex import pptgen
-from . import folder, sales_file
+from . import folder, sales_file, afe
 
 
 class TestPPTGen(TestCase):
@@ -31,7 +30,7 @@ class TestPPTGen(TestCase):
         cls.input = os.path.join(folder, 'input.pptx')
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
+        cls.data = pd.read_excel(sales_file, engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 
@@ -243,7 +242,7 @@ class TestPPTGen(TestCase):
 
     def test_group_and_image(self):
         # Test case for group objects.
-        for img in [self.image, 'https://learn.gramener.com/guide/pptxhandler/v1/sample.png']:
+        for img in [self.image, 'https://gramener.com/gramex/guide/pptxhandler/v1/sample.png']:
             try:
                 target = pptgen.pptgen(
                     source=self.input,
@@ -397,7 +396,7 @@ class TestPPTGen(TestCase):
         for c in table_data:
             table_data[c] = table_data[c].astype(self.data[c].dtype)
         # Comparinig `dataframe` from table with original `dataframe`
-        assert_frame_equal(table_data, self.data, check_names=True)
+        afe(table_data, self.data, check_names=True)
 
     def test_change_chart(self):
         # Test case for all native charts charts.
@@ -501,7 +500,7 @@ class TestPPTGen(TestCase):
         # Creating a new dataframe from treemap chart
         treemapdata = pd.DataFrame({'city': text, 'sales': width})
         # Treemap data should to exactly in same order as per data
-        assert_frame_equal(data, treemapdata[['city']], check_names=True)
+        afe(data, treemapdata[['city']], check_names=True)
 
     def test_horizontal_vertical_bullet_chart(self):
         # Test case for horizontal and vertical bullet chart
@@ -735,7 +734,11 @@ class TestPPTGen(TestCase):
 
         for index, grp in enumerate(groups):
             grpobj = data.groupby(grp)
-            frame = pd.DataFrame({'size': grpobj[grp].count(), 'seq': eval(grp_order)(grpobj)})
+            frame = pd.DataFrame({
+                'size': grpobj[grp].count(),
+                # B307:eval is safe here since we've constructed `grp_order`
+                'seq': eval(grp_order)(grpobj),  # nosec B307
+            })
             frame['width'] = frame['size'] / float(frame['size'].sum()) * width
             frame = frame.sort_values(by=['seq'])
             get_rect_width.extend([int(i) for i in frame['width'].tolist()])

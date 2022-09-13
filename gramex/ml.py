@@ -1,12 +1,13 @@
 import os
-import six
 import json
 import inspect
 import threading
 import joblib
+import numpy as np
 import pandas as pd
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
+from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
 
 # Expose joblob.load via gramex.ml
@@ -190,6 +191,8 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
 def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
                weight=None):
     '''
+    **DEPRECATED**. Use TopCause() instead.
+
     Yields the significant differences in average between every pair of
     groups and numbers.
 
@@ -235,8 +238,8 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
             lo = data[number][grouped.groups[sorted_cats.index[0]]].values
             hi = data[number][grouped.groups[sorted_cats.index[-1]]].values
             _, prob = ttest_ind(
-                pd.np.ma.masked_array(lo, pd.np.isnan(lo)),
-                pd.np.ma.masked_array(hi, pd.np.isnan(hi))
+                np.ma.masked_array(lo, np.isnan(lo)),
+                np.ma.masked_array(hi, np.isnan(hi))
             )
             if prob > cutoff:
                 continue
@@ -421,7 +424,7 @@ def languagetool(handler, *args, **kwargs):
 
 @coroutine
 def languagetoolrequest(text, lang='en-us', **kwargs):
-    """Check grammar by making a request to the LanguageTool server.
+    '''Check grammar by making a request to the LanguageTool server.
 
     Parameters
     ----------
@@ -429,10 +432,10 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
         Text to check
     lang : str, optional
         Language. See a list of supported languages here: https://languagetool.org/api/v2/languages
-    """
+    '''
     client = AsyncHTTPClient()
     url = kwargs['LT_URL'].format(**kwargs)
-    query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
+    query = urlencode({'language': lang, 'text': text})
     url = url + query
     tries = 2  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
     while tries:
@@ -469,12 +472,19 @@ def languagetool_download():
     if not os.path.isdir(target):
         os.makedirs(target)
     src = _languagetool['defaults']['LT_SRC'].format(**_languagetool['defaults'])
-    app_log.info('Downloading languagetools from %s', src)
+    app_log.info(f'Downloading languagetools from {src}')
     stream = io.BytesIO(requests.get(src).content)
-    app_log.info('Unzipping languagetools to %s', target)
+    app_log.info(f'Unzipping languagetools to {target}')
     zipfile.ZipFile(stream).extractall(target)
     _languagetool['installed'] = True
 
 
 # Gramex 1.48 spelt translater as translator. Accept both spellings.
 translator = translater
+
+
+try:
+    from .topcause import TopCause     # noqa -- F401 imported to expose
+except ImportError:
+    app_log.info('gramex.ml.TopCause not imported. pip install sklearn')
+    pass

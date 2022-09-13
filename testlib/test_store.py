@@ -1,5 +1,4 @@
 import os
-import six
 import json
 import time
 import shutil
@@ -98,6 +97,7 @@ class TestJSONStore(unittest.TestCase):
         ok_('λ' in result)
 
     def test_store(self):
+        self.store.purge()
         data = self.load()
         expiry = time.time() + 1000
         self.store.dump('►', {'_t': expiry, 'α': True})
@@ -114,7 +114,7 @@ class TestJSONStore(unittest.TestCase):
 
         # Keys must be converted to strings
         for key in (1, 0.0):
-            str_key = six.text_type(key)
+            str_key = str(key)
             self.store.dump(key, 1)
             self.store.flush()
             data.update({str_key: 1})

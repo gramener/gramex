@@ -11,6 +11,7 @@ import io
 import matplotlib.cm
 import matplotlib.colors
 import os
+import numpy as np
 import pandas as pd
 import pptx
 import pptx.util
@@ -18,9 +19,11 @@ import re
 import requests
 from PIL import Image
 from functools import partial
+from gramex import console
 from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
-from lxml.html import fragments_fromstring, builder, HtmlElement
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.html import fragments_fromstring, builder, HtmlElement    # nosec B410
 from orderedattrdict import AttrDict
 from pptx.chart import data as pptxchartdata
 from pptx.dml.color import RGBColor
@@ -76,7 +79,7 @@ def assign(convert, path: str):
 # ---------------------------------------------------------------------
 length_unit = pptx.util.Inches          # The default length unit is inches. This is exposed
 _length_expr = re.compile(r'''          # A length expression can be:ex
-    ([\d\.]+)                           #   Any integer or floating point (without + or -)
+    ((?:[+-]?)[\d\.]+)                  #   Any integer or floating point (with + or -)
     \s*                                 #   optionally followed by spaces
     ("|in|inch|inches|cm|mm|pt|cp|centipoint|centipoints|emu|)  # and a unit that may be blank
     $                                   # with nothing after that
@@ -94,7 +97,7 @@ def length_class(unit_str: str):
     elif not unit:
         return length_unit
     else:
-        raise ValueError('Invalid unit: %s' % unit_str)
+        raise ValueError(f'Invalid unit: {unit_str}')
 
 
 def length(val: Union[str, int, float]) -> pptx.util.Length:
@@ -103,7 +106,7 @@ def length(val: Union[str, int, float]) -> pptx.util.Length:
         match = _length_expr.match(val)
         if match:
             return length_class(match.group(2))(float(match.group(1)))
-    elif isinstance(val, (int, float, pd.np.number)):
+    elif isinstance(val, (int, float, np.number)):
         return length_unit(val)
     raise ValueError('Invalid length: %r' % val)
 
@@ -168,7 +171,7 @@ def fill_opacity(fill: FillFormat, val: Union[int, float, None]) -> None:
     if fill.type != MSO_FILL.SOLID:
         raise ValueError('Cannot set opacity: %r on non-solid fill type %r' % (val, fill.type))
     for tag in ('hslClr', 'sysClr', 'srgbClr', 'prstClr', 'scrgbClr', 'schemeClr'):
-        color = fill._xPr.find('.//' + qn('a:%s' % tag))
+        color = fill._xPr.find('.//' + qn(f'a:{tag}'))
         if color is not None:
             alpha = color.find(qn('a:alpha'))
             if alpha is None:
@@ -194,7 +197,7 @@ def alignment(enum, val: str) -> EnumValue:
     alignment = getattr(enum, val.upper(), None)
     if alignment is not None:
         return alignment
-    raise ValueError('Invalid alignment: %s' % val)
+    raise ValueError(f'Invalid alignment: {val}')
 
 
 # Basic command methods
@@ -208,7 +211,7 @@ def name(shape, spec, data: dict):
 def print_command(shape, spec, data: dict):
     spec = spec if isinstance(spec, (list, tuple)) else [spec]
     for item in spec:
-        print('    %s: %s' % (item, expr(item, data)))      # noqa
+        console(f'    {item}: {expr(item, data)}')
 
 
 # Position & style commands
@@ -295,9 +298,9 @@ def get_or_add_link(shape, type, event):
     # parent is the container inside which we insert the link. Can be p:cNvPr or a:rPr
     parent = el.find('.//' + conf['link-attrs'][type]['tag'], _nsmap)
     # Create link if required. (Else preserve all attributes one existing link, like tooltip)
-    link = parent.find(qn('a:%s' % event))
+    link = parent.find(qn(f'a:{event}'))
     if link is None:
-        link = OxmlElement('a:%s' % event)
+        link = OxmlElement(f'a:{event}')
         parent.insert(0, link)
     return link
 
@@ -398,7 +401,7 @@ def get_text_frame(shape):
     try:
         return shape.text_frame
     except AttributeError:
-        raise ValueError('Cannot set text on shape %s that has no text frame' % shape.name)
+        raise ValueError(f'Cannot set text on shape {shape.name} that has no text frame')
 
 
 para_methods = {
@@ -461,7 +464,7 @@ def text(shape, spec, data):
             # Ensure that all runs have the same color, font, etc as the first run (if any)
             r.font._rPr.attrib.update(run_defaults)
             # Set specified run attributes
-            r.text = run.text
+            r.text = run.text or ''
             for attr, val in run.attrib.items():
                 if attr in run_methods:
                     run_methods[attr](r, val, data)
@@ -608,7 +611,7 @@ table_col_commands = {
 
 def table(shape, spec, data: dict):
     if not shape.has_table:
-        raise ValueError('Cannot run table commands on shape %s that is not a table' % shape.name)
+        raise ValueError(f'Cannot run table commands on shape {shape.name} that is not a table')
     table = shape.table
 
     # Set or get table first/last row/col attributes
@@ -621,7 +624,7 @@ def table(shape, spec, data: dict):
     # table data must be a DataFrame if specified. Else, create a DataFrame from existing text
     table_data = expr(spec.get('data', None), data)
     if table_data is not None and not isinstance(table_data, pd.DataFrame):
-        raise ValueError('data on table %s must be a DataFrame, not %r' % (shape.name, table_data))
+        raise ValueError(f'data on table {shape.name} must be a DataFrame, not {table_data!r}')
     # Extract data from table text if no data is specified.
     if table_data is None:
         table_data = pd.DataFrame([[cell.text for cell in row.cells] for row in table.rows])
@@ -673,7 +676,7 @@ def table(shape, spec, data: dict):
                         table_cell_commands[key](cell, cmdspec[column], data)
             for column in cmdspec:
                 if column not in columns:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
         # Apply commands that run on each column
         elif key in table_col_commands:
             for column, colspec in cmdspec.items():
@@ -684,35 +687,56 @@ def table(shape, spec, data: dict):
                         pos=AttrDict(row=-1, column=col_index))
                     table_col_commands[key](table, col_index, colspec, data)
                 else:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
 
 
-def chart_data(shape, spec, data: dict):
+def chart(shape, spec, data: dict):
+    # Ensure that the chart is of a type we support
     if not hasattr(shape, 'chart'):
-        raise ValueError('Cannot set chart-data on shape: %s' % shape.name)
-    chartdata = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
-                              index_col=0, engine='openpyxl')
-    val = expr(spec, {'chartdata': chartdata, **data})
-    if val is not None:
-        if not isinstance(val, pd.DataFrame):
-            raise ValueError('chart-data: must be a DataFrame, not %s' % val)
-        chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
-        if chart_tag not in conf['chart-type']:
-            raise ValueError('Shape %s: unsupported chart %s' % (shape.name, chart_tag))
+        raise ValueError(f'Cannot run chart: on non-chart shape: {shape.name}')
+    chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
+    if chart_tag not in conf['chart-type']:
+        raise ValueError(f'Unsupported chart type {chart_tag} on shape: {shape.name}')
+
+    # Set the chart data
+    chart_data = expr(spec.get('data', None), data)
+    # If it's specified, it must be a DataFrame
+    if chart_data is not None and not isinstance(chart_data, pd.DataFrame):
+        raise ValueError(f'Chart data {chart_data:r} is not a DataFrame on shape: {shape.name}')
+    # If it's not specified, use the existing data
+    if chart_data is None:
+        chart_data = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+                                   index_col=0, engine='openpyxl')
+    else:
         chart_type = conf['chart-type'][chart_tag]
         # Create a new instance of CategoryChartData(), XYChartData() or BubbleChartData()
         new_chart_data = getattr(pptxchartdata, chart_type + 'ChartData')()
-        new_chart_data.categories = val.index
+        new_chart_data.categories = chart_data.index
         if chart_type == 'Category':
-            for name, col in val.iteritems():
+            for name, col in chart_data.iteritems():
                 new_chart_data.add_series(name, col.values)
         # TODO: This messes up the resulting Excel sheet, and is not extensible. Rewrite via lxml
         elif chart_type == 'Xy':
-            for name, col in val.iteritems():
+            for name, col in chart_data.iteritems():
                 series = new_chart_data.add_series(name)
                 for index, v in col.iteritems():
                     series.add_data_point(index, v)
         shape.chart.replace_data(new_chart_data)
+
+    data = dict(**data, chartdata=chart_data)
+    for attrname, method in (
+        ('fill', partial(set_color, 'format.fill')),
+        ('stroke', partial(set_color, 'format.line.fill')),
+        ('text', lambda shape, spec, data: text(shape.data_label, spec, data)),
+    ):
+        val = expr(spec.get(attrname, None), data)
+        if val is not None:
+            for series in shape.chart.series:
+                if series.name in val.columns:
+                    vals = val[series.name].tolist()
+                    for point_index, point in enumerate(series.points):
+                        if point_index < len(vals) and vals[point_index] is not None:
+                            method(point, vals[point_index], data)
 
 
 cmdlist = {
@@ -764,7 +788,8 @@ cmdlist = {
     'underline': partial(set_text, 'underline', False),
     # Others
     'table': table,
-    'chart-data': chart_data,
+    'chart': chart,
+    'chart-data': lambda shape, spec, data: chart(shape, {'data': spec}, data),
     # Custom charts
     # 'sankey': sankey,
     # 'bullet': bullet,

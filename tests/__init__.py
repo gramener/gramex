@@ -1,11 +1,14 @@
 import os
 import requests
 import shutil
-import six
 import unittest
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+# F401: we import here since other modules use this
+from lxml import etree      # noqa: F401    # nosec B410
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
+from pandas.testing import assert_frame_equal as afe   # noqa: F401 - other modules use this
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -13,8 +16,6 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 def setUp():
     # Remove uploads folder before Gramex locks .meta.h5
-    # This may fail on Python 2.7 on Windows due to unicode characters.
-    # Delete tests/uploads/ manually in that case
     upload_path = os.path.join(folder, 'uploads')
     if os.path.exists(upload_path):
         shutil.rmtree(upload_path)
@@ -116,7 +117,7 @@ class TestGramex(unittest.TestCase):
             ok_(len(nodes) > 0, 'CSS %s missing' % css)
 
             # val must be a dict. Convert text values to dict. Raise error for rest
-            if isinstance(val, six.string_types):
+            if isinstance(val, str):
                 val = {'@text': val}
             elif not isinstance(val, dict):
                 raise ValueError('CSS %s has invalid value %s' % (css, val))
@@ -147,3 +148,16 @@ class TestGramex(unittest.TestCase):
                 else:
                     raise ValueError('CSS %s: invalid how: "%s"' % (css, how))
         return tree
+
+
+def remove_if_possible(target):
+    '''
+    os.remove(file).
+    But ignore Windows antivirus software preventing deletion
+    '''
+    if not os.path.exists(target):
+        return
+    try:
+        os.remove(target)
+    except PermissionError:
+        pass

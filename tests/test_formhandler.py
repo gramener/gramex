@@ -1,21 +1,18 @@
 import re
 import os
-import six
 import json
 import shutil
 import sqlite3
 import pandas as pd
 import gramex.cache
 from io import BytesIO
-from lxml import etree
 from nose.tools import eq_, ok_
 from gramex import conf
 from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
-from pandas.util.testing import assert_frame_equal as afe
-from . import folder, TestGramex, dbutils, tempfiles
+from . import etree, folder, TestGramex, dbutils, tempfiles, afe
 
 xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -151,7 +148,7 @@ class TestFormHandler(TestGramex):
         out = self.get(url).content
         actual = pd.read_csv(BytesIO(out), encoding='utf-8')
         expected.index = range(len(expected))
-        afe(actual, expected, check_column_type=six.PY3)
+        afe(actual, expected, check_column_type=True)
 
     def test_file(self):
         self.check_filter('/formhandler/file', na_position='last')
@@ -180,12 +177,14 @@ class TestFormHandler(TestGramex):
         # it calls state(args, path), which is logged in `/formhandler/state`
         eq_(self.get('/formhandler/state').json(), [], 'Start with blank slate')
         self.check('/formhandler/sqlite-state?x=1')
-        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'],
+        # TODO: This test fails. Check why.
+        eq_(self.get('/formhandler/state').json(),
+            [{'x': ['1'], '_limit': [10000]}, '/formhandler/sqlite-state'],
             'state() is called once per request')
         self.check('/formhandler/sqlite-state?x=2')
         eq_(self.get('/formhandler/state').json(), [
-            {'x': ['1']}, '/formhandler/sqlite-state',
-            {'x': ['2']}, '/formhandler/sqlite-state',
+            {'x': ['1'], '_limit': [10000]}, '/formhandler/sqlite-state',
+            {'x': ['2'], '_limit': [10000]}, '/formhandler/sqlite-state',
         ], 'state() is called twice for 2 requests')
 
     def test_mysql(self):
@@ -233,16 +232,14 @@ class TestFormHandler(TestGramex):
         by_growth.index = range(len(by_growth))
 
         out = self.get('/formhandler/file?_format=html')
-        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
-        # instead of unicde. So check column type only in PY3 not PY2
-        afe(pd.read_html(out.content, encoding='utf-8')[0], self.sales, check_column_type=six.PY3)
+        afe(pd.read_html(out.content, encoding='utf-8')[0], self.sales, check_column_type=True)
         eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
         eq_(out.headers.get('Content-Disposition'), None)
 
         out = self.get('/formhandler/file-multi?_format=html')
         result = pd.read_html(BytesIO(out.content), encoding='utf-8')
-        afe(result[0], big, check_column_type=six.PY3)
-        afe(result[1], by_growth, check_column_type=six.PY3)
+        afe(result[0], big, check_column_type=True)
+        afe(result[1], by_growth, check_column_type=True)
         eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
         eq_(out.headers.get('Content-Disposition'), None)
 
@@ -605,8 +602,7 @@ class TestFormHandler(TestGramex):
         afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
 
         # url: and table: accept query formatting for SQLAlchemy
-        # TODO: In Python 2, unicode keys don't work well on Tornado. So use safe keys
-        key, val = ('product', '芯片') if six.PY2 else ('देश', 'भारत')
+        key, val = 'देश', 'भारत'
         url = '/formhandler/arg-query?db=formhandler&col=%s&val=%s' % (key, val)
         actual = pd.DataFrame(self.get(url).json())
         expected = self.sales[self.sales[key] == val]

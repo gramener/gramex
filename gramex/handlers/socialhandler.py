@@ -22,7 +22,9 @@ class SocialHandler(BaseHandler):
         # Session key that stores the user info
         cls.user_info = user_info
         # Set up methods
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @tornado.gen.coroutine
     def social_response(self, response):
@@ -107,14 +109,15 @@ class SocialHandler(BaseHandler):
         info = self.session.get(self.user_info, {})
         token = self.kwargs.get(key, None)         # Get from config
         session_token = fetch(info, key, None)
-        if token == 'persist':                          # nosec
+        # B105:hardcoded_password_string: 'persist' is not a password
+        if token == 'persist':                          # nosec B105
             token = self.read_store().get(key, None)    # If persist, use store
             if token is None and session_token:         # Or persist from session
                 self.write_store(info)
         if token is None:
             token = session_token                       # Use session token
         if token is None:                               # Ensure token is present
-            raise HTTPError(BAD_REQUEST, reason='token %s missing' % key)
+            raise HTTPError(BAD_REQUEST, f'token {key} missing')
         return token
 
 

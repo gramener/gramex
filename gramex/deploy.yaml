@@ -23,7 +23,7 @@ handlers:
           # Font formats
           '*.ttf', '*.woff*', '*.eot', '*.otf',
           # Front-end formats
-          '*.js', '*.css', '*.map', '*.vue', '*.less',
+          '*.js', '*.css', '*.map', '*.ts', '*.vue', '*.sass', '*.scss', '*.less',
           # Front-end data format:
           '*.json'
         ]

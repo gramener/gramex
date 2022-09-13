@@ -8,7 +8,6 @@ from gramex.config import objectpath
 from gramex.pptgen2 import pptgen, load_data, commands, commandline
 from nose.tools import eq_, ok_, assert_raises
 from orderedattrdict import AttrDict
-from pandas.util.testing import assert_frame_equal as afe
 from pptx import Presentation
 from pptx.dml.color import _NoneColor
 from pptx.enum.dml import MSO_THEME_COLOR, MSO_FILL
@@ -16,7 +15,7 @@ from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR as MVA
 from pptx.oxml.ns import _nsmap, qn
 from testfixtures import LogCapture, OutputCapture
 from unittest import TestCase
-from . import folder, sales_file
+from . import folder, sales_file, afe
 
 units = ('inches', 'cm', 'mm', 'pt', 'emu', 'centipoints')
 aeq_ = lambda a, b: ok_(abs(a - b) <= 1)        # noqa
@@ -33,7 +32,7 @@ class TestPPTGen(TestCase):
         cls.prs = Presentation(cls.input)
         cls.output = os.path.join(folder, 'output.pptx')
         cls.image = os.path.join(folder, 'small-image.jpg')
-        cls.data = pd.read_excel(sales_file, encoding='utf-8', engine='openpyxl')
+        cls.data = pd.read_excel(sales_file, engine='openpyxl')
         if os.path.exists(cls.output):
             os.remove(cls.output)
 
@@ -151,10 +150,10 @@ class TestPPTGen(TestCase):
         for unit in units:
             eq_(length('3.2' + unit), getattr(pptx.util, unit.title())(3.2))
             eq_(length('3.2  ' + unit), getattr(pptx.util, unit.title())(3.2))
+            eq_(length('+3.2 ' + unit), getattr(pptx.util, unit.title())(3.2))
+            eq_(length('-3.2 ' + unit), getattr(pptx.util, unit.title())(-3.2))
         with assert_raises(ValueError):
             length('3.4 nonunits')
-        with assert_raises(ValueError):
-            length('-3.4')
         with assert_raises(ValueError):
             length(None)
         length_class = commands.length_class
@@ -176,7 +175,7 @@ class TestPPTGen(TestCase):
 
     def test_register(self, slides=3):
         # register= must be a dict
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only=1, register='dummy')
         # register= compiles the functions into commands.cmdlist
         prs = pptgen(source=self.input, only=slides, register={
@@ -196,9 +195,9 @@ class TestPPTGen(TestCase):
 
     def test_only(self, slides=[2, 4]):
         # Delete slides except those specified in ``only``
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only={})
-        with assert_raises(AssertionError):
+        with assert_raises(TypeError):
             pptgen(source=self.input, only='4')
         # Test single only= value
         only = slides[0]
@@ -971,7 +970,7 @@ class TestPPTGen(TestCase):
             engine='openpyxl',
         ).fillna('')
 
-    def test_chart(self, slides=[10]):
+    def test_chart_data(self, slides=[10]):
         data = pd.DataFrame({
             'Alpha': [1, 2, 3],
             'Beta': [4, 5, 6],
@@ -979,21 +978,232 @@ class TestPPTGen(TestCase):
         }, index=['X', 'Y', 'Z'])
         charts_2d = ['Column Chart', 'Line Chart', 'Bar Chart']
         charts_1d = ['Pie Chart', 'Donut Chart']
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
+        prs1 = pptgen(source=self.input, target=self.output, only=slides, rules=[
             *({chart: {'chart-data': data[['Alpha']]}} for chart in charts_1d),
             *({chart: {'chart-data': data}} for chart in charts_2d)
         ])
-        shapes = prs.slides[0].shapes
-        for chart in charts_2d:
-            afe(self.chart_data(self.get_shape(shapes, chart)), data)
-        for chart in charts_1d:
-            afe(self.chart_data(self.get_shape(shapes, chart)), data[['Alpha']])
+        prs2 = pptgen(source=self.input, target=self.output, only=slides, rules=[
+            *({chart: {'chart': {'data': data[['Alpha']]}}} for chart in charts_1d),
+            *({chart: {'chart': {'data': data}}} for chart in charts_2d)
+        ])
+        for prs in (prs1, prs2):
+            shapes = prs.slides[0].shapes
+            for chart in charts_1d:
+                afe(self.chart_data(self.get_shape(shapes, chart)), data[['Alpha']])
+            for chart in charts_2d:
+                afe(self.chart_data(self.get_shape(shapes, chart)), data)
+
+    def test_chart_attrs(self, slides=[10]):
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Bar Chart': {
+                'chart': {
+                    'fill': pd.DataFrame({
+                        'Series 1': 'red',
+                        'Series 2': 'yellow',
+                        'Series 3': ['#f88', '#f44', '#f00', '#800'],
+                    }),
+                    'text': pd.DataFrame({
+                        'Series 1': ['<a bold="y">1.1</a>', '1.2', '1.3', '1.4'],
+                        'Series 2': ['<a bold="y">2.1</a>', '2.2', '2.3', '2.4'],
+                        'Series 3': ['<a bold="y">3.1</a>', '3.2', '3.3', '3.4'],
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Bar Chart').chart.series
+        eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[2].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[3].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[0].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[1].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[2].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[3].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[2].points[0].format.fill.fore_color.rgb, (255, 136, 136))
+        eq_(series[2].points[1].format.fill.fore_color.rgb, (255, 68, 68))
+        eq_(series[2].points[2].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[2].points[3].format.fill.fore_color.rgb, (136, 0, 0))
+        for series_index in range(3):
+            for point_index in range(4):
+                frame = series[series_index].points[point_index].data_label.text_frame
+                eq_(frame.paragraphs[0].runs[0].text, f'{series_index + 1}.{point_index + 1}')
+                eq_(frame.paragraphs[0].runs[0].font.bold, True if point_index == 0 else None)
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Column Chart': {
+                'chart': {'fill': pd.DataFrame({
+                    'Series 1': 'red',
+                    'Series 2': 'yellow',
+                    'Series 3': ['#f88', '#f44', '#f00', '#800'],
+                })}
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Column Chart').chart.series
+        eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[2].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[3].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[0].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[1].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[2].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[3].format.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[2].points[0].format.fill.fore_color.rgb, (255, 136, 136))
+        eq_(series[2].points[1].format.fill.fore_color.rgb, (255, 68, 68))
+        eq_(series[2].points[2].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[2].points[3].format.fill.fore_color.rgb, (136, 0, 0))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Radar Chart': {
+                'chart': {'stroke': pd.DataFrame({
+                    'Series 1': ['red', 'blue', 'green', '#777'],
+                    'Series 2': ['yellow', 'black', 'red', '#088'],
+                    'Series 3': ['#ccc', '#aaa', '#777', '#444'],
+                })}
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Radar Chart').chart.series
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[0].points[3].format.line.fill.fore_color.rgb, (119, 119, 119))
+        eq_(series[1].points[0].format.line.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[1].format.line.fill.fore_color.rgb, (0, 0, 0))
+        eq_(series[1].points[2].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[3].format.line.fill.fore_color.rgb, (0, 136, 136))
+        eq_(series[2].points[0].format.line.fill.fore_color.rgb, (204, 204, 204))
+        eq_(series[2].points[1].format.line.fill.fore_color.rgb, (170, 170, 170))
+        eq_(series[2].points[2].format.line.fill.fore_color.rgb, (119, 119, 119))
+        eq_(series[2].points[3].format.line.fill.fore_color.rgb, (68, 68, 68))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'XY Chart': {
+                'chart': {
+                    'fill': pd.DataFrame({
+                        'Y-Values': ['red', 'blue', 'green', '#777'],
+                        'Z-Values': ['yellow', 'black', 'red', '#088'],
+                    }),
+                    'stroke': pd.DataFrame({
+                        'Y-Values': ['red', 'blue', 'green', '#777'],
+                        'Z-Values': ['yellow', 'black', 'red', '#088'],
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'XY Chart').chart.series
+        # TODO: Test fill
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[1].points[0].format.line.fill.fore_color.rgb, (255, 255, 0))
+        eq_(series[1].points[1].format.line.fill.fore_color.rgb, (0, 0, 0))
+        eq_(series[1].points[2].format.line.fill.fore_color.rgb, (255, 0, 0))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Pie Chart': {
+                'chart': {
+                    'fill': pd.DataFrame({
+                        'Sales': ['red', 'blue', 'green', '#777'],
+                    }),
+                    'stroke': pd.DataFrame({
+                        'Sales': ['red', 'blue', 'green', '#777'],
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Pie Chart').chart.series
+        eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[0].points[3].format.fill.fore_color.rgb, (119, 119, 119))
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[0].points[3].format.line.fill.fore_color.rgb, (119, 119, 119))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Donut Chart': {
+                'chart': {
+                    'fill': pd.DataFrame({
+                        'Sales': ['red', 'blue', 'green', '#777'],
+                    }),
+                    'stroke': pd.DataFrame({
+                        'Sales': ['red', 'blue', 'green', '#777'],
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Donut Chart').chart.series
+        eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[0].points[3].format.fill.fore_color.rgb, (119, 119, 119))
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[0].points[3].format.line.fill.fore_color.rgb, (119, 119, 119))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Line Chart': {
+                'chart': {
+                    'stroke': pd.DataFrame({
+                        'Series 1': ['red'] * 4,
+                        'Series 2': ['blue'] * 4,
+                        'Series 3': ['green'] * 4,
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Line Chart').chart.series
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[3].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[0].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[2].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[3].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[2].points[0].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[2].points[1].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[2].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
+        eq_(series[2].points[3].format.line.fill.fore_color.rgb, (0, 128, 0))
+
+        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
+            'Area Chart': {
+                'chart': {
+                    'fill': pd.DataFrame({
+                        'Series 1': ['red'] * 4,
+                        'Series 2': ['blue'] * 4,
+                    }),
+                    'stroke': pd.DataFrame({
+                        'Series 1': ['red'] * 4,
+                        'Series 2': ['blue'] * 4,
+                    })
+                }
+            },
+        }])
+        series = self.get_shape(prs.slides[0].shapes, 'Area Chart').chart.series
+        eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[2].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[3].format.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[0].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[1].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[2].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[3].format.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[1].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[2].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[0].points[3].format.line.fill.fore_color.rgb, (255, 0, 0))
+        eq_(series[1].points[0].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[2].format.line.fill.fore_color.rgb, (0, 0, 255))
+        eq_(series[1].points[3].format.line.fill.fore_color.rgb, (0, 0, 255))
 
     def test_commandline(self):
         # "slidesense" prints usage
         with OutputCapture() as logs:
             commandline([])
-        ok_(logs.captured.startswith('usage: slidesense'))
+        ok_(logs.captured.startswith('Generates target PPTX'))
         # "slidesense nonexistent.yaml" prints an error
         with LogCapture() as logs:
             commandline(['nonexistent.yaml'])

@@ -23,8 +23,11 @@ app:
     port: 9999              # Avoid clash with default Gramex port running tests
   session:
     cookie: sid2                # Name the cookie differently from "sid"
-    domain: .localhost.local    # RequestCookieJar uses this domain for localhost
+    domain: .localhost.local    # RequestCookieJar uses this domain for localhost. Remove to test sessions manually
     secure: false               # Don't set this to true. We're using HTTP, so it will fail
+    samesite: Strict            # Check if SameSite=Strict is sent
+    cookiepath: /               # NOTE: This is not tested automatically, only manually.
+                                # That's because tests NEED the cookie path to be / to work
     # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:
@@ -44,6 +47,10 @@ cache:
   # We could test more disk caches, but they're slow
 
 url:
+  invalid-nohandler:
+    pattern: /nohandler
+  invalid-nopattern:
+    handler: NonExistent
   invalid-pattern:
     pattern: invalid\gpattern
     handler: FileHandler
@@ -371,6 +378,34 @@ url:
     handler: FunctionHandler
     kwargs:
       function: functionutils.content
+  func/pipeline:
+    pattern: /func/pipeline
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - { name: x, function: '"--"' }
+        - { name: n, function: 2}
+        - (x + handler.request.path) * n
+  func/pipeline-number:
+    pattern: /func/pipeline-number
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - 2
+  func/pipeline-iterable:
+    pattern: /func/pipeline-iterable
+    handler: FunctionHandler
+    kwargs:
+      function:
+        - [3, x, null, false]   # Returns [3, "x", false]
+  # TestPyNode
+  pynode/run:
+    pattern: /pynode/run
+    handler: FunctionHandler
+    kwargs:
+      function: utils.pynode_run(handler)
+      headers:
+        Content-Type: application/json
 
   # TestFileHandler
   dir/noindex:
@@ -464,16 +499,6 @@ url:
           function: markdown.markdown(content)
           headers:
             Content-Type: text/html; charset=UTF-8
-        "*.Rmd":
-          encoding: utf-8
-          function: rmarkdown(content, handler)
-          headers:
-            Content-Type: text/html; charset=UTF-8
-        "*.yaml":
-          encoding: utf-8
-          function: badgerfish(content, handler)
-          headers:
-            Content-Type: text/html; charset=UTF-8
         "template.*":
           encoding: utf-8
           function: template(content, handler=handler, param='x')
@@ -515,6 +540,22 @@ url:
     kwargs:
       path: $YAMLPATH/vue/
       vue: '*.vue'
+  dir/transform-ts:
+    pattern: /dir/transform-ts/(.*)
+    handler: FileHandler
+    kwargs:
+      path: ts
+      transform:
+        # Multiple globs can be separated by spaces or commas
+        " missing.ts,a.ts, b.ts":
+          encoding: utf-8
+          function: ts
+  dir/ts-file:
+    pattern: /dir/ts-file/(.*)
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/ts/
+      ts: '*.ts'
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler
@@ -552,10 +593,10 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
         'beta.html':
           encoding: utf-8
-          function: six.text_type.title(content)
+          function: str.title(content)
   dir/merge.html:
     pattern: /dir/merge.html
     handler: FileHandler
@@ -566,10 +607,10 @@ url:
       transform:
         'beta.html':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.title(content)
+          function: str.title(content)
   dir/map:
     pattern: /dir/map/(.*)
     handler: FileHandler
@@ -588,7 +629,7 @@ url:
       transform:
         'alpha.txt':
           encoding: utf-8
-          function: six.text_type.upper(content)
+          function: str.upper(content)
   dir/map2:
     pattern: /dir/map2/
     handler: FileHandler
@@ -1145,7 +1186,6 @@ url:
       data:
         url: $YAMLPATH/../testlib/iris.csv
       model:
-        path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
       xsrf_cookies: false
@@ -1157,10 +1197,22 @@ url:
       data:
         url: $YAMLPATH/../testlib/iris.csv
       model:
-        path: $YAMLPATH/model.pkl
         class: LogisticRegression
         target_col: species
         cats: [species]
+      xsrf_cookies: false
+
+  mlhandler/pipeline:
+    pattern: /mlpipe
+    handler: MLHandler
+    kwargs:
+      data:
+        url: $YAMLPATH/actors.csv
+      model:
+        class: DecisionTreeRegressor
+        target_col: rating
+        cats: [category]
+        exclude: [name]
       xsrf_cookies: false
 
   mlhandler/nopath:
@@ -1188,6 +1240,35 @@ url:
       model:
         class: LogisticRegression
         target_col: y
+      xsrf_cookies: false
+  mlhandler/decompositions:
+    pattern: /mldecompose
+    handler: MLHandler
+    kwargs:
+      model:
+        class: PCA
+        exclude: [species]
+        params:
+          n_components: 2
+      xsrf_cookies: false
+
+  # statsmodels
+  mlhandler/sarimax:
+    pattern: /sarimax
+    handler: MLHandler
+    kwargs:
+      model:
+        class: SARIMAX
+        params:
+          order: [7, 1, 0]
+      xsrf_cookies: false
+
+  mlhandler/huggingface/sentiment:
+    pattern: /sentiment
+    handler: MLHandler
+    kwargs:
+      model:
+        class: SentimentAnalysis
       xsrf_cookies: false
 
   capture:
@@ -1401,7 +1482,7 @@ url:
       data:
         x: "1"
         y: {z: 2}
-        z: [a, b, {m: 1, n: 2}]
+        z: [a, b, {m: 1, n: 2, 'x/y': 3}]
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
@@ -1489,7 +1570,7 @@ url:
       path: $YAMLPATH/uploads
       xsrf_cookies: false
       transform:
-        function: six.text_type('')
+        function: str('')
 
   upload-transform-invalid-transform:
     pattern: /upload-transform
@@ -1534,6 +1615,20 @@ url:
       function: utils.otp
       headers:
         Content-Type: application/json
+
+  auth/apikey:
+    pattern: /auth/apikey
+    handler: FunctionHandler
+    kwargs:
+      function: utils.apikey
+      headers:
+        Content-Type: application/json
+
+  auth/revoke:
+    pattern: /auth/revoke
+    handler: FunctionHandler
+    kwargs:
+      function: utils.revoke
 
   auth/authorize:
     pattern: /auth/authorize
@@ -1806,7 +1901,7 @@ url:
     handler: FunctionHandler
     kwargs:
       auth: true
-      function: six.text_type
+      function: str
       args: 'OK'
       xsrf_cookies: false
   auth/filehandler:
@@ -1973,6 +2068,70 @@ url:
         url: lookup.xlsx
         sheet_name: userinfo
         id: userid
+
+  auth/rules:
+    pattern: /auth/rulesdb
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        γ:
+          password: gamma
+          gender: male
+          empty: ''
+      rules:
+        url: sqlite:///$YAMLPATH/rules.db
+        table: rules
+
+  auth/rules-files:
+    pattern: /auth/rulesfile
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        γ:
+          password: gamma
+          gender: male
+          empty: ''
+      rules:
+        url: $YAMLPATH/rules.xlsx
+        sheet_name: rules
+
+  auth/no-rules:
+    pattern: /auth/norules
+    handler: SimpleAuth
+    kwargs:
+      credentials:
+        alpha:
+          password: alpha
+          gender: female
+          email: jane.doe@gmail.com
+        beta:
+          password: beta
+          gender: male
+          email: john.doe@gramener.com
+          team: "ग्रामेक्स"
+        γ:
+          password: gamma
+          gender: male
+          empty: ''
+      rules: {}
 
   pptx/source:
     pattern: /pptx/source
@@ -2211,6 +2370,70 @@ url:
           url: $TRANSLATE_XLSX
           sheet_name: translate
 
+  comic:
+    pattern: /comic
+    handler: ComicHandler
+
+  openapi/spec:
+    pattern: /openapi/spec
+    handler: OpenAPIHandler
+    kwargs:
+      info:
+        title: OpenAPI-title
+        description: OpenAPI-description
+        version: OpenAPI-version
+      servers:
+        - url: ..
+          description: Server-description
+
+  openapi/func:
+    pattern: /openapi/func
+    handler: FunctionHandler
+    kwargs:
+      function: utils.test_function
+      methods: GET, POST
+    openapi:
+      get:
+        responses:
+          '400':
+            description: You served a bad request
+
+  openapi/form:
+    pattern: /openapi/form
+    handler: FormHandler
+    kwargs:
+      sales:
+        url: sales.xlsx
+        sheet_name: sales
+        columns:
+          - name: देश
+            type: text
+          - name: city
+            type: text
+          - name: product
+            type: text
+          - name: sales
+            type: float
+          - name: growth
+            type: float
+      dates:
+        url: sales.xlsx
+        sheet_name: sales
+        columns:
+          - name: date
+            type: date
+          - name: sales
+            type: int
+      census:
+        url: sales.xlsx
+        sheet_name: census
+        columns: [State, District, DistrictCaps]
+    openapi:
+      get:
+        responses:
+          '400':
+            description: You served a bad request
+
   variables:
     pattern: /variables
     handler: FunctionHandler
@@ -2339,6 +2562,9 @@ schedule:
     hours: 5
     minutes: 0
     utc: true
+  schedule-every:
+    function: gramex.config.app_log.info('schedule-every-90s ran now')
+    every: 1.5 hours 1.5m 2.5 sec
 
 email:
   smtps_stub:
@@ -2541,3 +2767,8 @@ invalid-service: true
 
 eventlog:
   path: $YAMLPATH/events.db
+
+storelocations:
+  # The `otp:` section defines where to store one-time passwords
+  otp:
+      url: sqlite:///$YAMLPATH/otp.db

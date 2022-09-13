@@ -1,6 +1,5 @@
 '''Python-PPTX customized module.'''
 import os
-import six
 import copy
 import logging
 import requests
@@ -11,14 +10,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
-from lxml import etree
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.etree import fromstring   # nosec B410
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.xmlchemy import OxmlElement
-from six.moves.urllib_parse import urlparse
+from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from . import utils
 from . import fontwidth
@@ -38,7 +38,7 @@ def template(tmpl, data):
 def text(shape, spec, data):
     '''Replace entire text of shape with spec['text']'''
     if not shape.has_text_frame:
-        logging.error('"%s" is not a TextShape to apply text:', shape.name)
+        logging.error(f'"{shape.name}" is not a TextShape to apply text:')
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}
@@ -73,7 +73,8 @@ def text(shape, spec, data):
     # Updating default css with css from config.
     default_css.update(style)
     default_css['color'] = default_css.get('color', '#0000000')
-    update_text = etree.fromstring('<root>{}</root>'.format(template(spec['text'], data)))
+    # B320: lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+    update_text = fromstring('<root>{}</root>'.format(template(spec['text'], data)))  # nosec B320
     paragraph.runs[0].text = update_text.text if update_text.text else ''
     utils.apply_text_css(shape, paragraph.runs[0], paragraph, **default_css)
     index = 1
@@ -101,7 +102,7 @@ def text(shape, spec, data):
 def replace(shape, spec, data):
     '''Replace keywords in shape using the dictionary at spec['replace']'''
     if not shape.has_text_frame:
-        logging.error('"%s" is not a TextShape to apply text:', shape.name)
+        logging.error(f'"{shape.name}" is not a TextShape to apply text:')
         return
     if not isinstance(data, (dict,)):
         data = {'data': data}
@@ -387,10 +388,11 @@ def chart(shape, spec, data):
                 for series_point in {'point', 'series'}:
                     # Replacing point with series to change color in legend
                     fillpoint = color_mapping[chart_name].replace('point', series_point)
-                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])      # nosec
+                    # B307:eval this is safe since `expr` is written by app developer
+                    chart_css(eval(fillpoint).fill, point_css, point_css['color'])  # nosec B307
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)            # nosec
+                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)        # nosec B307
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
@@ -530,7 +532,7 @@ def treemap(shape, spec, data):
                 text = '{}'.format(v[1])
             rectstyle = {'fill': rect_color, 'stroke': stroke}
             rect_css(shp, **rectstyle)
-            font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), pd.np.Inf)
+            font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), np.Inf)
             text_style = {}
             text_style['color'] = _color.contrast(rect_color)
             text_style.update(spec.get('style', {}))
@@ -577,7 +579,7 @@ def calendarmap(shape, spec, data):
     fill_rect = style.get('fill', '#cccccc')
     text_color = style.get('color', '#000000')
     # Treat infinities as nans when calculating scale
-    scaledata = pd.Series(data).replace([pd.np.inf, -pd.np.inf], pd.np.nan)
+    scaledata = pd.Series(data).replace([np.inf, -np.inf], np.nan)
     for key in {'lo', 'hi', 'weekstart'}:
         if isinstance(spec.get(key), (dict,)) and 'function' in spec.get(key):
             spec[key] = compile_function(spec, key, data, handler)
@@ -782,7 +784,7 @@ def bullet(shape, spec, data):
         # Setting default font-size
         font_size = (text_width / pixel_inch) * font_aspect / fontwidth.fontwidth(
             '{}'.format(_data_text))
-        font_size = min(text_width / pixel_inch, font_size, pd.np.Inf)
+        font_size = min(text_width / pixel_inch, font_size, np.Inf)
         data_txt_style['font-size'] = data_txt_style.get('font-size', font_size)
         add_text_to_shape(parent, _data_text, **data_txt_style)
 
@@ -814,7 +816,7 @@ def bullet(shape, spec, data):
             # Setting default font-size
             font_size = font_aspect / fontwidth.fontwidth('{}'.format(_target_text))
             font_size = min(text_width / pixel_inch,
-                            (text_width / pixel_inch) * font_size, pd.np.Inf)
+                            (text_width / pixel_inch) * font_size, np.Inf)
             target_txt_style['font-size'] = target_txt_style.get('font-size', font_size)
             add_text_to_shape(parent, _target_text, **target_txt_style)
 
@@ -945,7 +947,7 @@ def css(shape, spec, data):
         if setprop:
             if not isinstance(style[prop], (dict,)):
                 style[prop] = {'function': '{}'.format(style[prop]) if not isinstance(
-                               style[prop], (str, six.string_types,)) else style[prop]}
+                    style[prop], str) else style[prop]}
             setprop = compile_function(style, prop, data, handler)
             setprop = setprop * pxl_to_inch
         else:

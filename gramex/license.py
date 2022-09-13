@@ -1,5 +1,5 @@
 import os
-import six
+import sys
 import time
 import uuid
 import gramex
@@ -10,7 +10,7 @@ from gramex.cache import SQLiteStore
 # gramex.license.EULA has the wording of the end user license agreement
 EULA = '''
 -------------------------------------------------------------------------
-Read the license agreement at https://learn.gramener.com/guide/license/
+Read the license agreement at https://gramener.com/gramex/guide/license/
 '''
 # All license information is captured in this store.
 store = SQLiteStore(path=os.path.join(variables['GRAMEXDATA'], 'license.db'), table='license')
@@ -29,14 +29,15 @@ def accept(force=False):
     '''
     Prints the license.
     Allows users to accept the license by prompting.
-    If force=True is passed, accepts the license without prompting the user.
+    If force=True is passed, accepts the license with no prompt.
+    If no stdin is available, e.g. when running as a service, accept license with no prompt.
     '''
     if is_accepted():
         return
     gramex.console(EULA)
-    result = 'y' if force else ''
+    result = 'y' if force or not sys.stdin else ''
     while not result:
-        result = six.moves.input('Do you accept the license (Y/N): ').strip()
+        result = input('Do you accept the license (Y/N): ').strip()
     if result.lower().startswith('y'):
         store.dump('accepted', time.time())
         store.flush()

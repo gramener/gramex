@@ -1,0 +1,88 @@
+site_name: Gramex API
+site_url: https://gramener.com/gramex/guide/api/
+repo_url: https://github.com/gramener/gramex/
+edit_uri: edit/master/mkdocs/docs/
+site_dir: api
+
+nav:
+  - index.md
+  - Startup: gramex.md
+  - Services: services.md
+  - Handlers: handlers.md
+  - Caching: cache.md
+  - Data manipulation: data.md
+  - Debugging: debug.md
+  - Configuration: config.md
+  - Python - Node bridge: pynode.md
+  - Scheduler: scheduler.md
+  - Emailer: emailer.md
+  - Transformation utilities: transforms.md
+  - HTTP response codes: http.md
+  - Install apps: install.md
+  - License management: license.md
+  - Machine learning: ml.md
+  - Machine learning API: ml_api.md
+  - Visualization scales: scale.md
+  - Secrets management: secrets.md
+  - sm_api.md
+  - TopCause: topcause.md
+  - Windows Services: winservice.md
+
+extra_css:
+  - readthedocs-extra.css
+
+markdown_extensions:
+    - smarty
+    - toc:
+        permalink: true
+    - sane_lists
+    - admonition
+
+theme:
+  name: readthedocs
+  analytics:
+    tag: G-4GQV607K4E
+
+plugins:
+  - autorefs
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            # The order of functions in modules has a logic. Stick to it
+            members_order: source
+            show_source: true
+
+            # Show module name, e.g. gramex.cache, on top
+            show_root_heading: true
+            # Show gramex.cache
+            show_root_full_path: true
+            # Don't show module name, e.g. cache, on the TOC on the left
+            # It creates a structure like Caching > cache > Functions -- which is TOO nested
+            show_root_toc_entry: false
+
+            # In ToC and content, group into attributes, classes, and functions.
+            # But don't display attributes, classes and functions as section headings.
+            group_by_category: true
+            show_category_heading: false
+
+            # Show `open()`, not `gramex.cache.open()`
+            show_object_full_path: false
+            show_bases: false
+
+            # Show the function parameters, but not types. Types makes it too verbose
+            show_signature: true
+            show_signature_annotations: false
+            # Note: separate_signature: true raises
+            # black.parsing.InvalidInput: Cannot parse: 1:10: def gramex.cache.Subprocess
+            separate_signature: false
+
+            # For classes, use the constructor docs and class docs together
+            merge_init_into_class: true
+
+            # TODO: What does this do?
+            docstring_section_style: table
+
+            # Under gramex, don't show gramex.cache, etc. We add this explicitly
+            show_submodules: false

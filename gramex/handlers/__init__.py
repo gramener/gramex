@@ -1,8 +1,6 @@
-'''
-Handlers
-'''
+'''Handlers set up the micro-services for [gramex.services.url][].'''
 
-from .basehandler import BaseHandler, BaseWebSocketHandler, SetupFailedHandler
+from .basehandler import BaseMixin, BaseHandler, BaseWebSocketHandler, SetupFailedHandler
 from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
@@ -19,29 +17,38 @@ from .modelhandler import ModelHandler
 from .mlhandler import MLHandler
 from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
+from .comichandler import ComicHandler
+from .openapihandler import OpenAPIHandler
 
 # Aliases
+Comic = ComicHandler
 Command = ProcessHandler
 Data = FormHandler
 Facebook = FacebookGraphHandler
 File = DirectoryHandler = FileHandler
 Filter = FilterHandler
 Function = FunctionHandler
+JSON = JSONHandler
 ML = MLHandler
+OpenAPI = OpenAPIHandler
 Proxy = ProxyHandler
 Screenshot = CaptureHandler
 Slide = PPTXHandler
 Storage = DriveHandler
 Twitter = TwitterRESTHandler
+Upload = UploadHandler
 Websocket = WebSocketHandler
 
 
 __all__ = [
     'BaseHandler',
     'BaseWebSocketHandler',
+    'BaseMixin',
     'Capture',
     'CaptureHandler',
     'Command',
+    'Comic',
+    'ComicHandler',
     'Data',
     'DirectoryHandler',
     'DriveHandler',
@@ -54,11 +61,14 @@ __all__ = [
     'Function',
     'FunctionHandler',
     'GoogleAuth',
+    'JSON',
     'JSONHandler',
     'LogoutHandler',
     'ModelHandler',
     'ML',
     'MLHandler',
+    'OpenAPI',
+    'OpenAPIHandler',
     'PPTXHandler',
     'ProcessHandler',
     'Proxy',
@@ -70,6 +80,7 @@ __all__ = [
     'Storage',
     'Twitter',
     'TwitterRESTHandler',
+    'Upload',
     'UploadHandler',
     'Websocket',
     'WebSocketHandler',

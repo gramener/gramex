@@ -60,7 +60,7 @@ class AmazonSNS(Notifier):
                 }
             }
         )
-        app_log.info('SMS sent. SNS MessageId: %s', result['MessageId'])
+        app_log.info(f'SMS sent. SNS MessageId: {result["MessageId"]}')
         return result
 
 
@@ -92,7 +92,7 @@ class Exotel(Notifier):
 
     def _handle_response(self, r):
         if r.status_code != OK:
-            raise RuntimeError('Exotel API failed: %d %s' % (r.status_code, r.text))
+            raise RuntimeError(f'Exotel API failed: {r.status_code} {r.text}')
         result = r.json()
         return result['SMSMessage']
 

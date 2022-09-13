@@ -4,6 +4,6 @@
   },
   "dependencies": {
     "rollup": "1",
-    "rollup-plugin-htmlparts": "1"
+    "rollup-plugin-htmlparts": "^1.2.1"
   }
 }

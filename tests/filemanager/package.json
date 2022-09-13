@@ -1,0 +1,34 @@
+{
+  "name": "filemanager",
+  "version": "0.0.1",
+  "description": "Gramex 1.x filemanager",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:gramener/gramex.git"
+  },
+  "scripts": {
+    "test": "bash test.sh"
+  },
+  "eslintConfig": {
+    "overrides": [
+      {
+        "files": [
+          "puppet.js"
+        ]
+      }
+    ],
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": 8
+    }
+  },
+  "devDependencies": {
+    "browserify": "14",
+    "g1": "0.17",
+    "glob": "^7.2.0",
+    "puppeteer": "3",
+    "tap-merge": "0.3",
+    "tape": "^4.15.1"
+  }
+}

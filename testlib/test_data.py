@@ -1,20 +1,18 @@
 import io
 import os
-import six
 import json
 import shutil
 import unittest
 import gramex.data
 import gramex.cache
+import numpy as np
 import pandas as pd
+import pymongo.errors
 import sqlalchemy as sa
 from orderedattrdict import AttrDict
 from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_, assert_raises
-from pandas.util.testing import assert_frame_equal as afe
-from pandas.util.testing import assert_series_equal as ase
-import dbutils
-from . import folder, sales_file
+from . import folder, sales_file, remove_if_possible, dbutils, afe, ase
 
 server = AttrDict(
     mysql=os.environ.get('MYSQL_SERVER', 'localhost'),
@@ -78,7 +76,7 @@ class TestFilter(unittest.TestCase):
         if sum_na:
             for col in columns:
                 if col.lower().endswith('|sum'):
-                    expected[col].replace({0.0: pd.np.nan}, inplace=True)
+                    expected[col].replace({0.0: np.nan}, inplace=True)
         expected.sort_values(by, inplace=True)
 
     def check_filter(self, df=None, na_position='last', sum_na=False, **kwargs):
@@ -255,12 +253,14 @@ class TestFilter(unittest.TestCase):
                     # Apply HAVING at the mid-point of aggregated data.
                     # Cannot use .median() since data may not be numeric.
                     midpoint = expected[having].sort_values().iloc[len(expected) // 2]
-                    # Floating point bugs surface unless we round it off
+                    # Floating point bugs surface unless we round it off.
+                    # In Pandas 1.x, we need a small additional buffer.
                     if isinstance(midpoint, float):
-                        midpoint = round(midpoint, 2)
+                        buffer = 0.001
+                        midpoint = round(midpoint, 2) + buffer
                     subset = expected[expected[having] > midpoint]
                     args = {'_by': by, '_sort': by, '_c': aggs,
-                            having + '>': [six.text_type(midpoint)]}
+                            having + '>': [str(midpoint)]}
                     if query is not None:
                         args[key] = [val]
                     # When subset is empty, the SQL returned types may not match.
@@ -274,7 +274,7 @@ class TestFilter(unittest.TestCase):
             columns=aggs
         )
         eq({'_by': [], '_c': aggs}, expected)
-        expected = (sales.select_dtypes(include=pd.np.number).agg('sum')
+        expected = (sales.select_dtypes(include=np.number).agg('sum')
                     .to_frame().T.add_suffix('|sum'))
         eq({'_by': []}, expected)
         for _c in [[], ['']]:
@@ -395,13 +395,15 @@ class TestFilter(unittest.TestCase):
         self.check_filter_dates('sqlite', url)
 
     def test_mongodb(self):
-        self.db.add('mongodb')
         url = f'mongodb://{server.mongodb}'
         db = 'test_filter'
-        dbutils.mongodb_create_db(url, db, **{
-            'sales': self.sales})
+        try:
+            dbutils.mongodb_create_db(url, db, **{'sales': self.sales, 'empty': pd.DataFrame()})
+        except pymongo.errors.ServerSelectionTimeoutError:
+            raise SkipTest(f'MongoDB not set up at {server.mongodb}')
+        self.db.add('mongodb')
         kwargs = {
-            'url': f'plugin:{url}',
+            'url': url,
             'collection': 'sales',
             'database': db,
         }
@@ -421,14 +423,19 @@ class TestFilter(unittest.TestCase):
         size(args={'city!~': ['Newport']}, b=20)
         size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
         size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
-        size(args={'sales!': ['']}, b=2)
+        # TODO: NOT NULL
+        # size(args={'sales!': []}, b=2)
+        # size(args={'sales': []}, b=22)
 
         size(query={'sales': {'$lt': 100}}, b=11)
         size(query={'देश': {'$in': ['भारत', 'Singapore']}}, b=16)
         size(query={'देश': {'$in': ['भारत', '{country}']}}, args={'country': ['Singapore']}, b=16)
 
-        # TODO: NOT NULL
-        # size({'sales': []}, b=22)
+        size(args={'sales<': ['100'], 'missing': ['ignored']}, b=11)
+
+        kwargs['collection'] = 'empty'
+        size(args={}, b=0)
+        size(args={'missing': ['ignored']}, b=0)
 
     @classmethod
     def tearDownClass(cls):
@@ -469,7 +476,7 @@ class TestInsert(unittest.TestCase):
         # Check if added rows are correct
         added_rows = pd.DataFrame(self.insert_rows)
         added_rows['sales'] = added_rows['sales'].astype(float)
-        added_rows['growth'] = pd.np.nan
+        added_rows['growth'] = np.nan
         added_rows.index = new_data.tail(2).index
         afe(new_data.tail(2), added_rows, check_like=True)
 
@@ -477,26 +484,19 @@ class TestInsert(unittest.TestCase):
         new_files = [
             {'url': os.path.join(folder, 'insert.csv'), 'encoding': 'utf-8'},
             {'url': os.path.join(folder, 'insert.xlsx'), 'sheet_name': 'test'},
-            {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
+            # Insertion into HDF files is deprecated. We don't use it much.
+            # {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
         ]
         for conf in new_files:
-            if os.path.exists(conf['url']):
-                os.remove(conf['url'])
+            remove_if_possible(conf['url'])
             self.tmpfiles.append(conf['url'])
             gramex.data.insert(args=self.insert_rows, **conf)
             # Check if added rows are correct
-            try:
-                actual = gramex.data.filter(**conf)
-            except ValueError:
-                # TODO: This is a temporary fix for NumPy 1.16.2, Tables 3.4.4
-                # https://github.com/pandas-dev/pandas/issues/24839
-                if conf['url'].endswith('.hdf') and pd.np.__version__.startswith('1.16'):
-                    raise SkipTest('Ignore NumPy 1.16.2 / PyTables 3.4.4 quirk')
-            else:
-                expected = pd.DataFrame(self.insert_rows)
-                actual['sales'] = actual['sales'].astype(float)
-                expected['sales'] = expected['sales'].astype(float)
-                afe(actual, expected, check_like=True)
+            actual = gramex.data.filter(**conf)
+            expected = pd.DataFrame(self.insert_rows)
+            actual['sales'] = actual['sales'].astype(float)
+            expected['sales'] = expected['sales'].astype(float)
+            afe(actual, expected, check_like=True)
 
     def test_insert_mysql(self):
         url = dbutils.mysql_create_db(server.mysql, 'test_insert')
@@ -569,8 +569,7 @@ class TestInsert(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
-            if os.path.exists(path):
-                os.remove(path)
+            remove_if_possible(path)
         if 'mysql' in cls.db:
             dbutils.mysql_drop_db(server.mysql, 'test_insert')
         if 'postgres' in cls.db:
@@ -604,8 +603,7 @@ class TestEdit(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
-            if os.path.exists(path):
-                os.remove(path)
+            remove_if_possible(path)
 
 
 class TestDownload(unittest.TestCase):
@@ -645,7 +643,7 @@ class TestDownload(unittest.TestCase):
         def from_json(key):
             s = json.dumps(result[key])
             # PY2 returns str (binary). PY3 returns str (unicode). Ensure it's binary
-            if isinstance(s, six.text_type):
+            if isinstance(s, str):
                 s = s.encode('utf-8')
             return pd.read_json(io.BytesIO(s))
 
@@ -662,19 +660,17 @@ class TestDownload(unittest.TestCase):
         afe(result['sales'], self.sales)
 
     def test_download_html(self):
-        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
-        # instead of unicde. So check column type only in PY3 not PY2
         out = gramex.data.download(self.dummy, format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')[0]
-        afe(result, self.dummy, check_column_type=six.PY3)
+        afe(result, self.dummy, check_column_type=True)
 
         out = gramex.data.download(AttrDict([
             ('dummy', self.dummy),
             ('sales', self.sales)
         ]), format='html')
         result = pd.read_html(io.BytesIO(out), encoding='utf-8')
-        afe(result[0], self.dummy, check_column_type=six.PY3)
-        afe(result[1], self.sales, check_column_type=six.PY3)
+        afe(result[0], self.dummy, check_column_type=True)
+        afe(result[1], self.sales, check_column_type=True)
 
     def test_template(self):
         raise SkipTest('TODO')

@@ -1,14 +1,24 @@
 nose                  # Base testing package
 coverage              # For code coverage in .travis.yml
 
+boto3                 # For Amazon SNS service testing
 cssselect             # For HTML testing (test_admin.py)
 # In .travis.yml, we specify ElasticSearch 7.x. So use same version here
-elasticsearch>=7.0.0,<8.0.0   # OPT: Test gramexlog: features. Use
-openpyxl              # For gramex.cache.open(..., 'xlsx')
+elasticsearch>=7.0.0,<8.0.0   # OPT: Test gramexlog: features
 pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
-python-dateutil       # For schedule testing
 pymongo               # For MongoDB tests
-sphinx_rtd_theme      # For documentation
 testfixtures          # For logcapture
+typing_extensions     # For OpenAPIHandler annotation testing
 websocket-client      # For websocket testing
+statsmodels           # For sm_api.StatsModels
+
+mkdocs                # For documentation
+mkdocstrings          # For documentation
+mkdocstrings[python]  # For documentation
+
+markdown              # Markdown is part of gramex/release.json, but re-install since
+                      # importlib_metadata version conflicts with makdocs
+
+transformers          # For MLHandler
+datasets              # For MLHandler

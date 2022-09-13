@@ -3,7 +3,6 @@ import os
 import json
 import numpy as np
 from io import open
-import pandas as pd
 
 
 def abs_path():
@@ -18,13 +17,13 @@ def fontwidth(string, font='sans-serif'):
     default_width = 32
     default_width_idx = 120
     for _fontrow in _fontwidth:
-        _fontrow['widths'] = pd.np.array(_fontrow['widths'], dtype=float)
-        _fontrow['widths'] = pd.np.insert(_fontrow['widths'], 0, np.zeros(default_width))
+        _fontrow['widths'] = np.array(_fontrow['widths'], dtype=float)
+        _fontrow['widths'] = np.insert(_fontrow['widths'], 0, np.zeros(default_width))
 
     # Add the first font stack at the end, making it the default
     _fontwidth.append(_fontwidth[0])
     # Convert all characters to ASCII codes. Treat Unicode as single char
-    codes = pd.np.fromstring(string.encode('ascii', 'replace'), dtype=pd.np.uint8)
+    codes = np.fromstring(string.encode('ascii', 'replace'), dtype=np.uint8)
     # Drop everything that's out of bounds. We'll adjust for them later
     valid = codes[codes < codes_len]
     # Get the font

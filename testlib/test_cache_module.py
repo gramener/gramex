@@ -1,7 +1,5 @@
 import io
 import os
-import re
-import six
 import json
 import time
 import yaml
@@ -9,19 +7,15 @@ import unittest
 import gramex.cache
 import pandas as pd
 import sqlalchemy as sa
-from lxml import etree
 from gramex.cache import hashfn
-from gramex.config import variables, str_utf8
-from six import string_types
+from gramex.config import variables
 from markdown import markdown
 from collections import OrderedDict
 from orderedattrdict import AttrDict
 from tornado.template import Template
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from pandas.util.testing import assert_frame_equal as afe
 from nose.tools import eq_, ok_, assert_raises
-import dbutils
-from . import folder, tests_dir
+from . import folder, tests_dir, remove_if_possible, dbutils, afe
 
 cache_folder = os.path.join(folder, 'test_cache')
 state_file = os.path.join(cache_folder, '.state')
@@ -207,7 +201,7 @@ class TestOpen(unittest.TestCase):
         afe(gramex.cache.open(path, sheet_name='table', table='CensusTable'),
             gramex.cache.open(path, sheet_name='table', range='$D1:F$23'))
         # Load named range. The "sales" named range is the same as the sheet "sales"
-        afe(gramex.cache.open(path, sheet_name='sales', defined_name='sales'),
+        afe(gramex.cache.open(path, sheet_name='sales', name='sales'),
             gramex.cache.open(path, sheet_name='sales'))
         # Test failure conditions, edge cases, etc.
 
@@ -241,11 +235,13 @@ class TestOpen(unittest.TestCase):
     def test_open_yaml(self):
         path = os.path.join(cache_folder, 'data.yaml')
         with io.open(path, encoding='utf-8') as handle:
-            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)
+            # B506:yaml_load is safe to use here since we're loading from a known safe file.
+            # Specifically, we're testing whether Loader= is passed to gramex.cache.open.
+            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec B506
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'yaml', _reload_status=True,
-                                                 Loader=AttrDictYAMLLoader)
+            result, reloaded = gramex.cache.open(
+                path, 'yaml', _reload_status=True, Loader=AttrDictYAMLLoader)
             eq_(reloaded, reload)
             ok_(isinstance(result, AttrDict))
             eq_(result, expected)
@@ -282,25 +278,11 @@ class TestOpen(unittest.TestCase):
         def check(reload):
             result, reloaded = gramex.cache.open(path, 'md', _reload_status=True, encoding='utf-8')
             eq_(reloaded, reload)
-            ok_(isinstance(result, six.text_type))
+            ok_(isinstance(result, str))
             eq_(result, expected)
 
         self.check_file_cache(path, check)
         eq_(gramex.cache.open(path), gramex.cache.open(path, 'md'))
-
-    def test_open_xml(self):
-        path = os.path.join(cache_folder, 'data.svg')
-        expected = etree.parse(path)
-
-        def check(reload):
-            result, reloaded = gramex.cache.open(path, 'svg', _reload_status=True)
-            eq_(reloaded, reload)
-            eq_(etree.tostring(result), etree.tostring(expected))
-
-        self.check_file_cache(path, check)
-        for ext in ['xml', 'svg', 'rss', 'atom']:
-            eq_(etree.tostring(gramex.cache.open(path)),
-                etree.tostring(gramex.cache.open(path, ext)))
 
     def test_open_custom(self):
         def img_size(path, scale=1):
@@ -341,7 +323,7 @@ class TestOpen(unittest.TestCase):
                     result = pd.DataFrame(data)
                 afe(result, data)
             finally:
-                os.remove(target)
+                remove_if_possible(target)
 
     def test_custom_cache(self):
         path = os.path.join(cache_folder, 'data.csv')
@@ -426,7 +408,7 @@ class TestOpen(unittest.TestCase):
         data = gramex.cache.open(path, 'csv')
         ok_(isinstance(data, pd.DataFrame))
         text = gramex.cache.open(path, 'text')
-        ok_(isinstance(text, string_types))
+        ok_(isinstance(text, str))
         none = gramex.cache.open(path, lambda path: None)
         ok_(none is None)
 
@@ -485,7 +467,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.url = dbutils.sqlite_create_db('test_cache.db', t1=cls.data, t2=cls.data)
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
@@ -561,7 +543,7 @@ class TestMySQLCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_cache',
                                           t1=cls.data, t2=cls.data)
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
@@ -575,7 +557,7 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     def setUpClass(cls):
         cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
                                              **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
-        cls.engine = sa.create_engine(cls.url, encoding=str_utf8)
+        cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     def test_schema(self):
         afe(
@@ -584,125 +566,6 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
     @classmethod
     def tearDownClass(cls):
         dbutils.postgres_drop_db(variables.POSTGRES_SERVER, 'test_cache')
-
-
-def wait(future):
-    wait_till(future.done)
-    return future.result()
-
-
-def wait_till(condition):
-    while not condition():
-        time.sleep(small_delay)
-
-
-class TestSubprocess(unittest.TestCase):
-    args = ['python', os.path.join(folder, 'subprocess_check.py')]          # Instant result
-    args1 = ['python', os.path.join(folder, 'subprocess_check.py'), '1']    # Result after delay
-    hello = ['python', '-c', 'print("hello")']
-
-    @staticmethod
-    def msg(s):
-        '''Returns the string + newline as UTF-8 bytestring'''
-        return (s + os.linesep).encode('utf-8')
-
-    def test_stream_none(self):
-        proc = gramex.cache.Subprocess(self.args)
-        stdout, stderr = [wait(future) for future in proc.wait_for_exit()]
-        eq_(stdout, self.msg('OUT:0'))
-        eq_(stderr, self.msg('ERR:0'))
-
-        proc = gramex.cache.Subprocess(self.args1)
-        stdout, stderr = [wait(future) for future in proc.wait_for_exit()]
-        eq_(stdout, self.msg('OUT:0') + self.msg('OUT:1'))
-        eq_(stderr, self.msg('ERR:0') + self.msg('ERR:1'))
-
-    def test_stream_list(self):
-        proc = gramex.cache.Subprocess(
-            self.args, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(proc.list_out, [self.msg('OUT:0')])
-        eq_(proc.list_err, [self.msg('ERR:0')])
-
-        proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
-        wait_till(lambda: len(proc.list_out) > 0)
-        wait_till(lambda: len(proc.list_err) > 0)
-        eq_(proc.list_out, [self.msg('OUT:0')])
-        eq_(proc.list_err, [self.msg('ERR:0')])
-        wait_till(lambda: len(proc.list_out) > 1)
-        wait_till(lambda: len(proc.list_err) > 1)
-        eq_(proc.list_out, [self.msg('OUT:0'), self.msg('OUT:1')])
-        eq_(proc.list_err, [self.msg('ERR:0'), self.msg('ERR:1')])
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(proc.list_out, [self.msg('OUT:0'), self.msg('OUT:1')])
-        eq_(proc.list_err, [self.msg('ERR:0'), self.msg('ERR:1')])
-
-    def test_stream_queue(self):
-        proc = gramex.cache.Subprocess(
-            self.args, stream_stdout='queue_out', stream_stderr='queue_err')
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(proc.queue_out.get(), self.msg('OUT:0'))
-        eq_(proc.queue_err.get(), self.msg('ERR:0'))
-
-        proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='queue_out', stream_stderr='queue_err', buffer_size='line')
-        eq_(proc.queue_out.get(), self.msg('OUT:0'))
-        eq_(proc.queue_err.get(), self.msg('ERR:0'))
-        eq_(proc.queue_out.get(), self.msg('OUT:1'))
-        eq_(proc.queue_err.get(), self.msg('ERR:1'))
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(proc.queue_out.qsize(), 0)
-        eq_(proc.queue_err.qsize(), 0)
-
-    def test_stream_blend(self):
-        proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='list_out', stream_stderr='list_out', buffer_size='line')
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(set(proc.list_out), {self.msg(s) for s in ('OUT:0', 'OUT:1', 'ERR:0', 'ERR:1')})
-
-        proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='queue_out', stream_stderr='queue_out', buffer_size='line')
-        [wait(future) for future in proc.wait_for_exit()]
-        items = set()
-        for index in range(proc.queue_out.qsize()):
-            items.add(proc.queue_out.get_nowait())
-        eq_(items, {self.msg(s) for s in ('OUT:0', 'OUT:1', 'ERR:0', 'ERR:1')})
-
-    def test_daemon_reuse(self):
-        procs = [
-            wait(gramex.cache.daemon(self.args)),
-            wait(gramex.cache.daemon(self.args)),
-            wait(gramex.cache.daemon(self.args1)),
-        ]
-        eq_(procs[0].proc.pid, procs[1].proc.pid)
-        ok_(procs[0].proc.pid != procs[2].proc.pid)
-        for proc in procs:
-            [wait(future) for future in proc.wait_for_exit()]
-
-    def test_daemon_stream(self):
-        out = []
-        proc = wait(gramex.cache.daemon(self.args, stream=out.append))
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(set(out), {self.msg('OUT:0'), self.msg('ERR:0')})
-
-    def test_daemon_first_line(self):
-        # Streaming output is still possible
-        out = []
-        proc = wait(gramex.cache.daemon(self.hello, first_line='hello', stream=out.append))
-        [wait(future) for future in proc.wait_for_exit()]
-        eq_(set(out), {self.msg('hello')})
-
-        # Incorrect first line raises an error
-        with assert_raises(AssertionError):
-            proc = wait(gramex.cache.daemon(self.args, first_line='NOTHING'))
-        [wait(future) for future in proc.wait_for_exit()]
-
-        # Correct first line can be a string or regex
-        proc = wait(gramex.cache.daemon(self.hello, first_line='hello'))
-        [wait(future) for future in proc.wait_for_exit()]
-        proc = wait(gramex.cache.daemon(self.args, first_line=re.compile(r'(OUT|ERR):\d\s*')))
-        [wait(future) for future in proc.wait_for_exit()]
 
 
 def tearDownModule():

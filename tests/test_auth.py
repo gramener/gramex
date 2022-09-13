@@ -7,7 +7,7 @@ import requests
 import lxml.html
 import pandas as pd
 import sqlalchemy as sa
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, assert_not_equal as neq_
 from nose.plugins.skip import SkipTest
 from tornado.web import create_signed_value
 from urllib.parse import urlencode, urljoin
@@ -64,6 +64,7 @@ class TestSession(TestGramex):
         cookie = r.headers['Set-Cookie'].lower()
         self.assertIn('sid2', cookies)
         self.assertIn('httponly', cookie)
+        self.assertIn('samesite=strict', cookie)
         self.assertIn('domain=.localhost.local', cookie)
         # HTTP requests should not have a secure flag
         # TODO: HTTPS requests SHOULD have a secure flag
@@ -188,10 +189,12 @@ class LoginMixin(object):
 class LoginFailureMixin(object):
     def check_delay(self, start, min=None, max=None):
         t = time.time()
+        # Give a 0.1s buffer in case of timing delays
+        buffer = 0.1
         if min is not None and min > 0:
-            self.assertGreaterEqual(t - start, min)
+            self.assertGreaterEqual(t - start, min - buffer)
         if max is not None and max > 0:
-            self.assertLessEqual(t - start, max)
+            self.assertLessEqual(t - start, max + buffer)
         return t
 
     def test_slow_down_attacks(self, retries=3):
@@ -226,8 +229,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
-    def get_session(self, headers=None):
-        return self.session.get(server.base_url + '/auth/session', headers=headers).json()
+    def get_session(self, headers=None, params={}):
+        return self.session.get(server.base_url + '/auth/session',
+                                headers=headers, params=params).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -292,6 +296,53 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             eq_(r.status_code, BAD_REQUEST)
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
+
+        # Revoke an OTP
+        self.session.get(server.base_url + f'/auth/revoke?otp={otp1}')
+        # Fetching the session info raises a HTTP 400 because of the invalid OTP
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp1})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-OTP': otp1})
+        eq_(r.status_code, 400)
+
+    def test_apikey(self):
+        # Get an API key as the user "alpha"
+        self.session = requests.Session()
+        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        apikey = self.session.get(server.base_url + '/auth/apikey').json()
+
+        def check_key(user, **kwargs):
+            self.session = requests.Session()
+            # Initially, a session does not have a logged in user
+            self.assertTrue('user' not in self.get_session())
+            # But when we call self.get_session() with the specified params / headers
+            session_data = self.get_session(**kwargs)
+            # it should return the user object we expect
+            in_(user, session_data['user'])
+            # ... and it should log the user in with that user object for that session
+            in_(user, self.get_session()['user'])
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'alpha', 'id': 'alpha'}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'alpha', 'id': 'alpha'}, headers={'X-Gramex-Key': apikey})
+
+        # Get an API key as the user "new"
+        self.session = requests.Session()
+        apikey = self.session.get(server.base_url + '/auth/apikey?user=new&role=x').json()
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'new', 'role': 'x'}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'new', 'role': 'x'}, headers={'X-Gramex-Key': apikey})
+
+        # Revoke an API key
+        self.session.get(server.base_url + f'/auth/revoke?key={apikey}')
+        # Fetching the session info raises a HTTP 400 because of the invalid key
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-key': apikey})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-Key': apikey})
+        eq_(r.status_code, 400)
 
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open
@@ -483,6 +534,73 @@ class TestLookup(AuthBase):
         eq_(session['user']['gender'], 'female')
 
 
+class TestRules(AuthBase):
+    url = server.base_url + '/auth/rulesdb'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+        eq_(session['user']['team'], 'Gramex')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('γ', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        # Check if the empty string match for Gamma works
+        eq_(session['user']['email'], 'gamma@null.com')
+
+        upass = {'γ': 'gamma'}
+        for user in 'alpha beta γ'.split():
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            # Check that no users have attributes defined in an unreachable rule
+            neq_(session['user']['email'], 'none@none.com')
+            # Check that everyone is team: Gramex
+            eq_(session['user']['team'], 'Gramex')
+
+
+class TestRulesFile(TestRules):
+    url = server.base_url + '/auth/rulesfile'
+
+    def test_default(self):
+        super(TestRulesFile, self).test_default()
+        upass = {'γ': 'gamma'}
+        expires_duration = 3.14
+        for user in 'alpha beta γ'.split():
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            eq_(session['user']['cookie_expires'], expires_duration)
+            # Strip out the time zone (e.g. +05:30) before comparing expiry.
+            # Ensures tests will run in any country.
+            eq_(session['user']['expiry'][:19], '2050-12-31T00:00:00')
+
+
+class TestNoRules(AuthBase):
+    url = server.base_url + '/auth/norules'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['team'], 'ग्रामेक्स')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('γ', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['empty'], '')
+
+
 class DBAuthBase(AuthBase):
     @staticmethod
     def create_database(url, table):
@@ -511,10 +629,10 @@ class DBAuthBase(AuthBase):
             # for valid but non-existent username, password
             if user and password:
                 eq_(r.status_code, UNAUTHORIZED)
-                eq_(r.reason, 'Cannot log in')
+                self.assertIn('Cannot log in', r.text)
                 continue
             eq_(r.status_code, BAD_REQUEST)
-            eq_(r.reason, 'User name or password is empty')
+            self.assertIn('User name or password is empty', r.text)
 
 
 class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
@@ -593,7 +711,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User cannot be empty')
+        self.assertIn('User cannot be empty', r.text)
 
         # POST an existing username. Raises HTTP 400: User exists
         r = session.post(self.url + '?signup', data={
@@ -602,7 +720,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User exists')
+        self.assertIn('User exists', r.text)
 
         # POST a new username. That should send a email to our service
         r = session.post(self.url + '?signup', data={
@@ -630,18 +748,17 @@ class TestDBAuthSignup(DBAuthBase):
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)
-        users = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users = users.set_index(self.config.user.column)
         user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
 
+        # Check that the recovery database is at the custom location
+        ok_(gramex.service.storelocations.otp['url'].endswith('otp.db'))
         # Check that the user has been added to the recovery database
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        recover_engine = sa.create_engine(url)
-        tokens = pd.read_sql('SELECT * FROM users', recover_engine).set_index('token')
-        eq_(tokens['user'][token], 'newuser')
-        eq_(tokens['email'][token], 'any@example.org')
+        tokens = gramex.data.filter(**gramex.service.storelocations.otp).set_index('token')
+        eq_(tokens['user'][token], json.dumps('newuser'))
+        eq_(tokens['type'][token], 'DBAuth')
 
         # Log in with the URL sent in the email. That should take us to the
         # change password page. Change the password
@@ -652,7 +769,7 @@ class TestDBAuthSignup(DBAuthBase):
             '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
         })
         eq_(r.status_code, OK)
-        users2 = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users2 = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users2 = users2.set_index(self.config.user.column)
         user2 = users2.loc['newuser']
         ok_(user2[self.config.password.column] != user[self.config.password.column])

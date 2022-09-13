@@ -1,7 +1,6 @@
 import os
 import re
 import csv
-import six
 import yaml
 import socket
 import inspect
@@ -128,13 +127,13 @@ class TestPathConfig(unittest.TestCase):
 
         # When the file is blank, config is empty
         with self.temp.open('w') as out:
-            out.write(six.text_type(''))
+            out.write('')
         eq_(+conf, {})
 
         # Once created, it is automatically reloaded
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         eq_(+conf, data)
 
         # Deleted file is detected
@@ -172,7 +171,7 @@ class TestPathConfig(unittest.TestCase):
         # Once temp file is created, it is automatically imported
         data = AttrDict(a=1, b=2)
         with self.temp.open('w') as out:
-            yaml.dump(data, out)
+            yaml.dump(dict(data), out)
         result = +conf_b
         result.update(data)
         eq_(+conf_imp, result)
@@ -225,6 +224,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Invalid functions switch to defaults
+            eq_(conf['%s_INVALID_FUNCTION' % key], 'DEFAULT')
             # Functions can use variables using gramex.config.variables
             eq_(conf['%s_FUNCTION_VAR' % key], conf.base_ROOT + key)
             # Derived variables
@@ -247,6 +248,10 @@ class TestPathConfig(unittest.TestCase):
         eq_(conf['boolean'], True)
         eq_(conf['object'], {'x': 1})
         eq_(conf['list'], [1, 2])
+        # Check if substitutions work inside dicts and lists
+        eq_(conf['object_calc'], {'x': 'base'})
+        eq_(conf['list_calc'], ['base'])
+        eq_(conf['object_default'], {'x': 'base'})
 
         # Check if variables of different types are string substituted
         eq_(conf['numeric_subst'], '/1')
@@ -365,7 +370,7 @@ class TestConfig(unittest.TestCase):
             a: 1
             a: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': 2})
+        eq_(yaml.safe_load(dup_keys), {'a': 2})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -374,7 +379,7 @@ class TestConfig(unittest.TestCase):
                 b: 1
                 b: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': {'b': 2}})
+        eq_(yaml.safe_load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -390,7 +395,7 @@ class TestConfig(unittest.TestCase):
         for scalar in (None, True, 1, float(1), 'abc', {1, 2}):
             eq_(prune_keys(scalar, 'comment'), scalar)
         with open(info.home / 'config.prune_keys.yaml', encoding='utf-8') as handle:
-            tests = yaml.load(handle, Loader=yaml.SafeLoader)
+            tests = yaml.safe_load(handle)
         for test in tests:
             eq_(prune_keys(test['source'], 'comment'), test['target'])
 
@@ -425,7 +430,6 @@ class TestTimedRotatingCSVHandler(unittest.TestCase):
         test2.addHandler(csv1)
         test2.addHandler(csv2)
 
-        # Do not test unicode. Python 2.7 csv writer does not support it
         test1.info({'a': 'a', 'b': 1, 'c': -0.1})       # noqa: 0.1 is not magic
         test2.info({'a': 'na', 'b': 'na', 'c': 'na'})
         test1.warn({'a': True, 'b': False, 'c': None})

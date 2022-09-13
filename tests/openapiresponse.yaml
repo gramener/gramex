@@ -1,0 +1,221 @@
+/openapi/form:
+  get:
+    summary: 'Openapi Form: FormHandler'
+    description: Query data from 3 data source(s)
+    parameters:
+    - description: Filter by value
+      in: query
+      name: "\u0926\u0947\u0936"
+      schema:
+        min: 0
+        type: text
+    - description: Filter by value
+      in: query
+      name: city
+      schema:
+        min: 0
+        type: text
+    - description: Filter by value
+      in: query
+      name: product
+      schema:
+        min: 0
+        type: text
+    - description: Filter by value
+      in: query
+      name: sales
+      schema:
+        min: 0
+        type: float
+    - description: Filter by value
+      in: query
+      name: growth
+      schema:
+        min: 0
+        type: float
+    - in: query
+      name: sales:_sort
+      schema:
+        items:
+          enum:
+          - "\u0926\u0947\u0936"
+          - "-\u0926\u0947\u0936"
+          - city
+          - -city
+          - product
+          - -product
+          - sales
+          - -sales
+          - growth
+          - -growth
+          type: string
+        type: array
+    - in: query
+      name: sales:_c
+      schema:
+        items:
+          enum:
+          - "\u0926\u0947\u0936"
+          - city
+          - product
+          - sales
+          - growth
+          type: string
+        type: array
+    - description: No. of rows to skip at the start
+      in: query
+      name: sales:_offset
+      schema:
+        min: 0
+        type: number
+    - description: Maximum number of rows to return
+      in: query
+      name: sales:_limit
+      schema:
+        default: 10000
+        min: 0
+        type: number
+    - description: Return metadata in headers?
+      in: query
+      name: sales:_limit
+      schema:
+        type: boolean
+    - description: Filter by value
+      in: query
+      name: date
+      schema:
+        min: 0
+        type: date
+    - description: Filter by value
+      in: query
+      name: sales
+      schema:
+        min: 0
+        type: int
+    - in: query
+      name: dates:_sort
+      schema:
+        items:
+          enum:
+          - date
+          - -date
+          - sales
+          - -sales
+          type: string
+        type: array
+    - in: query
+      name: dates:_c
+      schema:
+        items:
+          enum:
+          - date
+          - sales
+          type: string
+        type: array
+    - description: No. of rows to skip at the start
+      in: query
+      name: dates:_offset
+      schema:
+        min: 0
+        type: number
+    - description: Maximum number of rows to return
+      in: query
+      name: dates:_limit
+      schema:
+        default: 10000
+        min: 0
+        type: number
+    - description: Return metadata in headers?
+      in: query
+      name: dates:_limit
+      schema:
+        type: boolean
+    - description: Filter by value
+      in: query
+      name: State
+      schema:
+        min: 0
+        type: string
+    - description: Filter by value
+      in: query
+      name: District
+      schema:
+        min: 0
+        type: string
+    - description: Filter by value
+      in: query
+      name: DistrictCaps
+      schema:
+        min: 0
+        type: string
+    - in: query
+      name: census:_sort
+      schema:
+        items:
+          enum:
+          - State
+          - -State
+          - District
+          - -District
+          - DistrictCaps
+          - -DistrictCaps
+          type: string
+        type: array
+    - in: query
+      name: census:_c
+      schema:
+        items:
+          enum:
+          - State
+          - District
+          - DistrictCaps
+          type: string
+        type: array
+    - description: No. of rows to skip at the start
+      in: query
+      name: census:_offset
+      schema:
+        min: 0
+        type: number
+    - description: Maximum number of rows to return
+      in: query
+      name: census:_limit
+      schema:
+        default: 10000
+        min: 0
+        type: number
+    - description: Return metadata in headers?
+      in: query
+      name: census:_limit
+      schema:
+        type: boolean
+    responses:
+      '200':
+        description: Successful Response
+        content:
+          application/json: {}
+      '400':
+        description: You served a bad request
+        content:
+          text/html:
+            example: Bad request
+      '401':
+        description: Not authorized
+        content:
+          text/html:
+            example: Not authorized
+      '403':
+        description: Forbidden
+        content:
+          text/html:
+            example: Forbidden
+      '404':
+        description: Not found
+        content:
+          text/html:
+            example: Not found
+      '500':
+        description: Internal server error
+        content:
+          text/html:
+            example: Internal server error

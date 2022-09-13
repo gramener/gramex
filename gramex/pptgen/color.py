@@ -30,13 +30,13 @@ Thatch, Trek, Urban, Verve, Waveform
 A palette's colours can be accessed as an array or as an attribute. For e.g.:
 
 >>> Office[0]               # The first element
-u'#4f81bd'
+'#4f81bd'
 >>> Office.accent_1         # ... is called .accent_1
-u'#4f81bd'
+'#4f81bd'
 >>> Office[1]               # The next element
-u'#c0504d'
+'#c0504d'
 >>> Office.accent_2         # ... is called .accent_2
-u'#c0504d'
+'#c0504d'
 
 The following 10 attributes are available (in order):
 
@@ -55,7 +55,6 @@ The following 10 attributes are available (in order):
 
 import os
 import re
-import six
 import json
 import operator
 import colorsys
@@ -493,7 +492,7 @@ def rgba(color):
         result.append(float(BASE_1))
 
     if len(result) != BASE_4:
-        raise ValueError('%s: invalid color' % color)
+        raise ValueError(f'{color}: invalid color')
 
     return tuple(
         float(BASE_0) if val < BASE_0 else float(
@@ -580,15 +579,15 @@ def _add_gradients(target, data):
     """Add gradients to the module"""
     mid_val = 0.5
     min_val = -1.0
-    for grad, colors in six.iteritems(data['sequential']):
+    for grad, colors in data['sequential'].items():
         target[grad] = [[float(BASE_0), colors[BASE_0]],
                         [mid_val, colors[BASE_1]],
                         [float(BASE_1), colors[BASE_2]]]
-    for grad, colors in six.iteritems(data['divergent']):
+    for grad, colors in data['divergent'].items():
         target[grad] = [[min_val, colors[BASE_0]],
                         [float(BASE_0), colors[BASE_1]],
                         [float(BASE_1), colors[BASE_2]]]
-    for grad, colors in six.iteritems(data['office']):
+    for grad, colors in data['office'].items():
         target[grad] = _MSO(*colors)
 
 

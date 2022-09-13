@@ -172,4 +172,4 @@ class TestLogViewer(TestGramex):
         }
         logviewer.apply_transform(self.df, spec)
         ok_('__temp__' in self.df)
-        self.df.drop('__temp__', 1)
+        self.df.drop('__temp__', axis=1)

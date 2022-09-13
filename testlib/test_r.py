@@ -13,7 +13,7 @@ def test_init():
     if sys.platform == 'win32':
         # R_HOME is set to a non-existent directory
         os.environ['R_HOME'] = os.path.join(folder, 'R')
-        with assert_raises(RuntimeError):
+        with assert_raises(Exception):
             import rpy2.robjects  # NOQA: F401
     # But Gramex uses Conda PATH
     r('1 + 2')

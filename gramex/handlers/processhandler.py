@@ -107,7 +107,7 @@ class ProcessHandler(BaseHandler):
                 callbacks.append(handle.write)
             # warn on unknown parameters (e.g. numbers, True, etc)
             else:
-                app_log.warning('ProcessHandler: %s: %s is not implemented' % (name, target))
+                app_log.warning(f'ProcessHandler: {name}: {target} is not implemented')
         return callbacks
 
     def initialize(self, stdout=None, stderr=None, stdin=None, **kwargs):
@@ -124,7 +124,9 @@ class ProcessHandler(BaseHandler):
 
         proc = Subprocess(
             self.cmdargs,
-            shell=self.shell,
+            # NOTE: developer should sanitize args if shell=True
+            # B604:any_other_function_with_shell_equals_true
+            shell=self.shell,  # nosec B604
             cwd=self.cwd,
             stream_stdout=self.stream_stdout,
             stream_stderr=self.stream_stderr,

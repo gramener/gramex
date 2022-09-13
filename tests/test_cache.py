@@ -70,38 +70,39 @@ class TestCacheConstructor(unittest.TestCase):
         eq_(len(keys), 1)           # it has only 1 key
         eq_(keys[0][0], path)       # with the file we just opened
 
-    def get_redis_cache(self):
-        # Need to run a redis-server on localhost:6379:0
-        cache = gramex.services.info.cache
-        if 'redis' not in cache:
-            raise SkipTest('Redis Cache not created')
-        return cache['redis']
-
     def test_redis_cache(self):
-        redis_cache = self.get_redis_cache()
-        self.assertIsInstance(redis_cache, RedisCache)
+        # Need to run a redis-server on localhost:6379:0
+        if 'redis' not in gramex.services.info.cache:
+            raise SkipTest('Redis Cache not created')
+        cache = gramex.services.info.cache['redis']
+        try:
+            cache.store.ping()
+        except Exception:
+            raise SkipTest('Redis not set up at localhost')
+
+        self.assertIsInstance(cache, RedisCache)
         # When YAML has size: 0, .maxsize is None on Windows/Old Redis, 0 on Linux/New Redis
-        ok_(redis_cache.maxsize in (0, None))
+        ok_(cache.maxsize in (0, None))
 
-    def test_redis_cache_size(self):
-        redis = self.get_redis_cache()
-        redis.store.flushall()
-        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=redis)
-        eq_(len(redis), 1)      # only 1 new key should have been added
+        cache.store.flushall()
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=cache)
+        eq_(len(cache), 1)      # only 1 new key should have been added
 
-    def test_redis_pickle(self):
         def lock(x):
             return Lock()       # Non Picklable object
 
-        redis = self.get_redis_cache()
-        redis.store.flushall()
-        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=redis)
-        eq_(len(redis), 0)      # It should not be cached
+        # Non-pickable object should not be cached in Redis cache, but in fallback cache
+        cache.store.flushall()
+        gramex.cache._FALLBACK_MEMORY_CACHE.clear()
+        gramex.cache.open(os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache)
+        eq_(len(cache), 0, 'Redis Cache does not store non-pickeable objects')
+        eq_(len(gramex.cache._FALLBACK_MEMORY_CACHE), 1, 'Fallback cache is set')
+        result, reloaded = gramex.cache.open(
+            os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache, _reload_status=True)
+        eq_(reloaded, True, 'Fallback cache returns non-pickleable objects')
 
-    def test_redis_unpickling(self):
         r = StrictRedis()                   # Connect to redis without gramex cache
         r.set('Unpickled', 'Test')          # Set a key that is not pickled
-        cache = self.get_redis_cache()      # When we read from the cache,
         ok_(list(cache))                    # the unpicked key should not raise an Exception
 
 
@@ -267,7 +268,7 @@ class TestCacheFileHandler(TestGramex):
     def test_cache(self):
 
         def check_value(content):
-            r = self.get('/cache/filehandler/%s' % self.filename)
+            r = self.get(f'/cache/filehandler/{self.filename}')
             eq_(r.status_code, OK)
             eq_(r.content, content)
 

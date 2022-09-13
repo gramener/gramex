@@ -1,6 +1,5 @@
 import io
 import os
-import six
 import json
 import logging
 import sqlalchemy as sa
@@ -23,11 +22,11 @@ def gramexupdate(handler):
             version=gramex.__version__, handler=handler)
     # Log all messages
     try:
-        logs = json.loads(handler.request.body, encoding='utf-8')
+        logs = json.loads(handler.request.body)
         if not isinstance(logs, list):
             raise ValueError()
     except (ValueError, AssertionError):
-        raise HTTPError(BAD_REQUEST, reason='Invalid POST data. Expecting JSON array')
+        raise HTTPError(BAD_REQUEST, 'Invalid POST data. Expecting JSON array')
     logger = logging.getLogger('gramexupdate')
     for log in logs:
         log['ip'] = handler.request.remote_ip
@@ -60,7 +59,7 @@ def consolidate():
         src = os.path.split(path)[-1]
         if src in merged and not force:
             return
-        app_log.info('consolidating %s', src)
+        app_log.info(f'consolidating {src}')
 
         result = []
         for line in io.open(path, 'r', encoding='utf-8'):
@@ -74,7 +73,7 @@ def consolidate():
             row_data = row.pop('data')
             row_data = json.loads(row_data) if row_data else {}     # parse. Ignore missing data
             # If data is double-encoded, decode again. TODO: figure out when & why
-            if isinstance(row_data, six.string_types):
+            if isinstance(row_data, str):
                 row_data = json.loads(row_data)
             # Startup args are a list. Join with spaces
             if 'args' in row_data and isinstance(row_data['args'], list):

@@ -75,8 +75,8 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         slides_in_rule = tuple(slide_filter(slides, rule, data))
         # If no slides matched, warn the user
         if len(slides_in_rule) == 0:
-            app_log.warn('pptgen2: No slide with slide-number: %s, slide-title: %s',
-                         rule.get('slide-number'), rule.get('slide-title'))
+            app_log.warn(f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
+                         f'slide-title: {rule.get("slide-title")}')
             continue
         # Copy slides after the last mapped position of the last slide in this rule
         max_index = max(index for index, slide in slides_in_rule)
@@ -164,14 +164,14 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                         commands.cmdlist[cmd](clone.shape, spec[cmd], shape_data)
                     # Warn on unknown commands. But don't warn on groups -- they have sub-shapes
                     elif cmd not in special_cmdlist and not is_group:
-                        app_log.warn('pptgen2: Unknown command: %s on shape: %s', cmd, pattern)
+                        app_log.warn(f'pptgen2: Unknown command: {cmd} on shape: {pattern}')
                 # If the shape is a group, apply spec to each sub-shape
                 if is_group:
                     apply_commands(spec, SlideShapes(clone.shape.element, shapes), shape_data)
         # Warn if the pattern is neither a shape nor a command
         if (not matched_shapes and pattern not in special_cmdlist and
                 pattern not in commands.cmdlist):
-            app_log.warn('pptgen2: No shape matches pattern: %s', pattern)
+            app_log.warn(f'pptgen2: No shape matches pattern: {pattern}')
 
 
 def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
@@ -209,7 +209,7 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
         # If data is a string, return {_default_key: data} (or raise a TypeError)
         if _default_key is not None:
             return {_default_key: data}
-        raise TypeError('%s: must be a dict, not %r' % (key, data))
+        raise TypeError(f'{key}: must be a dict, not {data!r}')
 
     data = str2conf(_conf, 'data')
     if not isinstance(data, dict) or 'url' in data or 'function' in data:
@@ -223,7 +223,7 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
                     conf['transform'] = build_transform(
                         {'function': conf['transform']},
                         vars={'data': None, 'handler': None},
-                        filename='PPTXHandler:data.%s' % key, iter=False)
+                        filename=f'PPTXHandler:data.{key}', iter=False)
                 data[key] = gramex.data.filter(**conf)
             if 'function' in conf:
                 # Let functions use previously defined data variables, including current one
@@ -246,7 +246,8 @@ def register_commands(register: Dict[str, str]) -> None:
         the command. The expression can use 3 variables: ``shape`` (the Shape object to modify),
         ``spec`` (the configuration passed to your command) and ``data``.
     '''
-    assert isinstance(register, dict), 'register: must be a dict, not %s' % type(register)
+    if not isinstance(register, dict):
+        raise TypeError(f'register: must be a dict, not {type(register)}')
     for key, conf in register.items():
         commands.cmdlist[key] = build_transform(
             {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False)
@@ -264,7 +265,8 @@ def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> l
         return list(prs.slides)
     if isinstance(only, int):
         only = [only]
-    assert isinstance(only, list), 'pptgen(only=) takes slide number or list, not %s' % type(only)
+    if not isinstance(only, list):
+        raise TypeError(f'pptgen(only=) takes slide number or list, not {type(only)}')
     all_slides = set(range(1, 1 + len(prs.slides)))
     for slide_num in reversed(sorted(all_slides - set(only))):
         rid = prs.slides._sldIdLst[slide_num - 1].rId
@@ -376,12 +378,12 @@ def transition(slide, spec: Union[str, dict], data: dict):
             attrs.update(conf['transition-alias'][tag])
             tag = attrs.pop('tag')
         if tag not in conf['transition']:
-            raise ValueError('transition.type: %s is an unknown transition' % type)
+            raise ValueError(f'transition.type: {type} is an unknown transition')
         trans = conf['transition'][tag]
         options = trans['default'] if (not options and 'default' in trans) else options
         for option in options:
             if option not in trans:
-                raise ValueError('transition.type: "%s" has invalid option %s' % (type, option))
+                raise ValueError(f'transition.type: "{type}" has invalid option {option}')
             attrs.update(trans[option])
         # Remove existing transition
         el = slide.element.find(qn('mc:AlternateContent'))
@@ -391,7 +393,7 @@ def transition(slide, spec: Union[str, dict], data: dict):
         # TODO: fails on slides with equations, zoom, or any other mc:alternateContent
         if tag != 'none':
             ns = trans.get('ns', 'p')
-            attrs = ' '.join('%s="%s"' % (k, v) for k, v in attrs.items())
+            attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
             xml = conf['transition-tmpl'][ns].format(tag=tag, attrs=attrs)
             el = parse_xml(xml)[0]
             slide.element.append(el)
@@ -401,7 +403,7 @@ def transition(slide, spec: Union[str, dict], data: dict):
         if val is not None:
             trans = slide.element.find('mc:AlternateContent/mc:Choice/p:transition', _nsmap)
             if trans is not None:
-                trans.set(attr, '%s' % int(float(val) * 1000))
+                trans.set(attr, f'{float(val) * 1000:.0f}')
 
 
 def iterate_on(spec, data: dict):
@@ -431,14 +433,16 @@ def iterate_on(spec, data: dict):
     elif isinstance(val, pd.core.groupby.generic.DataFrameGroupBy):
         return val
     else:
-        raise ValueError('Cannot iterate over %s: %r' % (type(val), val))
+        raise ValueError(f'Cannot iterate over {type(val)}: {val!r}')
 
 
 def commandline(args=None):
-    '''
-    usage: slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+    '''Generates target PPTX from a source PPTX, applying rules in config file and opens it.
 
-    Generates target PPTX from a source PPTX, applying rules in config file and opens it.
+    Usage
+
+        slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+
     If no config file is specified, uses `gramex.yaml` in the current directory.
 
     The config file can have a pptgen configuration like {source: ..., target: ..., rules: ...}
@@ -482,4 +486,5 @@ def commandline(args=None):
     # If --no-open is specified, or the OS doesn't have startfile (e.g. Linux), stop here.
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
-        os.startfile(rules['target'])
+        # B606:start_process_with_no_shell is safe -- it's a file we've explicitly created
+        os.startfile(rules['target'])   # nosec B606

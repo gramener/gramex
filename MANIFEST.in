@@ -3,11 +3,13 @@
 # Include package specific files
 include gramex/gramex.yaml
 include gramex/deploy.yaml
+include gramex/servicenow.yaml
 include gramex/apps.yaml
 include gramex/favicon.ico
 include gramex/release.json
 include gramex/download.vega.js
 include gramex/handlers/*.html
+include gramex/handlers/*.yaml
 include gramex/pptgen/*.json
 include gramex/pptgen2/config.yaml
 
@@ -23,11 +25,7 @@ graft gramex/apps
 include .gitignore
 
 # Include core docs
-include README.rst
-
-# Include test cases
-graft tests
-graft testlib
+include README.md
 
 # Include documentation
 recursive-include docs *.rst conf.py Makefile make.bat

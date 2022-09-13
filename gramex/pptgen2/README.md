@@ -35,4 +35,4 @@ target.save('slide1.pptx')  # Save the target
 
 ## Documentation
 
-Documentation is available at https://learn.gramener.com/guide/pptxhandler/
+Documentation is available at <https://gramener.com/gramex/guide/pptxhandler/>

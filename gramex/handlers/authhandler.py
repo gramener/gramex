@@ -1,9 +1,8 @@
+from fnmatch import fnmatch
 import io
 import os
 import csv
 import json
-import time
-import uuid
 import logging
 import tornado.escape
 import tornado.httpclient
@@ -16,7 +15,7 @@ from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
 from gramex.http import UNAUTHORIZED, FORBIDDEN
-from gramex.config import app_log, objectpath, str_utf8, merge
+from gramex.config import app_log, objectpath, merge
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
 
@@ -32,10 +31,12 @@ class AuthHandler(BaseHandler):
 
     @classmethod
     def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, recaptcha=None, **kwargs):
+              session_inactive=None, user_key='user', lookup=None, recaptcha=None,
+              rules=None, **kwargs):
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])
+        cls.special_keys += ['rules']
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events
@@ -48,11 +49,11 @@ class AuthHandler(BaseHandler):
         cls.failed_logins = Counter()
         # Set delay for failed logins from the delay: parameter which can be a number or list
         default_delay = [1, 1, 5]
-        cls.delay = delay
-        if isinstance(cls.delay, list) and not all(isinstance(n, (int, float)) for n in cls.delay):
-            app_log.warning('%s: Ignoring invalid delay: %r', cls.name, cls.delay)
-            cls.delay = default_delay
-        elif isinstance(cls.delay, (int, float)) or cls.delay is None:
+        cls.delay = default_delay if delay is None else delay
+        if not isinstance(cls.delay, list):
+            cls.delay = [cls.delay]
+        if not all(isinstance(n, (int, float)) for n in cls.delay):
+            app_log.warning(f'{cls.name}: Ignoring invalid delay: {cls.delay!r}')
             cls.delay = default_delay
 
         # Set up session user key, session expiry and inactive expiry
@@ -68,7 +69,10 @@ class AuthHandler(BaseHandler):
             if isinstance(lookup, dict):
                 cls.lookup_id = cls.lookup.pop('id', 'user')
             else:
-                app_log.error('%s: lookup must be a dict, not %s', cls.name, cls.lookup)
+                app_log.error(f'{cls.name}: lookup must be a dict, not {cls.lookup}')
+
+        cls.rules = gramex.data.filter(**rules) if rules else gramex.data.pd.DataFrame()
+        cls.rules.fillna(value='', inplace=True)
 
         # Set up prepare
         cls.auth_methods = {}
@@ -76,14 +80,14 @@ class AuthHandler(BaseHandler):
             cls.auth_methods['prepare'] = build_transform(
                 conf={'function': prepare},
                 vars={'handler': None, 'args': None},
-                filename='url:%s:prepare' % cls.name,
+                filename=f'url:{cls.name}:prepare',
                 iter=False)
         # Prepare recaptcha
         if recaptcha is not None:
             if 'key' not in recaptcha:
-                app_log.error('%s: recaptcha.key missing', cls.name)
+                app_log.error(f'{cls.name}: recaptcha.key missing')
             elif 'key' not in recaptcha:
-                app_log.error('%s: recaptcha.secret missing', cls.name)
+                app_log.error(f'{cls.name}: recaptcha.secret missing')
             else:
                 recaptcha.setdefault('action', 'login')
                 cls.auth_methods['recaptcha'] = cls.check_recaptcha
@@ -95,8 +99,8 @@ class AuthHandler(BaseHandler):
                 action = [action]
             for conf in action:
                 cls.actions.append(build_transform(
-                    conf, vars=AttrDict(handler=None),
-                    filename='url:%s:%s' % (cls.name, conf.function)))
+                    conf, vars={'handler': None},
+                    filename=f'url:{cls.name}:{conf.function}'))
 
     @coroutine
     def prepare(self):
@@ -163,6 +167,11 @@ class AuthHandler(BaseHandler):
         if self.session_inactive is not None:
             self.session['_i'] = self.session_inactive * 24 * 60 * 60
 
+        # Apply rules to the user
+        for _, rule in self.rules.iterrows():
+            if fnmatch(user.get(rule['selector'], ''), rule['pattern']):
+                user[rule['field']] = rule['value']
+
         # Run post-login events (e.g. ensure_single_session) specified in config
         for callback in self.actions:
             callback(self)
@@ -205,7 +214,7 @@ class AuthHandler(BaseHandler):
         response = yield http.fetch(self._RECAPTCHA_VERIFY_URL, method='POST', body=body)
         result = json.loads(response.body)
         if not result['success']:
-            raise HTTPError(FORBIDDEN, 'recaptcha failed: %s' % ', '.join(result['error-codes']))
+            raise HTTPError(FORBIDDEN, f'recaptcha failed: {", ".join(result["error-codes"])}')
 
     def authorize(self):
         '''AuthHandlers don't have authorization. They're meant to log users in.'''
@@ -381,49 +390,6 @@ class SimpleAuth(AuthHandler):
             self.log_user_event(event='fail')
             self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
-
-
-class OTP(object):
-    '''
-    OTP: One-time password. Also used for password recovery
-    '''
-    def __init__(self, size=None):
-        '''
-        Set up the database that stores password recovery tokens.
-        ``size`` is the length of the OTP in characters. Defaults to the
-        full hashing string
-        '''
-        self.size = size
-        # create database at GRAMEXDATA
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        self.engine = gramex.data.create_engine(url, encoding=str_utf8)
-        conn = self.engine.connect()
-        conn.execute('CREATE TABLE IF NOT EXISTS users '
-                     '(user TEXT, email TEXT, token TEXT, expire REAL)')
-        self.table = gramex.data.get_table(self.engine, 'users')
-
-    def token(self, user, email, expire):
-        '''Generate a one-tie token, store it in the recovery database, and return it'''
-        token = uuid.uuid4().hex[:self.size]
-        query = self.table.insert().values({
-            'user': user, 'email': email, 'token': token, 'expire': expire,
-        })
-        self.engine.execute(query)
-        return token
-
-    def pop(self, token):
-        '''Return the row matching the token, and deletes it from the list'''
-        where = self.table.c['token'] == token
-        query = self.table.select().where(where)
-        result = self.engine.execute(query)
-        if result.returns_rows:
-            row = result.fetchone()
-            if row is not None:
-                self.engine.execute(self.table.delete(where))
-                if row['expire'] >= time.time():
-                    return row
-        return None
 
 
 def csv_encode(values, *args, **kwargs):

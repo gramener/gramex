@@ -1,0 +1,10 @@
+version: v1.19.0
+ignore:
+
+  SNYK-JS-UGLIFYJS-1727251:
+    - '*':
+        reason: No fix available. Await html-minifier upgrade
+        expires: 2022-09-30T00:00:00.000Z
+        created: 2022-01-01T00:00:00.000Z
+
+patch: {}

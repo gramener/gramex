@@ -1,30 +1,32 @@
 '''Caching utilities'''
-import io
-import os
-import re
-import sys
-import json
-import time
 import atexit
+import copy
 import inspect
-import requests
-import tempfile
+import io
+import json
 import mimetypes
-import subprocess       # nosec
+import os
 import pandas as pd
+import re
+import requests
+# B404:import_subprocess only developers can access this, not users
+import subprocess       # nosec B404
+import sys
+import tempfile
+import time
+import tornado.ioloop
 import tornado.template
-from lxml import etree
-from threading import Thread
-from queue import Queue
-from orderedattrdict import AttrDict
-from tornado.concurrent import Future
-from tornado.ioloop import IOLoop, PeriodicCallback
-from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
 from gramex.config import PathConfig
+from gramex.config import app_log, merge, used_kwargs, CustomJSONDecoder, CustomJSONEncoder
+from orderedattrdict import AttrDict
+from queue import Queue
+from threading import Thread
+from tornado.concurrent import Future
+from types import ModuleType
+from typing import List, Tuple, Union, Dict, Callable, BinaryIO
 from urllib.parse import urlparse
 
 
-_undef = object()
 MILLISECOND = 0.001         # in seconds
 _opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
                         newline=None, closefd=True)
@@ -52,225 +54,33 @@ def _delete_temp_files():
 atexit.register(_delete_temp_files)
 
 
-def hashfn(fn):
-    '''Returns a unique hash value for the function.'''
-    # id() returns a unique value for the lifetime of an object.
-    # To ensure that ID is not re-cycled, cache object, so it's never released.
-    _ID_CACHE.add(fn)
-    return id(fn)
+def open(
+        path: str, callback: Union[str, Callable] = None, transform: Callable = None,
+        rel: bool = False, **kwargs: dict):
+    '''Reads a file, processes it via a callback, caches the result and returns it.
 
-
-def cache_key(*args):
-    '''Converts arguments into a string suitable for use as a cache key'''
-    return json.dumps(args, sort_keys=True, separators=(',', ':'))
-
-
-def opener(callback, read=False, **open_kwargs):
-    '''
-    Converts any function that accepts a string or handle as its parameter into
-    a function that takes the first parameter from a file path.
-
-    Here are a few examples::
-
-        jsonload = opener(json.load)
-        jsonload('x.json')      # opens x.json and runs json.load(handle)
-        gramex.cache.open('x.json', jsonload)   # Loads x.json, cached
-
-        # read=True parameter passes the contents (not handle) to the function
-        template = opener(string.Template, read=True)
-        template('abc.txt').substitute(x=val)
-        gramex.cache.open('abc.txt', template).substitute(x=val)
-
-        # If read=True, callback may be None. The result of .read() is passed as-is
-        text = opener(None, read=True)
-        gramex.cache.open('abc.txt', text)
-
-    Keyword arguments applicable for ``io.open`` are passed to ``io.open``. These
-    default to ``io.open(mode='r', buffering=-1, encoding='utf-8',
-    errors='strict', newline=None, closefd=True)``. All other arguments and
-    keyword arguments are passed to the callback (e.g. to ``json.load``).
-
-    When reading binary files, pass ``mode='rb', encoding=None, errors=None``.
-    '''
-    merge(open_kwargs, _opener_defaults, 'setdefault')
-    if read:
-        # Pass contents to callback
-        def method(path, **kwargs):
-            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
-            with io.open(path, **open_args) as handle:
-                result = handle.read()
-                return callback(result, **kwargs) if callable(callback) else result
-    else:
-        if not callable(callback):
-            raise ValueError('opener callback %s not a function', repr(callback))
-
-        # Pass handle to callback
-        def method(path, **kwargs):
-            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
-            with io.open(path, **open_args) as handle:
-                return callback(handle, **kwargs)
-    return method
-
-
-@opener
-def _markdown(handle, **kwargs):
-    from markdown import markdown
-    return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
-
-
-@opener
-def _yaml(handle, **kwargs):
-    import yaml
-    defaults = {'Loader': yaml.FullLoader}
-    return yaml.load(handle.read(), **{k: kwargs.pop(k, v) for k, v in defaults.items()})
-
-
-def _template(path, **kwargs):
-    root, name = os.path.split(path)
-    return tornado.template.Loader(root, **kwargs).load(name)
-
-
-def read_excel(io, sheet_name=0, table=None, name=None, range=None, header=_undef, **kwargs):
-    '''
-    Read data from an XLSX as a DataFrame using ``openpyxl``.
-
-    :arg str/file io: path or file-like object pointing to an Excel file
-    :arg str/int sheet_name: sheet to load data from. Sheet names are specified as strings.
-        Integers pick zero-indexed sheet position. default: 0
-    :arg str table: Worksheet table to load from sheet, e.g. ``'Table1'``
-    :arg str name: Defined name to load from sheet, e.g. ``'MyNamedRange'``
-    :arg str range: Cell range to load from sheet, e.g. ``'A1:C10'``
-    :arg None/int/list[int] header: Row (0-indexed) to use for the column labels.
-        A list of integers is combined into a MultiIndex. Use None if there is no header.
-
-    ``table`` overrides ``name`` overrides ``range``. If none of these are specified, loads entire
-    sheet via ``pd.read_excel``, passing the remaining kwargs.
-    '''
-    if not any((range, name, table)):
-        # Pandas defaults to xlrd, but we prefer openpyxl
-        kwargs.setdefault('engine', 'openpyxl')
-        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is _undef else header,
-                             **kwargs)
-
-    import openpyxl
-    wb = openpyxl.load_workbook(io, data_only=True)
-    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
-    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
-    # Get the data range to be picked
-    if table is not None:
-        range = ws.tables[table].ref
-        # Tables themselves specify whether they have a column header. Use this as default
-        if header is _undef:
-            header = list(builtin_range(ws.tables[table].headerRowCount))
-    elif name is not None:
-        # If the name is workbook-scoped, get it directly
-        defined_name = wb.defined_names.get(name)
-        # Else, if it's sheet-scoped, get it related to the sheet
-        if defined_name is None:
-            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
-        # Raise an error if we can't find it
-        if defined_name is None:
-            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
-        # Note: This only works if it's a cell range. If we create a named range inside a table,
-        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
-        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
-        range = defined_name.attr_text.split('!')[-1]
-
-    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
-    # Header defaults to 0 if undefined. If it's not None, apply the header
-    header = 0 if header is _undef else header
-    if header is not None:
-        data = (data.T.set_index(header).T      # Set header rows as column names
-                    .reset_index(drop=True)     # Drop index with "holes" where headers were
-                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
-                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
-                        axis=1))
-    return data.infer_objects()                 # Convert data types
-
-
-def stat(path):
-    '''
-    Returns a file status tuple - based on file last modified time and file size
-    '''
-    if os.path.exists(path):
-        stat = os.stat(path)
-        return (stat.st_mtime, stat.st_size)
-    return (None, None)
-
-
-def hashed(val):
-    '''Return the hashed value of val. If not possible, return None'''
-    try:
-        hash(val)
-        return val
-    except TypeError:
-        try:
-            return json.dumps(val, sort_keys=True, separators=(',', ':'))
-        except Exception:
-            return None
-
-
-# gramex.cache.open() stores its cache here.
-# {(path, callback): {data: ..., stat: ...}}
-_OPEN_CACHE = {}
-open_callback = dict(
-    bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
-    txt=opener(None, read=True),
-    text=opener(None, read=True),
-    csv=pd.read_csv,
-    excel=read_excel,
-    xls=pd.read_excel,
-    xlsx=read_excel,
-    hdf=pd.read_hdf,
-    h5=pd.read_hdf,
-    html=pd.read_html,
-    json=opener(json.load),
-    jsondata=pd.read_json,
-    sas=pd.read_sas,
-    stata=pd.read_stata,
-    table=pd.read_table,
-    parquet=pd.read_parquet,
-    feather=pd.read_feather,
-    md=_markdown,
-    markdown=_markdown,
-    tmpl=_template,
-    template=_template,
-    xml=etree.parse,
-    svg=etree.parse,
-    rss=etree.parse,
-    atom=etree.parse,
-    config=PathConfig,
-    yml=_yaml,
-    yaml=_yaml
-)
-
-
-def open(path, callback=None, transform=None, rel=False, **kwargs):
-    '''
-    Reads a file, processes it via a callback, caches the result and returns it.
     When called again, returns the cached result unless the file has updated.
 
-    By default, it determine the file type using the extension. For example::
+    By default, it determine the file type using the extension. For example:
 
         open('data.yaml')           # Loads a YAML file
         open('data.csv')            # Loads a CSV file
 
     The 2nd parameter (callback) accepts a predefined string that can be one of:
 
-    - ``bin``: reads binary files using io.open
-    - ``text`` or ``txt``: reads text files using io.open
-    - ``yaml``: reads files using yaml.load via io.open
-    - ``config``: reads files using using :py:class:`gramex.config.PathConfig`.
-      Same as ``yaml``, but allows ``import:`` and variable substitution.
-    - ``json``: reads files using json.load via io.open
-    - ``jsondata``: reads files using pd.read_json
-    - ``template``: reads files using tornado.Template via io.open
-    - ``markdown`` or ``md``: reads files using markdown.markdown via io.open
-    - ``csv``, ``excel``, ``xls``, ``xlsx``, ``hdf``, ``h5``, ``html``, ``sas``,
-      ``stata``, ``table``, ``parquet``, ``feather``: reads using Pandas
-    - ``xml``, ``svg``, ``rss``, ``atom``: reads using lxml.etree
+    - `bin`: reads binary files using io.open
+    - `text` or `txt`: reads text files using io.open
+    - `yaml`: reads files using yaml.safe_load via io.open
+    - `config`: reads files using using [gramex.config.PathConfig]
+        Same as `yaml`, but allows `import:` and variable substitution.
+    - `json`: reads files using json.load via io.open
+    - `jsondata`: reads files using pd.read_json
+    - `template`: reads files using tornado.Template via io.open
+    - `markdown` or `md`: reads files using markdown.markdown via io.open
+    - `csv`, `excel`, `xls`, `xlsx`, `hdf`, `h5`, `html`, `sas`,
+        `stata`, `table`, `parquet`, `feather`: reads using Pandas
 
-    For example::
+    For example:
 
         # Load data.yaml as YAML into an AttrDict
         open('data.yaml', 'yaml')
@@ -281,22 +91,22 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         # Load data.csv as CSV into a Pandas DataFrame
         open('data.csv', 'csv', encoding='cp1252')
 
-    It can also be a function that accepts the filename and any other arguments::
+    It can also be a function that accepts the filename and any other arguments:
 
         # Load data using a custom callback
         open('data.fmt', my_format_reader_function, arg='value')
 
-    This is called as ``my_format_reader_function('data.fmt', arg='value')`` and
+    This is called as `my_format_reader_function('data.fmt', arg='value')` and
     cached. Future calls do not re-load and re-calculate this data.
 
-    To support a new callback string, set ``gramex.cache.open_callback[key] = method``.
-    For example::
+    To support a new callback string, set `gramex.cache.open_callback[key] = method`.
+    For example:
 
         gramex.cache.open_callback['shp'] = geopandas.read_file     # Register
         prs = gramex.cache.open('my.shp', layer='countries')        # Open with method
 
-    ``transform=`` is an optional function that processes the data returned by
-    the callback. For example::
+    `transform=` is an optional function that processes the data returned by
+    the callback. For example:
 
         # Returns the count of the CSV file, updating it only when changed
         open('data.csv', 'csv', transform=lambda data: len(data))
@@ -304,11 +114,11 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         # After loading data.xlsx into a DataFrame, returned the grouped result
         open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
-    If ``transform=`` is not a callable, it is ignored, but used as a cache key.
+    If `transform=` is not a callable, it is ignored, but used as a cache key.
 
-    ``rel=True`` opens the path relative to the caller function's file path. If
-    ``D:/app/calc.py`` calls ``open('data.csv', 'csv', rel=True)``, the path
-    is replaced with ``D:/app/data.csv``.
+    `rel=True` opens the path relative to the caller function's file path. If
+    `D:/app/calc.py` calls `open('data.csv', 'csv', rel=True)`, the path
+    is replaced with `D:/app/data.csv`.
 
     Any other keyword arguments are passed directly to the callback. If the
     callback is a predefined string and uses io.open, all argument applicable to
@@ -322,9 +132,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
 
     # Get the parent frame's filename. Compute path relative to that.
     if rel:
-        stack = inspect.getouterframes(inspect.currentframe(), 2)
-        folder = os.path.dirname(os.path.abspath(stack[1][1]))
-        path = os.path.join(folder, path)
+        path = _relpath(path)
 
     original_callback = callback
     if callback is None:
@@ -336,7 +144,7 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
         hashfn(transform),
         frozenset(((k, hashed(v)) for k, v in kwargs.items())),
     )
-    cached = _cache.get(key, None)
+    cached = _cache.get(key, _FALLBACK_MEMORY_CACHE.get(key, None))
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):
         reloaded = True
@@ -349,127 +157,91 @@ def open(path, callback=None, transform=None, rel=False, **kwargs):
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
-                raise TypeError('gramex.cache.open: path "%s" has unknown extension' % path)
+                raise TypeError(f'gramex.cache.open: path "{path}" has unknown extension')
             else:
-                raise TypeError('gramex.cache.open(callback="%s") is not a known type' % callback)
+                raise TypeError(f'gramex.cache.open(callback="{callback}") is not a known type')
         else:
-            raise TypeError('gramex.cache.open(callback=) must be a function, not %r' % callback)
+            raise TypeError(f'gramex.cache.open(callback=) must be a function, not {callback!r}')
         if callable(transform):
             data = transform(data)
         cached = {'data': data, 'stat': fstat}
         try:
             _cache[key] = cached
+        except TypeError as e:
+            # Redis / Disk caches can't pickle templates, etc. Fall back quietly to memory cache
+            app_log.debug(f'gramex.cache.open: {e} on {callback}. Using fallback memory cache')
+            _FALLBACK_MEMORY_CACHE[key] = cached
+        except ValueError:
+            size = sys.getsizeof(data)
+            app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
+                              'Increase cache.memory.size in gramex.yaml')
         except Exception:
-            app_log.error('gramex.cache.open: %s cannot cache %r' % (type(_cache), data))
+            app_log.exception(f'gramex.cache.open: {type(_cache)} cannot cache {data!r}')
+
     result = cached['data']
     return (result, reloaded) if _reload_status else result
 
 
-def set_cache(cache, old_cache):
+def stat(path: str) -> Tuple[Union[float, None], Union[int, None]]:
+    '''Returns file status. Used to check if a file has changed.
+
+    If the `stat(file)` has changed, the file has been updated and needs to be reloaded.
+    It checks the file's last modified time -- AND file size in case the modified time
+    is not refreshed.
+
+    Examples:
+        To see the status of gramex.yaml:
+
+        >>> stat('gramex.yaml')
+        (1654149106.1422858, 7675)
+
+    Parameters:
+        path: Absolute file path/Path relative to gramex root folder
+
+    Returns:
+        The last modified time and file size.
     '''
-    Use ``cache`` as the new cache for all open requests.
-    Copies keys from old cache, and deletes them from the old cache.
+    if os.path.exists(path):
+        stat = os.stat(path)
+        return (stat.st_mtime, stat.st_size)
+    return (None, None)
+
+
+def save(data: pd.DataFrame, url: str, rel: bool = False, callback: Union[str, Callable] = None,
+         **kwargs: dict) -> None:
     '''
-    for key in list(old_cache.keys()):
-        cache[key] = old_cache[key]
-        del old_cache[key]
-    return cache
+    Saves a Pandas DataFrame into file at url.
 
+    Examples:
+        To save data into `sample.csv`:
 
-_SAVE_CALLBACKS = dict(
-    json='to_json',
-    csv='to_csv',
-    xlsx='to_excel',
-    hdf='to_hdf',
-    html='to_html',
-    stata='to_stata',
-    # Other configurations not supported
-)
+        >>> type(data)
+        <class 'pandas.core.frame.DataFrame'>
+        >>> data
+           a  b
+        0  1  2
+        >>> save(data, 'sample.csv')
 
-
-def save(data, url, callback=None, **kwargs):
-    '''
-    Saves a DataFrame into file at url. It does not cache.
-
-    ``callback`` is almost the same as for :py:func:`gramex.cache.open`. It can
-    be ``json``, ``csv``, ``xlsx``, ``hdf``, ``html``, ``stata`` or
-    a function that accepts the filename and any other arguments.
-
-    Other keyword arguments are passed directly to the callback.
+    Parameters:
+        data: Pandas dataframe which has to be saved to a file.
+        url: Absolute/Relative location (relative to gramex root folder)
+            in which the file has to be saved.
+        rel: If true, opens the path relative to the caller function's file path.
+        callback: Almost the same as for [gramex.cache.open][]. It can
+            be `json`, `csv`, `xlsx`, `hdf`, `html`, `stata` or
+            a function that accepts the filename and any other arguments.
+        **kwargs: Other keyword arguments are passed directly to the callback.
     '''
     if callback is None:
         callback = os.path.splitext(url)[-1][1:]
     if callable(callback):
         return callback(data, url, **kwargs)
     elif callback in _SAVE_CALLBACKS:
+        url = _relpath(url) if rel else url
         method = getattr(data, _SAVE_CALLBACKS[callback])
         return method(url, **(used_kwargs(method, kwargs)[0]))
     else:
-        raise TypeError('gramex.cache.save(callback="%s") is unknown' % callback)
-
-
-# gramex.cache.query() stores its cache here
-_QUERY_CACHE = {}
-_STATUS_METHODS = {}
-
-
-def _wheres(dbkey, tablekey, default_db, names, fn=None):
-    '''
-    Convert a table name list like ['sales', 'dept.sales']) to a WHERE clause
-    like ``(table="sales") OR (db="dept" AND table="sales")``.
-
-    TODO: escape the table names to avoid SQL injection attacks
-    '''
-    where = []
-    for name in names:
-        db, table = name.rsplit('.', 2) if '.' in name else (default_db, name)
-        if not fn:
-            where.append("({}='{}' AND {}='{}')".format(dbkey, db, tablekey, table))
-        else:
-            where.append("({}={}('{}') AND {}={}('{}'))".format(
-                dbkey, fn[0], db, tablekey, fn[1], table))
-    return ' OR '.join(where)
-
-
-def _table_status(engine, tables):
-    '''
-    Returns the last updated date of a list of tables.
-    '''
-    # Cache the SQL query or file date check function beforehand.
-    # Every time method is called with a URL and table list, run cached query
-    dialect = engine.dialect.name
-    key = (engine.url, tuple(tables))
-    db = engine.url.database
-    if _STATUS_METHODS.get(key, None) is None:
-        if len(tables) == 0:
-            raise ValueError('gramex.cache.query table list is empty: %s', repr(tables))
-        for name in tables:
-            if not name or not isinstance(name, str):
-                raise ValueError('gramex.cache.query invalid table list: %s', repr(tables))
-        if dialect == 'mysql':
-            # https://dev.mysql.com/doc/refman/5.7/en/tables-table.html
-            # Works only on MySQL 5.7 and above
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +
-                 _wheres('table_schema', 'table_name', db, tables))
-        elif dialect == 'mssql':
-            # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +
-                 _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
-        elif dialect == 'postgresql':
-            # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables WHERE ' +
-                 _wheres('schemaname', 'relname', 'public', tables))
-        elif dialect == 'sqlite':
-            if not db:
-                raise KeyError('gramex.cache.query does not support memory sqlite "%s"' % dialect)
-            q = db
-        else:
-            raise KeyError('gramex.cache.query cannot cache dialect "%s" yet' % dialect)
-        if dialect == 'sqlite':
-            _STATUS_METHODS[key] = lambda: stat(q)
-        else:
-            _STATUS_METHODS[key] = lambda: pd.read_sql(q, engine).to_json(orient='records')
-    return _STATUS_METHODS[key]()
+        raise TypeError(f'gramex.cache.save(callback="{callback}") is unknown')
 
 
 def query(sql, engine, state=None, **kwargs):
@@ -484,7 +256,7 @@ def query(sql, engine, state=None, **kwargs):
     2. A function. This is called to determine the state of the database.
     3. A list of tables. This list of ["db.table"] names specifies which tables
        to watch for. This is currently experimental.
-    4. ``None``: the default. The query is always re-run and not cached.
+    4. `None`: the default. The query is always re-run and not cached.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
@@ -494,25 +266,29 @@ def query(sql, engine, state=None, **kwargs):
     store_cache = True
 
     if isinstance(state, (list, tuple)):
-        status = _table_status(engine, tuple(state))
+        try:
+            status = _table_status(engine, tuple(state))
+        except KeyError as e:
+            # Unknown SQLAlchemy dialects raise a KeyError.
+            # Warn and don't cache the table. (Otherwise, no new dialects can be used.)
+            app_log.warning(e.args[0] if len(e.args) > 0 else 'gramex.cache.query: state failed')
+            status, store_cache = object(), False
     elif isinstance(state, str):
         status = pd.read_sql(state, engine).to_dict(orient='list')
     elif callable(state):
         status = state()
     elif state is None:
         # Create a new status every time, so that the query is always re-run
-        status = object()
-        store_cache = False
+        status, store_cache = object(), False
     else:
-        raise TypeError('gramex.cache.query(state=) must be a table list, query or fn, not %s',
-                        repr(state))
+        raise TypeError(f'gramex.cache.query(state=) must be a table list/query/fn, not {state!r}')
 
     key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
     if key in _cache and _cache[key]['status'] == status:
         result = _cache[key]['data']
     else:
-        app_log.debug('gramex.cache.query: %s. engine: %s. state: %s. kwargs: %s', sql, engine,
-                      state, kwargs)
+        app_log.debug(
+            f'gramex.cache.query: {sql}. engine: {engine}. state: {state}. kwargs: {kwargs}')
         result = pd.read_sql(sql, engine, **kwargs)
         if store_cache:
             _cache[key] = {
@@ -524,19 +300,24 @@ def query(sql, engine, state=None, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
-# gramex.cache.reload_module() stores its cache here. {module_name: file_stat}
+# reload_module() stores its cache here
 _MODULE_CACHE = {}
 
 
-def reload_module(*modules):
-    '''
-    Reloads one or more modules if they are outdated, i.e. only if required the
+def reload_module(*modules: List[ModuleType]) -> None:
+    '''Reloads one or more modules if they are outdated, i.e. only if required the
     underlying source file has changed.
 
-    For example::
+    Examples:
 
-        import mymodule             # Load cached module
-        reload_module(mymodule)     # Reload module if the source has changed
+        >>> import mymodule
+        >>> reload_module(mymodule)
+
+        Load the cached module. Reload the module if the source has changed.
+
+    Parameters:
+
+        *modules: Pass the module which has to reload.
 
     This is most useful during template development. If your changes are in a
     Python module, add adding these lines to pick up new module changes when
@@ -549,51 +330,60 @@ def reload_module(*modules):
         if name in {'sys'}:
             continue
         if name is None or path is None or not os.path.exists(path):
-            app_log.warning('Path for module %s is %s: not found', name, path)
+            app_log.warning(f'Cannot locate path for module "{name}". Got path: {path}')
             continue
-        # On Python 3, __file__ points to the .py file. In Python 2, it's the .pyc file
-        # https://www.python.org/dev/peps/pep-3147/#file
-        if path.lower().endswith('.pyc'):
-            path = path[:-1]
-            if not os.path.exists(path):
-                app_log.warning('Path for module %s is %s: not found', name, path)
-                continue
         # The first time, don't reload it. Thereafter, if it's older or resized, reload it
         fstat = stat(path)
         if fstat != _MODULE_CACHE.get(name, fstat):
-            app_log.info('Reloading module %s', name)
+            app_log.info(f'Reloading module {name}')
             import importlib
             importlib.reload(module)
         _MODULE_CACHE[name] = fstat
 
 
-def urlfetch(path, info=False, **kwargs):
-    '''
-    - If path is a file path, return as is.
-    - If path is a file path and info is true, return a dict with name (filepath),
-      ext (extension), and content_type as well as r, url set to None.
+def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
+    '''Fetch the content in the url and return a file path where it is downloaded.
+
+    Examples:
+
+        >>> urlfetch('https://gramener.com/gramex/guide/mlhandler/titanic?_download=titanic.csv' +
+                '&_format=csv')
+        >>> '/path/to/tmpfile.csv'
+
+        This is a synchronous function, i.e. it waits until the file is downloaded.
+
+    Parameters:
+        url: The path can be http, https or file path
+        info: True if metadata of the requested file is required. If true, it
+            returns a dict with (filename), r (request) url, ext (extension), content_type.
+        **kwargs: Any other keyword arguments are passed to requests.get.
+
+    Returns:
+        Filepath where the file is downloaded.
+
+    - If url is a file url, return as is.
+    - If url is a file url and info is true, return a dict with name (filepath),
+        ext (extension), and content_type as well as r, url set to None.
     - If path is a URL, download the file, return the saved filename.
-      The filename extension is based on the URL's Content-Type HTTP header.
+    - The filename extension is based on the URL's Content-Type HTTP header.
     - If info is true, returns a dict with name (filename), r (request)
-      url, ext (extension), content_type.
-    - Any other keyword arguments are passed to requests.get.
+        url, ext (extension), content_type.
     - Automatically delete the files on exit of the application.
-    - This is a synchronous function, i.e. it waits until the file is downloaded.
     '''
-    url = urlparse(path)
-    if url.scheme not in {'http', 'https'}:  # path is a filepath
+    urlparts = urlparse(url)
+    if urlparts.scheme not in {'http', 'https'}:  # url is a filepath
         if info:
-            ext = os.path.splitext(path)[1]
-            content_type = mimetypes.guess_type(path, strict=True)[0]
-            return {'name': path, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
+            ext = os.path.splitext(url)[1]
+            content_type = mimetypes.guess_type(url, strict=True)[0]
+            return {'name': url, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
         else:
-            return path
-    r = requests.get(path, **kwargs)
+            return url
+    r = requests.get(url, **kwargs)
     if 'Content-Type' in r.headers:
         content_type = r.headers['Content-Type'].split(';')[0]
         ext = mimetypes.guess_extension(content_type, strict=False)
     else:
-        ext = os.path.splitext(url.path)[1]
+        ext = os.path.splitext(urlparts.path)[1]
     with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as handle:
         for chunk in r.iter_content(chunk_size=16384):
             handle.write(chunk)
@@ -612,11 +402,11 @@ class Subprocess(object):
     This is a threaded alternative based on
     http://stackoverflow.com/a/4896288/100904
 
-    Run a program async and wait for it to execute. Then get its output::
+    Run a program async and wait for it to execute. Then get its output:
 
         stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
 
-    Run a program async and send each line to the handler as it writes::
+    Run a program async and send each line to the handler as it writes:
 
         yield Subprocess(
             ['ls', '-la'],                  # Run 'ls -la'
@@ -625,7 +415,7 @@ class Subprocess(object):
             stream_stderr=handler.write,    # Send errors to handler.write(line)
         )
 
-    Run a program async and appends output into a list::
+    Run a program async and appends output into a list:
 
         proc = Subprocess(
             ['ls', '-la'],
@@ -636,7 +426,7 @@ class Subprocess(object):
         output = proc.list_out[-10:]        # Return last 10 lines of output
         yield proc.wait_for_exit()          # Wait until application is done
 
-    Run a program async and appends output into a queue::
+    Run a program async and appends output into a queue:
 
         proc = Subprocess(
             ['ls', '-la'],                  # Run 'ls -la'
@@ -647,7 +437,7 @@ class Subprocess(object):
         output = proc.queue_out.get_nowait()    # Returns first line of output
         yield proc.wait_for_exit()              # Wait until application is done
 
-    To write to multiple streams, pass a list::
+    To write to multiple streams, pass a list:
 
         proc = Subprocess(
             args,
@@ -658,28 +448,33 @@ class Subprocess(object):
         )
         yield proc.wait_for_exit()
 
-    To check the process return code, use ``.proc`` which has the ``Popen``
-    object::
+    To check the process return code, use `.proc` which has the `Popen`
+    object:
 
         if proc.proc.returncode:
             raise Exception('Process failed with return code %d', proc.proc.returncode)
-
-    :arg list args: command line arguments passed as a list to Subprocess
-    :arg methodlist stream_stdout: optional list of write methods - called when stdout has data
-    :arg methodlist stream_stderr: optional list of write methods - called when stderr has data
-    :arg str_or_int buffer_size: 'line' to write line by line, any int for chunk size
-    :arg dict kwargs: additional kwargs passed to subprocess.Popen
-
-    stream_stdout and stream_stderr can be:
-
-    - a function that accept a byte string. Called as stdout/stderr are buffered
-    - OR a string starting with ``list_`` or ``queue_``. Appends buffered output
-    - OR a list of any of the above
-    - OR an empty list. In this case, ``.wait_for_exit()`` returns a tuple with
-      ``stdout`` and ``stderr`` as a tuple of byte strings.
     '''
 
-    def __init__(self, args, stream_stdout=[], stream_stderr=[], buffer_size=0, **kwargs):
+    def __init__(
+            self, args: List[str], stream_stdout: List[Union[Callable, str]] = [],
+            stream_stderr: List[Union[Callable, str]] = [], buffer_size: Union[str, int] = 0,
+            **kwargs: dict):
+        '''
+        Parameters:
+            args: command line arguments passed as a list to Subprocess
+            stream_stdout: optional list of write methods - called when stdout has data
+            stream_stderr: optional list of write methods - called when stderr has data
+            buffer_size: 'line' to write line by line, any int for chunk size
+            **kwargs: additional kwargs passed to subprocess.Popen
+
+        `stream_stdout` and `stream_stderr` can be:
+
+        - a function that accept a byte string. Called as stdout/stderr are buffered
+        - OR a string starting with `list_` or `queue_`. Appends buffered output
+        - OR a list of any of the above
+        - OR an empty list. In this case, `.wait_for_exit()` returns a tuple with
+        `stdout` and `stderr` as a tuple of byte strings.
+        '''
         self.args = args
 
         # self.proc.stdout & self.proc.stderr are streams with process output
@@ -690,7 +485,8 @@ class Subprocess(object):
         # http://stackoverflow.com/a/4896288/100904
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
-        self.proc = subprocess.Popen(args, **kwargs)        # nosec
+        # B603:subprocess_without_shell_equals_true: only developers can access this, not users
+        self.proc = subprocess.Popen(args, **kwargs)        # nosec B603
         self.thread = {}        # Has the running threads
         self.future = {}        # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
@@ -768,7 +564,7 @@ class Subprocess(object):
                             setattr(self, method, log)
                             callbacks[index] = log.put
                     else:
-                        raise ValueError('Invalid stream_%s: %s', stream, method)
+                        raise ValueError(f'Invalid stream_{stream}: {method}')
             self.future[stream] = future = Future()
             # Thread writes from self.proc.stdout / stderr to appropriate callbacks
             self.thread[stream] = t = Thread(
@@ -780,7 +576,7 @@ class Subprocess(object):
 
     def wait_for_exit(self):
         '''
-        Returns futures for (stdout, stderr). To wait for the process to complete, use::
+        Returns futures for (stdout, stderr). To wait for the process to complete, use:
 
             stdout, stderr = yield proc.wait_for_exit()
         '''
@@ -789,21 +585,18 @@ class Subprocess(object):
 
 _daemons = {}
 _regex_type = type(re.compile(''))
-# Python 3 needs sys.stderr.buffer.write for writing binary strings
-_stderr_write = sys.stderr.buffer.write if hasattr(sys.stderr, 'buffer') else sys.stderr.write
 
 
 def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
-    '''
-    This is the same as :py:class:`Subprocess`, but has a few additional checks.
+    '''This is the same as [Subprocess], but has a few additional checks.
 
-    1. If we have already called :py:class:`Subprocess` with the same arguments,
-       re-use the same instance.
+    1. If we have already called [Subprocess] with the same arguments,
+        re-use the same instance.
     2. Send the process STDOUT and STDERR to this application's STDERR. This
-       makes it easy to see what errors the application reports.
+        makes it easy to see what errors the application reports.
     3. Supports retry attempts.
     4. Checks if the first line of output is a matches a string / re -- ensuring
-       that the application started properly.
+        that the application started properly.
     '''
     arg_str = args if isinstance(args, str) else ' '.join(args)
     try:
@@ -821,7 +614,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
         if first_line:
             kwargs[channel].append(queue.put)
         if stream is True:
-            kwargs[channel].append(_stderr_write)
+            kwargs[channel].append(sys.stderr.buffer.write)
         elif callable(stream):
             kwargs[channel].append(stream)
     # Buffer by line by default. This is required for the first_line check, not otherwise.
@@ -831,18 +624,20 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
 
     # If process was never started, start it
     if key not in _daemons:
-        started = _daemons[key] = Subprocess(args, **kwargs)
+        # B404:import_subprocess only developers can access this, not users
+        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec B404
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
     restart = int(restart)
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)
+        # B404:import_subprocess only developers can access this, not users
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec B404
     if proc.proc.returncode is not None:
-        raise RuntimeError('Error %d starting %s' % (proc.proc.returncode, arg_str))
+        raise RuntimeError(f'Error {proc.proc.returncode} starting {arg_str}')
     if started:
-        app_log.info('Started: %s', arg_str)
+        app_log.info(f'Started: {arg_str}')
 
     future = Future()
     # If process was started, wait until it has initialized. Else just return the proc
@@ -851,13 +646,12 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if first_line not in actual:
-                    raise AssertionError('%s: wrong first line: %s (no "%s")' %
-                                         (arg_str, actual, first_line))
+                    raise AssertionError(f'{arg_str}: first line is "{actual}" not "{first_line}"')
         elif isinstance(first_line, _regex_type):
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if not first_line.search(actual):
-                    raise AssertionError('%s: wrong first line: %s' % (arg_str, actual))
+                    raise AssertionError(f'{arg_str}: wrong first line: {actual}')
         elif callable(first_line):
             check = first_line
         loop = _get_current_ioloop()
@@ -878,18 +672,6 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     return future
 
 
-def _get_current_ioloop():
-    '''
-    Return the current IOLoop. But if we're not already in an IOLoop, return an
-    object that mimics add_callback() by running the method immediately.
-    This allows daemon() to be run without Tornado / asyncio.
-    '''
-    loop = IOLoop.current(instance=False)
-    if loop is None:
-        loop = AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
-    return loop
-
-
 def get_store(type, **kwargs):
     if type == 'memory':
         return KeyStore(**kwargs)
@@ -902,7 +684,7 @@ def get_store(type, **kwargs):
     elif type == 'hdf5':
         return HDF5Store(**kwargs)
     else:
-        raise NotImplementedError('Store type: %s not implemented' % type)
+        raise NotImplementedError(f'Store type: {type} not implemented')
 
 
 class KeyStore(object):
@@ -915,14 +697,14 @@ class KeyStore(object):
         >>> store.flush()                   # Saves to disk
         >>> store.close()                   # Close the store
 
-    You can initialize a KeyStore with a ``flush=`` parameter. The store is
-    flushed to disk via ``store.flush()`` every ``flush`` seconds.
+    You can initialize a KeyStore with a `flush=` parameter. The store is
+    flushed to disk via `store.flush()` every `flush` seconds.
 
-    If a ``purge=`` is provided, the data is purged of missing values every
-    ``purge`` seconds. You can provide a custom ``purge_keys=`` function that
+    If a `purge=` is provided, the data is purged of missing values every
+    `purge` seconds. You can provide a custom `purge_keys=` function that
     returns an iterator of keys to delete if any.
 
-    When the program exits, ``.close()`` is automatically called.
+    When the program exits, `.close()` is automatically called.
     '''
 
     def __init__(self, flush=None, purge=None, purge_keys=None, **kwargs):
@@ -936,9 +718,9 @@ class KeyStore(object):
                 purge_keys)
         # Periodically flush and purge buffers
         if flush is not None:
-            PeriodicCallback(self.flush, callback_time=flush * 1000).start()
+            tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
         if purge is not None:
-            PeriodicCallback(self.purge, callback_time=purge * 1000).start()
+            tornado.ioloop.PeriodicCallback(self.purge, callback_time=purge * 1000).start()
         # Call close() when Python gracefully exits
         atexit.register(self.close)
 
@@ -985,7 +767,7 @@ class KeyStore(object):
 
 class RedisStore(KeyStore):
     '''
-    A KeyStore that stores data in a Redis database. Typical usage::
+    A KeyStore that stores data in a Redis database. Typical usage:
 
         >>> store = RedisStore('localhost:6379:1:password=x:...')     # host:port:db:params
         >>> value = store.load(key)
@@ -1015,8 +797,7 @@ class RedisStore(KeyStore):
             return json.loads(
                 result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
-            app_log.error('RedisStore("%s").load("%s") is not JSON ("%r..."")',
-                          self.store, key, result)
+            app_log.error(f'RedisStore("{self.store}").load("{key}") is not JSON "{result!r}"')
             return default
 
     def dump(self, key, value):
@@ -1034,7 +815,7 @@ class RedisStore(KeyStore):
         pass
 
     def purge(self):
-        app_log.debug('Purging %s', self.store)
+        app_log.debug(f'Purging {self.store}')
         # TODO: optimize item retrieval
         items = {key: self.load(key, None) for key in self.store.keys()}
         for key in self.purge_keys(items):
@@ -1043,7 +824,7 @@ class RedisStore(KeyStore):
 
 class SQLiteStore(KeyStore):
     '''
-    A KeyStore that stores data in a SQLite file. Typical usage::
+    A KeyStore that stores data in a SQLite file. Typical usage:
 
         >>> store = SQLiteStore('file.db', table='store')
         >>> value = store.load(key)
@@ -1076,13 +857,13 @@ class SQLiteStore(KeyStore):
         return (self._escape(key) for key in self.store.keys())
 
     def purge(self):
-        app_log.debug('Purging %s', self.path)
+        app_log.debug(f'Purging {self.path}')
         super(SQLiteStore, self).purge()
 
 
 class HDF5Store(KeyStore):
     '''
-    A KeyStore that stores data in a HDF5 file. Typical usage::
+    A KeyStore that stores data in a HDF5 file. Typical usage:
 
         >>> store = HDF5Store('file.h5', flush=15)
         >>> value = store.load(key)
@@ -1113,12 +894,12 @@ class HDF5Store(KeyStore):
         try:
             return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
-            app_log.error('HDF5Store("%s").load("%s") is not JSON ("%r..."")',
-                          self.path, key, result)
+            app_log.error(f'HDF5Store("{self.path}").load("{key}") is not JSON ("{result!r}")')
             return default
 
     def dump(self, key, value):
         key = self._escape(key)
+        # TODO: BUG. Rewrite like JSONStore.dump()
         if self.store.get(key) != value:
             if key in self.store:
                 del self.store[key]
@@ -1144,7 +925,7 @@ class HDF5Store(KeyStore):
     def flush(self):
         super(HDF5Store, self).flush()
         if self.changed:
-            app_log.debug('Flushing %s', self.path)
+            app_log.debug(f'Flushing {self.path}')
             self.store.flush()
             self.changed = False
 
@@ -1162,21 +943,23 @@ class HDF5Store(KeyStore):
             del self.store[key]
             changed = True
         if changed:
-            app_log.debug('Purging %s', self.path)
+            app_log.debug(f'Purging {self.path}')
             self.store.flush()
 
     def close(self):
         try:
             self.store.close()
         # h5py.h5f.get_obj_ids often raises a ValueError: Not a file id.
-        # This is presumably if the file handle has been closed. Log & ignore.
-        except ValueError:
-            app_log.debug('HDF5Store("%s").close() error ignored', self.path)
+        #   This is presumably if the file handle has been closed. Log & ignore.
+        # import h5py may fil. If so, self.store is a dict, and has no .close().
+        #   This raises an AttributeError. Log & ignore
+        except (AttributeError, ValueError) as e:
+            app_log.debug(f'HDF5Store("{self.path}").close() error ({e}) ignored')
 
 
 class JSONStore(KeyStore):
     '''
-    A KeyStore that stores data in a JSON file. Typical usage::
+    A KeyStore that stores data in a JSON file. Typical usage:
 
         >>> store = JSONStore('file.json', flush=15)
         >>> value = store.load(key)
@@ -1190,9 +973,13 @@ class JSONStore(KeyStore):
     def __init__(self, path, *args, **kwargs):
         super(JSONStore, self).__init__(*args, **kwargs)
         self.path = _create_path(path)
-        self.store = self._read_json()
-        self.changed = False
-        self.update = {}  # key-values added since flush
+        self._init_store(self._read_json())
+
+    def _init_store(self, contents):
+        self.store = contents
+        self._original = copy.deepcopy(self.store)  # copy of original contents
+        self.changed = False    # boolean: has the store contents changed?
+        self.update = {}        # all key-values added since flush
 
     def _read_json(self):
         try:
@@ -1202,52 +989,353 @@ class JSONStore(KeyStore):
             return {}
 
     def _write_json(self, data):
-        json_value = json.dumps(
-            data,
-            ensure_ascii=True,
-            separators=(',', ':'),
-            cls=CustomJSONEncoder)
+        json_value = json.dumps(data, ensure_ascii=True, separators=(',', ':'),
+                                cls=CustomJSONEncoder)
         with io.open(self.path, 'w') as handle:     # noqa: no encoding for json
             handle.write(json_value)
 
     def dump(self, key, value):
         '''Same as store[key] = value'''
         key = self._escape(key)
-        if self.store.get(key) != value:
-            self.store[key] = value
+        self.store[key] = value
+        # Update contents only if the value is different from the original
+        if self._original.get(key) != value:
             self.update[key] = value
             self.changed = True
 
-    def flush(self):
+    def flush(self, purge=False):
         super(JSONStore, self).flush()
-        if self.changed:
-            app_log.debug('Flushing %s', self.path)
+        if getattr(self, 'changed') or purge:
+            app_log.debug(f"{'Purging' if purge else 'Flushing'} {self.path}")
+            # Don't dump contents. That can overwrite other instances' updates.
+            # Instead: read, apply updates, and save.
             store = self._read_json()
             store.update(self.update)
+            for key in self.purge_keys(store):
+                del store[key]
             self._write_json(store)
-            self.store = store
-            self.update = {}
-            self.changed = False
+            self._init_store(store)
 
     def purge(self):
-        '''
-        Load all keys into self.store. Delete what's required. Save.
-        '''
-        self.flush()
-        changed = False
-        for key in self.purge_keys(self.store):
-            del self.store[key]
-            changed = True
-        if changed:
-            app_log.debug('Purging %s', self.path)
-            self._write_json(self.store)
+        self.flush(purge=True)
 
     def close(self):
         try:
             self.flush()
         # This has happened when the directory was deleted. Log & ignore.
         except OSError:
-            app_log.error('Cannot flush %s', self.path)
+            app_log.exception(f'Cannot flush {self.path}')
+
+
+def hashfn(fn):
+    '''Returns a unique hash value for the function.'''
+    # id() returns a unique value for the lifetime of an object.
+    # To ensure that ID is not re-cycled, cache object, so it's never released.
+    _ID_CACHE.add(fn)
+    return id(fn)
+
+
+def cache_key(*args):
+    '''Converts arguments into a string suitable for use as a cache key'''
+    return json.dumps(args, sort_keys=True, separators=(',', ':'))
+
+
+def opener(callback, read=False, **open_kwargs):
+    '''
+    Converts any function that accepts a string or handle as its parameter into
+    a function that takes the first parameter from a file path.
+
+    Here are a few examples:
+
+        jsonload = opener(json.load)
+        jsonload('x.json')      # opens x.json and runs json.load(handle)
+        gramex.cache.open('x.json', jsonload)   # Loads x.json, cached
+
+        # read=True parameter passes the contents (not handle) to the function
+        template = opener(string.Template, read=True)
+        template('abc.txt').substitute(x=val)
+        gramex.cache.open('abc.txt', template).substitute(x=val)
+
+        # If read=True, callback may be None. The result of .read() is passed as-is
+        text = opener(None, read=True)
+        gramex.cache.open('abc.txt', text)
+
+    Keyword arguments applicable for `io.open` are passed to `io.open`. These
+    default to `io.open(mode='r', buffering=-1, encoding='utf-8',
+    errors='strict', newline=None, closefd=True)`. All other arguments and
+    keyword arguments are passed to the callback (e.g. to `json.load`).
+
+    When reading binary files, pass `mode='rb', encoding=None, errors=None`.
+    '''
+    merge(open_kwargs, _opener_defaults, 'setdefault')
+    if read:
+        # Pass contents to callback
+        def method(path, **kwargs):
+            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
+            with io.open(path, **open_args) as handle:
+                result = handle.read()
+                return callback(result, **kwargs) if callable(callback) else result
+    else:
+        if not callable(callback):
+            raise ValueError(f'opener callback {callback!r} not a function')
+
+        # Pass handle to callback
+        def method(path, **kwargs):
+            open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
+            with io.open(path, **open_args) as handle:
+                return callback(handle, **kwargs)
+    return method
+
+
+@opener
+def _markdown(handle, **kwargs):
+    from markdown import markdown
+    return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
+
+
+@opener
+def _yaml(handle, **kwargs):
+    import yaml
+    kwargs.setdefault('Loader', yaml.SafeLoader)
+    # B506:yaml_load we load safely using SafeLoader
+    return yaml.load(handle.read(), **kwargs)   # nosec B506
+
+
+def _template(path, **kwargs):
+    root, name = os.path.split(path)
+    return tornado.template.Loader(root, **kwargs).load(name)
+
+
+def read_excel(
+        io: Union[str, BinaryIO], sheet_name: Union[str, int] = 0, table: str = None,
+        name: str = None, range: str = None, header: Union[None, int, List[int]] = ...,
+        **kwargs: dict) -> pd.DataFrame:
+    '''Read data from an XLSX as a DataFrame using `openpyxl`.
+
+    Parameters:
+        io: path or file-like object pointing to an Excel file
+        sheet_name: sheet to load data from. Sheet names are specified as strings.
+            Integers pick zero-indexed sheet position. default: 0
+        table: Worksheet table to load from sheet, e.g. `'Table1'`
+        name: Defined name to load from sheet, e.g. `'MyNamedRange'`
+        range: Cell range to load from sheet, e.g. `'A1:C10'`
+        header: Row (0-indexed) to use for the column labels. A list of integers is combined into
+            a MultiIndex. Use None if there is no header.
+        **kwargs: If neither `table`, nor `name`, nor `range` is specified, loads entire
+            sheet via `pd.read_excel`, passing the remaining kwargs.
+
+    `table` overrides `name` overrides `range`.
+    '''
+    if not any((range, name, table)):
+        # Pandas defaults to xlrd, but we prefer openpyxl
+        kwargs.setdefault('engine', 'openpyxl')
+        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is ... else header,
+                             **kwargs)
+
+    import openpyxl
+    wb = openpyxl.load_workbook(io, data_only=True)
+    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
+    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
+    # Get the data range to be picked
+    if table is not None:
+        range = ws.tables[table].ref
+        # Tables themselves specify whether they have a column header. Use this as default
+        if header is ...:
+            header = list(builtin_range(ws.tables[table].headerRowCount))
+    elif name is not None:
+        # If the name is workbook-scoped, get it directly
+        defined_name = wb.defined_names.get(name)
+        # Else, if it's sheet-scoped, get it related to the sheet
+        if defined_name is None:
+            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
+        # Raise an error if we can't find it
+        if defined_name is None:
+            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
+        # Note: This only works if it's a cell range. If we create a named range inside a table,
+        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
+        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
+        range = defined_name.attr_text.split('!')[-1]
+
+    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
+    # Header defaults to 0 if undefined. If it's not None, apply the header
+    header = 0 if header is ... else header
+    if header is not None:
+        data = (data.T.set_index(header).T      # Set header rows as column names
+                    .reset_index(drop=True)     # Drop index with "holes" where headers were
+                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
+                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
+                        axis=1))
+    return data.infer_objects()                 # Convert data types
+
+
+def hashed(val):
+    '''Return the hashed value of val. If not possible, return None'''
+    try:
+        hash(val)
+        return val
+    except TypeError:
+        try:
+            return json.dumps(val, sort_keys=True, separators=(',', ':'))
+        except Exception:
+            return None
+
+
+# gramex.cache.open() stores its cache here.
+# {(path, callback): {data: ..., stat: ...}}
+_OPEN_CACHE = {}
+# If _OPEN_CACHE is a Redis/Disk/... cache that can't store the object, use fallback memory cache
+_FALLBACK_MEMORY_CACHE = {}
+open_callback = dict(
+    bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
+    txt=opener(None, read=True),
+    text=opener(None, read=True),
+    csv=pd.read_csv,
+    excel=read_excel,
+    xls=pd.read_excel,
+    xlsx=read_excel,
+    hdf=pd.read_hdf,
+    h5=pd.read_hdf,
+    html=pd.read_html,
+    json=opener(json.load),
+    jsondata=pd.read_json,
+    sas=pd.read_sas,
+    stata=pd.read_stata,
+    table=pd.read_table,
+    parquet=pd.read_parquet,
+    feather=pd.read_feather,
+    md=_markdown,
+    markdown=_markdown,
+    tmpl=_template,
+    template=_template,
+    config=PathConfig,
+    yml=_yaml,
+    yaml=_yaml
+)
+
+
+def _relpath(path):
+    # Returns absolute path relative to the caller's caller's frame. Used in open() / save()
+    # Get all parent frames, with 2 lines of context in each
+    stack = inspect.getouterframes(inspect.currentframe(), context=2)
+    # Get the frame that called open() or save(). This is the caller's caller
+    frame = stack[2]
+    # The folder is relative to that frame's file
+    folder = os.path.dirname(os.path.abspath(frame[1]))
+    # But if we're calling from a FileHandler template, use the template's path
+    if frame[1] == '<string>.generated.py':
+        g = frame[0].f_globals
+        if 'handler' in g and g['handler'].__class__.__name__ == 'FileHandler':
+            folder = os.path.dirname(g['handler'].file)
+        else:
+            app_log.warning(f'gramex.cache.open/save: rel= on unknown template folder for {path}')
+    return os.path.join(folder, path)
+
+
+def set_cache(cache, old_cache):
+    '''
+    Use `cache` as the new cache for all open requests.
+    Copies keys from old cache, and deletes them from the old cache.
+    '''
+    for key in list(old_cache.keys()):
+        cache[key] = old_cache[key]
+        del old_cache[key]
+    return cache
+
+
+_SAVE_CALLBACKS = dict(
+    json='to_json',
+    csv='to_csv',
+    xlsx='to_excel',
+    hdf='to_hdf',
+    html='to_html',
+    stata='to_stata',
+    # Other configurations not supported
+)
+
+
+# gramex.cache.query() stores its cache here
+_QUERY_CACHE = {}
+_STATUS_METHODS = {}
+
+
+def _wheres(dbkey, tablekey, default_db, names, fn=None):
+    '''
+    Convert a table name list like ['sales', 'dept.sales']) to a WHERE clause
+    like `(table="sales") OR (db="dept" AND table="sales")`.
+
+    TODO: escape the table names to avoid SQL injection attacks
+    '''
+    where = []
+    for name in names:
+        db, table = name.rsplit('.', 2) if '.' in name else (default_db, name)
+        if not fn:
+            where.append("({}='{}' AND {}='{}')".format(dbkey, db, tablekey, table))
+        else:
+            where.append("({}={}('{}') AND {}={}('{}'))".format(
+                dbkey, fn[0], db, tablekey, fn[1], table))
+    return ' OR '.join(where)
+
+
+def _table_status(engine, tables):
+    '''
+    Returns the last updated date of a list of tables.
+    '''
+    # Cache the SQL query or file date check function beforehand.
+    # Every time method is called with a URL and table list, run cached query
+    dialect = engine.dialect.name
+    key = (engine.url, tuple(tables))
+    db = engine.url.database
+    if _STATUS_METHODS.get(key, None) is None:
+        if len(tables) == 0:
+            raise ValueError(f'gramex.cache.query table list is empty: {tables!r}')
+        for name in tables:
+            if not name or not isinstance(name, str):
+                raise ValueError(f'gramex.cache.query invalid table list: {tables!r}')
+        # bandit security note: We use string substitution for DB and table names.
+        # But these are validated via gramex.data._sql_safe, so we're fine.
+        if dialect == 'mysql':
+            # https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html
+            # Works only on MySQL 5.7 and above
+            # B608:hardcoded_sql_expressions only used internally
+            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec B608
+                 _wheres('table_schema', 'table_name', db, tables))
+        elif dialect == 'snowflake':
+            # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
+            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec B608
+                 _wheres('table_schema', 'table_name', db, tables))
+        elif dialect == 'mssql':
+            # https://goo.gl/b4aL9m
+            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +  # nosec B608
+                 _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
+        elif dialect == 'postgresql':
+            # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
+            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables ' +  # nosec B608
+                 'WHERE ' + _wheres('schemaname', 'relname', 'public', tables))
+        elif dialect == 'sqlite':
+            if not db:
+                raise KeyError(f'gramex.cache.query: does not support memory sqlite "{dialect}"')
+            q = db
+        else:
+            raise KeyError(f'gramex.cache.query: cannot cache dialect "{dialect}" yet')
+        if dialect == 'sqlite':
+            _STATUS_METHODS[key] = lambda: stat(q)
+        else:
+            _STATUS_METHODS[key] = lambda: pd.read_sql(q, engine).to_json(orient='records')
+    return _STATUS_METHODS[key]()
+
+
+def _get_current_ioloop():
+    '''
+    Return the current IOLoop. But if we're not already in an IOLoop, return an
+    object that mimics add_callback() by running the method immediately.
+    This allows daemon() to be run without Tornado / asyncio.
+    '''
+    from gramex.services import info
+    return (
+        info.main_ioloop or
+        tornado.ioloop.IOLoop.current() or
+        AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
+    )
 
 
 def _create_path(path):

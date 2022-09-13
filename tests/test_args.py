@@ -1,4 +1,3 @@
-import six
 import json
 from gramex.http import BAD_REQUEST
 from . import TestGramex
@@ -29,9 +28,9 @@ class TestArgs(TestGramex):
     def check_argparse(self, query, result, *args, **kwargs):
         params = {'_q': json.dumps({'args': args, 'kwargs': kwargs})}
         r = self.get('/func/argparse' + query, params=params)
-        if isinstance(result, six.string_types):
+        if isinstance(result, str):
             self.assertEqual(r.status_code, BAD_REQUEST)
-            self.assertIn(result, r.reason)
+            self.assertIn(result, r.text)
         else:
             result = r.json()
             result.pop('_q', None)

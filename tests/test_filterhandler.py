@@ -1,8 +1,7 @@
 import os
 import gramex.cache
 import pandas as pd
-from pandas.util.testing import assert_frame_equal as afe
-from . import TestGramex, folder
+from . import TestGramex, folder, afe
 
 
 class TestFilterHandler(TestGramex):

@@ -4,7 +4,6 @@ monitor files, and run functions when the file changes.
 '''
 
 import os
-import six
 import atexit
 from fnmatch import fnmatch
 from orderedattrdict import AttrDict
@@ -24,9 +23,6 @@ atexit.register(observer.stop)
 
 handlers = {}               # (handler, watch) -> (folder, name)
 watches = AttrDict()        # watches[folder] = ObservedWatch
-
-if six.PY2:
-    PermissionError = RuntimeError
 
 
 class FileEventHandler(FileSystemEventHandler):
@@ -106,10 +102,10 @@ def watch(name, paths, **events):
             try:
                 watch = watches[folder] = observer.schedule(handler, folder, recursive=True)
             except PermissionError:
-                app_log.warning('No permission to watch changes on %s', folder)
+                app_log.warning(f'No permission to watch changes on {folder}')
                 continue
         else:
-            app_log.warning('watch directory %s does not exist', folder)
+            app_log.warning(f'watch directory {folder} does not exist')
             continue
         # If EXISTING sub-folders of folder have watches, consolidate into this watch
         consolidate_watches(folder, watch)

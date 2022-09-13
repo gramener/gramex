@@ -1,6 +1,6 @@
 # Config file for automatic testing at travis-ci.org
 
-# Run in Python 3 only. Drop Python 2 testing
+# Run in Python 3.x only
 language: python
 python: 3.7
 
@@ -49,6 +49,7 @@ cache:
   timeout: 1000
   pip: true
   npm: true
+  # We don't use yarn except for the test_install test cases
   yarn: true
   # Don't cache miniconda directory. It's slower. Fresh install takes ~200s.
   # But caching takes ~150s (extraction) + ~190s (re-packing) = ~340s (slower).
@@ -67,11 +68,7 @@ install:
   - conda install line_profiler
   # Why conda install rpy2?
   #   rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  # Why conda install r-markdown instead of install.packages("rmarkdown")?
-  #   install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
-  #   https://bitbucket.org/rpy2/rpy2/issues/572
-  #   Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
-  - conda install -c conda-forge rpy2 r-markdown
+  - conda install -c conda-forge rpy2
   # Install a reasonably modern version of node.js for UI components to work
   - nvm install 12
   # Set up variables
@@ -84,7 +81,7 @@ script:
   - pip install -e .
   - pip install gramexenterprise
   - gramex license accept
-  - gramex setup --all  # ensure node-sass, puppetter exists
+  - gramex setup --all  # ensure sass, puppetter exists
 
   # Run tests, explicitly showing coverage
   - make test-setup
@@ -92,11 +89,10 @@ script:
   - coverage report --show-missing --ignore-errors
 
   # Test specific apps
-  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && yarn install && bash test/test.sh
+  - cd $TRAVIS_BUILD_DIR/gramex/apps/filemanager/ && npm install && bash test/test.sh
 
   # TODO: Incorporate later
   # - gramex --listen.port=1234 > gramex.log 2>&1 &
   # - sleep 10
-  # - pytest tests/gramextest.yaml
   # - cat gramex.log
   # - kill %1

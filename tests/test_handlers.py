@@ -3,8 +3,8 @@ import requests
 from . import server
 from . import TestGramex
 from nose.tools import eq_, ok_
-from six.moves.urllib_request import urlopen
-from six.moves.urllib_error import HTTPError
+from urllib.request import urlopen
+from urllib.error import HTTPError
 from gramex.services import info
 from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
 
@@ -78,8 +78,9 @@ class TestSetupErrors(TestGramex):
         self.check('/invalid-handler', code=NOT_FOUND)
 
     def test_invalid_setup(self):
-        self.check('/invalid-setup', code=INTERNAL_SERVER_ERROR,
-                   text='url: invalid-setup: No function in conf {}')
+        self.check(
+            '/invalid-setup', code=INTERNAL_SERVER_ERROR,
+            text='url:invalid-setup: needs "function:"')
 
     def test_invalid_function(self):
         self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')

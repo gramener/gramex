@@ -5,7 +5,6 @@ import sys
 import copy
 import json
 import collections
-import six
 from pptx import Presentation
 from pptx.shapes.shapetree import SlideShapes
 from orderedattrdict import AttrDict
@@ -229,7 +228,7 @@ def change_shapes(collection, change, data, handler, **kwargs):
         if spec.get('data'):
             if not isinstance(spec['data'], (dict,)):
                 spec['data'] = {'function': '{}'.format(spec['data']) if not isinstance(
-                    spec['data'], (str, six.string_types,)) else spec['data']}
+                    spec['data'], str) else spec['data']}
             shape_data = build_transform(
                 spec['data'], vars={'data': None, 'handler': None})(data=data, handler=handler)[0]
         else:

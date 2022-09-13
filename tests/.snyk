@@ -1,0 +1,19 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.19.0
+ignore:
+
+  SNYK-PYTHON-NUMPY-2321964:
+    - '*':
+        reason: Evaluate pinning numpy@1.21.5 to numpy@1.22.2 to fix
+        expires: 2022-09-30T00:00:00.000Z
+        created: 2022-05-03T00:00:00.000Z
+  SNYK-PYTHON-NUMPY-2321966:
+    - '*':
+        reason: Evaluate pinning numpy@1.21.5 to numpy@1.22.2 to fix
+        expires: 2022-09-30T00:00:00.000Z
+        created: 2022-05-03T00:00:00.000Z
+  SNYK-PYTHON-NUMPY-2321970:
+    - '*':
+        reason: Evaluate pinning numpy@1.21.5 to numpy@1.22.2 to fix
+        expires: 2022-09-30T00:00:00.000Z
+        created: 2022-05-03T00:00:00.000Z

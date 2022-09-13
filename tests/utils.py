@@ -1,23 +1,30 @@
 '''Test case utilities'''
 import os
 import csv
-import six
 import sys
 import json
 import time
 import random
 import pandas as pd
+import numpy as np
+from io import StringIO
 from collections import Counter
 from orderedattrdict import AttrDict
+from typing import List
+from typing_extensions import Annotated
 from sklearn.datasets import make_circles as sk_make_circles
 from tornado import gen
-from tornado.web import RequestHandler, MissingArgumentError
+from tornado.web import RequestHandler, MissingArgumentError, HTTPError
+from tornado.gen import coroutine
+from tornado.concurrent import Future
 from tornado.httpclient import AsyncHTTPClient
 from concurrent.futures import ThreadPoolExecutor
-from gramex.cache import Subprocess
+from gramex.cache import Subprocess, CustomJSONEncoder
 from gramex.services import info
 from gramex.services.emailer import SMTPStub
 from gramex.handlers import BaseHandler
+from gramex.http import OK
+from gramex.transforms import handler, Header
 
 watch_info = []
 ws_info = []
@@ -70,14 +77,18 @@ def str_callback(value, callback):
 
 def iterator_async(handler):
     for val in handler.get_arguments('x'):
-        future = gen.Task(str_callback, val)
+        future = Future()
+        str_callback(val, callback=future.set_result)
         yield future
 
 
 @gen.coroutine
 def async_args(*args, **kwargs):
     '''Run params_as_json asynchronously'''
-    result = yield gen.Task(params_as_json, *args, **kwargs)
+    future = Future()
+    kwargs['callback'] = future.set_result
+    params_as_json(*args, **kwargs)
+    result = yield future
     raise gen.Return(result)
 
 
@@ -110,7 +121,7 @@ def async_calc(handler):
     rows = 1000
     cols = ['A', 'B', 'C']
     df = pd.DataFrame(
-        pd.np.arange(rows * len(cols)).reshape((rows, len(cols))),
+        np.arange(rows * len(cols)).reshape((rows, len(cols))),
         columns=cols)
     df = df % 4
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
@@ -191,7 +202,7 @@ def session(handler):
     var = handler.get_argument('var', None)
     if var is not None:
         handler.session['var'] = var
-    return json.dumps(handler.session, indent=4)
+    return json.dumps(handler.session, indent=4, cls=CustomJSONEncoder)
 
 
 def encrypt(handler, content):
@@ -213,7 +224,7 @@ def log_format(handler):
 
 
 def log_csv(handler):
-    result = six.StringIO()
+    result = StringIO()
     writer = csv.writer(result)
     try:
         1 / 0
@@ -246,6 +257,18 @@ def otp(handler):
     return json.dumps(handler.otp(expire=expire))
 
 
+def apikey(handler):
+    user = {key: val[-1] for key, val in handler.args.items()}
+    return json.dumps(handler.apikey(user=user or None))
+
+
+def revoke(handler):
+    if 'otp' in handler.args:
+        handler.revoke_otp(handler.args['otp'][-1])
+    elif 'key' in handler.args:
+        handler.revoke_apikey(handler.args['key'][-1])
+
+
 def increment(handler):
     '''
     This function is used to check the cache. Suppose we fetch a page, then
@@ -265,7 +288,7 @@ def increment_header(handler):
     Does not return any output. Used as a FunctionHandler in func/redirect
     '''
     counters['header'] += 1
-    handler.set_header('Increment', six.text_type(counters['header']))
+    handler.set_header('Increment', str(counters['header']))
     return 'Constant result'
 
 
@@ -310,15 +333,16 @@ def subprocess(handler):
 def argparse(handler):
     params = json.loads(handler.get_argument('_q'))
     args = params.get('args', [])
+    typemap = {'list': list, 'str': str, 'None': None, 'int': int, 'bool': bool}
     # Convert first parameter to relevant type, if required
     if len(args) > 0:
-        if args[0] in {'list', 'str', 'unicode', 'six.string_type', 'None'}:
-            args[0] = eval(args[0])
+        if args[0] in typemap:
+            args[0] = typemap[args[0]]
     # Convert type: to a Python class
     kwargs = params.get('kwargs', {})
-    for key, val in kwargs.items():
+    for val in kwargs.values():
         if 'type' in val:
-            val['type'] = eval(val['type'])
+            val['type'] = typemap[val['type']]
     return json.dumps(handler.argparse(*args, **kwargs))
 
 
@@ -395,7 +419,7 @@ def numpytypes(handler):
         'uint8', 'uint16', 'uint32', 'uint64',
         'float16', 'float32', 'float64',
         'bool_', 'object_', 'string_', 'unicode_'}
-    result = {t: getattr(pd.np, t)(1) for t in supported_types}
+    result = {t: getattr(np, t)(1) for t in supported_types}
     return result
 
 
@@ -464,13 +488,51 @@ def get_state_info():
 def make_circles():
     X, y = sk_make_circles(noise=0.05, factor=0.4)  # NOQA: N806
     out = os.path.join(os.path.dirname(__file__), 'circles.csv')
-    pd.DataFrame(pd.np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
+    pd.DataFrame(np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
         out, encoding='utf-8', index=False)
 
 
 def transform_circles(df, *argss, **kwargs):
-    df[['X1', 'X2']] = pd.np.exp(-df[['X1', 'X2']].values ** 2)
+    df[['X1', 'X2']] = np.exp(-df[['X1', 'X2']].values ** 2)
     return df
+
+
+@coroutine
+def pynode_run(handler):
+    from gramex.pynode import node
+    kwargs = {}
+    for key, vals in handler.args.items():
+        try:
+            kwargs[key] = float(vals[-1])
+        except ValueError:
+            kwargs[key] = vals[-1]
+    result = yield node.js(**kwargs)
+    return result
+
+
+@handler
+def test_function(
+        li1: List[int],
+        lf1: List[float],
+        li2: Annotated[List[int], 'List of ints'],  # noqa
+        lf2: Annotated[List[float], 'List of floats'],  # noqa
+        li3: List[int] = [0],
+        lf3: List[float] = [0.0],
+        l1=[],
+        i1: Annotated[int, 'First value'] = 0,  # noqa
+        i2: Annotated[int, 'Second value'] = 0,  # noqa
+        s1: str = 'Total',
+        n1: int = 0,
+        n2: np.int64 = 0,
+        h: Header = '',
+        code: int = OK):
+    '''
+    This is a **Markdown** docstring.
+    '''
+    if code == OK:
+        return json.dumps([li1, li2, li3, lf1, lf2, lf3, l1, i1, i2, s1, h])
+    else:
+        raise HTTPError(code)
 
 
 if __name__ == '__main__':

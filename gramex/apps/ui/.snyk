@@ -1,0 +1,20 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.19.0
+ignore:
+
+  # @vue/cli-service has vulnerabilities that only affects projects using Vue. Known risk.
+  # Since this only impacts developer-controlled code, it's acceptable
+  SNYK-JS-ANSIREGEX-1583908:
+    - '*':
+        reason: No fix available. Await @vue/cli-service upgrade
+        expires: 2022-06-30T00:00:00.000Z
+        created: 2021-10-01T00:00:00.000Z
+
+  # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this
+  SNYK-JS-D3COLOR-1076592:
+    - '*':
+        reason: Retained for backward compatibility for old projects
+        expires: 2030-01-01T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
+patch: {}
