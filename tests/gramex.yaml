@@ -1279,6 +1279,14 @@ url:
         class: NER
       xsrf_cookies: false
 
+  mlpredictor:
+    pattern: /predictor
+    handler: MLPredictor
+    kwargs:
+      model: $YAMLPATH/predictor.pkl
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
+
   capture:
     pattern: /capture
     handler: CaptureHandler
@@ -2554,6 +2562,9 @@ watch:
 schedule:
   make-circles:
     function: utils.make_circles
+    startup: true
+  make-classifier:
+    function: utils.make_classifier
     startup: true
   schedule-start:
     function: utils.schedule_start

@@ -12,7 +12,9 @@ from collections import Counter
 from orderedattrdict import AttrDict
 from typing import List
 from typing_extensions import Annotated
+import joblib
 from sklearn.datasets import make_circles as sk_make_circles
+from sklearn.linear_model import LogisticRegression
 from tornado import gen
 from tornado.web import RequestHandler, MissingArgumentError, HTTPError
 from tornado.gen import coroutine
@@ -495,6 +497,16 @@ def make_circles():
 def transform_circles(df, *argss, **kwargs):
     df[['X1', 'X2']] = np.exp(-df[['X1', 'X2']].values ** 2)
     return df
+
+
+def make_classifier():
+    folder = os.path.dirname(__file__)
+    df = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'))
+    X = df.drop(['species'], axis=1)
+    y = df['species']
+    lr = LogisticRegression()
+    lr.fit(X, y)
+    joblib.dump(lr, os.path.join(folder, "predictor.pkl"))
 
 
 @coroutine
