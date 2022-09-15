@@ -13,7 +13,6 @@ from gramex.http import NOT_FOUND, BAD_REQUEST
 from gramex.install import safe_rmtree
 from gramex import cache
 
-from orderedattrdict import AttrDict
 import numpy as np
 import pandas as pd
 import joblib
@@ -362,14 +361,6 @@ class MLPredictor(FormHandler):
         kwargs.update(data)
         super(MLPredictor, cls).setup(**kwargs)
 
-    @coroutine
-    def get(self, *path_args, **path_kwargs):
-        for key, dataset in self.datasets.items():
-            break  # We assume that unlike in FormHandler, only one dataset is present
-        opt = self._options(dataset, self.args, path_args, path_kwargs, key)
-        meta = {key: AttrDict()}
-        data = yield gramex.service.threadpool.submit(
-            self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
-        dataset.pop('schema', None)
-        result = yield gramex.service.threadpool.submit(self.model.predict, data)
-        self.write(json.dumps(result, cls=CustomJSONEncoder))
+    def modify_all(self, data=None, key=None, handler=None):
+        df = pd.DataFrame.from_dict({'prediction': self.model.predict(data['data'])})
+        return {'data': df}

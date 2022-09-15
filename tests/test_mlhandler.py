@@ -810,17 +810,21 @@ class TestPredictor(TestGramex):
             squeeze=True,
         )
         y_pred = self.get('/predictor?_c=-species').json()
+        y_pred = pd.DataFrame.from_records(y_pred)['prediction']
         self.assertGreaterEqual(accuracy_score(y_true, y_pred), 0.9)
 
     def test_filters(self):
         # petal length < 2.5 is setosa alone
         resp = self.get('/predictor?_c=-species&petal_length<=2.5').json()
-        self.assertEqual(set(resp), {'setosa'})
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'setosa'})
 
         # petal width < 0.75 is setosa alone
         resp = self.get('/predictor?_c=-species&petal_width<=0.75').json()
-        self.assertEqual(set(resp), {'setosa'})
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'setosa'})
 
         # Check the others are a mix of versicolor and virginica
         resp = self.get('/predictor?_c=-species&petal_width>=0.75&petal_length>=2.5').json()
-        self.assertEqual(set(resp), {'versicolor', 'virginica'})
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'versicolor', 'virginica'})
