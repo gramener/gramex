@@ -120,7 +120,7 @@ Project path:      C:\site\gramener.com\viz\async-gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 903 dependencies for known issues, no vulnerable paths found.
+✔ Tested 864 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -148,6 +148,17 @@ Next steps:
 
 Testing C:\site\gramener.com\viz\async-gramex...
 
+Tested 66 dependencies for known issues, found 1 issue, 1 vulnerable path.
+
+
+Issues to fix by upgrading dependencies:
+
+  Pin aiohttp@3.7.4 to aiohttp@3.8.0 to fix
+  ✗ HTTP Header Injection [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-AIOHTTP-1584144] in aiohttp@3.7.4
+    introduced by datasets@2.3.2 > aiohttp@3.7.4
+
+
+
 Organization:      sanand0
 Package manager:   pip
 Target file:       tests\requirements.txt
@@ -157,11 +168,8 @@ Project path:      C:\site\gramener.com\viz\async-gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 69 dependencies for known issues, no vulnerable paths found.
-
-Next steps:
-- Run `snyk monitor` to be notified about new related vulnerabilities.
-- Run `snyk test` as part of your CI/test.
+Tip: Try `snyk fix` to address these issues.`snyk fix` is a new CLI command in that aims to automatically apply the recommended updates for supported ecosystems.
+See documentation on how to enable this beta feature: https://docs.snyk.io/snyk-cli/fix-vulnerabilities-from-the-cli/automatic-remediation-with-snyk-fix#enabling-snyk-fix
 
 -------------------------------------------------------
 
@@ -200,7 +208,7 @@ Next steps:
 - Run `snyk test` as part of your CI/test.
 
 
-Tested 11 projects, no vulnerable paths were found.
+Tested 11 projects, 1 contained vulnerable paths.
 
 
 
