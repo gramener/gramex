@@ -19,8 +19,10 @@ from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
 from .openapihandler import OpenAPIHandler
+from .chathandler import ChatHandler
 
 # Aliases
+Chat = ChatHandler
 Comic = ComicHandler
 Command = ProcessHandler
 Data = FormHandler
@@ -46,6 +48,8 @@ __all__ = [
     'BaseMixin',
     'Capture',
     'CaptureHandler',
+    'Chat',
+    'ChatHandler',
     'Command',
     'Comic',
     'ComicHandler',
