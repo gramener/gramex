@@ -8,9 +8,13 @@ info = {}
 def get_agent(config_dir):
     # If rasa is not installed, let it raise an ImportError
     from rasa.core.agent import Agent
+    from rasa.core.tracker_store import SQLTrackerStore
 
+    if 'tracker' not in info:
+        info['tracker'] = SQLTrackerStore(
+            db=f'sqlite:///${config_dir}/tracker.db', dialect='sqlite')
     if 'agent' not in info:
-        info['agent'] = Agent.load(model_path=config_dir)
+        info['agent'] = Agent.load(model_path=config_dir, tracker_store=info['tracker'])
         # TODO: Await till agent.is_ready()
     return info['agent']
 
@@ -25,6 +29,6 @@ class ChatHandler(BaseHandler):
     def get(self):
         agent = yield get_agent(self.config_dir)
         message = self.get_arg('q')
-        coroutine = agent.handle_text(message)
+        coroutine = agent.handle_text(message, sender_id=self.session['id'])
         responses = yield coroutine
-        self.write(responses)
+        self.write({"responses": responses})

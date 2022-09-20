@@ -8,8 +8,15 @@
 </head>
 <body>
 
-  <form action="train" method="POST">
+  <form action="train" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+    {% import os %}
+    {% import gramex.cache %}
+    {% set config_dir = handler.kwargs.chattrainer_kwargs['config_dir'] %}
+    <textarea name="domain" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'domain.yml'), callback='txt') }}</textarea>
+    <textarea name="config" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'config.yml'), callback='txt') }}</textarea>
+    <textarea name="nlu" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'nlu.yml'), callback='txt') }}</textarea>
+    <textarea name="stories" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'stories.yml'), callback='txt') }}</textarea>
     <button type="submit">Train</button>
   </form>
 
