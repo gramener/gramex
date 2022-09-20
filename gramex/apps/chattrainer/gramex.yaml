@@ -1,0 +1,22 @@
+import:
+  apps/chattrainer/ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/
+
+url:
+  apps/chattrainer/home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/default.tmpl.html
+      template: ['*.tmpl.html']
+      chattrainer_kwargs: $CHATTRAINER_KWARGS
+      auth: $CHATTRAINER_AUTH
+
+  apps/chattrainer/users-$*:
+    pattern: /$YAMLURL/train
+    handler: FunctionHandler
+    kwargs:
+      function: chattrainer.train(handler)
+      chattrainer_kwargs: $CHATTRAINER_KWARGS
+      auth: $CHATTRAINER_AUTH

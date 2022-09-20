@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Trainer</title>
+</head>
+<body>
+
+  <form action="train" method="POST">
+    <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
+    <button type="submit">Train</button>
+  </form>
+
+</body>
+</html>
