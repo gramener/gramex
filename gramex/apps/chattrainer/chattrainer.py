@@ -11,8 +11,7 @@ def train(handler):
         for key in ['config', 'nlu', 'domain', 'stories']:
             value = handler.get_arg(key, '')
             if len(value):
-                print('key', key, 'has non-zero upload. Writing')
-                with open(os.path.join(config_dir, f'{key}.yml'), 'w') as handle:
+                with open(os.path.join(config_dir, f'{key}.yml'), 'w', newline='') as handle:
                     handle.write(value)
 
         # Retrain. TODO: Allow retaining to be optional

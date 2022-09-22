@@ -5,20 +5,76 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat Trainer</title>
+  <link href="ui/bootstrap5/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-
-  <form action="train" method="POST" enctype="multipart/form-data">
+  <form action="train" method="POST">
     <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
-    {% import os %}
-    {% import gramex.cache %}
-    {% set config_dir = handler.kwargs.chattrainer_kwargs['config_dir'] %}
-    <textarea name="domain" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'domain.yml'), callback='txt') }}</textarea>
-    <textarea name="config" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'config.yml'), callback='txt') }}</textarea>
-    <textarea name="nlu" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'nlu.yml'), callback='txt') }}</textarea>
-    <textarea name="stories" cols="40" rows="40">{{ gramex.cache.open(os.path.join(config_dir, 'stories.yml'), callback='txt') }}</textarea>
-    <button type="submit">Train</button>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Chat Trainer</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="editors" role="tablist">
+            <li class="nav-item" role="presentation">
+              <a class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#domain-pane" role="tab" aria-controls="home-tab-pane" aria-selected="true" href="#">Domain</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#config-pane" role="tab" aria-controls="profile-tab-pane" aria-selected="false" href="#">Config</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#nlu-pane" role="tab" aria-controls="contact-tab-pane" aria-selected="false" href="#">NLU</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#stories-pane" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" href="#">Stories</a>
+            </li>
+          </ul>
+          <div class="d-flex">
+            <button class="btn btn-danger" type="submit">Train</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid tab-content d-flex" id="editorsContent">
+      {% import os %}
+      {% import gramex.cache %}
+      {% set config_dir = handler.kwargs.chattrainer_kwargs['config_dir'] %}
+      <div class="tab-pane show active" id="domain-pane" role="tabpanel" aria-labelledby="domain-pane" tabindex="0">
+        <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'domain.yml'), callback='txt') }}</pre>
+      </div>
+      <div class="tab-pane" id="config-pane" role="tabpanel" aria-labelledby="config-pane" tabindex="0">
+        <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'config.yml'), callback='txt') }}</pre>
+      </div>
+      <div class="tab-pane" id="nlu-pane" role="tabpanel" aria-labelledby="nlu-pane" tabindex="0">
+        <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'nlu.yml'), callback='txt') }}</pre>
+      </div>
+      <div class="tab-pane" id="stories-pane" role="tabpanel" aria-labelledby="stories-pane" tabindex="0">
+        <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'stories.yml'), callback='txt') }}</pre>
+      </div>
+    </div>
   </form>
+
+  <script src="ui/bootstrap5/dist/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs/loader.js"></script>
+  <script>
+    /* globals require, monaco, document */
+    const editors = {}
+    const size = { width: 1200, height: 800 }
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs' } })
+    require(['vs/editor/editor.main'], function () {
+      Array.from(document.querySelectorAll('.monaco')).forEach(el => {
+        let editor = editors[el.parentElement.getAttribute('id')] = monaco.editor.create(el.parentElement, { value: el.innerHTML, language: 'yaml' })
+        editor.layout(size)
+        el.remove()
+      })
+    })
+    document.querySelector('.navbar').addEventListener('shown.bs.tab', e => {
+      editors[e.target.dataset.bsTarget.slice(1)].layout(size)
+    })
+  </script>
 
 </body>
 </html>
