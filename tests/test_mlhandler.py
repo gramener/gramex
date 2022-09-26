@@ -796,9 +796,19 @@ class TestSklearn(TestGramex):
 
 
 class TestPredictor(TestGramex):
+
+    @classmethod
+    def setUpClass(cls):
+        df = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'))
+        X = df.drop(['species'], axis=1)
+        y = df['species']
+        lr = LogisticRegression()
+        lr.fit(X, y)
+        joblib.dump(lr, os.path.join(folder, "model.pkl"))
+
     @classmethod
     def tearDownClass(cls):
-        model = op.join(folder, "predictor.pkl")
+        model = op.join(folder, "model.pkl")
         if op.exists(model):
             os.remove(model)
 
