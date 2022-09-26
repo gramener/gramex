@@ -33,9 +33,7 @@ def multilist(items: List[int], start: float) -> float:
 
 @handler
 def strtotal(*items: str) -> str:
-    s = ''
-    for i in items:
-        s += i
+    s = ''.join([i for i in items])
     return s
 
 
