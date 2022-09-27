@@ -1284,7 +1284,9 @@ url:
     handler: MLPredictor
     kwargs:
       config_dir: $YAMLPATH
-      url: $YAMLPATH/../testlib/iris.csv
+      data:
+        url: $YAMLPATH/../testlib/iris.csv
+      columns: [sepal_length, sepal_width, petal_length, petal_width]
 
   capture:
     pattern: /capture

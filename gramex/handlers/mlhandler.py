@@ -356,11 +356,16 @@ class MLHandler(FormHandler):
 class MLPredictor(FormHandler):
 
     @classmethod
-    def setup(cls, config_dir, **kwargs):
+    def setup(cls, config_dir, data, columns=None, **kwargs):
         cls.config_dir = config_dir
+        cls.cols = columns
+        kwargs.update(data)
         super(MLPredictor, cls).setup(**kwargs)
 
     def modify_all(self, data=None, key=None, handler=None):
         model = cache.open(op.join(self.config_dir, "model.pkl"), joblib.load)
-        df = pd.DataFrame.from_dict({'prediction': model.predict(data['data'])})
+        X = data['data']
+        if self.cols is not None:
+            X = data['data'][self.cols]
+        df = pd.DataFrame.from_dict({'prediction': model.predict(X)})
         return {'data': df}

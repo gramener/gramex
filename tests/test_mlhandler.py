@@ -814,7 +814,7 @@ class TestPredictor(TestGramex):
 
     def test_default(self):
         """An empty GET request returns all predictions."""
-        y_true = pd.read_csv(
+        y_true = gramex.cache.open(
             op.join(folder, "..", "testlib", "iris.csv"),
             usecols=["species"],
             squeeze=True,
@@ -822,6 +822,26 @@ class TestPredictor(TestGramex):
         y_pred = self.get('/predictor?_c=-species').json()
         y_pred = pd.DataFrame.from_records(y_pred)['prediction']
         self.assertGreaterEqual(accuracy_score(y_true, y_pred), 0.9)
+
+    def test_column_order(self):
+        # Rewrite the original dataset with column order changed
+        path = op.join(folder, "..", "testlib", "iris.csv")
+        with open(path, 'rb') as fin:
+            org_data = fin.read()
+        df = gramex.cache.open(path)
+        cols = df.columns.tolist()
+        import random
+        random.shuffle(cols)
+        xdf = df[cols]
+
+        try:
+            xdf.to_csv(path, index=False)
+            y_pred = self.get('/predictor?_c=-species').json()
+            y_pred = pd.DataFrame.from_records(y_pred)['prediction']
+            self.assertGreaterEqual(accuracy_score(xdf['species'], y_pred), 0.9)
+        finally:  # Revert to the original dataset
+            with open(path, 'wb') as fout:
+                fout.write(org_data)
 
     def test_filters(self):
         # petal length < 2.5 is setosa alone
