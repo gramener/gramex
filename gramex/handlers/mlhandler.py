@@ -363,9 +363,8 @@ class MLPredictor(FormHandler):
         super(MLPredictor, cls).setup(**kwargs)
 
     def modify_all(self, data=None, key=None, handler=None):
-        model = cache.open(op.join(self.config_dir, "model.pkl"), joblib.load)
-        X = data['data']
-        if self.cols is not None:
-            X = data['data'][self.cols]
-        df = pd.DataFrame.from_dict({'prediction': model.predict(X)})
+        model = cache.open(op.join(self.config_dir, 'model.pkl'), joblib.load)
+        df = pd.DataFrame.from_dict({'prediction': model.predict(
+            data['data'][self.cols] if self.cols is not None else data['data']
+        )})
         return {'data': df}

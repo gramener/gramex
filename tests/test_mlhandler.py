@@ -800,10 +800,10 @@ class TestPredictor(TestGramex):
     @classmethod
     def setUpClass(cls):
         df = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'))
-        X = df.drop(['species'], axis=1)
+        x = df.drop(['species'], axis=1)
         y = df['species']
         lr = LogisticRegression()
-        lr.fit(X, y)
+        lr.fit(x, y)
         joblib.dump(lr, os.path.join(folder, "model.pkl"))
 
     @classmethod
