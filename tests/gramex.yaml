@@ -1288,6 +1288,29 @@ url:
         url: $YAMLPATH/../testlib/iris.csv
       columns: [sepal_length, sepal_width, petal_length, petal_width]
 
+  mlpredictor-trainer:
+    pattern: /titanic
+    handler: MLHandler
+    kwargs:
+      xsrf_cookies: false
+      config_dir: $YAMLPATH/titanic
+      data:
+        url: https://gramener.com/gramex/guide/mlhandler/titanic.csv
+      model:
+        class: LogisticRegression
+        target_col: Survived
+        exclude: [PassengerId, Ticket, Cabin, Name]
+        cats: [Embarked, SibSp, Parch, Pclass, Sex]
+
+  mlpredictor-from-handler:
+    pattern: /predictfromhandler
+    handler: MLPredictor
+    kwargs:
+      function: data.dropna(subset=['Age', 'Embarked'])
+      config_dir: $YAMLPATH/titanic
+      data:
+        url: https://gramener.com/gramex/guide/mlhandler/titanic.csv
+
   capture:
     pattern: /capture
     handler: CaptureHandler

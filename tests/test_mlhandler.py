@@ -811,6 +811,9 @@ class TestPredictor(TestGramex):
         model = op.join(folder, "model.pkl")
         if op.exists(model):
             os.remove(model)
+        titanic = op.join(folder, "titanic")
+        if op.isdir(titanic):
+            shutil.rmtree(titanic)
 
     def test_default(self):
         """An empty GET request returns all predictions."""
@@ -858,3 +861,24 @@ class TestPredictor(TestGramex):
         resp = self.get('/predictor?_c=-species&petal_width>=0.75&petal_length>=2.5').json()
         y_pred = [k['prediction'] for k in resp]
         self.assertEqual(set(y_pred), {'versicolor', 'virginica'})
+
+    def test_from_mlhandler(self):
+        """Check that a model created through MLHandler works."""
+        # Get results from the MLHandler
+        df = pd.read_csv("https://gramener.com/gramex/guide/mlhandler/titanic.csv")
+        print('ORG:')
+        print(df.shape)
+        resp = self.get(
+            "/titanic",
+            method="post",
+            data=df.drop(['Survived'], axis=1).to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        y_true = np.array([k['Survived'] for k in resp])
+
+        # Get the results from the MLPredictor
+        resp = self.get('/predictfromhandler').json()
+        y_pred = np.array([k['prediction'] for k in resp])
+
+        # Assert that they are identical
+        np.testing.assert_equal(y_true, y_pred)
