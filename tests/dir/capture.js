@@ -1,3 +1,5 @@
+/* eslint-env browser */
+
 // After 500 ms, change color to blue and text to blue block
 setTimeout(function() {
   document.querySelector('p').style.color = 'blue'

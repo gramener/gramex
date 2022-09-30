@@ -71,7 +71,7 @@ def pop_user(handler):
         session = handler._session_store.load(key)
         if session is not None:
             other_user = session.get('user')
-            if(other_user is not None and other_user.get('id') and
+            if (other_user is not None and other_user.get('id') and
                arg_user == other_user.get('id')):
                 session.pop('user')
                 user_dets = user_info.load(arg_user)
