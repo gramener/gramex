@@ -8,10 +8,11 @@ def train(handler):
         config_dir = chattrainer_kwargs['config_dir']
 
         # Upload files
-        for key in ['config', 'nlu', 'domain', 'stories']:
+        for key in ['config.yml', 'nlu.yml', 'domain.yml', 'stories.yml', 'actions.py']:
             value = handler.get_arg(key, '')
             if len(value):
-                with open(os.path.join(config_dir, f'{key}.yml'), 'w', newline='') as handle:
+                with open(os.path.join(config_dir, key), 'w', newline='') as handle:
+                    # TODO: Decode HTML
                     handle.write(value)
 
         # Retrain. TODO: Allow retaining to be optional

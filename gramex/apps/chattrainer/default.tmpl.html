@@ -8,7 +8,7 @@
   <link href="ui/bootstrap5/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <form action="train" method="POST">
+  <form class="chattrainer-form" action="train" method="POST">
     <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
@@ -30,6 +30,9 @@
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#stories-pane" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" href="#">Stories</a>
             </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#actions-pane" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" href="#">Actions</a>
+            </li>
           </ul>
           <div class="d-flex">
             <button class="btn btn-danger" type="submit">Train</button>
@@ -43,16 +46,24 @@
       {% import gramex.cache %}
       {% set config_dir = handler.kwargs.chattrainer_kwargs['config_dir'] %}
       <div class="tab-pane show active" id="domain-pane" role="tabpanel" aria-labelledby="domain-pane" tabindex="0">
+        <input name="domain.yml" type="hidden" value="">
         <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'domain.yml'), callback='txt') }}</pre>
       </div>
       <div class="tab-pane" id="config-pane" role="tabpanel" aria-labelledby="config-pane" tabindex="0">
+        <input name="config.yml" type="hidden" value="">
         <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'config.yml'), callback='txt') }}</pre>
       </div>
       <div class="tab-pane" id="nlu-pane" role="tabpanel" aria-labelledby="nlu-pane" tabindex="0">
+        <input name="nly.yml" type="hidden" value="">
         <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'nlu.yml'), callback='txt') }}</pre>
       </div>
       <div class="tab-pane" id="stories-pane" role="tabpanel" aria-labelledby="stories-pane" tabindex="0">
+        <input name="stories.yml" type="hidden" value="">
         <pre class="monaco">{{ gramex.cache.open(os.path.join(config_dir, 'stories.yml'), callback='txt') }}</pre>
+      </div>
+      <div class="tab-pane" id="actions-pane" role="tabpanel" aria-labelledby="actions-pane" tabindex="0">
+        <input name="actions.py" type="hidden" value="">
+        <pre class="monaco">{% raw gramex.cache.open(os.path.join(config_dir, 'actions.py'), callback='txt') %}</pre>
       </div>
     </div>
   </form>
@@ -60,19 +71,31 @@
   <script src="ui/bootstrap5/dist/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs/loader.js"></script>
   <script>
-    /* globals require, monaco, document */
+    /* globals require, monaco, document, console */
     const editors = {}
     const size = { width: 1200, height: 800 }
     require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.0/min/vs' } })
     require(['vs/editor/editor.main'], function () {
       Array.from(document.querySelectorAll('.monaco')).forEach(el => {
-        let editor = editors[el.parentElement.getAttribute('id')] = monaco.editor.create(el.parentElement, { value: el.innerHTML, language: 'yaml' })
-        editor.layout(size)
+        console.log(el.textContent)
+        let editor = editors[el.parentElement.getAttribute('id')] = {
+          input: el.parentElement.querySelector('input'),
+          editor: monaco.editor.create(el.parentElement, {
+            value: el.textContent, language: 'yaml'
+          })
+        }
+        editor.editor.layout(size)
         el.remove()
       })
     })
     document.querySelector('.navbar').addEventListener('shown.bs.tab', e => {
       editors[e.target.dataset.bsTarget.slice(1)].layout(size)
+    })
+    document.querySelector('.chattrainer-form').addEventListener('submit', () => {
+      for (let [key, val] of Object.entries(editors)) {
+        val.input.value = val.editor.getValue()
+        console.log(key, val.input, val.editor.getValue())
+      }
     })
   </script>
 
