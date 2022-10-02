@@ -865,9 +865,7 @@ class TestPredictor(TestGramex):
     def test_from_mlhandler(self):
         """Check that a model created through MLHandler works."""
         # Get results from the MLHandler
-        df = pd.read_csv("https://gramener.com/gramex/guide/mlhandler/titanic.csv")
-        print('ORG:')
-        print(df.shape)
+        df = gramex.cache.open('titanic.csv', rel=True)
         resp = self.get(
             "/titanic",
             method="post",
@@ -876,9 +874,11 @@ class TestPredictor(TestGramex):
         ).json()
         y_true = np.array([k['Survived'] for k in resp])
 
-        # Get the results from the MLPredictor
+        # Check that the results from the MLPredictor are identical
         resp = self.get('/predictfromhandler').json()
-        y_pred = np.array([k['prediction'] for k in resp])
-
-        # Assert that they are identical
+        y_pred = np.array([k['Survived'] for k in resp])
         np.testing.assert_equal(y_true, y_pred)
+
+        # Check that target_col overrides column name
+        resp = self.get('/predictfromhandlerwithtargetcol').json()
+        y_pred = np.array([k['pred'] for k in resp])

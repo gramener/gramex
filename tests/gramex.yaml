@@ -1311,6 +1311,16 @@ url:
       data:
         url: https://gramener.com/gramex/guide/mlhandler/titanic.csv
 
+  mlpredictor-from-handler-with-target-col:
+    pattern: /predictfromhandlerwithtargetcol
+    handler: MLPredictor
+    kwargs:
+      function: data.dropna(subset=['Age', 'Embarked'])
+      config_dir: $YAMLPATH/titanic
+      data:
+        url: https://gramener.com/gramex/guide/mlhandler/titanic.csv
+      target_col: pred
+
   capture:
     pattern: /capture
     handler: CaptureHandler

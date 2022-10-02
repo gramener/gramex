@@ -356,9 +356,10 @@ class MLHandler(FormHandler):
 class MLPredictor(FormHandler):
 
     @classmethod
-    def setup(cls, config_dir, data, columns=None, **kwargs):
+    def setup(cls, config_dir, data, target_col=None, columns=None, **kwargs):
         cls.config_dir = config_dir
         cls.cols = columns
+        cls.target_col = target_col
         kwargs.update(data)
         super(MLPredictor, cls).setup(**kwargs)
 
@@ -386,6 +387,8 @@ class MLPredictor(FormHandler):
 
     def modify_all(self, data=None, key=None, handler=None):
         model = cache.open(op.join(self.config_dir, "model.pkl"), joblib.load)
-        x = self._filtercols(data['data'])
-        df = pd.DataFrame.from_dict({'prediction': model.predict(x)})
+        df = self._filtercols(data['data'])
+        store = ml.ModelStore(self.config_dir)
+        target = self.target_col or store.load('target_col', None) or 'prediction'
+        df[target] = model.predict(df)
         return {'data': df}
