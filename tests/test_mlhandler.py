@@ -56,7 +56,9 @@ class TestTransformers(TestGramex):
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
-    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
+    @skipUnless(
+        os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests"
+    )
     def test_train_sentiment(self):
         """Train with some vague sentences."""
         df = pd.read_json("https://bit.ly/3NesHFs")
@@ -71,7 +73,9 @@ class TestTransformers(TestGramex):
 
     def test_default_ner(self):
         """Ensure that the default model predicts something."""
-        labels = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300).json()
+        labels = self.get(
+            "/ner?text=Narendra Modi is the PM of India.", timeout=300
+        ).json()
         ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
         self.assertIn(("Narendra Modi", "PER"), ents[0])
         self.assertIn(("India", "LOC"), ents[0])
@@ -85,7 +89,9 @@ class TestTransformers(TestGramex):
         self.assertIn(("India", "LOC"), ents[0])
         self.assertIn(("Joe Biden", "PER"), ents[1])
 
-    @skipUnless(os.environ.get('GRAMEX_ML_TESTS'), 'Set GRAMEX_ML_TESTS=1 to run slow ML tests')
+    @skipUnless(
+        os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests"
+    )
     def test_train_ner(self):
         df = pd.read_json("https://bit.ly/3wZYsf5")
         resp = self.get(
@@ -560,9 +566,7 @@ class TestSklearn(TestGramex):
         self.assertGreaterEqual(accuracy_score(target, pred), self.ACC_TOL)
 
     def test_model_default_path(self):
-        clf = joblib.load(
-            op.join(self.root, "mlhandler-nopath", "model.pkl")
-        )
+        clf = joblib.load(op.join(self.root, "mlhandler-nopath", "model.pkl"))
         self.assertIsInstance(clf, LogisticRegression)
         resp = self.get(
             "/mlnopath?_action=score",
@@ -690,9 +694,7 @@ class TestSklearn(TestGramex):
         self.assertEqual(resp.status_code, OK)
 
         # Assert that the model is a pipeline
-        model = joblib.load(
-            op.join(self.root, "mlhandler-blank", "model.pkl")
-        )
+        model = joblib.load(op.join(self.root, "mlhandler-blank", "model.pkl"))
         self.assertIsInstance(model, Pipeline)
         self.assertIsInstance(model["transform"], ColumnTransformer)
         self.assertIsInstance(model["DecisionTreeClassifier"], DecisionTreeClassifier)
@@ -791,3 +793,92 @@ class TestSklearn(TestGramex):
             [(k[0], k[-1]) for k in model["transform"].transformers_],
             [("ohe", ["category"]), ("scaler", ["votes"])],
         )
+
+
+class TestPredictor(TestGramex):
+
+    @classmethod
+    def setUpClass(cls):
+        df = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'))
+        x = df.drop(['species'], axis=1)
+        y = df['species']
+        lr = LogisticRegression()
+        lr.fit(x, y)
+        joblib.dump(lr, os.path.join(folder, "model.pkl"))
+
+    @classmethod
+    def tearDownClass(cls):
+        model = op.join(folder, "model.pkl")
+        if op.exists(model):
+            os.remove(model)
+        titanic = op.join(folder, "titanic")
+        if op.isdir(titanic):
+            shutil.rmtree(titanic)
+
+    def test_default(self):
+        """An empty GET request returns all predictions."""
+        y_true = gramex.cache.open(
+            op.join(folder, "..", "testlib", "iris.csv"),
+            usecols=["species"],
+            squeeze=True,
+        )
+        y_pred = self.get('/predictor?_c=-species').json()
+        y_pred = pd.DataFrame.from_records(y_pred)['prediction']
+        self.assertGreaterEqual(accuracy_score(y_true, y_pred), 0.9)
+
+    def test_column_order(self):
+        # Rewrite the original dataset with column order changed
+        path = op.join(folder, "..", "testlib", "iris.csv")
+        with open(path, 'rb') as fin:
+            org_data = fin.read()
+        df = gramex.cache.open(path)
+        cols = df.columns.tolist()
+        import random
+        random.shuffle(cols)
+        xdf = df[cols]
+
+        try:
+            xdf.to_csv(path, index=False)
+            y_pred = self.get('/predictor?_c=-species').json()
+            y_pred = pd.DataFrame.from_records(y_pred)['prediction']
+            self.assertGreaterEqual(accuracy_score(xdf['species'], y_pred), 0.9)
+        finally:  # Revert to the original dataset
+            with open(path, 'wb') as fout:
+                fout.write(org_data)
+
+    def test_filters(self):
+        # petal length < 2.5 is setosa alone
+        resp = self.get('/predictor?_c=-species&petal_length<=2.5').json()
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'setosa'})
+
+        # petal width < 0.75 is setosa alone
+        resp = self.get('/predictor?_c=-species&petal_width<=0.75').json()
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'setosa'})
+
+        # Check the others are a mix of versicolor and virginica
+        resp = self.get('/predictor?_c=-species&petal_width>=0.75&petal_length>=2.5').json()
+        y_pred = [k['prediction'] for k in resp]
+        self.assertEqual(set(y_pred), {'versicolor', 'virginica'})
+
+    def test_from_mlhandler(self):
+        """Check that a model created through MLHandler works."""
+        # Get results from the MLHandler
+        df = gramex.cache.open('titanic.csv', rel=True)
+        resp = self.get(
+            "/titanic",
+            method="post",
+            data=df.drop(['Survived'], axis=1).to_json(orient="records"),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        y_true = np.array([k['Survived'] for k in resp])
+
+        # Check that the results from the MLPredictor are identical
+        resp = self.get('/predictfromhandler').json()
+        y_pred = np.array([k['Survived'] for k in resp])
+        np.testing.assert_equal(y_true, y_pred)
+
+        # Check that target_col overrides column name
+        resp = self.get('/predictfromhandlerwithtargetcol').json()
+        y_pred = np.array([k['pred'] for k in resp])

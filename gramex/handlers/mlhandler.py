@@ -351,3 +351,44 @@ class MLHandler(FormHandler):
                 getattr(self, f'_delete_{item}')()
             except AttributeError:
                 raise HTTPError(BAD_REQUEST, f'Cannot delete {item}.')
+
+
+class MLPredictor(FormHandler):
+
+    @classmethod
+    def setup(cls, config_dir, data, target_col=None, columns=None, **kwargs):
+        cls.config_dir = config_dir
+        cls.cols = columns
+        cls.target_col = target_col
+        kwargs.update(data)
+        super(MLPredictor, cls).setup(**kwargs)
+
+    def _filtercols(self, data):
+        """Filter columns from the input dataframe, as follows:
+
+        1. If columns are specified, use only those columns and ignore everything else.
+        2. Otherwise fall back on config_dir/config.json
+
+        Note: From sklearn 1.x onwards, ColumnTransformer (which is the default
+        preprocessor used in MLHandler) stores the names of columns.
+        When Gramex supports it, we will not need to store column information in config.json
+        """
+        if self.cols is not None:
+            return data[self.cols]
+        store = ml.ModelStore(self.config_dir)
+        include = store.load('include')
+        if len(include):
+            return data[include]
+        exclude = store.load('exclude')
+        target = store.load('target_col', False)
+        if target and target not in exclude:
+            exclude.append(target)
+        return data.drop(exclude, axis=1)
+
+    def modify_all(self, data=None, key=None, handler=None):
+        model = cache.open(op.join(self.config_dir, "model.pkl"), joblib.load)
+        df = self._filtercols(data['data'])
+        store = ml.ModelStore(self.config_dir)
+        target = self.target_col or store.load('target_col', None) or 'prediction'
+        df[target] = model.predict(df)
+        return {'data': df}

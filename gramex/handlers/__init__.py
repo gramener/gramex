@@ -14,7 +14,7 @@ from .formhandler import FormHandler
 from .pptxhandler import PPTXHandler
 from .proxyhandler import ProxyHandler
 from .modelhandler import ModelHandler
-from .mlhandler import MLHandler
+from .mlhandler import MLHandler, MLPredictor
 from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
@@ -67,6 +67,7 @@ __all__ = [
     'ModelHandler',
     'ML',
     'MLHandler',
+    'MLPredictor',
     'OpenAPI',
     'OpenAPIHandler',
     'PPTXHandler',
