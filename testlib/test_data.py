@@ -371,8 +371,8 @@ class TestFilter(unittest.TestCase):
 
     def check_filter_dates(self, dbname, url):
         self.db.add(dbname)
-        df = self.dates[self.dates['date'] > '2018-02-01 01:00:00']
-        dff = gramex.data.filter(url=url, table='dates', args={'date>': ['2018-02-01 01:00:00']})
+        df = self.dates[self.dates['date'] > pd.to_datetime('2018-01-15 01:00:00')]
+        dff = gramex.data.filter(url=url, table='dates', args={'date>': ['15 Jan 2018 01:00:00']})
         eqframe(dff, df)
 
     def test_mysql(self):
