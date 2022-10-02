@@ -108,7 +108,10 @@ pushdocker () {
     --tag gramener/gramex:$VERSION \
     --tag gramener/gramex:latest
   docker login                # log in as sanand0 / pratapvardhan
-  docker push gramener/gramex-base
+  docker push gramener/gramex-base:$VERSION
+  docker push gramener/gramex-base:latest
+  docker push gramener/gramex:$VERSION
+  docker push gramener/gramex:latest
 }
 
 # Run all commands from the same folder as this script
