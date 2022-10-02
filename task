@@ -86,7 +86,7 @@ security () {
   freshclam
   clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=mkdocs --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
   find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$0" && npm audit --parseable || true' > reports/npm-audit.txt
-  snyk test --dev --all-projects > reports/snyk.txt || true
+  snyk test --dev --all-projects --skip-unresolved > reports/snyk.txt || true
 }
 
 conda () {

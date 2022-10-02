@@ -1,3 +1,5 @@
+C:\site\gramener.com\viz\async-gramex\ --\v8-compile-cache\10.2.154.4-node.8\CzCzBsitezBgramener.comzBvizZzBbuilderrorszBnode_moduleszBstylelintzBbinzBstylelint.js.BLOB: OK
+C:\site\gramener.com\viz\async-gramex\ --\v8-compile-cache\10.2.154.4-node.8\CzCzBsitezBgramener.comzBvizZzBbuilderrorszBnode_moduleszBstylelintzBbinzBstylelint.js.MAP: OK
 C:\site\gramener.com\viz\async-gramex\.bandit: OK
 C:\site\gramener.com\viz\async-gramex\.ecrc: OK
 C:\site\gramener.com\viz\async-gramex\.editorconfig: OK
@@ -11,7 +13,7 @@ C:\site\gramener.com\viz\async-gramex\.htmllintrc: OK
 C:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 C:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
 C:\site\gramener.com\viz\async-gramex\bash.exe.stackdump: OK
-C:\site\gramener.com\viz\async-gramex\dist\gramex-1.82.0.tar.gz: OK
+C:\site\gramener.com\viz\async-gramex\dist\gramex-1.83.0.tar.gz: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\.eslintrc.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\controlpanel.py: OK
@@ -23,7 +25,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\reset_password.svg: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\script.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\webshell.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.eslintrc.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\admin.css: OK
@@ -45,6 +46,7 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\node_modules: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\package-lock.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\README.md: OK
+C:\site\gramener.com\viz\async-gramex\gramex\apps\chattrainer\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\configeditor\node_modules: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\drivehandler-snippet.html: OK
@@ -56,7 +58,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\navbar.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\README.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\$appname.py: Empty file
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.editorconfig: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.flake8: OK
@@ -621,6 +622,7 @@ C:\site\gramener.com\viz\async-gramex\tests\test_uploadhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_watcher.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_websockethandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\throwerror.py: OK
+C:\site\gramener.com\viz\async-gramex\tests\titanic.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\a.ts: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\b.ts: OK
 C:\site\gramener.com\viz\async-gramex\tests\userdata.csv: OK
@@ -636,13 +638,13 @@ C:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\TODO: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8635234
+Known viruses: 8638370
 Engine version: 0.103.3
-Scanned directories: 84
-Scanned files: 588
+Scanned directories: 88
+Scanned files: 591
 Infected files: 0
-Data scanned: 13.70 MB
-Data read: 4.61 MB (ratio 2.97:1)
-Time: 25.168 sec (0 m 25 s)
-Start Date: 2022:09:19 08:07:06
-End Date:   2022:09:19 08:07:31
+Data scanned: 15.91 MB
+Data read: 5.78 MB (ratio 2.75:1)
+Time: 21.000 sec (0 m 21 s)
+Start Date: 2022:10:02 14:21:38
+End Date:   2022:10:02 14:21:59
