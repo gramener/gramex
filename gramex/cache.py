@@ -599,6 +599,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
         that the application started properly.
     '''
     arg_str = args if isinstance(args, str) else ' '.join(args)
+    # TODO: stream_stderr and stream_stdout are NOT likely to be serializable! Exclude those
     try:
         key = cache_key(arg_str, kwargs)
     except (TypeError, ValueError):
