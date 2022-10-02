@@ -1,14 +1,14 @@
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin
+/viz/async-gramex/gramex/apps/admin
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin2
+/viz/async-gramex/gramex/apps/admin2
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/capture
+/viz/async-gramex/gramex/apps/capture
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
+/viz/async-gramex/gramex/apps/logviewer
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/pynode
+/viz/async-gramex/gramex/apps/pynode
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/ui
+/viz/async-gramex/gramex/apps/ui
 found 0 vulnerabilities
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
+/viz/async-gramex/gramex/apps/uifactory
 found 0 vulnerabilities
