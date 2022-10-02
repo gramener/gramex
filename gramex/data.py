@@ -1109,9 +1109,8 @@ def _filter_frame_col(data, key, col, op, vals, meta):
     return data
 
 
-# Treat SQL type datetime as str when converting URL arguments to values.
-# Don't try to convert ?date=2022-01-01 to datetime(2022, 1, 1).
-_sql_types = {datetime: str}
+# If a column has a datetime type, use Pandas to convert strings to datetime values
+_sql_types = {datetime: pd.to_datetime}
 
 
 def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
