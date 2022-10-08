@@ -18,10 +18,13 @@ def template(content, handler=None, **kwargs):
         template: '*.tmpl.html'
     ```
     '''
+    name = f'{handler.name}:template'
     loader = None
-    if handler is not None and getattr(handler, 'path', None):
+    # If a FileHandler renders templates, cache the file, and treat handler.file as filename.
+    if handler is not None and getattr(handler, 'file', None):
+        name = str(handler.file)
         loader = CacheLoader(os.path.dirname(str(handler.file)))
-    tmpl = tornado.template.Template(content, loader=loader)
+    tmpl = tornado.template.Template(content, name=name, loader=loader)
 
     if handler is not None:
         for key, val in handler.get_template_namespace().items():
