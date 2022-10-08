@@ -1223,9 +1223,11 @@ def _relpath(path):
     # The folder is relative to that frame's file
     folder = os.path.dirname(os.path.abspath(frame[1]))
     # But if we're calling from a FileHandler template, use the template's path
-    if frame[1] == '<string>.generated.py':
+    if frame[1].endswith('.generated.py'):
         g = frame[0].f_globals
-        if 'handler' in g and g['handler'].__class__.__name__ == 'FileHandler':
+        # Duck-type if it's a FileHandler by checking for .file attribute
+        # Don't import gramex.handler.FileHandler -- gramex.cache should have no dependencies
+        if 'handler' in g and hasattr(g['handler'], 'file'):
             folder = os.path.dirname(g['handler'].file)
         else:
             app_log.warning(f'gramex.cache.open/save: rel= on unknown template folder for {path}')
