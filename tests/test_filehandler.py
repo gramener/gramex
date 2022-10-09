@@ -37,6 +37,7 @@ class TestFileHandler(TestGramex):
     def test_directoryhandler(self):
         # DirectoryHandler == FileHandler
         from gramex.handlers import DirectoryHandler, FileHandler
+
         self.assertEqual(DirectoryHandler, FileHandler)
 
     def test_filehandler(self):
@@ -109,24 +110,28 @@ class TestFileHandler(TestGramex):
         self.check('/dir/single-file/alpha', path='dir/text.txt')
         self.check('/dir/single-file/alpha/beta', path='dir/text.txt')
 
-        self.check('/dir/data', path='dir/data.csv', headers={
-            'Content-Type': 'text/plain',
-            'Content-Disposition': None
-        })
+        self.check(
+            '/dir/data',
+            path='dir/data.csv',
+            headers={'Content-Type': 'text/plain', 'Content-Disposition': None},
+        )
 
-        self.check('/dir/image.JPG', path='dir/image.JPG', headers={
-            'Content-Type': 'image/jpeg'
-        })
+        self.check('/dir/image.JPG', path='dir/image.JPG', headers={'Content-Type': 'image/jpeg'})
 
-        r = self.get('/dir/index/subdir', allow_redirects=False, headers={
-            'X-Request-URI': 'https://x.com/a/dir/index/subdir'})
+        r = self.get(
+            '/dir/index/subdir',
+            allow_redirects=False,
+            headers={'X-Request-URI': 'https://x.com/a/dir/index/subdir'},
+        )
         ok_(r.status_code in redirect_codes)
         eq_(r.headers['Location'], 'https://x.com/a/dir/index/subdir/')
 
     def test_args(self):
         self.check('/dir/args/?高=σ', text=json.dumps({'高': ['σ']}))
-        self.check('/dir/args/?高=σ&高=λ&س=►', text=json.dumps(
-            {'高': ['σ', 'λ'], 'س': ['►']}, sort_keys=True))
+        self.check(
+            '/dir/args/?高=σ&高=λ&س=►',
+            text=json.dumps({'高': ['σ', 'λ'], 'س': ['►']}, sort_keys=True),
+        )
 
     def test_index_template(self):
         # Custom index_template is used in directories
@@ -191,7 +196,8 @@ class TestFileHandler(TestGramex):
             for name in ('a', 'b'):
                 url = f'{dir}/comp-{name}.vue'
                 text = self.check(
-                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}
+                ).text
                 ok_(f'Component: {name}' in text, f'{url}: has component name')
                 self.check_sourcemap(url, text)
         # TODO: Invalid file should generate a compilation failure
@@ -202,7 +208,8 @@ class TestFileHandler(TestGramex):
             for name in ('a', 'b'):
                 url = f'{dir}/{name}.ts'
                 text = self.check(
-                    url, timeout=30, headers={'Content-Type': 'text/javascript'}).text
+                    url, timeout=30, headers={'Content-Type': 'text/javascript'}
+                ).text
                 # TypeScript transpiles into ES3 by default, converting const to var.
                 # So check for 'var a =' in output, though source uses 'const a ='
                 ok_(f'var {name} = ' in text, f'{url}: has correct content')
@@ -236,19 +243,23 @@ class TestFileHandler(TestGramex):
             self.assertIn('phrase Second', r.text)
 
     def test_merge(self):
-        self.check('/dir/merge.txt', text='Α.TXT\nΒ.Html\n', headers={
-            'Content-Type': 'text/plain; charset=UTF-8'
-        })
-        self.check('/dir/merge.html', text='Β.HTML\nΑ.Txt\n', headers={
-            'Content-Type': 'text/html; charset=UTF-8'
-        })
+        self.check(
+            '/dir/merge.txt',
+            text='Α.TXT\nΒ.Html\n',
+            headers={'Content-Type': 'text/plain; charset=UTF-8'},
+        )
+        self.check(
+            '/dir/merge.html',
+            text='Β.HTML\nΑ.Txt\n',
+            headers={'Content-Type': 'text/html; charset=UTF-8'},
+        )
 
     def test_map(self):
         # '/dir/map/': dir/index.html
         self.check('/dir/map/', path='dir/index.html')
         # '/dir/map/(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
         self.check('/dir/map/cap/ture/.js', path='dir/capture.js')
-        self.check('/dir/map/al/ph/a.txt', text='Α.TXT')    # Capitalized alpha.txt
+        self.check('/dir/map/al/ph/a.txt', text='Α.TXT')  # Capitalized alpha.txt
         self.check('/dir/map/x/y/z', code=404)
         # '/dir/map/url': 'dir/{file}{mid}.{ext}'
         self.check('/dir/map/url?file=template', path='dir/template.txt')
@@ -305,14 +316,15 @@ class TestFileHandler(TestGramex):
         self.check('/dir/ignore-list/ignore-list.EXT2', code=FORBIDDEN)
         self.check('/dir/allow-file/gramex.yaml')
         self.check('/dir/allow-ignore/ignore-file.txt')
-        self.check('/server.py', code=FORBIDDEN)     # Ignore .py files by default
-        self.check('/dir/index/.allow')              # But .allow is allowed
+        self.check('/server.py', code=FORBIDDEN)  # Ignore .py files by default
+        self.check('/dir/index/.allow')  # But .allow is allowed
         # Paths are resolved before ignoring
         self.check('/dir/ignore-all-except/', path='dir/index.html')
 
     def test_parent(self):
         # Eliminate parent directory references
         from gramex import variables
+
         self.check('/{}'.format(variables['GRAMEXDATA']), code=404)
 
     def test_methods(self):
@@ -324,26 +336,32 @@ class TestFileHandler(TestGramex):
             '/methods/head-put-delete': {
                 OK: ('head', 'put', 'delete'),
                 METHOD_NOT_ALLOWED: ('get', 'post', 'patch', 'options'),
-            }
+            },
         }
         for url, results in config.items():
             for code, methods in results.items():
                 for method in methods:
                     r = getattr(requests, method)(server.base_url + url)
-                    self.assertEqual(r.status_code, code,
-                                     '%s %s should return %d' % (method, url, code))
+                    self.assertEqual(
+                        r.status_code, code, '%s %s should return %d' % (method, url, code)
+                    )
 
     def test_headers(self):
-        self.check('/header/', headers={
-            'X-FileHandler-Header': 'updated',
-            'X-FileHandler': 'updated',
-            'X-FileHandler-Base': 'base',
-        })
+        self.check(
+            '/header/',
+            headers={
+                'X-FileHandler-Header': 'updated',
+                'X-FileHandler': 'updated',
+                'X-FileHandler-Base': 'base',
+            },
+        )
         self.check('/headerdict/alpha.txt', headers={'Root': 'a', 'Sub': 'a', 'All': 'x'})
         self.check('/headerdict/beta.html', headers={'Root': 'b', 'Sub': 'b', 'All': 'x'})
         self.check('/headerdict/data.csv', headers={'Root': 'x', 'All': 'x'})
-        self.check('/headerdict/install/gramex-npm-package/package.json', headers={
-            'Root': 'x', 'Sub': 'x'})
+        self.check(
+            '/headerdict/install/gramex-npm-package/package.json',
+            headers={'Root': 'x', 'Sub': 'x'},
+        )
         # ToDo: Fix with FileHandler 2
         # self.check('/headerdict/install/gramex-bower-package/bower.json', headers={
         #     'Root': 'x', 'Sub': 'y'})

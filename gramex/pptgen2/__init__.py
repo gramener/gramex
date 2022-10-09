@@ -24,16 +24,18 @@ from typing import Union, List, Dict
 from . import commands
 
 
-def pptgen(source: Union[str, pptx.presentation.Presentation],
-           rules: List[dict] = [],
-           data: dict = {},
-           target: str = None,
-           only: Union[int, List[int]] = None,
-           register: Dict[str, str] = {},
-           unit: str = 'Inches',
-           mode: str = 'literal',
-           handler=None,
-           **config) -> pptx.presentation.Presentation:
+def pptgen(
+    source: Union[str, pptx.presentation.Presentation],
+    rules: List[dict] = [],
+    data: dict = {},
+    target: str = None,
+    only: Union[int, List[int]] = None,
+    register: Dict[str, str] = {},
+    unit: str = 'Inches',
+    mode: str = 'literal',
+    handler=None,
+    **config,
+) -> pptx.presentation.Presentation:
     '''
     Process a configuration. This loads a Presentation from source, applies the
     (optional) configuration changes and (optionally) saves it into target. Returns the modified
@@ -75,8 +77,10 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         slides_in_rule = tuple(slide_filter(slides, rule, data))
         # If no slides matched, warn the user
         if len(slides_in_rule) == 0:
-            app_log.warn(f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
-                         f'slide-title: {rule.get("slide-title")}')
+            app_log.warn(
+                f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
+                f'slide-title: {rule.get("slide-title")}'
+            )
             continue
         # Copy slides after the last mapped position of the last slide in this rule
         max_index = max(index for index, slide in slides_in_rule)
@@ -98,9 +102,10 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         for copy_row in copies:
             # Include rule-level `data:`. Add copy, slide as variables
             slide_data = load_data(
-                rule.get('data', {}), _default_key='function', copy=copy_row, **data)
+                rule.get('data', {}), _default_key='function', copy=copy_row, **data
+            )
             for slide in copy_row.slides:
-                slide_data['slide'] = slide         # Rule can use 'slide' as a variable
+                slide_data['slide'] = slide  # Rule can use 'slide' as a variable
                 transition(slide, rule.get('transition', None), data)
                 apply_commands(rule, slide.shapes, slide_data)
     if target:
@@ -150,15 +155,20 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                     el = copy.deepcopy(shape.element)
                     shape.element.addnext(el)
                     shape = pptx.shapes.autoshape.Shape(el, shape._parent)
-                clones.append(AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape,
-                                       parent=parent_clone))
+                clones.append(
+                    AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape, parent=parent_clone)
+                )
             # Run commands in the spec on all cloned shapes
             is_group = shape.element.tag.endswith('}grpSp')
             for clone in clones:
                 # Include shape-level `data:`. Add shape, clone as variables
                 shape_data = load_data(
-                    spec.get('data', {}), _default_key='function', shape=shape, clone=clone,
-                    **{k: v for k, v in data.items() if k not in {'shape', 'clone'}})
+                    spec.get('data', {}),
+                    _default_key='function',
+                    shape=shape,
+                    clone=clone,
+                    **{k: v for k, v in data.items() if k not in {'shape', 'clone'}},
+                )
                 for cmd in spec:
                     if cmd in commands.cmdlist:
                         commands.cmdlist[cmd](clone.shape, spec[cmd], shape_data)
@@ -169,8 +179,11 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                 if is_group:
                     apply_commands(spec, SlideShapes(clone.shape.element, shapes), shape_data)
         # Warn if the pattern is neither a shape nor a command
-        if (not matched_shapes and pattern not in special_cmdlist and
-                pattern not in commands.cmdlist):
+        if (
+            not matched_shapes
+            and pattern not in special_cmdlist
+            and pattern not in commands.cmdlist
+        ):
             app_log.warn(f'pptgen2: No shape matches pattern: {pattern}')
 
 
@@ -223,7 +236,9 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
                     conf['transform'] = build_transform(
                         {'function': conf['transform']},
                         vars={'data': None, 'handler': None},
-                        filename=f'PPTXHandler:data.{key}', iter=False)
+                        filename=f'PPTXHandler:data.{key}',
+                        iter=False,
+                    )
                 data[key] = gramex.data.filter(**conf)
             if 'function' in conf:
                 # Let functions use previously defined data variables, including current one
@@ -250,7 +265,8 @@ def register_commands(register: Dict[str, str]) -> None:
         raise TypeError(f'register: must be a dict, not {type(register)}')
     for key, conf in register.items():
         commands.cmdlist[key] = build_transform(
-            {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False)
+            {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False
+        )
 
 
 def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> list:
@@ -338,10 +354,14 @@ def copy_slide(prs, source, target_index):
             partname = target.package.next_partname(pptx.parts.chart.ChartPart.partname_template)
             xlsx_blob = target.chart_workbook.xlsx_part.blob
             target = pptx.parts.chart.ChartPart(
-                partname, target.content_type, copy.deepcopy(target._element),
-                package=target.package)
+                partname,
+                target.content_type,
+                copy.deepcopy(target._element),
+                package=target.package,
+            )
             target.chart_workbook.xlsx_part = pptx.parts.chart.EmbeddedXlsxPart.new(
-                xlsx_blob, target.package)
+                xlsx_blob, target.package
+            )
         # TODO: handle diagrams
         dest.part.rels.add_relationship(val.reltype, target, val.rId, val.is_external)
     # Move appended slide into target_index
@@ -487,4 +507,4 @@ def commandline(args=None):
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
         # B606:start_process_with_no_shell is safe -- it's a file we've explicitly created
-        os.startfile(rules['target'])   # nosec B606
+        os.startfile(rules['target'])  # nosec B606

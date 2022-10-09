@@ -28,15 +28,18 @@ class TestModelHandler(TestGramex):
         eq_(info['trained'], False)
 
     def test_train_model_check_info(self):
-        self.check('/model/iris/', method='put',
-                   data=json.dumps({'url': 'iris.csv',
-                                    'model_class': 'sklearn.linear_model.SGDClassifier'}),
-                   request_headers={'Model-Retrain': 'True'})
+        self.check(
+            '/model/iris/',
+            method='put',
+            data=json.dumps(
+                {'url': 'iris.csv', 'model_class': 'sklearn.linear_model.SGDClassifier'}
+            ),
+            request_headers={'Model-Retrain': 'True'},
+        )
         r = self.check('/model/iris/')
         info = r.json()
         eq_(info['trained'], True)
-        eq_(info['input'], ['sepal_length',
-                            'sepal_width', 'petal_length', 'petal_width'])
+        eq_(info['input'], ['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
         eq_(info['output'], 'species')
 
     def test_predict(self):
@@ -46,38 +49,50 @@ class TestModelHandler(TestGramex):
             {'sepal_length': 6, 'sepal_width': 3, 'petal_length': 4.8, 'petal_width': 2},
         ]
         # Test individual results
-        self.check('/model/iris/', method='put',
-                   data=json.dumps({'url': 'iris.csv',
-                                    'model_class': 'sklearn.linear_model.SGDClassifier'}),
-                   request_headers={'Model-Retrain': 'True'})
+        self.check(
+            '/model/iris/',
+            method='put',
+            data=json.dumps(
+                {'url': 'iris.csv', 'model_class': 'sklearn.linear_model.SGDClassifier'}
+            ),
+            request_headers={'Model-Retrain': 'True'},
+        )
         # In case model not trained, train it.
-        single = [
-            self.check('/model/iris/', method='post', data=json.dumps(k))
-            for k in data
-        ]
+        single = [self.check('/model/iris/', method='post', data=json.dumps(k)) for k in data]
         single_responses = [response.json()[0] for response in single]
-        ok_(all(response['result'] in {'setosa', 'versicolor', 'virginica'}
-                for response in single_responses))
+        ok_(
+            all(
+                response['result'] in {'setosa', 'versicolor', 'virginica'}
+                for response in single_responses
+            )
+        )
         data_df = pd.DataFrame(data)
         # Test multiple results
-        multi = self.check('/model/iris/', method='post',
-                           data=json.dumps(data_df.to_dict(orient='list')))
+        multi = self.check(
+            '/model/iris/', method='post', data=json.dumps(data_df.to_dict(orient='list'))
+        )
         eq_(multi.json(), single_responses)
         # eq_([result['result'] for result in multi.json()], ['setosa', 'versicolor', 'virginica'])
         # This currently does not work since the model is not deterministic
 
     def test_predict_incomplete(self):
-        self.check('/model/iris/', method='post',
-                   data=json.dumps({'sepal_length': 5}), code=500)
+        self.check('/model/iris/', method='post', data=json.dumps({'sepal_length': 5}), code=500)
 
     def test_change_params_without_training(self):
-        self.check('/model/iris/', method='put',
-                   data=json.dumps({'url': 'iris.csv',
-                                    'model_class': 'sklearn.linear_model.SGDClassifier'}),
-                   request_headers={'Model-Retrain': 'True'})
+        self.check(
+            '/model/iris/',
+            method='put',
+            data=json.dumps(
+                {'url': 'iris.csv', 'model_class': 'sklearn.linear_model.SGDClassifier'}
+            ),
+            request_headers={'Model-Retrain': 'True'},
+        )
         # Train a model
-        self.check('/model/iris/', method='post',
-                   data=json.dumps({'model_class': 'sklearn.ensemble.RandomForestClassifier'}))
+        self.check(
+            '/model/iris/',
+            method='post',
+            data=json.dumps({'model_class': 'sklearn.ensemble.RandomForestClassifier'}),
+        )
         # Change a parameter
         r = self.check('/model/iris/').json()
         eq_(r['model_class'], 'sklearn.ensemble.RandomForestClassifier')
@@ -88,25 +103,28 @@ class TestModelHandler(TestGramex):
         ok_('iris.pkl' not in os.listdir(folder))
 
     def test_get_training_data(self):
-        self.check('/model/iris/', method='put',
-                   data=json.dumps({'url': 'iris.csv'}),
-                   request_headers={'Model-Retrain': 'True'})
+        self.check(
+            '/model/iris/',
+            method='put',
+            data=json.dumps({'url': 'iris.csv'}),
+            request_headers={'Model-Retrain': 'True'},
+        )
         r = self.check('/model/iris/data?').json()
         training_file = pd.read_csv(os.path.join(folder, 'iris.csv'), encoding='utf-8')
         eq_(len(r), len(training_file))
 
     # def test_add_training_data(self):
-        # Gets interpreted as string which breaks other tests
-        # TODO: Fix Data.py update and insert types then re-add this test
-        # self.check('/model/iris/', method='put',
-        #            data=json.dumps({'url': 'iris.csv'}),
-        #            request_headers={'Model-Retrain': 'True'})
-        # self.check('/model/iris/data', data=json.dumps({'sepal_width': 10,
-        #                                                 'sepal_length': 10,
-        #                                                 'petal_length': 10,
-        #                                                 'petal_width': 10,
-        #                                                 'specis':'test_insert'}),
-        #                                                 method='post')
+    # Gets interpreted as string which breaks other tests
+    # TODO: Fix Data.py update and insert types then re-add this test
+    # self.check('/model/iris/', method='put',
+    #            data=json.dumps({'url': 'iris.csv'}),
+    #            request_headers={'Model-Retrain': 'True'})
+    # self.check('/model/iris/data', data=json.dumps({'sepal_width': 10,
+    #                                                 'sepal_length': 10,
+    #                                                 'petal_length': 10,
+    #                                                 'petal_width': 10,
+    #                                                 'specis':'test_insert'}),
+    #                                                 method='post')
 
     # def test_remove_training_data(self):
     #     ...

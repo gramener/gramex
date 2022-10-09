@@ -102,8 +102,10 @@ class TestAlerts2(TestGramex):
             img_file = handle.read()
         eq_(a2b_base64(img.get_payload()), img_file)
 
-        ok_(attachment['Content-Type'].split(';')[0] in
-            {'application/x-zip-compressed', 'application/zip'})
+        ok_(
+            attachment['Content-Type'].split(';')[0]
+            in {'application/x-zip-compressed', 'application/zip'}
+        )
         eq_(attachment['Content-Disposition'], 'attachment; filename="install-test.zip"')
         with open(os.path.join(folder, 'install-test.zip'), 'rb') as handle:
             zip_file = handle.read()

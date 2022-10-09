@@ -73,12 +73,24 @@ def load_data(data_config, handler=None):
     '''
     Loads data using gramex cache.
     '''
-    if not isinstance(data_config, (dict, AttrDict,)):
+    if not isinstance(
+        data_config,
+        (
+            dict,
+            AttrDict,
+        ),
+    ):
         raise ValueError('Data argument must be a dict like object.')
 
     data = {}
     for key, conf in data_config.items():
-        if isinstance(conf, (dict, AttrDict,)):
+        if isinstance(
+            conf,
+            (
+                dict,
+                AttrDict,
+            ),
+        ):
             if 'function' in conf:
                 data[key] = build_transform(conf, vars={'handler': None})(handler=handler)[0]
             elif conf.get('ext') in {'yaml', 'yml', 'json'}:
@@ -163,7 +175,8 @@ def pptgen(source, target=None, **config):
                     for _slide_data in slide_data:
                         _slide_data = _slide_data[1] if is_grp is True else _slide_data
                         replicate_slides(
-                            _slide_data, prs, change, slide, slides_to_remove, index, handler)
+                            _slide_data, prs, change, slide, slides_to_remove, index, handler
+                        )
                         # Creating dict mapping to order slides.
                         manage_slide_order[index + 1].append(len(prs.slides))
                 else:
@@ -227,16 +240,35 @@ def change_shapes(collection, change, data, handler, **kwargs):
 
         if spec.get('data'):
             if not isinstance(spec['data'], (dict,)):
-                spec['data'] = {'function': '{}'.format(spec['data']) if not isinstance(
-                    spec['data'], str) else spec['data']}
-            shape_data = build_transform(
-                spec['data'], vars={'data': None, 'handler': None})(data=data, handler=handler)[0]
+                spec['data'] = {
+                    'function': '{}'.format(spec['data'])
+                    if not isinstance(spec['data'], str)
+                    else spec['data']
+                }
+            shape_data = build_transform(spec['data'], vars={'data': None, 'handler': None})(
+                data=data, handler=handler
+            )[0]
         else:
-            if isinstance(data, (dict, AttrDict,)) and 'handler' in data:
+            if (
+                isinstance(
+                    data,
+                    (
+                        dict,
+                        AttrDict,
+                    ),
+                )
+                and 'handler' in data
+            ):
                 data.pop('handler')
             shape_data = copy.deepcopy(data)
 
-        if isinstance(shape_data, (dict, AttrDict,)):
+        if isinstance(
+            shape_data,
+            (
+                dict,
+                AttrDict,
+            ),
+        ):
             shape_data['handler'] = handler
 
         if spec.get('stack'):

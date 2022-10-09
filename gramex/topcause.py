@@ -26,6 +26,7 @@ class TopCause(BaseEstimator):
             p: probability that this feature does not impact y
             type: how this feature's impact was calculated (e.g. `num` or `cat`)
     '''
+
     def __init__(
         self,
         max_p: float = 0.05,
@@ -36,7 +37,7 @@ class TopCause(BaseEstimator):
         self.max_p = max_p
         self.percentile = percentile
 
-    def fit(self, X, y, sample_weight=None):    # noqa - capital X is a sklearn convention
+    def fit(self, X, y, sample_weight=None):  # noqa - capital X is a sklearn convention
         '''Returns the top causes of y from among X.
 
         Parameters
@@ -52,7 +53,7 @@ class TopCause(BaseEstimator):
             Returns the instance itself.
         '''
         if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)     # noqa: N806 X can be in uppercase
+            X = pd.DataFrame(X)  # noqa: N806 X can be in uppercase
         if not isinstance(y, pd.Series):
             y = pd.Series(y)
         if X.shape[0] != y.shape[0]:
@@ -74,7 +75,7 @@ class TopCause(BaseEstimator):
             n = sample_weight.sum()
             weighted_y = y * sample_weight
             mean = weighted_y.sum() / n
-            var = ((y - mean)**2 * sample_weight).sum() / n
+            var = ((y - mean) ** 2 * sample_weight).sum() / n
 
             # Calculate impact for every column consistently
             results = {}
@@ -92,7 +93,7 @@ class TopCause(BaseEstimator):
                     'value': np.nan,
                     'gain': np.nan,
                     'p': 1.0,
-                    'type': kind
+                    'type': kind,
                 }
 
                 # ORDERED CATEGORICAL if kind is signed or unsigned int
@@ -110,6 +111,7 @@ class TopCause(BaseEstimator):
                     # Run linear regression to see if y increases/decreases with column
                     # TODO: use weighted regression
                     from scipy.stats import linregress
+
                     reg = linregress(pair['values'], pair['y'])
 
                     # If slope is +ve, pick value at the 95th percentile
@@ -118,7 +120,8 @@ class TopCause(BaseEstimator):
                     top = np.interp(
                         self.percentile if reg.slope >= 0 else 1 - self.percentile,
                         pair['weight'].cumsum() / pair['weight'].sum(),
-                        pair['values'])
+                        pair['values'],
+                    )
 
                     # Predict the gain based on linear regression
                     gain = reg.slope * top + reg.intercept - mean
@@ -131,19 +134,23 @@ class TopCause(BaseEstimator):
                     #   value: Each row has every unique value in the column
                     #   weight: Sum of sample_weights in each group
                     #   mean: mean(y) in each group, weighted by sample_weights
-                    group = pd.DataFrame({
-                        'values': series,
-                        'weight': sample_weight,
-                        'weighted_y': weighted_y
-                    }).dropna().groupby('values', sort=False).sum()
+                    group = (
+                        pd.DataFrame(
+                            {'values': series, 'weight': sample_weight, 'weighted_y': weighted_y}
+                        )
+                        .dropna()
+                        .groupby('values', sort=False)
+                        .sum()
+                    )
                     group['mean'] = group['weighted_y'] / group['weight']
 
                     # Pick the groups with highest mean(y), at >=95th percentile (or whatever).
                     # Ensure each group has at least min_weight samples.
                     group.sort_values('mean', inplace=True, ascending=True)
                     best_values = group.dropna(subset=['mean'])[
-                        (group['weight'].cumsum() / group['weight'].sum() >= self.percentile) &
-                        (group['weight'] >= min_weight)]
+                        (group['weight'].cumsum() / group['weight'].sum() >= self.percentile)
+                        & (group['weight'] >= min_weight)
+                    ]
 
                     # If there's at least 1 group over 95th percentile with enough weights...
                     if len(best_values):
@@ -162,11 +169,14 @@ class TopCause(BaseEstimator):
                                 diff = subseries - submean
                                 vn1 = (diff**2 * sample_weight[subset]).sum() / subn
                                 vn2 = var / n
-                                df = (vn1 + vn2)**2 / (vn1**2 / (subn - 1) + vn2**2 / (n - 1))
+                                df = (vn1 + vn2) ** 2 / (
+                                    vn1**2 / (subn - 1) + vn2**2 / (n - 1)
+                                )
                             df = 1 if np.isnan(df) else df
                             with np.errstate(divide='ignore', invalid='ignore'):
-                                t = gain / (vn1 + vn2)**0.5
+                                t = gain / (vn1 + vn2) ** 0.5
                             import scipy.special as special
+
                             p = special.betainc(0.5 * df, 0.5, df / (df + t * t))
                             # Update the result
                             result.update(value=top.name, gain=gain, p=p, type='cat')

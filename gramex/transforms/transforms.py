@@ -25,10 +25,10 @@ def _arg_repr(arg):
     '''
     if isinstance(arg, str):
         if arg.startswith('=='):
-            return repr(arg[1:])        # "==x" becomes '"=x"'
+            return repr(arg[1:])  # "==x" becomes '"=x"'
         elif arg.startswith('='):
-            return arg[1:]              # "=x" becomes 'x'
-    return repr(arg)                    # "x" becomes '"x"', 1 becomes '1', etc
+            return arg[1:]  # "=x" becomes 'x'
+    return repr(arg)  # "x" becomes '"x"', 1 becomes '1', etc
 
 
 def _full_name(tree):
@@ -89,12 +89,13 @@ def module_names(node, vars):
 
 
 def build_transform(
-        conf: dict,
-        vars: dict = None,
-        kwargs: Union[bool, str] = False,
-        filename: str = 'transform',
-        cache: bool = False,
-        iter: bool = True):
+    conf: dict,
+    vars: dict = None,
+    kwargs: Union[bool, str] = False,
+    filename: str = 'transform',
+    cache: bool = False,
+    iter: bool = True,
+):
     '''Converts an expression into a callable function.
 
     Examples:
@@ -276,6 +277,7 @@ def build_transform(
     # If expr starts with a function call (e.g. module.func(...)), use it's docs
     elif isinstance(tree.body[0].value, ast.Call):
         from astor import to_source
+
         doc = locate(to_source(tree.body[0].value.func).strip()).__doc__
 
     # Create the code
@@ -291,23 +293,25 @@ def build_transform(
         f'\tresult = {expr}\n',
         # If the result is a generator object, return it. Else, create a list and
         # return that. This ensures that the returned value is always an iterable
-        '\treturn result if isinstance(result, GeneratorType) else [result,]' if iter else
-        '\treturn result',
+        '\treturn result if isinstance(result, GeneratorType) else [result,]'
+        if iter
+        else '\treturn result',
     ]
 
     # Compile the function with context variables
     import gramex.transforms
     from gramex.cache import reload_module
+
     context = dict(
         reload_module=reload_module,
         GeneratorType=GeneratorType,
         Return=tornado.gen.Return,
         AttrDict=AttrDict,
-        **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__}
+        **{key: getattr(gramex.transforms, key) for key in gramex.transforms.__all__},
     )
     code = compile(''.join(body), filename=filename, mode='exec')
     # B102:exec_used is safe since the code is written by app developer
-    exec(code, context)         # nosec B102
+    exec(code, context)  # nosec B102
 
     # Return the transformed function
     result = context['transform']
@@ -319,12 +323,13 @@ def build_transform(
 
 
 def build_pipeline(
-        conf: dict,
-        vars: dict = None,
-        kwargs: Union[bool, str] = False,
-        filename: str = 'pipeline',
-        cache: bool = False,
-        iter: bool = True):
+    conf: dict,
+    vars: dict = None,
+    kwargs: Union[bool, str] = False,
+    filename: str = 'pipeline',
+    cache: bool = False,
+    iter: bool = True,
+):
     '''Converts an expression list into a callable function (called a pipeline).
 
     Examples:
@@ -379,8 +384,13 @@ def build_pipeline(
             raise ValueError(f'pipeline:{filename}: {index}/{n}: missing "function"')
         # Compile the function, allowing use of all variables in current_scope
         stage['function'] = build_transform(
-            {'function': spec['function']}, vars=current_scope, kwargs=kwargs,
-            filename=f'pipeline:{filename} {index}/{n}', cache=cache, iter=False)
+            {'function': spec['function']},
+            vars=current_scope,
+            kwargs=kwargs,
+            filename=f'pipeline:{filename} {index}/{n}',
+            cache=cache,
+            iter=False,
+        )
         # If the stage defines a name, add it as a variable for current_scope
         if 'name' in spec:
             current_scope[spec['name']] = None
@@ -415,10 +425,11 @@ def build_pipeline(
                 return result if isinstance(result, GeneratorType) else [result]
             else:
                 return result
-        except:     # noqa: E722 - trap all exceptions for storelocation logging
+        except:  # noqa: E722 - trap all exceptions for storelocation logging
             # On any exception, capture the error and traceback to log it
             import sys
             import traceback
+
             error = f'pipeline:{filename} {stage["index"]}/{n} failed: {stage["spec"]}'
             error += '\n' + ''.join(traceback.format_exception(*sys.exc_info()))
             # but raise the original Exception
@@ -426,12 +437,21 @@ def build_pipeline(
         finally:
             # Log pipeline execution (and error, if any)
             from gramex.services import info
+
             if 'pipeline' in info.storelocations:
                 from gramex.data import insert
+
                 end = datetime.datetime.utcnow().isoformat()
-                insert(**info.storelocations.pipeline, id=['name', 'start'], args={
-                    'name': [filename], 'start': [start], 'end': [end], 'error': [error],
-                })
+                insert(
+                    **info.storelocations.pipeline,
+                    id=['name', 'start'],
+                    args={
+                        'name': [filename],
+                        'start': [start],
+                        'end': [end],
+                        'error': [error],
+                    },
+                )
 
     return run_pipeline
 
@@ -456,10 +476,13 @@ def condition(*args):
                     - 8883
     '''
     import warnings
+
     warnings.warn(
         'condition() deprecated. https://gramener.com/gramex/guide/config/#conditions',
-        DeprecationWarning)
+        DeprecationWarning,
+    )
     from string import Template
+
     var_defaults = {}
     for var in variables:
         var_defaults[var] = f"variables.get('{var}', '')"
@@ -471,7 +494,7 @@ def condition(*args):
     for cond, val in pairs:
         if isinstance(cond, str):
             # B307:eval is safe here since `cond` is written by app developer
-            if eval(Template(cond).substitute(var_defaults)):    # nosec B307
+            if eval(Template(cond).substitute(var_defaults)):  # nosec B307
                 return val
         elif bool(cond):
             return val
@@ -543,7 +566,7 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
     code = compile(''.join(body), filename=f'flattener:{filename}', mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
     # B307:eval is safe here since the code is constructed entirely in this function
-    eval(code, context)     # nosec B307
+    eval(code, context)  # nosec B307
     return context[filename]
 
 
@@ -558,6 +581,7 @@ def once(*args, **kwargs):
     if 'db' not in _once_info:
         import os
         from sqlitedict import SqliteDict
+
         dbpath = os.path.join(variables['GRAMEXDATA'], 'once.db')
         _once_info['db'] = SqliteDict(dbpath, tablename='once', autocommit=True)
     db = _once_info['db']
@@ -595,6 +619,7 @@ def typelist(hint):
 
 def convert(hint, param, *args):
     from pandas.core.common import flatten
+
     args = list(flatten(args))
     typ, is_list = typelist(hint)
     # Convert args to the native type
@@ -781,8 +806,9 @@ def build_log_info(keys: List, *vars: List):
         'request': 'getattr(handler.request, "{val}", "")',
         'headers': 'handler.request.headers.get("{val}", "")',
         'cookies': (
-            'handler.request.cookies["{val}"].value ' +
-            'if "{val}" in handler.request.cookies else ""'),
+            'handler.request.cookies["{val}"].value '
+            + 'if "{val}" in handler.request.cookies else ""'
+        ),
         'user': '(handler.current_user or {{}}).get("{val}", "")',
         'env': 'os.environ.get("{val}", "")',
     }
@@ -802,8 +828,10 @@ def build_log_info(keys: List, *vars: List):
         app_log.error(f'Skipping unknown key {key}')
     code = compile(
         'def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
-        filename='log', mode='exec')
+        filename='log',
+        mode='exec',
+    )
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     # B102:exec_used is safe here since the code is constructed entirely in this function
-    exec(code, context)     # nosec B102
+    exec(code, context)  # nosec B102
     return context['fn']

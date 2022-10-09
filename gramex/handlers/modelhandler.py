@@ -13,6 +13,7 @@ class ModelHandler(BaseHandler):
     Allows users to create API endpoints to train/test models exposed through Scikit-Learn.
     TODO: support Scikit-Learn Pipelines for data transformations.
     '''
+
     @classmethod
     def setup(cls, path, **kwargs):
         super(ModelHandler, cls).setup(**kwargs)
@@ -27,8 +28,7 @@ class ModelHandler(BaseHandler):
         Expects multi-row paramets to be formatted as the output of handler.argparse.
         '''
         self.set_header('Content-Type', 'application/json; charset=utf-8')
-        self.pickle_file_path = os.path.join(
-            self.path, self.path_args[0] + '.pkl')
+        self.pickle_file_path = os.path.join(self.path, self.path_args[0] + '.pkl')
         self.request_body = {}
         if self.request.body:
             self.request_body = tornado.escape.json_decode(self.request.body)
@@ -63,8 +63,7 @@ class ModelHandler(BaseHandler):
             return
         # If no model columns are passed, return model info
         if not vars(model).get('input', '') or not any(col in self.args for col in model.input):
-            model_info = {k: v for k, v in vars(model).items()
-                          if k not in ('model', 'scaler')}
+            model_info = {k: v for k, v in vars(model).items() if k not in ('model', 'scaler')}
             self.write(json.dumps(model_info, indent=4))
             return
         self._predict(model)
@@ -80,7 +79,7 @@ class ModelHandler(BaseHandler):
         '''
         try:
             model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-        except EnvironmentError: # noqa
+        except EnvironmentError:  # noqa
             model = gramex.ml.Classifier(**self.request_body)
         if self.get_data_flag():
             file_kwargs = self.listify(model.input + [model.output] + ['id'])
@@ -113,10 +112,10 @@ class ModelHandler(BaseHandler):
         # load model object - if it doesn't exist, send a response asking to create the model
         try:
             model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-        except EnvironmentError: # noqa
+        except EnvironmentError:  # noqa
             # Log error
             self.write({'Error': 'Please Send PUT Request, model does not exist'})
-            raise EnvironmentError # noqa
+            raise EnvironmentError  # noqa
         if self.get_data_flag():
             file_kwargs = self.listify(model.input + [model.output])
             gramex.data.insert(model.url, args=file_kwargs)
@@ -135,17 +134,16 @@ class ModelHandler(BaseHandler):
             file_kwargs = self.listify(['id'])
             try:
                 model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-            except EnvironmentError: # noqa
-                self.write(
-                    {'Error': 'Please Send PUT Request, model does not exist'})
-                raise EnvironmentError # noqa
+            except EnvironmentError:  # noqa
+                self.write({'Error': 'Please Send PUT Request, model does not exist'})
+                raise EnvironmentError  # noqa
             gramex.data.delete(model.url, args=file_kwargs, id=file_kwargs['id'])
             return
         if os.path.exists(self.pickle_file_path):
             os.unlink(self.pickle_file_path)
 
     def _train(self, model):
-        ''' Looks for Model-Retrain in Request Headers,
+        '''Looks for Model-Retrain in Request Headers,
         trains a model and pickles it.
         '''
         # Update model parameters
@@ -154,8 +152,8 @@ class ModelHandler(BaseHandler):
             # Pass non model kwargs to gramex.data.filter
             try:
                 data = gramex.data.filter(
-                    model.url,
-                    args=self.listify(['engine', 'url', 'ext', 'table', 'query', 'id']))
+                    model.url, args=self.listify(['engine', 'url', 'ext', 'table', 'query', 'id'])
+                )
             except AttributeError:
                 raise AttributeError('Model does not have a url')
             # Train the model.
@@ -165,7 +163,7 @@ class ModelHandler(BaseHandler):
             return True
 
     def listify(self, checklst):
-        ''' Some functions in data.py expect list values, so creates them.
+        '''Some functions in data.py expect list values, so creates them.
         checklst is list-like which contains the selected values to be returned.
         '''
         return {

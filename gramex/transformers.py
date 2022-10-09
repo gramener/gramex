@@ -76,23 +76,17 @@ def offsets2iob(text: spacy.tokens.Doc, entities: List[dict]) -> List[str]:
 
 
 def tokenize_and_align_labels(examples, tokenizer):
-    tokenized_inputs = tokenizer(
-        examples["text"], truncation=True, is_split_into_words=True
-    )
+    tokenized_inputs = tokenizer(examples["text"], truncation=True, is_split_into_words=True)
 
     labels = []
     for i, label in enumerate(examples["ner_tags"]):
-        word_ids = tokenized_inputs.word_ids(
-            batch_index=i
-        )  # Map tokens to their respective word.
+        word_ids = tokenized_inputs.word_ids(batch_index=i)  # Map tokens to their respective word.
         previous_word_idx = None
         label_ids = []
         for word_idx in word_ids:  # Set the special tokens to -100.
             if word_idx is None:
                 label_ids.append(-100)
-            elif (
-                word_idx != previous_word_idx
-            ):  # Only label the first token of a given word.
+            elif word_idx != previous_word_idx:  # Only label the first token of a given word.
                 label_ids.append(label[word_idx])
             else:
                 label_ids.append(-100)
@@ -122,7 +116,6 @@ def load_pretrained(klass, path, default, **kwargs):
 
 
 class BaseTransformer(object):
-
     def __init__(self, model=None, tokenizer=None, **kwargs):
         if model is None:
             model = self.DEFAULT_MODEL
@@ -131,9 +124,7 @@ class BaseTransformer(object):
         self._model = model
         self._tokenizer = tokenizer
         self.model = load_pretrained(self.AUTO_CLASS, model, self.DEFAULT_MODEL)
-        self.tokenizer = load_pretrained(
-            trf.AutoTokenizer, tokenizer, self.DEFAULT_TOKENIZER
-        )
+        self.tokenizer = load_pretrained(trf.AutoTokenizer, tokenizer, self.DEFAULT_TOKENIZER)
         self.pipeline_kwargs = kwargs
         self.pipeline = trf.pipeline(
             self.task, model=self.model, tokenizer=self.tokenizer, **kwargs
@@ -154,9 +145,7 @@ class BaseTransformer(object):
 
 class SentimentAnalysis(BaseTransformer):
     task = "sentiment-analysis"
-    DEFAULT_MODEL = (
-        DEFAULT_TOKENIZER
-    ) = "distilbert-base-uncased-finetuned-sst-2-english"
+    DEFAULT_MODEL = DEFAULT_TOKENIZER = "distilbert-base-uncased-finetuned-sst-2-english"
     AUTO_CLASS = trf.AutoModelForSequenceClassification
 
     def fit(self, text, labels, model_path, **kwargs):
@@ -168,9 +157,7 @@ class SentimentAnalysis(BaseTransformer):
             batched=True,
         )
         train_args = trf.TrainingArguments(save_strategy="no", output_dir=model_path)
-        trainer = trf.Trainer(
-            model=self.model, train_dataset=tokenized, args=train_args
-        )
+        trainer = trf.Trainer(model=self.model, train_dataset=tokenized, args=train_args)
         trainer.train()
         self.post_train(model_path)
 
@@ -179,7 +166,7 @@ class SentimentAnalysis(BaseTransformer):
         predictions = self.pipeline(text)
         return [k["label"] for k in predictions]
 
-    def score(self, X, y_true, **kwargs):   # noqa: N803
+    def score(self, X, y_true, **kwargs):  # noqa: N803
         y_true = [self.model.config.label2id[x] for x in y_true]
         y_pred = self.predict(X.squeeze("columns"))
         y_pred = [self.model.config.label2id[x] for x in y_pred]
@@ -188,9 +175,7 @@ class SentimentAnalysis(BaseTransformer):
 
 class NER(BaseTransformer):
     task = "ner"
-    DEFAULT_TOKENIZER = (
-        DEFAULT_MODEL
-    ) = "dbmdz/bert-large-cased-finetuned-conll03-english"
+    DEFAULT_TOKENIZER = DEFAULT_MODEL = "dbmdz/bert-large-cased-finetuned-conll03-english"
     AUTO_CLASS = trf.AutoModelForTokenClassification
 
     def __init__(self, model=None, tokenizer=None, **kwargs):
@@ -225,9 +210,7 @@ class NER(BaseTransformer):
             preds.append(offsets2iob(doc, pred))
             refs.append(offsets2iob(doc, ref))
         metrics = metric.compute(references=refs, predictions=preds)
-        return pd.DataFrame(
-            {k: v for k, v in metrics.items() if k in self.labels}
-        ).reset_index()
+        return pd.DataFrame({k: v for k, v in metrics.items() if k in self.labels}).reset_index()
 
     def fit(self, text, labels, model_path, **kwargs):
         texts = []

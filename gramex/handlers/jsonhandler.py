@@ -12,9 +12,9 @@ from gramex.http import BAD_REQUEST
 # store[path] holds the full data for that handler. It is saved in path at the
 # end of each request (if the data has changed.) The time data was last synced is
 # stored in _loaded[path].
-store = {}              # Contents of the JSON data stores
-_loaded = {}            # Time when persistent stores were last loaded
-_jsonstores = store     # Internal legacy alias for store
+store = {}  # Contents of the JSON data stores
+_loaded = {}  # Time when persistent stores were last loaded
+_jsonstores = store  # Internal legacy alias for store
 
 
 class JSONHandler(BaseHandler):
@@ -33,6 +33,7 @@ class JSONHandler(BaseHandler):
     :arg string data: optional initial dataset, used only if path is not
         specified. Defaults to null
     '''
+
     def parse_body_as_json(self):
         try:
             return tornado.escape.json_decode(self.request.body)
@@ -51,7 +52,7 @@ class JSONHandler(BaseHandler):
                 if _loaded.get(path, 0) <= os.stat(path).st_mtime:
                     # Don't use encoding when reading JSON. We're using ensure_ascii=True
                     # Besides, when handling Py2 & Py3, just ignoring encoding works best
-                    with open(path, mode='r') as handle:     # noqa
+                    with open(path, mode='r') as handle:  # noqa
                         try:
                             _jsonstores[path] = json.load(handle)
                             _loaded[path] = time.time()
@@ -157,7 +158,7 @@ class JSONHandler(BaseHandler):
                 os.makedirs(folder)
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
-            with open(self.path, mode='w') as handle:       # noqa
+            with open(self.path, mode='w') as handle:  # noqa
                 json.dump(_jsonstores.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
         super(JSONHandler, self).on_finish()

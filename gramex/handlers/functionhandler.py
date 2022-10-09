@@ -17,13 +17,15 @@ class FunctionHandler(BaseHandler):
     The function result is converted to a string and rendered.
     You can also yield one or more results. These are written immediately, in order.
     '''
+
     @classmethod
     def setup(cls, headers={}, **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
         cls.info['function'] = build_transform(
-            kwargs, vars={'handler': None}, filename=f'url:{cls.name}')
+            kwargs, vars={'handler': None}, filename=f'url:{cls.name}'
+        )
         cls.headers = headers
         cls.post = cls.put = cls.delete = cls.patch = cls.get
         if not kwargs.get('cors'):
@@ -66,16 +68,23 @@ class FunctionHandler(BaseHandler):
             # This includes JSON types, detected by isinstance(item, ...))
             # and numpy types, detected by cls in (...)
             # and anything with a to_dict, e.g. DataFrames
-            elif (isinstance(item, (int, float, bool, list, tuple, dict)) or
-                  cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
-                  hasattr(item, 'to_dict')):
-                self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
-                                      cls=CustomJSONEncoder))
+            elif (
+                isinstance(item, (int, float, bool, list, tuple, dict))
+                or cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str')
+                or hasattr(item, 'to_dict')
+            ):
+                self.write(
+                    json.dumps(
+                        item, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+                    )
+                )
                 if multipart:
                     self.flush()
             else:
-                app_log.warning(f'url:{self.name}: FunctionHandler can write scalars/list/dict, '
-                                f'not {type(item)}: {item!r}')
+                app_log.warning(
+                    f'url:{self.name}: FunctionHandler can write scalars/list/dict, '
+                    f'not {type(item)}: {item!r}'
+                )
 
         if self.redirects:
             self.redirect_next()

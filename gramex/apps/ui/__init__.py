@@ -7,8 +7,9 @@ import gramex
 import gramex.cache
 import gramex.handlers
 import string
+
 # B404:import_subprocess only for JS compilation
-import subprocess       # nosec B404
+import subprocess  # nosec B404
 from hashlib import md5
 from tornado.gen import coroutine, Return
 from functools import partial
@@ -33,13 +34,13 @@ if not os.path.exists(cache_dir):
 def _get_cache_key(state):
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     # B303:md5 is safe here - it's not for cryptographic use
-    return md5(cache_key).hexdigest()[:5]       # nosec B303
+    return md5(cache_key).hexdigest()[:5]  # nosec B303
 
 
 @coroutine
 def sass(
-        handler: gramex.handlers.FileHandler,
-        template: str = _join(ui_dir, 'bootstrap-theme.scss')):
+    handler: gramex.handlers.FileHandler, template: str = _join(ui_dir, 'bootstrap-theme.scss')
+):
     '''Return a bootstrap theme based on the custom SASS variables provided.'''
     args = dict(variables.get('ui-bootstrap', {}))
     args.update({key: handler.get_arg(key) for key in handler.args})
@@ -73,14 +74,23 @@ def sass(
             )
             handle.write(result)
         # Run sass to generate the output
-        proc = gramex.cache.Subprocess([
-            'node', sass_bin, scss_path, cache_file,
-            '--style', 'compressed',
-            # Allow importing path from these paths
-            '--load-path', os.path.dirname(template),
-            '--load-path', ui_dir,
-            '--load-path', bootstrap_dir,
-        ])
+        proc = gramex.cache.Subprocess(
+            [
+                'node',
+                sass_bin,
+                scss_path,
+                cache_file,
+                '--style',
+                'compressed',
+                # Allow importing path from these paths
+                '--load-path',
+                os.path.dirname(template),
+                '--load-path',
+                ui_dir,
+                '--load-path',
+                bootstrap_dir,
+            ]
+        )
         out, err = yield proc.wait_for_exit()
         if proc.proc.returncode:
             raise RuntimeError('sass compilation failure', err.decode('utf-8'))
@@ -96,8 +106,8 @@ valid_sass_key = re.compile(r'[_a-zA-Z][_a-zA-Z0-9\-]*')
 
 @coroutine
 def sass2(
-        handler: gramex.handlers.FileHandler,
-        path: str = _join(ui_dir, 'gramexui.scss')) -> bytes:
+    handler: gramex.handlers.FileHandler, path: str = _join(ui_dir, 'gramexui.scss')
+) -> bytes:
     '''Compile a SASS file using custom variables from URL query parameters.
 
     Examples:
@@ -157,20 +167,35 @@ def sass2(
         content += [
             '%s "%s";' % (key, url.replace('\\', '/'))
             for key, urls in commands.items()
-            for url in urls]
+            for url in urls
+        ]
         # ... and the main SCSS file we want to use
         content.append(f'@import "{path}";')
         with open(source, 'w', encoding='utf-8') as handle:
             handle.write('\n'.join(content))
         # Compile SASS file. Allow @import from template dir, UI dir, Bootstrap dir, CWD
-        proc = yield gramex.service.threadpool.submit(subprocess.run, [
-            'node', sass_bin, source, target,
-            '--style', 'compressed',
-            '--load-path', os.path.dirname(path),
-            '--load-path', ui_dir,
-            '--load-path', bootstrap_dir,
-            '--load-path', os.getcwd(),
-        ], capture_output=True, input='\n'.join(content), encoding='utf-8')
+        proc = yield gramex.service.threadpool.submit(
+            subprocess.run,
+            [
+                'node',
+                sass_bin,
+                source,
+                target,
+                '--style',
+                'compressed',
+                '--load-path',
+                os.path.dirname(path),
+                '--load-path',
+                ui_dir,
+                '--load-path',
+                bootstrap_dir,
+                '--load-path',
+                os.getcwd(),
+            ],
+            capture_output=True,
+            input='\n'.join(content),
+            encoding='utf-8',
+        )
         if proc.returncode:
             # If there's an error, remove the generated files and raise an error
             os.remove(source)
@@ -180,8 +205,8 @@ def sass2(
 
 @coroutine
 def jscompiler(
-        handler: gramex.handlers.FileHandler,
-        path: str, target_ext: str, exe: str, cmd: str) -> bytes:
+    handler: gramex.handlers.FileHandler, path: str, target_ext: str, exe: str, cmd: str
+) -> bytes:
     '''Compile a file (Vue, TypeScript), etc into a JS file using Node.js
 
     Examples:
@@ -218,20 +243,27 @@ def jscompiler(
         cmd = [string.Template(x).substitute(subs) for x in cmd.split()]
         app_log.debug(f'Compiling .{ext}: {" ".join(cmd)}')
         proc = yield gramex.service.threadpool.submit(
-            subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8')
+            subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8'
+        )
         if proc.returncode:
             raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}\n{proc.stdout}')
 
-    target = os.path.join(target_dir, os.path.basename(path[:-len(ext)] + target_ext))
+    target = os.path.join(target_dir, os.path.basename(path[: -len(ext)] + target_ext))
     return _sourcemap(handler, target, 'text/javascript')
 
 
 ts = partial(
-    jscompiler, target_ext='.js', exe=ts_path,
-    cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap')
+    jscompiler,
+    target_ext='.js',
+    exe=ts_path,
+    cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap',
+)
 vue = partial(
-    jscompiler, target_ext='.min.js', exe=vue_path,
-    cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir')
+    jscompiler,
+    target_ext='.min.js',
+    exe=vue_path,
+    cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir',
+)
 
 
 def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> bytes:
@@ -272,4 +304,5 @@ def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> 
         return re.sub(
             rb' sourceMappingURL=(\S+)',
             rb' sourceMappingURL=' + source_map.encode('utf-8'),
-            content)
+            content,
+        )

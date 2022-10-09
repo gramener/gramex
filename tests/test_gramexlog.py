@@ -24,10 +24,16 @@ class TestESLog(TestGramex):
         for attempt in range(10, -1, -1):
             result = self.check('/gramexlog/search?index=default').json()['hits']
             try:
-                eq_(json.dumps(result, sort_keys=True), json.dumps([
-                    {},
-                    {'x': '2', '高': 'σ', 'س': ''},
-                ], sort_keys=True))
+                eq_(
+                    json.dumps(result, sort_keys=True),
+                    json.dumps(
+                        [
+                            {},
+                            {'x': '2', '高': 'σ', 'س': ''},
+                        ],
+                        sort_keys=True,
+                    ),
+                )
             except Exception:
                 if attempt == 0:
                     raise

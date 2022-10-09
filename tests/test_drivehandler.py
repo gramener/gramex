@@ -8,8 +8,13 @@ from shutil import rmtree
 from mimetypes import guess_type
 from tornado.web import create_signed_value
 from gramex import conf
-from gramex.http import (OK, BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE,
-                         UNSUPPORTED_MEDIA_TYPE)
+from gramex.http import (
+    OK,
+    BAD_REQUEST,
+    NOT_FOUND,
+    REQUEST_ENTITY_TOO_LARGE,
+    UNSUPPORTED_MEDIA_TYPE,
+)
 from gramex.install import _ensure_remove
 from nose.tools import eq_, ok_
 from . import server, TestGramex, afe
@@ -28,7 +33,7 @@ class TestDriveHandler(TestGramex):
         for f in fileinfo:
             info = (f.get('name', f['file']), open(f['file'], 'rb'))
             if 'mime' in f:
-                info += (f['mime'], )
+                info += (f['mime'],)
             files.append(('file', info))
             for field in ('tag', 'cat'):
                 if field in f:
@@ -105,12 +110,15 @@ class TestDriveHandler(TestGramex):
         self.check_upload(dict(file='server.py'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
 
         # Multi-uploads are supported, with tags
-        self.check_upload(dict(file='userdata.csv', tag='t1'),
-                          dict(file='actors.csv', tag='t2'))
-        r = requests.post(self.url, files=(
-            ('file', ('x.csv', open('userdata.csv', 'rb'))),
-            ('file', ('y.csv', open('userdata.csv', 'rb'))),
-        ), data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']})
+        self.check_upload(dict(file='userdata.csv', tag='t1'), dict(file='actors.csv', tag='t2'))
+        r = requests.post(
+            self.url,
+            files=(
+                ('file', ('x.csv', open('userdata.csv', 'rb'))),
+                ('file', ('y.csv', open('userdata.csv', 'rb'))),
+            ),
+            data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']},
+        )
         eq_(r.status_code, OK)
         data = gramex.data.filter(self.con, table='drive').sort_values('id').tail(2)
         # If there are insufficient tags, they become NULL
@@ -173,7 +181,7 @@ class TestDriveHandler(TestGramex):
             'size': 100,
             'date': 100,
             'user_id': 'A',
-            'user_role': 'B'
+            'user_role': 'B',
         }
         r = requests.put(self.url, params=params)
         eq_(r.status_code, OK)
@@ -193,9 +201,12 @@ class TestDriveHandler(TestGramex):
         )
         secret = gramex.service.app.settings['cookie_secret']
         user = {'id': 'AB', 'role': 'CD'}
-        r = requests.put(self.url, params=params, files=files, headers={
-            'X-Gramex-User': create_signed_value(secret, 'user', json.dumps(user))
-        })
+        r = requests.put(
+            self.url,
+            params=params,
+            files=files,
+            headers={'X-Gramex-User': create_signed_value(secret, 'user', json.dumps(user))},
+        )
         eq_(r.status_code, OK)
         data2 = gramex.data.filter(self.con, table='drive')
         new = data2[data2.id == data.id.iloc[1]].iloc[0]

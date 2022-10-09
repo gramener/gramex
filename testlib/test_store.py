@@ -7,6 +7,7 @@ from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 import gramex.cache
 from gramex.cache import JSONStore, SQLiteStore, HDF5Store, RedisStore
+
 # It must be possible to import from basehandler for backward-compatibility
 from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore  # noqa
 from gramex.handlers.basehandler import BaseMixin
@@ -44,7 +45,7 @@ class TestJSONStore(unittest.TestCase):
     def load(self):
         '''Load all data in the store and return it'''
         if os.path.exists(self.path):
-            with open(self.path, 'r') as handle:    # noqa: no encoding for json
+            with open(self.path, 'r') as handle:  # noqa: no encoding for json
                 data = json.load(handle)
             return data
         return {}
@@ -134,10 +135,7 @@ class TestSQLiteStore(TestJSONStore):
     store_file = 'data.db'
 
     def load(self):
-        return {
-            self.store._escape(key): val
-            for key, val in self.store.store.items()
-        }
+        return {self.store._escape(key): val for key, val in self.store.store.items()}
 
 
 class TestHDF5Store(TestJSONStore):
@@ -146,8 +144,7 @@ class TestHDF5Store(TestJSONStore):
 
     def load(self):
         return {
-            key.replace('\t', '/'): json.loads(val[()])
-            for key, val in self.store.store.items()
+            key.replace('\t', '/'): json.loads(val[()]) for key, val in self.store.store.items()
         }
 
 
@@ -158,6 +155,7 @@ class TestRedisStore(TestJSONStore):
         host = variables['REDIS_SERVER']
 
         import redis
+
         cls.redis = redis.StrictRedis(host=host, decode_responses=True, encoding='utf-8')
         try:
             # Re-initialize the database by clearing it
@@ -166,14 +164,11 @@ class TestRedisStore(TestJSONStore):
             raise SkipTest('No redis server at %s' % host)
 
         cls.plainstore = RedisStore(path=host, flush=None)
-        cls.store = RedisStore(path='%s:6379' % host, flush=None,
-                               purge_keys=BaseMixin._purge_keys)
-        cls.store2 = RedisStore(path='%s:6379:0' % host, flush=None,
-                                purge_keys=BaseMixin._purge_keys)
+        cls.store = RedisStore(path='%s:6379' % host, flush=None, purge_keys=BaseMixin._purge_keys)
+        cls.store2 = RedisStore(
+            path='%s:6379:0' % host, flush=None, purge_keys=BaseMixin._purge_keys
+        )
 
     def load(self):
         '''Load all data in the store and return it'''
-        return {
-            key: json.loads(self.redis.get(key))
-            for key in self.redis.keys()
-        }
+        return {key: json.loads(self.redis.get(key)) for key in self.redis.keys()}

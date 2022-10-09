@@ -120,9 +120,7 @@ def async_calc(handler):
     '''Perform a slow calculation asynchronously'''
     rows = 1000
     cols = ['A', 'B', 'C']
-    df = pd.DataFrame(
-        np.arange(rows * len(cols)).reshape((rows, len(cols))),
-        columns=cols)
+    df = pd.DataFrame(np.arange(rows * len(cols)).reshape((rows, len(cols))), columns=cols)
     df = df % 4
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
     # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
@@ -240,11 +238,13 @@ def zero_division_error(handler):
 
 
 def handle_error(status_code, kwargs, handler):
-    return json.dumps({
-        'status_code': status_code,
-        'kwargs': repr(kwargs),
-        'handler.request.uri': handler.request.uri,
-    })
+    return json.dumps(
+        {
+            'status_code': status_code,
+            'kwargs': repr(kwargs),
+            'handler.request.uri': handler.request.uri,
+        }
+    )
 
 
 def set_session(handler, **kwargs):
@@ -323,7 +323,7 @@ def subprocess(handler):
         kwargs['buffer_size'] = int(buf) if buf.isdigit() else buf
     if handler.args.get('env'):
         kwargs['env'] = dict(os.environ)
-        kwargs['env'][str('GRAMEXTESTENV')] = str('test')   # env keys & values can only by str()
+        kwargs['env'][str('GRAMEXTESTENV')] = str('test')  # env keys & values can only by str()
     handler.write('stream: ')
     proc = Subprocess(handler.args['args'], universal_newlines=True, **kwargs)
     stdout, stderr = yield proc.wait_for_exit()
@@ -395,7 +395,7 @@ def write_stream():
 
 def sales_query(args, handler):
     '''Used by formhandler/sqlite-queryfilter and testlib.test_data.py'''
-    handler.request.headers             # Check that we can access headers
+    handler.request.headers  # Check that we can access headers
     cities = args.get('ct', [])
     if len(cities) > 0:
         vals = ', '.join("'%s'" % v for v in cities)
@@ -415,10 +415,22 @@ def email_stubs(handler):
 
 def numpytypes(handler):
     supported_types = {
-        'int8', 'int16', 'int32', 'int64',
-        'uint8', 'uint16', 'uint32', 'uint64',
-        'float16', 'float32', 'float64',
-        'bool_', 'object_', 'string_', 'unicode_'}
+        'int8',
+        'int16',
+        'int32',
+        'int64',
+        'uint8',
+        'uint16',
+        'uint32',
+        'uint64',
+        'float16',
+        'float32',
+        'float64',
+        'bool_',
+        'object_',
+        'string_',
+        'unicode_',
+    }
     result = {t: getattr(np, t)(1) for t in supported_types}
     return result
 
@@ -488,8 +500,7 @@ def get_state_info():
 def make_circles():
     X, y = sk_make_circles(noise=0.05, factor=0.4)  # NOQA: N806
     out = os.path.join(os.path.dirname(__file__), 'circles.csv')
-    pd.DataFrame(np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(
-        out, encoding='utf-8', index=False)
+    pd.DataFrame(np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(out, encoding='utf-8', index=False)
 
 
 def transform_circles(df, *argss, **kwargs):
@@ -500,6 +511,7 @@ def transform_circles(df, *argss, **kwargs):
 @coroutine
 def pynode_run(handler):
     from gramex.pynode import node
+
     kwargs = {}
     for key, vals in handler.args.items():
         try:
@@ -512,20 +524,21 @@ def pynode_run(handler):
 
 @handler
 def test_function(
-        li1: List[int],
-        lf1: List[float],
-        li2: Annotated[List[int], 'List of ints'],  # noqa
-        lf2: Annotated[List[float], 'List of floats'],  # noqa
-        li3: List[int] = [0],
-        lf3: List[float] = [0.0],
-        l1=[],
-        i1: Annotated[int, 'First value'] = 0,  # noqa
-        i2: Annotated[int, 'Second value'] = 0,  # noqa
-        s1: str = 'Total',
-        n1: int = 0,
-        n2: np.int64 = 0,
-        h: Header = '',
-        code: int = OK):
+    li1: List[int],
+    lf1: List[float],
+    li2: Annotated[List[int], 'List of ints'],  # noqa
+    lf2: Annotated[List[float], 'List of floats'],  # noqa
+    li3: List[int] = [0],
+    lf3: List[float] = [0.0],
+    l1=[],
+    i1: Annotated[int, 'First value'] = 0,  # noqa
+    i2: Annotated[int, 'Second value'] = 0,  # noqa
+    s1: str = 'Total',
+    n1: int = 0,
+    n2: np.int64 = 0,
+    h: Header = '',
+    code: int = OK,
+):
     '''
     This is a **Markdown** docstring.
     '''

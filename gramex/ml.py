@@ -11,17 +11,17 @@ from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
 
 # Expose joblob.load via gramex.ml
-load = joblib.load                      # noqa
+load = joblib.load  # noqa
 
 
 class Classifier(object):
     '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
+    :arg data DataFrame: data to train / re-train the model with
+    :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
+    :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
+    :arg output str: output column name (default: last column in training data)
+    :arg input list: input column names (default: all columns except ``output``)
+    :arg labels list: list of possible output values (default: unique ``output`` in training)
     '''
 
     def __init__(self, **kwargs):
@@ -34,8 +34,11 @@ class Classifier(object):
 
     def update_params(self, params):
         model_keys = ('model_class', 'url', 'input', 'output', 'trained', 'query', 'model_kwargs')
-        model_params = {k: v[0] if isinstance(v, list) and k != 'input' else v
-                        for k, v in params.items() if k in model_keys}
+        model_params = {
+            k: v[0] if isinstance(v, list) and k != 'input' else v
+            for k, v in params.items()
+            if k in model_keys
+        }
         if model_params:
             self.trained = params.get('trained', False)
         vars(self).update(model_params)
@@ -64,6 +67,7 @@ class Classifier(object):
             x, y = data[self.input], data[self.output]
             # Transform the data
             from sklearn.preprocessing import StandardScaler
+
             self.scaler = StandardScaler()
             self.scaler.fit(x)
             # Train the classifier. Partially, if possible
@@ -73,8 +77,7 @@ class Classifier(object):
                 raise ValueError('{0} is not a correct model class'.format(self.model_class))
             if self.labels and hasattr(clf, 'partial_fit'):
                 try:
-                    clf.partial_fit(self.scaler.transform(x),
-                                    y, classes=self.labels)
+                    clf.partial_fit(self.scaler.transform(x), y, classes=self.labels)
                 except AttributeError:
                     raise ValueError('{0} does not support partial fit'.format(self.model_class))
             else:
@@ -127,8 +130,15 @@ def _conda_r_home():
     return None
 
 
-def r(code=None, path=None, rel=True, conda=True, convert=True,
-      repo='https://cran.r-project.org/', **kwargs):
+def r(
+    code=None,
+    path=None,
+    rel=True,
+    conda=True,
+    convert=True,
+    repo='https://cran.r-project.org/',
+    **kwargs,
+):
     '''
     Runs the R script and returns the result.
 
@@ -188,8 +198,7 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
     return result
 
 
-def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
-               weight=None):
+def groupmeans(data, groups, numbers, cutoff=0.01, quantile=0.95, minsize=None, weight=None):
     '''
     **DEPRECATED**. Use TopCause() instead.
 
@@ -209,6 +218,7 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
         1% of the dataset, or 10, whichever is larger.
     '''
     from scipy.stats.mstats import ttest_ind
+
     if minsize is None:
         minsize = max(len(data.index) // 100, 10)
 
@@ -238,19 +248,20 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
             lo = data[number][grouped.groups[sorted_cats.index[0]]].values
             hi = data[number][grouped.groups[sorted_cats.index[-1]]].values
             _, prob = ttest_ind(
-                np.ma.masked_array(lo, np.isnan(lo)),
-                np.ma.masked_array(hi, np.isnan(hi))
+                np.ma.masked_array(lo, np.isnan(lo)), np.ma.masked_array(hi, np.isnan(hi))
             )
             if prob > cutoff:
                 continue
-            results.append({
-                'group': group,
-                'number': number,
-                'prob': prob,
-                'gain': sorted_cats.iloc[-1] / means[number] - 1,
-                'biggies': ave.loc[biggies][number].to_dict(),
-                'means': ave[[number, '#']].sort_values(number).to_dict(),
-            })
+            results.append(
+                {
+                    'group': group,
+                    'number': number,
+                    'prob': prob,
+                    'gain': sorted_cats.iloc[-1] / means[number] - 1,
+                    'biggies': ave.loc[biggies][number].to_dict(),
+                    'means': ave[[number, '#']].sort_values(number).to_dict(),
+                }
+            )
 
     results = pd.DataFrame(results)
     if len(results) > 0:
@@ -268,6 +279,7 @@ def weighted_avg(data, numeric_cols, weight):
 
 def _google_translate(q, source, target, key):
     import requests
+
     params = {'q': q, 'target': target, 'key': key}
     if source:
         params['source'] = source
@@ -281,15 +293,15 @@ def _google_translate(q, source, target, key):
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
-        'source': [t.get('detectedSourceLanguage', params.get('source', None))
-                   for t in response['data']['translations']],
+        'source': [
+            t.get('detectedSourceLanguage', params.get('source', None))
+            for t in response['data']['translations']
+        ],
         'target': [target] * len(q),
     }
 
 
-translate_api = {
-    'google': _google_translate
-}
+translate_api = {'google': _google_translate}
 # Prevent translate cache from being accessed concurrently across threads.
 # TODO: avoid threads and use Tornado ioloop/gen instead.
 _translate_cache_lock = threading.Lock()
@@ -322,6 +334,7 @@ def translate(*q, **kwargs):
     Reference: https://cloud.google.com/translate/docs/apis
     '''
     import gramex.data
+
     source = kwargs.pop('source', None)
     target = kwargs.pop('target', None)
     key = kwargs.pop('key', None)
@@ -370,13 +383,13 @@ def translate(*q, **kwargs):
 @coroutine
 def translater(handler, source='en', target='nl', key=None, cache=None, api='google'):
     args = handler.argparse(
-        q={'nargs': '*', 'default': []},
-        source={'default': source},
-        target={'default': target}
+        q={'nargs': '*', 'default': []}, source={'default': source}, target={'default': target}
     )
     import gramex
+
     result = yield gramex.service.threadpool.submit(
-        translate, *args.q, source=args.source, target=args.target, key=key, cache=cache, api=api)
+        translate, *args.q, source=args.source, target=args.target, key=key, cache=cache, api=api
+    )
 
     # TODO: support gramex.data.download features
     handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
@@ -385,13 +398,14 @@ def translater(handler, source='en', target='nl', key=None, cache=None, api='goo
 
 _languagetool = {
     'defaults': {k: v for k, v in variables.items() if k.startswith('LT_')},
-    'installed': os.path.isdir(variables['LT_CWD'])
+    'installed': os.path.isdir(variables['LT_CWD']),
 }
 
 
 @coroutine
 def languagetool(handler, *args, **kwargs):
     import gramex
+
     merge(kwargs, _languagetool['defaults'], mode='setdefault')
     yield gramex.service.threadpool.submit(languagetool_download)
     if not handler:
@@ -413,7 +427,7 @@ def languagetool(handler, *args, **kwargs):
             correction = error['replacements'][0]['value']
             offset, limit = error['offset'], error['length']
             offset += d_offset
-            del corrected[offset:(offset + limit)]
+            del corrected[offset : (offset + limit)]
             for i, char in enumerate(correction):
                 corrected.insert(offset + i, char)
             d_offset += len(correction) - limit
@@ -445,15 +459,19 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
         except ConnectionRefusedError:
             # Start languagetool
             from gramex.cache import daemon
+
             cmd = [p.format(**kwargs) for p in kwargs['LT_CMD']]
             app_log.info('Starting: %s', ' '.join(cmd))
             if 'proc' not in _languagetool:
                 import re
+
                 _languagetool['proc'] = daemon(
-                    cmd, cwd=kwargs['LT_CWD'],
+                    cmd,
+                    cwd=kwargs['LT_CWD'],
                     first_line=re.compile(r"Server started\s*$"),
-                    stream=True, timeout=5,
-                    buffer_size=512
+                    stream=True,
+                    timeout=5,
+                    buffer_size=512,
                 )
             try:
                 result = yield client.fetch(url)
@@ -467,7 +485,8 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
 def languagetool_download():
     if _languagetool['installed']:
         return
-    import requests, zipfile, io        # noqa
+    import requests, zipfile, io  # noqa
+
     target = _languagetool['defaults']['LT_TARGET']
     if not os.path.isdir(target):
         os.makedirs(target)
@@ -484,7 +503,7 @@ translator = translater
 
 
 try:
-    from .topcause import TopCause     # noqa -- F401 imported to expose
+    from .topcause import TopCause  # noqa -- F401 imported to expose
 except ImportError:
     app_log.info('gramex.ml.TopCause not imported. pip install sklearn')
     pass

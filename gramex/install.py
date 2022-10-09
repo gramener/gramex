@@ -14,8 +14,9 @@ import datetime
 import requests
 from shutilwhich import which
 from pathlib import Path
+
 # B404:import_subprocess only developers can access this, not users
-from subprocess import Popen, check_output, CalledProcessError      # nosec B404
+from subprocess import Popen, check_output, CalledProcessError  # nosec B404
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 from zipfile import ZipFile
@@ -155,11 +156,12 @@ license: |
     gramex license reject           # Reject Gramex license
 '''
 # B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
-usage = yaml.load(usage, Loader=AttrDictYAMLLoader)     # nosec B506
+usage = yaml.load(usage, Loader=AttrDictYAMLLoader)  # nosec B506
 
 
 class TryAgainError(Exception):
     '''If shutil.rmtree fails, and we've fixed the problem, raise this to try again'''
+
     pass
 
 
@@ -167,14 +169,16 @@ try:
     WindowsError
 except NameError:
     # On non-Windows systems, _ensure_remove just raises the exception
-    def _ensure_remove(remove, path, exc_info):     # noqa -- redefine function
+    def _ensure_remove(remove, path, exc_info):  # noqa -- redefine function
         raise exc_info[1]
+
 else:
     # On Windows systems, try harder
     def _ensure_remove(func, path, exc_info):
         '''onerror callback for rmtree that tries hard to delete files'''
         if issubclass(exc_info[0], WindowsError):
             import winerror
+
             # Delete read-only files
             # https://bugs.python.org/issue19643
             # https://bugs.python.org/msg218021
@@ -195,10 +199,13 @@ else:
             # npm creates windows shortcuts that shutil.rmtree cannot delete.
             # os.listdir/scandir fails with a PATH_NOT_FOUND.
             # Delete these using win32com and try again.
-            elif (exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and
-                    func in {os.listdir, os.scandir}):
+            elif exc_info[1].winerror == winerror.ERROR_PATH_NOT_FOUND and func in {
+                os.listdir,
+                os.scandir,
+            }:
                 app_log.error(f'Cannot delete {path}')
                 from win32com.shell import shell, shellcon  # type:ignore
+
                 options = shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NOERRORUI
                 code, err = shell.SHFileOperation((0, shellcon.FO_DELETE, path, None, options))
                 if code == 0:
@@ -229,8 +236,9 @@ def safe_rmtree(target, retries=100, delay=0.05, gramexdata=True):
     if not os.path.exists(target):
         return True
     # TODO: check case insensitive in Windows, but case sensitive on other OS
-    func, kwargs = (shutil.rmtree, {'onerror': _ensure_remove}) if \
-        os.path.isdir(target) else (os.remove, {})
+    func, kwargs = (
+        (shutil.rmtree, {'onerror': _ensure_remove}) if os.path.isdir(target) else (os.remove, {})
+    )
     if gramexdata:
         if target.lower().startswith(variables['GRAMEXDATA'].lower()):
             # Try multiple times to recover from errors, since we have no way of
@@ -324,10 +332,10 @@ def run_command(config):
     if cygwin is not None and cygpath is not None:
         # subprocess.check_output is safe here since these are developer-initiated
         # B404:import_subprocess check_output is safe here since these are developer-initiated
-        path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()   # nosec 404
-        is_cygwin_app = check_output([cygwin, '-f', path], **kwargs).strip()        # nosec 404
+        path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()  # nosec 404
+        is_cygwin_app = check_output([cygwin, '-f', path], **kwargs).strip()  # nosec 404
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target], **kwargs).strip()       # nosec 404
+            target = check_output([cygpath, '-au', target], **kwargs).strip()  # nosec 404
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
@@ -338,7 +346,7 @@ def run_command(config):
         app_log.error(f'Cannot delete target {config.target}. Aborting installation')
         return
     # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-    proc = Popen(appcmd, bufsize=-1, **kwargs)      # nosec 603
+    proc = Popen(appcmd, bufsize=-1, **kwargs)  # nosec 603
     proc.communicate()
     return proc.returncode
 
@@ -356,7 +364,7 @@ setup_paths = [
         {'file': 'yarn.lock', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
         {'file': 'package.json', 'exe': 'npm', 'cmd': '"{exe}" install'},
         {'file': 'package.json', 'exe': 'yarn', 'cmd': '"{exe}" install --prefer-offline'},
-    ]
+    ],
 ]
 
 
@@ -458,9 +466,8 @@ def show_usage(command):
     apps = (+apps_config).keys()
     return 'gramex {command}\n\n{desc}'.format(
         command=command,
-        desc=usage[command].strip().format(
-            apps='\n'.join('- ' + app for app in sorted(apps))
-        ))
+        desc=usage[command].strip().format(apps='\n'.join('- ' + app for app in sorted(apps))),
+    )
 
 
 def install(args, kwargs):
@@ -551,13 +558,21 @@ def run(args, kwargs):
         save_user_config(appname, app_config)
         # Tell the user what configs are used
         cline = ' '.join('--%s=%s' % arg for arg in flatten_config(app_config.get('run', {})))
-        app_log.info('Gramex %s | %s %s | %s | Python %s', gramex.__version__, appname, cline,
-                     os.getcwd(), sys.version.replace('\n', ' '))
+        app_log.info(
+            'Gramex %s | %s %s | %s | Python %s',
+            gramex.__version__,
+            appname,
+            cline,
+            os.getcwd(),
+            sys.version.replace('\n', ' '),
+        )
         gramex.init(args=AttrDict(app=app_config['run']))
     elif appname in apps_config['user']:
         # The user configuration has a wrong path. Inform user
-        app_log.error(f'{appname}: no target path {app_config.target}. '
-                      f'Run "gramex uninstall {appname}" and try again.', )
+        app_log.error(
+            f'{appname}: no target path {app_config.target}. '
+            f'Run "gramex uninstall {appname}" and try again.',
+        )
     else:
         app_log.error(f'{appname}: no target path {app_config.target}')
 
@@ -579,7 +594,7 @@ def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
         # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-        return check_output(shlex.split(cmd), **kwargs).strip()     # nosec B603
+        return check_output(shlex.split(cmd), **kwargs).strip()  # nosec B603
     # OSError is raised if the cmd is not found.
     # CalledProcessError is raised if the cmd returns an error.
     except (OSError, CalledProcessError):
@@ -591,7 +606,7 @@ def _run_console(cmd, **kwargs):
     cmd = shlex.split(cmd)
     try:
         # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)    # nosec B603
+        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)  # nosec B603
     except OSError:
         app_log.error(f'Cannot find command: {cmd[0]}')
         raise
@@ -734,6 +749,7 @@ def mail(args, kwargs):
         return
 
     from gramex.services import email as setup_email, create_alert
+
     alert_conf = conf.get('alert', {})
     email_conf = conf.get('email', {})
     setup_email(email_conf)

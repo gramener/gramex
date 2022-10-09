@@ -48,7 +48,7 @@ class TestCacheConstructor(unittest.TestCase):
         old_keys = set(memcache.keys())
         data = gramex.cache.open(os.path.join(folder, 'sales.xlsx'))
         new_keys = set(memcache.keys()) - old_keys
-        eq_(len(new_keys), 1)           # only 1 new key should have been added
+        eq_(len(new_keys), 1)  # only 1 new key should have been added
         value = memcache[list(new_keys)[0]]
         ok_(gramex.cache.sizeof(value) > sys.getsizeof(data))
 
@@ -67,8 +67,8 @@ class TestCacheConstructor(unittest.TestCase):
         cache.clear()
         gramex.cache.open(path)
         keys = list(cache.keys())
-        eq_(len(keys), 1)           # it has only 1 key
-        eq_(keys[0][0], path)       # with the file we just opened
+        eq_(len(keys), 1)  # it has only 1 key
+        eq_(keys[0][0], path)  # with the file we just opened
 
     def test_redis_cache(self):
         # Need to run a redis-server on localhost:6379:0
@@ -86,10 +86,10 @@ class TestCacheConstructor(unittest.TestCase):
 
         cache.store.flushall()
         gramex.cache.open(os.path.join(folder, 'sales.xlsx'), _cache=cache)
-        eq_(len(cache), 1)      # only 1 new key should have been added
+        eq_(len(cache), 1)  # only 1 new key should have been added
 
         def lock(x):
-            return Lock()       # Non Picklable object
+            return Lock()  # Non Picklable object
 
         # Non-pickable object should not be cached in Redis cache, but in fallback cache
         cache.store.flushall()
@@ -98,12 +98,13 @@ class TestCacheConstructor(unittest.TestCase):
         eq_(len(cache), 0, 'Redis Cache does not store non-pickeable objects')
         eq_(len(gramex.cache._FALLBACK_MEMORY_CACHE), 1, 'Fallback cache is set')
         result, reloaded = gramex.cache.open(
-            os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache, _reload_status=True)
+            os.path.join(folder, 'sales.xlsx'), transform=lock, _cache=cache, _reload_status=True
+        )
         eq_(reloaded, True, 'Fallback cache returns non-pickleable objects')
 
-        r = StrictRedis()                   # Connect to redis without gramex cache
-        r.set('Unpickled', 'Test')          # Set a key that is not pickled
-        ok_(list(cache))                    # the unpicked key should not raise an Exception
+        r = StrictRedis()  # Connect to redis without gramex cache
+        r.set('Unpickled', 'Test')  # Set a key that is not pickled
+        ok_(list(cache))  # the unpicked key should not raise an Exception
 
 
 class TestCacheKey(unittest.TestCase):
@@ -119,8 +120,9 @@ class TestCacheKey(unittest.TestCase):
         eq_(cache_key(request({'abc': None})), 'None')
         eq_(cache_key(request({'abc': 'λ–►'})), 'λ–►')
         # Just ensure that this produces different results. Exact serialisation is irrelevant
-        self.assertNotEqual(cache_key(request({'abc': {'x': 1}})),
-                            cache_key(request({'abc': {'x': 2}})))
+        self.assertNotEqual(
+            cache_key(request({'abc': {'x': 1}})), cache_key(request({'abc': {'x': 2}}))
+        )
 
     def test_user(self):
         def user(val):
@@ -140,7 +142,8 @@ class TestCacheKey(unittest.TestCase):
 
         # Check if cookies.* works
         cache_key = gramex.services._get_cache_key(
-            {'key': ['request.uri', 'cookies.sid2']}, 'cookie')
+            {'key': ['request.uri', 'cookies.sid2']}, 'cookie'
+        )
         eq_(cache_key(cookie('x', 1)), ('uri', '~'))
         eq_(cache_key(cookie('sid2', '')), ('uri', ''))
         eq_(cache_key(cookie('sid2', 'λ–►')), ('uri', 'λ–►'))
@@ -151,7 +154,8 @@ class TestCacheKey(unittest.TestCase):
 
         # Check if headers.* works
         cache_key = gramex.services._get_cache_key(
-            {'key': ['request.uri', 'headers.key']}, 'headers')
+            {'key': ['request.uri', 'headers.key']}, 'headers'
+        )
         eq_(cache_key(header('x', 1)), ('uri', '~'))
         eq_(cache_key(header('key', '')), ('uri', ''))
         eq_(cache_key(header('key', 'λ–►')), ('uri', 'λ–►'))
@@ -242,8 +246,11 @@ class TestCacheFunctionHandler(TestGramex):
         r1 = self.get('/cache/increment-headers-dummy', session=session1)
         # Scenario: Browser 1 had a cached copy. But Gramex restarted.
         # So now it requests the page again.
-        r2 = self.get('/cache/increment-headers', session=session1,
-                      headers={'If-None-Match': r1.headers['Etag']})
+        r2 = self.get(
+            '/cache/increment-headers',
+            session=session1,
+            headers={'If-None-Match': r1.headers['Etag']},
+        )
         eq_(r2.status_code, NOT_MODIFIED)
         # Now, the server has re-cached the response. Since the response was a
         # 304 without headers, check that the server actually cached the original
@@ -266,7 +273,6 @@ class TestCacheFileHandler(TestGramex):
         cls.cache_file = os.path.join(info.folder, 'dir', cls.filename)
 
     def test_cache(self):
-
         def check_value(content):
             r = self.get(f'/cache/filehandler/{self.filename}')
             eq_(r.status_code, OK)

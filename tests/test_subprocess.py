@@ -20,8 +20,8 @@ def wait_till(condition):
 
 
 class TestSubprocess(unittest.TestCase):
-    args = ['python', os.path.join(folder, 'subprocess_check.py')]          # Instant result
-    args1 = ['python', os.path.join(folder, 'subprocess_check.py'), '1']    # Result after delay
+    args = ['python', os.path.join(folder, 'subprocess_check.py')]  # Instant result
+    args1 = ['python', os.path.join(folder, 'subprocess_check.py'), '1']  # Result after delay
     hello = ['python', '-c', 'print("hello")']
 
     @staticmethod
@@ -42,13 +42,15 @@ class TestSubprocess(unittest.TestCase):
 
     def test_stream_list(self):
         proc = gramex.cache.Subprocess(
-            self.args, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
+            self.args, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line'
+        )
         [wait(future) for future in proc.wait_for_exit()]
         eq_(proc.list_out, [self.msg('OUT:0')])
         eq_(proc.list_err, [self.msg('ERR:0')])
 
         proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line')
+            self.args1, stream_stdout='list_out', stream_stderr='list_err', buffer_size='line'
+        )
         wait_till(lambda: len(proc.list_out) > 0)
         wait_till(lambda: len(proc.list_err) > 0)
         eq_(proc.list_out, [self.msg('OUT:0')])
@@ -63,13 +65,15 @@ class TestSubprocess(unittest.TestCase):
 
     def test_stream_queue(self):
         proc = gramex.cache.Subprocess(
-            self.args, stream_stdout='queue_out', stream_stderr='queue_err')
+            self.args, stream_stdout='queue_out', stream_stderr='queue_err'
+        )
         [wait(future) for future in proc.wait_for_exit()]
         eq_(proc.queue_out.get(), self.msg('OUT:0'))
         eq_(proc.queue_err.get(), self.msg('ERR:0'))
 
         proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='queue_out', stream_stderr='queue_err', buffer_size='line')
+            self.args1, stream_stdout='queue_out', stream_stderr='queue_err', buffer_size='line'
+        )
         eq_(proc.queue_out.get(), self.msg('OUT:0'))
         eq_(proc.queue_err.get(), self.msg('ERR:0'))
         eq_(proc.queue_out.get(), self.msg('OUT:1'))
@@ -80,12 +84,14 @@ class TestSubprocess(unittest.TestCase):
 
     def test_stream_blend(self):
         proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='list_out', stream_stderr='list_out', buffer_size='line')
+            self.args1, stream_stdout='list_out', stream_stderr='list_out', buffer_size='line'
+        )
         [wait(future) for future in proc.wait_for_exit()]
         eq_(set(proc.list_out), {self.msg(s) for s in ('OUT:0', 'OUT:1', 'ERR:0', 'ERR:1')})
 
         proc = gramex.cache.Subprocess(
-            self.args1, stream_stdout='queue_out', stream_stderr='queue_out', buffer_size='line')
+            self.args1, stream_stdout='queue_out', stream_stderr='queue_out', buffer_size='line'
+        )
         [wait(future) for future in proc.wait_for_exit()]
         items = set()
         for index in range(proc.queue_out.qsize()):

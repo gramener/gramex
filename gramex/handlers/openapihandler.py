@@ -22,20 +22,14 @@ def url_name(pattern):
 
 
 class OpenAPIHandler(BaseHandler):
-    types = {
-        str: 'string',
-        int: 'integer',
-        float: 'number',
-        bool: 'boolean',
-        None: 'null'
-    }
+    types = {str: 'string', int: 'integer', float: 'number', bool: 'boolean', None: 'null'}
 
     @classmethod
     def function_spec(cls, function):
         params = []
         spec = {
             'description': dedent(getattr(function, '__doc__', '') or ''),
-            'parameters': params
+            'parameters': params,
         }
         # Get the function signature. But "function: str" fails with ValueError.
         # In such cases, skip the parameter configuration.
@@ -51,7 +45,7 @@ class OpenAPIHandler(BaseHandler):
                 'in': 'header' if hint and hint is Header else 'query',
                 'name': name,
                 'description': getattr(param.annotation, '__metadata__', ('',))[0],
-                'schema': {}
+                'schema': {},
             }
             params.append(conf)
             # If default is not specific, parameter is required.
@@ -65,7 +59,7 @@ class OpenAPIHandler(BaseHandler):
                 conf['schema']['type'] = 'array'
                 conf['schema']['items'] = {'type': cls.types.get(typ, 'string')}
             else:
-                conf['schema']['type'] = cls.types.get(typ, 'string'),
+                conf['schema']['type'] = (cls.types.get(typ, 'string'),)
         spec['responses'] = config.responses
         return spec
 
@@ -79,12 +73,18 @@ class OpenAPIHandler(BaseHandler):
         }
         params = get_spec['parameters'] = []
         for name, dataset in datasets.items():
+
             def add(param, **keys):
                 param = merge({}, param)
-                params.append(merge(param, {
-                    'name': param['name'] if cls.single else f'{name}:{param["name"]}',
-                    **keys
-                }))
+                params.append(
+                    merge(
+                        param,
+                        {
+                            'name': param['name'] if cls.single else f'{name}:{param["name"]}',
+                            **keys,
+                        },
+                    )
+                )
 
             # For every column, add
             #   ?_c=<col>
@@ -122,7 +122,7 @@ class OpenAPIHandler(BaseHandler):
             'openapi': '3.0.2',
             'info': kwargs.get('info', {}),
             'servers': kwargs.get('servers', {}),
-            'paths': {}
+            'paths': {},
         }
 
         key_patterns = kwargs.get('urls', ['*'])
@@ -162,8 +162,10 @@ class OpenAPIHandler(BaseHandler):
             merge(info, cls.conf.get('openapi', {}), mode='overwrite')
 
         args = self.argparse(indent={'type': int, 'default': 0})
-        self.write(json.dumps(
-            spec,
-            indent=args.indent or None,
-            separators=(', ', ': ') if args.indent else (',', ':'),
-        ))
+        self.write(
+            json.dumps(
+                spec,
+                indent=args.indent or None,
+                separators=(', ', ': ') if args.indent else (',', ':'),
+            )
+        )

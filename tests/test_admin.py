@@ -85,8 +85,18 @@ class TestAdmin(AuthBase):
         result = self.check('/admin/auth/schedule-data').json()
         eq_({row['name'] for row in result}, set(gramex.service.schedule.keys()))
         for row in result:
-            cols = {"args", "days", "hours", "kwargs", "minutes", "name", "next",
-                    "schedule", "startup", "thread"}
+            cols = {
+                "args",
+                "days",
+                "hours",
+                "kwargs",
+                "minutes",
+                "name",
+                "next",
+                "schedule",
+                "startup",
+                "thread",
+            }
             ok_(cols <= set(row.keys()))
 
     def test_alerts(self):
@@ -94,10 +104,34 @@ class TestAdmin(AuthBase):
         result = self.check('/admin/auth/alert-data').json()
         eq_({row['name'] for row in result}, set(gramex.service.alert.keys()))
         for row in result:
-            cols = {"args", "attachments", "bcc", "body", "bodyfile", "cc", "condition", "data",
-                    "days", "each", "hours", "html", "htmlfile", "images", "kwargs", "markdown",
-                    "markdownfile", "minutes", "name", "next", "schedule", "service", "startup",
-                    "subject", "thread", "to"}
+            cols = {
+                "args",
+                "attachments",
+                "bcc",
+                "body",
+                "bodyfile",
+                "cc",
+                "condition",
+                "data",
+                "days",
+                "each",
+                "hours",
+                "html",
+                "htmlfile",
+                "images",
+                "kwargs",
+                "markdown",
+                "markdownfile",
+                "minutes",
+                "name",
+                "next",
+                "schedule",
+                "service",
+                "startup",
+                "subject",
+                "thread",
+                "to",
+            }
             ok_(cols <= set(row.keys()))
 
     def test_shell(self):

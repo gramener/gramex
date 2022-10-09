@@ -18,7 +18,7 @@ from unittest import TestCase
 from . import folder, sales_file, afe
 
 units = ('inches', 'cm', 'mm', 'pt', 'emu', 'centipoints')
-aeq_ = lambda a, b: ok_(abs(a - b) <= 1)        # noqa
+aeq_ = lambda a, b: ok_(abs(a - b) <= 1)  # noqa
 
 
 class TestPPTGen(TestCase):
@@ -86,10 +86,14 @@ class TestPPTGen(TestCase):
         afe(load_data({'url': sales_file})['data'], sales_data)
         afe(load_data({'d': {'url': sales_file}})['d'], sales_data)
         transform = 'data.set_index(["देश", "city", "product"])'
-        afe(load_data({'d': {'url': sales_file, 'transform': transform}})['d'],
-            sales_data.set_index(['देश', 'city', 'product']))
-        afe(load_data({'d': {'url': sales_file, 'args': {'product': 'Eggs'}}})['d'],
-            gramex.data.filter(sales_file, args={'product': 'Eggs'}))
+        afe(
+            load_data({'d': {'url': sales_file, 'transform': transform}})['d'],
+            sales_data.set_index(['देश', 'city', 'product']),
+        )
+        afe(
+            load_data({'d': {'url': sales_file, 'args': {'product': 'Eggs'}}})['d'],
+            gramex.data.filter(sales_file, args={'product': 'Eggs'}),
+        )
         # Dicts with function: are executed
         afe(load_data({'function': 'gramex.cache.open(%r)' % sales_file})['data'], sales_data)
         afe(load_data({'d': {'function': 'gramex.cache.open(%r)' % sales_file}})['d'], sales_data)
@@ -105,36 +109,36 @@ class TestPPTGen(TestCase):
 
     def test_expr(self):
         # Test expr mode - when strings are expressions
-        t = lambda v: commands.expr(v, data={'_expr_mode': True, 'x': 1})    # noqa
-        eq_(t('x + 0'), 1)                      # Value is a variable
-        eq_(t('"x + 0"'), 'x + 0')              # String is a literal
-        eq_(t('"{x + 0}"'), '{x + 0}')          # String is a literal
-        eq_(t('f"x + 0"'), 'x + 0')             # f-string is a template
-        eq_(t('f"{x + 0}"'), '1')               # f-string is a template using data
-        for val in [None, True, 1, []]:         # Non-string returns as-is
+        t = lambda v: commands.expr(v, data={'_expr_mode': True, 'x': 1})  # noqa
+        eq_(t('x + 0'), 1)  # Value is a variable
+        eq_(t('"x + 0"'), 'x + 0')  # String is a literal
+        eq_(t('"{x + 0}"'), '{x + 0}')  # String is a literal
+        eq_(t('f"x + 0"'), 'x + 0')  # f-string is a template
+        eq_(t('f"{x + 0}"'), '1')  # f-string is a template using data
+        for val in [None, True, 1, []]:  # Non-string returns as-is
             eq_(t(val), val)
         afe(t(self.data), self.data)
-        eq_(t({'value': 'x + 0'}), 'x + 0')     # value: is a template
+        eq_(t({'value': 'x + 0'}), 'x + 0')  # value: is a template
         # NOTE: literal cannot process x + 0. Just test with x
-        eq_(t({'value': '{x}'}), '1')           # value: is a template using data
-        for val in [None, 1, [], {}]:           # value: non-string returns as-is
+        eq_(t({'value': '{x}'}), '1')  # value: is a template using data
+        for val in [None, 1, [], {}]:  # value: non-string returns as-is
             eq_(t({'value': val}), val)
         afe(t({'value': self.data}), self.data)
 
         # Test literal mode - when strings are values
-        t = lambda v: commands.expr(v, data={'_expr_mode': False, 'x': 1})   # noqa
-        eq_(t('x + 0'), 'x + 0')                    # Value is a literal
-        eq_(t('"x + 0"'), '"x + 0"')                # String value is a literal
+        t = lambda v: commands.expr(v, data={'_expr_mode': False, 'x': 1})  # noqa
+        eq_(t('x + 0'), 'x + 0')  # Value is a literal
+        eq_(t('"x + 0"'), '"x + 0"')  # String value is a literal
         # NOTE: literal cannot process expressions like x + 0. Just test with x
-        eq_(t('{x}'), '1')                          # String template is formatted
-        eq_(t('f"x + 0"'), 'f"x + 0"')              # f-string value is a literal
-        for val in [None, True, 1, []]:             # Non-string returns as-is
+        eq_(t('{x}'), '1')  # String template is formatted
+        eq_(t('f"x + 0"'), 'f"x + 0"')  # f-string value is a literal
+        for val in [None, True, 1, []]:  # Non-string returns as-is
             eq_(t(val), val)
         afe(t(self.data), self.data)
-        eq_(t({'expr': 'x + 0'}), 1)                # expr: is a variable
-        eq_(t({'expr': '"{x + 0}"'}), '{x + 0}')    # expr: quoted string becomes string literal
-        eq_(t({'expr': 'f"{x + 0}"'}), '1')         # expr: f-string is a template using data
-        for val in [None, 1, [], {}]:               # expr: non-string returns as-is
+        eq_(t({'expr': 'x + 0'}), 1)  # expr: is a variable
+        eq_(t({'expr': '"{x + 0}"'}), '{x + 0}')  # expr: quoted string becomes string literal
+        eq_(t({'expr': 'f"{x + 0}"'}), '1')  # expr: f-string is a template using data
+        for val in [None, 1, [], {}]:  # expr: non-string returns as-is
             eq_(t({'expr': val}), val)
 
     def test_length(self):
@@ -178,14 +182,17 @@ class TestPPTGen(TestCase):
         with assert_raises(TypeError):
             pptgen(source=self.input, only=1, register='dummy')
         # register= compiles the functions into commands.cmdlist
-        prs = pptgen(source=self.input, only=slides, register={
-            'cmd1': '(shape, spec, data)',
-            'cmd2': 'shape.get(spec, data)',
-            'rename': 'setattr(shape, "name", spec)',
-            'rotate': 'setattr(shape, "rotation", spec)',
-        }, rules=[
-            {'Rectangle 1': {'rotate': 45, 'rename': 'abc'}}
-        ])
+        prs = pptgen(
+            source=self.input,
+            only=slides,
+            register={
+                'cmd1': '(shape, spec, data)',
+                'cmd2': 'shape.get(spec, data)',
+                'rename': 'setattr(shape, "name", spec)',
+                'rotate': 'setattr(shape, "rotation", spec)',
+            },
+            rules=[{'Rectangle 1': {'rotate': 45, 'rename': 'abc'}}],
+        )
         ok_('cmd1' in commands.cmdlist)
         eq_(commands.cmdlist['cmd1'](shape=1, spec={}), (1, {}, None))
         ok_('cmd2' in commands.cmdlist)
@@ -226,22 +233,25 @@ class TestPPTGen(TestCase):
 
     def test_incorrect(self, slides=1):
         with LogCapture() as logs:
-            pptgen(source=self.input, only=slides, rules=[
-                {'No-Shape': {'left': 0}},
-                {'Title 1': {'no-command': 0}}
-            ])
+            pptgen(
+                source=self.input,
+                only=slides,
+                rules=[{'No-Shape': {'left': 0}}, {'Title 1': {'no-command': 0}}],
+            )
         logs.check_present(
             ('gramex', 'WARNING', 'pptgen2: No shape matches pattern: No-Shape'),
-            ('gramex', 'WARNING', 'pptgen2: Unknown command: no-command on shape: Title 1')
+            ('gramex', 'WARNING', 'pptgen2: Unknown command: no-command on shape: Title 1'),
         )
 
     def test_slide_filter(self, slides=[1, 2, 3]):
         # Rules are specified as rule-name={shape: {rule}, ...}
         data = {'x': [2, 3]}
         rule1 = {'slide-number': 1, 'Title 1': {'width': 10}}
-        rule2 = {'slide-number': {'expr': 'x'},
-                 'Title 1': {'width': 20},
-                 'Rectangle 1': {'width': 20}}
+        rule2 = {
+            'slide-number': {'expr': 'x'},
+            'Title 1': {'width': 20},
+            'Rectangle 1': {'width': 20},
+        }
         prs = pptgen(source=self.input, only=slides, data=data, rules=[rule1, rule2])
         eq_(self.get_shape(prs.slides[0].shapes, 'Title 1').width, pptx.util.Inches(10))
         eq_(self.get_shape(prs.slides[1].shapes, 'Title 1').width, pptx.util.Inches(20))
@@ -259,11 +269,16 @@ class TestPPTGen(TestCase):
         )
 
     def test_transition(self, slides=[1, 2, 3]):
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'slide-number': 1, 'transition': 'glitter'},
-            {'slide-number': 2, 'transition': {'type': 'morph', 'duration': 1}},
-            {'slide-number': 3, 'transition': {'type': 'wind left', 'advance': 2}},
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {'slide-number': 1, 'transition': 'glitter'},
+                {'slide-number': 2, 'transition': {'type': 'morph', 'duration': 1}},
+                {'slide-number': 3, 'transition': {'type': 'wind left', 'advance': 2}},
+            ],
+        )
         node = 'mc:AlternateContent/mc:Choice/p:transition'
 
         tr = prs.slides[0].element.find(node, _nsmap)
@@ -289,10 +304,13 @@ class TestPPTGen(TestCase):
     def test_normalize_group(self, slides=3):
         def coords(grp):
             c = grp.element.find(qn('p:grpSpPr')).find(qn('a:xfrm'))
-            return AttrDict(off=c.find(qn('a:off')),
-                            ext=c.find(qn('a:ext')),
-                            choff=c.find(qn('a:chOff')),
-                            chext=c.find(qn('a:chExt')))
+            return AttrDict(
+                off=c.find(qn('a:off')),
+                ext=c.find(qn('a:ext')),
+                choff=c.find(qn('a:chOff')),
+                chext=c.find(qn('a:chExt')),
+            )
+
         grp = self.get_shape(self.prs.slides[slides - 1].shapes, 'Group 2')
         subgrps = self.get_shapes(grp.shapes, 'SubGroup')
         for g in [grp] + subgrps:
@@ -313,14 +331,18 @@ class TestPPTGen(TestCase):
             assert c.ext.cy == c.chext.cy, 'height is same after normalization'
 
     def test_shape_names(self, slides=3):
-        prs = pptgen(source=self.input, only=slides, rules=[
-            {'group 1': {'left': 99}},          # Case-sensitive match is ignored
-            {'Group ?': {'left': 1}},           # Group 1, Group 2
-            {'?extBox ?': {'left': 2}},         # TextBox 1
-            {'*le 1': {'left': 3}},             # Title 1, Rectangle 1
-            {'*form*': {'left': 4}},            # Freeform 1
-            {'[BC]har[tu] 1': {'left': 5}},     # Chart 1
-        ])
+        prs = pptgen(
+            source=self.input,
+            only=slides,
+            rules=[
+                {'group 1': {'left': 99}},  # Case-sensitive match is ignored
+                {'Group ?': {'left': 1}},  # Group 1, Group 2
+                {'?extBox ?': {'left': 2}},  # TextBox 1
+                {'*le 1': {'left': 3}},  # Title 1, Rectangle 1
+                {'*form*': {'left': 4}},  # Freeform 1
+                {'[BC]har[tu] 1': {'left': 5}},  # Chart 1
+            ],
+        )
         eq_(self.get_shape(prs.slides[0].shapes, 'Group 1').left, pptx.util.Inches(1))
         eq_(self.get_shape(prs.slides[0].shapes, 'Group 2').left, pptx.util.Inches(1))
         eq_(self.get_shape(prs.slides[0].shapes, 'TextBox 1').left, pptx.util.Inches(2))
@@ -330,12 +352,34 @@ class TestPPTGen(TestCase):
         eq_(self.get_shape(prs.slides[0].shapes, 'Chart 1').left, pptx.util.Inches(5))
 
     def test_name_position(self, slides=3):
-        pos = {'width': 4, 'height': 3, 'top': 2, 'left': 1, 'rotation': 30,
-               'name': {'expr': 'shape.name + " X"'}}
-        add = {'add-width': -0.1, 'add-height': 0.05, 'add-top': 0.3, 'add-left': -0.1,
-               'add-rotation': 30, 'name': {'expr': 'shape.name + " X"'}}
-        for name in ['Rectangle 1', 'TextBox 1', 'Picture 1', 'Chart 1', 'Group 1', 'Table 1',
-                     'Diagram 1', 'Audio 1', 'Freeform 1', 'Word Art 1']:
+        pos = {
+            'width': 4,
+            'height': 3,
+            'top': 2,
+            'left': 1,
+            'rotation': 30,
+            'name': {'expr': 'shape.name + " X"'},
+        }
+        add = {
+            'add-width': -0.1,
+            'add-height': 0.05,
+            'add-top': 0.3,
+            'add-left': -0.1,
+            'add-rotation': 30,
+            'name': {'expr': 'shape.name + " X"'},
+        }
+        for name in [
+            'Rectangle 1',
+            'TextBox 1',
+            'Picture 1',
+            'Chart 1',
+            'Group 1',
+            'Table 1',
+            'Diagram 1',
+            'Audio 1',
+            'Freeform 1',
+            'Word Art 1',
+        ]:
             # 'Zoom 1', 'Equation 1' are not supported by python-pptx
             prs = pptgen(source=self.input, only=slides, rules=[{name: pos}])
             shp = self.get_shape(prs.slides[0].shapes, name + ' X')
@@ -365,12 +409,19 @@ class TestPPTGen(TestCase):
         # Adjust position within group and subgroups
         text_pos = {'left': 1, 'top': 1, 'width': 2, 'height': 0.5}
         img_pos = {'left': 0, 'top': 1, 'width': 0.5, 'height': 0.5}
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Group 2': {
-                'left': 1,
-                'Subgroup': {'left': 1, 'Text': text_pos, 'Picture': img_pos}
-            }}
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Group 2': {
+                        'left': 1,
+                        'Subgroup': {'left': 1, 'Text': text_pos, 'Picture': img_pos},
+                    }
+                }
+            ],
+        )
         eq_(self.get_shape(prs.slides[0].shapes, 'Group 2>Subgroup').left, pptx.util.Inches(1))
         shape = self.get_shape(prs.slides[0].shapes, 'Group 2>Subgroup>Text')
         for attr, val in text_pos.items():
@@ -384,8 +435,7 @@ class TestPPTGen(TestCase):
         width = shape.width
         for img, aspect in (('small-image.jpg', 1), ('small-image.png', 2)):
             path = os.path.join(folder, img)
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image': path}}])
+            prs = pptgen(source=self.input, only=slides, rules=[{'Picture 1': {'image': path}}])
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             rid = shape._pic.blipFill.blip.rEmbed
             part = shape.part.related_parts[rid]
@@ -399,25 +449,37 @@ class TestPPTGen(TestCase):
         aspect = shape.width / shape.height
         for size in (3, '3 inches', '7.62 cm', '76.2 mm', '216 pt', '2743200 emu', '21600 cp'):
             # image-width preserves aspect ratio
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image-width': size}}])
+            prs = pptgen(
+                source=self.input, only=slides, rules=[{'Picture 1': {'image-width': size}}]
+            )
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             eq_(shape.width, pptx.util.Inches(3))
             self.assertAlmostEqual(shape.width / shape.height, aspect, places=5)
             # image-height preserves aspect ratio
-            prs = pptgen(source=self.input, only=slides,
-                         rules=[{'Picture 1': {'image-height': size}}])
+            prs = pptgen(
+                source=self.input, only=slides, rules=[{'Picture 1': {'image-height': size}}]
+            )
             shape = self.get_shape(prs.slides[0].shapes, 'Picture 1')
             eq_(shape.height, pptx.util.Inches(3))
             self.assertAlmostEqual(shape.width / shape.height, aspect, places=5)
 
     def test_image_clone_copy(self, slides=7):
         repeat = (0, 1, 2)
-        prs = pptgen(source=self.input, rules=[
-            {'copy-slide': repeat, 'slide-number': slides, 'Group 1': {'Picture': {
-                'clone-shape': repeat,
-                'image': self.image,
-            }}}])
+        prs = pptgen(
+            source=self.input,
+            rules=[
+                {
+                    'copy-slide': repeat,
+                    'slide-number': slides,
+                    'Group 1': {
+                        'Picture': {
+                            'clone-shape': repeat,
+                            'image': self.image,
+                        }
+                    },
+                }
+            ],
+        )
         for index in repeat:
             slide = prs.slides[slides + index - 1]
             group = [shape for shape in slide.shapes if shape.name == 'Group 1'][0]
@@ -444,17 +506,24 @@ class TestPPTGen(TestCase):
         for color, result in colors:
             for name in ['TextBox 1', 'Rectangle 1', 'Word Art 1', 'Freeform 1']:
                 # Doesn't work for 'Group 1', 'Table 1', 'Audio 1', 'Chart 1', 'Diagram 1'
-                prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-                    {name: {
-                        'fill': color,
-                        'stroke': color,
-                        'fill-opacity': 0.5,
-                        'stroke-opacity': 0.4,
-                        'stroke-width': '1 pt',
-                    }}
-                ])
+                prs = pptgen(
+                    source=self.input,
+                    target=self.output,
+                    only=slides,
+                    rules=[
+                        {
+                            name: {
+                                'fill': color,
+                                'stroke': color,
+                                'fill-opacity': 0.5,
+                                'stroke-opacity': 0.4,
+                                'stroke-width': '1 pt',
+                            }
+                        }
+                    ],
+                )
                 shape = self.get_shape(prs.slides[0].shapes, name)
-                for key in (('fill.fore_color.', 'line.fill.fore_color.')):
+                for key in ('fill.fore_color.', 'line.fill.fore_color.'):
                     for attr, val in result.items():
                         if attr == 'brightness':
                             self.assertAlmostEqual(objectpath(shape, key + attr), val, places=5)
@@ -463,9 +532,12 @@ class TestPPTGen(TestCase):
                 self.check_opacity(shape.fill.fore_color, 0.5)
                 self.check_opacity(shape.line.fill.fore_color, 0.4)
                 eq_(shape.line.width, pptx.util.Pt(1))
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Rectangle 1': {'fill': 'none', 'stroke': 'none'}}
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[{'Rectangle 1': {'fill': 'none', 'stroke': 'none'}}],
+        )
         shape = self.get_shape(prs.slides[0].shapes, 'Rectangle 1')
         eq_(shape.fill.type, MSO_FILL.BACKGROUND)
         eq_(shape.line.fill.type, MSO_FILL.BACKGROUND)
@@ -482,27 +554,34 @@ class TestPPTGen(TestCase):
             eq_(shapes[1].top, pptx.util.Inches(2.0))
             eq_(shapes[2].top, pptx.util.Inches(3.5))
         # Clone groups
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Group 1': {
-                'clone-shape': data,
-                'data': {'myclone': 'clone'},
-                'top': {'expr': '1 + myclone.val'},
-                'Picture': {
-                    'clone-shape': data,
-                    'data': {'subclone': 'clone'},
-                    'left': {'expr': '1 + subclone.val / 2'},
-                    'image-width': 0.2,
-                },
-                'Caption': {
-                    'clone-shape': data,
-                    'data': {'subclone2': 'clone'},
-                    'left': {'expr': '1 + subclone2.val / 2'},
-                    'text': '{clone.pos}, {clone.key}, {clone.val}, {clone.shape.text}, ' +
-                            '{clone.parent.key}, {clone.parent.val}',
-                    'fill': 'red',
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Group 1': {
+                        'clone-shape': data,
+                        'data': {'myclone': 'clone'},
+                        'top': {'expr': '1 + myclone.val'},
+                        'Picture': {
+                            'clone-shape': data,
+                            'data': {'subclone': 'clone'},
+                            'left': {'expr': '1 + subclone.val / 2'},
+                            'image-width': 0.2,
+                        },
+                        'Caption': {
+                            'clone-shape': data,
+                            'data': {'subclone2': 'clone'},
+                            'left': {'expr': '1 + subclone2.val / 2'},
+                            'text': '{clone.pos}, {clone.key}, {clone.val}, {clone.shape.text}, '
+                            + '{clone.parent.key}, {clone.parent.val}',
+                            'fill': 'red',
+                        },
+                    }
                 }
-            }}
-        ])
+            ],
+        )
         groups = self.get_shapes(prs.slides[0].shapes, 'Group 1')
         picture = self.get_shapes(prs.slides[0].shapes, 'Group 1>Picture')
         caption = self.get_shapes(prs.slides[0].shapes, 'Group 1>Caption')
@@ -518,20 +597,27 @@ class TestPPTGen(TestCase):
 
     def test_text(self, slides=4):
         # Non-strings are converted to str
-        for val in (1, ['x'], ):
-            prs = pptgen(source=self.input, only=slides, rules=[
-                {'TextBox 1': {'text': str(val)}}])
+        for val in (
+            1,
+            ['x'],
+        ):
+            prs = pptgen(source=self.input, only=slides, rules=[{'TextBox 1': {'text': str(val)}}])
             shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
             eq_(shape.text, str(val))
         # Empty strings clear text
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {'text': ''}}])
+        prs = pptgen(
+            source=self.input, target=self.output, only=slides, rules=[{'TextBox 1': {'text': ''}}]
+        )
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         eq_(shape.text, '')
         # Unicode characters work
         text = '高σ高λس►'
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {'text': text}}])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[{'TextBox 1': {'text': text}}],
+        )
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         eq_(shape.text, text)
         # Para and run formatting works
@@ -551,11 +637,17 @@ class TestPPTGen(TestCase):
                 P2R3</p>
             P3R0 <a color="#00f">P3R1</a> P3R2
         '''
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {'text': text}}])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[{'TextBox 1': {'text': text}}],
+        )
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
-        eq_(shape.text.split(),
-            'P0R0 P0R1 P0R2 P0R3 P0R4 P1R0 P1R1 P1R2 P2R0 P2R1 P2R2 P2R3 P3R0 P3R1 P3R2'.split())
+        eq_(
+            shape.text.split(),
+            'P0R0 P0R1 P0R2 P0R3 P0R4 P1R0 P1R1 P1R2 P2R0 P2R1 P2R2 P2R3 P3R0 P3R1 P3R2'.split(),
+        )
         paras = shape.text_frame.paragraphs
         # Para 0 has the right attributes and text
         eq_(paras[0].text, 'P0R0 P0R1 P0R2 P0R3 P0R4 ')
@@ -617,16 +709,23 @@ class TestPPTGen(TestCase):
         eq_(paras[3].runs[2].text, ' P3R2 ')
 
     def test_text_style(self, slides=4):
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {
-                'bold': 0,
-                'italic': 1,
-                'underline': 0,
-                'color': 'blue',
-                'font-name': 'Calibri',
-                'font-size': '10 pt',
-            }}
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'TextBox 1': {
+                        'bold': 0,
+                        'italic': 1,
+                        'underline': 0,
+                        'color': 'blue',
+                        'font-name': 'Calibri',
+                        'font-size': '10 pt',
+                    }
+                }
+            ],
+        )
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         for para in shape.text_frame.paragraphs:
             eq_(para.font.bold, False)
@@ -647,17 +746,24 @@ class TestPPTGen(TestCase):
     def test_replace(self, slides=4):
         with assert_raises(ValueError):
             pptgen(source=self.input, only=slides, rules=[{'TextBox 1': {'replace': 'text'}}])
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'TextBox 1': {
-                'replace': {
-                    '[Oo]ld': 'Old1',
-                    '(Title|italic)': '<a underline="y" bold="n">New</a>',
-                    'title': 'ignored',
-                    'der': 'd<a bold="y" underline="n">E<a color="green">R</a>',
-                    'c.l.r': '<a font-size="18 pt" font-name="Arial">COLOR</a>',
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'TextBox 1': {
+                        'replace': {
+                            '[Oo]ld': 'Old1',
+                            '(Title|italic)': '<a underline="y" bold="n">New</a>',
+                            'title': 'ignored',
+                            'der': 'd<a bold="y" underline="n">E<a color="green">R</a>',
+                            'c.l.r': '<a font-size="18 pt" font-name="Arial">COLOR</a>',
+                        }
+                    }
                 }
-            }}
-        ])
+            ],
+        )
         defaults = {'font-name': 'Consolas', 'font-size': '28 pt'}
         expected_runs = [
             {'text': 'Old1', **defaults},
@@ -701,24 +807,34 @@ class TestPPTGen(TestCase):
             # 'end': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=endshow'},
             'back': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=lastslideviewed'},
             'noaction': {'target': '', 'action': 'ppaction://noaction'},
-            '1': {'target': self.prs.slides[1 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
-            '2': {'target': self.prs.slides[2 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
-            '4': {'target': self.prs.slides[4 - 1].shapes.title.text,
-                  'action': 'ppaction://hlinksldjump'},
+            '1': {
+                'target': self.prs.slides[1 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump',
+            },
+            '2': {
+                'target': self.prs.slides[2 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump',
+            },
+            '4': {
+                'target': self.prs.slides[4 - 1].shapes.title.text,
+                'action': 'ppaction://hlinksldjump',
+            },
             'https://t.co/': {'target': 'https://t.co/', 'action': None},
-            'file.pptx': {'target': 'file.pptx',
-                          'action': 'ppaction://hlinkpres?slideindex=1&slidetitle='},
+            'file.pptx': {
+                'target': 'file.pptx',
+                'action': 'ppaction://hlinkpres?slideindex=1&slidetitle=',
+            },
             'file.xlsx': {'target': 'file.xlsx', 'action': 'ppaction://hlinkfile'},
         }
-        shape_rule = {prefix + val: {key: val}
-                      for val in vals for prefix, key in prefixes.items()}
-        text_rule = {prefix + 'Text': {
-            'replace': {val + '$': f'<a {key}="{val}">{val}</a>' for val in vals}
-        } for prefix, key in prefixes.items()}
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            shape_rule, text_rule])
+        shape_rule = {prefix + val: {key: val} for val in vals for prefix, key in prefixes.items()}
+        text_rule = {
+            prefix
+            + 'Text': {'replace': {val + '$': f'<a {key}="{val}">{val}</a>' for val in vals}}
+            for prefix, key in prefixes.items()
+        }
+        prs = pptgen(
+            source=self.input, target=self.output, only=slides, rules=[shape_rule, text_rule]
+        )
         slide = prs.slides[main_slide - 1]
         shapes = slide.shapes
         for prefix, key in prefixes.items():
@@ -750,14 +866,19 @@ class TestPPTGen(TestCase):
         eq_(target, attr['target'])
 
     def test_table(self, slides=9):
-        data = self.data.head(10)       # The 10th row has NaNs. Ensure the row is included
+        data = self.data.head(10)  # The 10th row has NaNs. Ensure the row is included
         headers = ['<a color="red">देश</a>', 'city', '<p>prod</p><p>uct</p>', 'Sales']
-        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr',
-                     data={'data': data},
-                     rules=[
-                         {'Table 1': {'table': {'data': 'data', 'header-row': headers}}},
-                         {'Table 2': {'table': {'data': 'data', 'width': 2}}},
-                     ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            mode='expr',
+            data={'data': data},
+            rules=[
+                {'Table 1': {'table': {'data': 'data', 'header-row': headers}}},
+                {'Table 2': {'table': {'data': 'data', 'width': 2}}},
+            ],
+        )
         for row_offset, shape_name in ((1, 'Table 1'), (0, 'Table 2')):
             table = self.get_shape(prs.slides[0].shapes, shape_name).table
             for i, (index, row) in enumerate(data.iterrows()):
@@ -770,72 +891,97 @@ class TestPPTGen(TestCase):
         eq_(header[0].text_frame.paragraphs[0].runs[0].font.color.rgb, (255, 0, 0))
         eq_(header[2].text_frame.paragraphs[0].text, 'prod')
         eq_(header[2].text_frame.paragraphs[1].text, 'uct')
-        eq_(header[4].text, 'Table 1')      # Inherited from the template
+        eq_(header[4].text, 'Table 1')  # Inherited from the template
         # Test column widths
         gridcols = self.get_shape(prs.slides[0].shapes, 'Table 2').table._tbl.tblGrid.gridCol_lst
         all(v.get('w') == pptx.util.Inches(2) for v in gridcols)
 
         # If there's no table data, text is copied from source
-        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr', rules=[
-            {'Table 2': {'table': {
-                'header-row': True,
-                'fill': '"red" if "Val" in cell.val else "yellow"',
-            }}}
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            mode='expr',
+            rules=[
+                {
+                    'Table 2': {
+                        'table': {
+                            'header-row': True,
+                            'fill': '"red" if "Val" in cell.val else "yellow"',
+                        }
+                    }
+                }
+            ],
+        )
         table = self.get_shape(prs.slides[0].shapes, 'Table 2').table
         eq_(table.rows[1].cells[0].fill.fore_color.rgb, (255, 0, 0))
         eq_(table.rows[1].cells[1].fill.fore_color.rgb, (255, 255, 0))
-        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr', rules=[
-            {'Table 2': {'table': {
-                'fill': '"red" if "Table" in cell.val else "yellow"',
-            }}}
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            mode='expr',
+            rules=[
+                {
+                    'Table 2': {
+                        'table': {
+                            'fill': '"red" if "Table" in cell.val else "yellow"',
+                        }
+                    }
+                }
+            ],
+        )
         table = self.get_shape(prs.slides[0].shapes, 'Table 2').table
         eq_(table.rows[0].cells[0].fill.fore_color.rgb, (255, 0, 0))
         eq_(table.rows[0].cells[1].fill.fore_color.rgb, (255, 255, 0))
 
         # Test all table commands comprehensively
-        cmds = {'table': {
-            'data': data,
-            'header-row': False,
-            'total-row': True,
-            'first-column': True,
-            'last-column': True,
-            'width': {
-                'देश': '1 in',
-                'city': {'expr': '"2 in" if cell.column == "city" else "1 in"'},
-                'product': {'expr': '"2 in" if cell.column == "city" else "1.5 in"'},
-            },
-            'align': {'expr': '"left" if cell.pos.row % 2 else "right"'},
-            'bold': {'expr': 'cell.pos.row % 2'},
-            'color': {'expr': '"red" if cell.pos.row % 3 else "green"'},
-            'fill': {'expr': '"#eee" if cell.pos.row % 2 else "#ccc"'},
-            'fill-opacity': 0.4,
-            'font-name': 'Arial',
-            'font-size': {'expr': '"10 pt" if cell.column == "देश" else "8 pt"'},
-            'italic': {
-                'देश': True,
-                'city': {'expr': 'cell.pos.row % 2'},
-            },
-            'margin-left': {
-                'देश': '0.05 in',
-                'city': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
-            },
-            'margin-right': '1 pt',
-            'margin-top': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
-            'margin-bottom': 0,
-            'underline': {'expr': 'cell.pos.column % 2'},
-            'vertical-align': {
-                'देश': 'middle',
-                'city': {'expr': '"top" if cell.pos.row % 2 else "bottom"'},
-            },
-            # Add text: at the end to verify that it over-rides bold:, italic:, etc
-            'text': '{cell.pos.row} {cell.pos.column} <a italic="y">{cell.index}</a> ' +
-                    '{cell.column} {cell.val} {cell.row.size} {cell.data.size}',
-        }}
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            {'Table 1': cmds}, {'Table 2': cmds}
-        ])
+        cmds = {
+            'table': {
+                'data': data,
+                'header-row': False,
+                'total-row': True,
+                'first-column': True,
+                'last-column': True,
+                'width': {
+                    'देश': '1 in',
+                    'city': {'expr': '"2 in" if cell.column == "city" else "1 in"'},
+                    'product': {'expr': '"2 in" if cell.column == "city" else "1.5 in"'},
+                },
+                'align': {'expr': '"left" if cell.pos.row % 2 else "right"'},
+                'bold': {'expr': 'cell.pos.row % 2'},
+                'color': {'expr': '"red" if cell.pos.row % 3 else "green"'},
+                'fill': {'expr': '"#eee" if cell.pos.row % 2 else "#ccc"'},
+                'fill-opacity': 0.4,
+                'font-name': 'Arial',
+                'font-size': {'expr': '"10 pt" if cell.column == "देश" else "8 pt"'},
+                'italic': {
+                    'देश': True,
+                    'city': {'expr': 'cell.pos.row % 2'},
+                },
+                'margin-left': {
+                    'देश': '0.05 in',
+                    'city': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
+                },
+                'margin-right': '1 pt',
+                'margin-top': {'expr': '0 if cell.pos.column % 2 else "0.1 in"'},
+                'margin-bottom': 0,
+                'underline': {'expr': 'cell.pos.column % 2'},
+                'vertical-align': {
+                    'देश': 'middle',
+                    'city': {'expr': '"top" if cell.pos.row % 2 else "bottom"'},
+                },
+                # Add text: at the end to verify that it over-rides bold:, italic:, etc
+                'text': '{cell.pos.row} {cell.pos.column} <a italic="y">{cell.index}</a> '
+                + '{cell.column} {cell.val} {cell.row.size} {cell.data.size}',
+            }
+        }
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[{'Table 1': cmds}, {'Table 2': cmds}],
+        )
         for shape_name in ('Table 1', 'Table 2'):
             src_table = self.get_shape(self.prs.slides[slides - 1].shapes, shape_name).table
             table = self.get_shape(prs.slides[0].shapes, shape_name).table
@@ -872,24 +1018,34 @@ class TestPPTGen(TestCase):
                     eq_(paras[0].font.color.rgb, (255, 0, 0) if i % 3 else (0, 128, 0))
                     eq_(cell.fill.fore_color.rgb, (238, 238, 238) if i % 2 else (204, 204, 204))
                     self.check_opacity(cell.fill.fore_color, 0.4)
-                    eq_(paras[0].font.size,
-                        pptx.util.Pt(10) if column == 'देश' else pptx.util.Pt(8))
+                    eq_(
+                        paras[0].font.size,
+                        pptx.util.Pt(10) if column == 'देश' else pptx.util.Pt(8),
+                    )
                     eq_(paras[0].font.name, 'Arial')
-                    eq_(paras[0].font.italic,
-                        True if column == 'देश' else
-                        bool(i % 2) if column == 'city' else
-                        None)
+                    eq_(
+                        paras[0].font.italic,
+                        True if column == 'देश' else bool(i % 2) if column == 'city' else None,
+                    )
                     eq_(paras[0].runs[1].font.italic, True)
                     eq_(paras[0].font.underline, bool(j % 2))
                     eq_(paras[0].alignment, PP_ALIGN.LEFT if i % 2 else PP_ALIGN.RIGHT)
-                    eq_(cell.vertical_anchor,
-                        MVA.MIDDLE if column == 'देश' else
-                        (MVA.TOP if i % 2 else MVA.BOTTOM) if column == 'city' else
-                        None)
-                    eq_(cell.margin_left,
-                        pptx.util.Inches(0.05) if column == 'देश' else
-                        pptx.util.Inches(0 if j % 2 else 0.1) if column == 'city' else
-                        pptx.util.Inches(0.1))
+                    eq_(
+                        cell.vertical_anchor,
+                        MVA.MIDDLE
+                        if column == 'देश'
+                        else (MVA.TOP if i % 2 else MVA.BOTTOM)
+                        if column == 'city'
+                        else None,
+                    )
+                    eq_(
+                        cell.margin_left,
+                        pptx.util.Inches(0.05)
+                        if column == 'देश'
+                        else pptx.util.Inches(0 if j % 2 else 0.1)
+                        if column == 'city'
+                        else pptx.util.Inches(0.1),
+                    )
                     eq_(cell.margin_right, pptx.util.Pt(1))
                     eq_(cell.margin_top, pptx.util.Inches(0 if j % 2 else 0.1))
                     eq_(cell.margin_bottom, 0)
@@ -902,11 +1058,21 @@ class TestPPTGen(TestCase):
             pptgen(source=self.input, only=slides, rules=[{'Table 1': {'table': {'data': []}}}])
         # Invalid column names raise a warning
         with LogCapture() as logs:
-            pptgen(source=self.input, only=slides, rules=[{'Table 1': {'table': {
-                'data': self.data.head(3),
-                'width': {'NA1': 1},
-                'text': {'NA2': 0},
-            }}}])
+            pptgen(
+                source=self.input,
+                only=slides,
+                rules=[
+                    {
+                        'Table 1': {
+                            'table': {
+                                'data': self.data.head(3),
+                                'width': {'NA1': 1},
+                                'text': {'NA2': 0},
+                            }
+                        }
+                    }
+                ],
+            )
         logs.check_present(
             ('gramex', 'WARNING', 'pptgen2: No column: NA1 in table: Table 1'),
             ('gramex', 'WARNING', 'pptgen2: No column: NA2 in table: Table 1'),
@@ -915,23 +1081,31 @@ class TestPPTGen(TestCase):
     # TODO: if we delete slide 6 and use slides=[6, 7], this causes an error
     def test_copy_slide(self, slides=[7, 8]):
         data = [1, 1.5, 2]
-        prs = pptgen(source=self.input, target=self.output, only=slides, mode='expr', rules=[
-            {
-                'slide-numbers': [1, 2],
-                'copy-slide': data,
-                'data': {'mycopy': 'copy'},
-                'Title 1': {'text': 'f"{copy.pos}: {copy.key} - {copy.val}: {len(copy.slides)}"'},
-                'TL': {'top': 'copy.val', 'left': 'mycopy.val'},
-                'TC': {'top': 'copy.val', 'left': 'mycopy.val * 2'},
-                'TR': {'top': 'copy.val', 'left': 'mycopy.val * 3'},
-                'CL': {'top': 'copy.val * 2', 'left': 'mycopy.val'},
-                'CC': {'top': 'copy.val * 2', 'left': 'mycopy.val * 2'},
-                'CR': {'top': 'copy.val * 2', 'left': 'mycopy.val * 3'},
-                'BL': {'top': 'copy.val * 3', 'left': 'mycopy.val'},
-                'BC': {'top': 'copy.val * 3', 'left': 'mycopy.val * 2'},
-                'BR': {'top': 'copy.val * 3', 'left': 'mycopy.val * 3'},
-            }
-        ])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            mode='expr',
+            rules=[
+                {
+                    'slide-numbers': [1, 2],
+                    'copy-slide': data,
+                    'data': {'mycopy': 'copy'},
+                    'Title 1': {
+                        'text': 'f"{copy.pos}: {copy.key} - {copy.val}: {len(copy.slides)}"'
+                    },
+                    'TL': {'top': 'copy.val', 'left': 'mycopy.val'},
+                    'TC': {'top': 'copy.val', 'left': 'mycopy.val * 2'},
+                    'TR': {'top': 'copy.val', 'left': 'mycopy.val * 3'},
+                    'CL': {'top': 'copy.val * 2', 'left': 'mycopy.val'},
+                    'CC': {'top': 'copy.val * 2', 'left': 'mycopy.val * 2'},
+                    'CR': {'top': 'copy.val * 2', 'left': 'mycopy.val * 3'},
+                    'BL': {'top': 'copy.val * 3', 'left': 'mycopy.val'},
+                    'BC': {'top': 'copy.val * 3', 'left': 'mycopy.val * 2'},
+                    'BR': {'top': 'copy.val * 3', 'left': 'mycopy.val * 3'},
+                }
+            ],
+        )
         # All shapes are copied into 3 slides?
         eq_(len(prs.slides), len(slides) * len(data))
         names = [[shape.name for shape in slide.shapes] for slide in prs.slides]
@@ -960,8 +1134,10 @@ class TestPPTGen(TestCase):
             shape = self.get_shape(prs.slides[n].shapes, 'Freeform 1')
             eq_(shape.click_action.hyperlink.address, 'https://t.co/')
             para = self.get_shape(prs.slides[n].shapes, 'TextBox 1').text_frame.paragraphs[0]
-            eq_(para.runs[1]._r.find('.//' + qn('a:hlinkClick')).get('action'),
-                'ppaction://hlinkshowjump?jump=firstslide')
+            eq_(
+                para.runs[1]._r.find('.//' + qn('a:hlinkClick')).get('action'),
+                'ppaction://hlinkshowjump?jump=firstslide',
+            )
 
     def chart_data(self, shape):
         return pd.read_excel(
@@ -971,21 +1147,34 @@ class TestPPTGen(TestCase):
         ).fillna('')
 
     def test_chart_data(self, slides=[10]):
-        data = pd.DataFrame({
-            'Alpha': [1, 2, 3],
-            'Beta': [4, 5, 6],
-            'Gamma': [7, 9, ''],
-        }, index=['X', 'Y', 'Z'])
+        data = pd.DataFrame(
+            {
+                'Alpha': [1, 2, 3],
+                'Beta': [4, 5, 6],
+                'Gamma': [7, 9, ''],
+            },
+            index=['X', 'Y', 'Z'],
+        )
         charts_2d = ['Column Chart', 'Line Chart', 'Bar Chart']
         charts_1d = ['Pie Chart', 'Donut Chart']
-        prs1 = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            *({chart: {'chart-data': data[['Alpha']]}} for chart in charts_1d),
-            *({chart: {'chart-data': data}} for chart in charts_2d)
-        ])
-        prs2 = pptgen(source=self.input, target=self.output, only=slides, rules=[
-            *({chart: {'chart': {'data': data[['Alpha']]}}} for chart in charts_1d),
-            *({chart: {'chart': {'data': data}}} for chart in charts_2d)
-        ])
+        prs1 = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                *({chart: {'chart-data': data[['Alpha']]}} for chart in charts_1d),
+                *({chart: {'chart-data': data}} for chart in charts_2d),
+            ],
+        )
+        prs2 = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                *({chart: {'chart': {'data': data[['Alpha']]}}} for chart in charts_1d),
+                *({chart: {'chart': {'data': data}}} for chart in charts_2d),
+            ],
+        )
         for prs in (prs1, prs2):
             shapes = prs.slides[0].shapes
             for chart in charts_1d:
@@ -994,22 +1183,33 @@ class TestPPTGen(TestCase):
                 afe(self.chart_data(self.get_shape(shapes, chart)), data)
 
     def test_chart_attrs(self, slides=[10]):
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Bar Chart': {
-                'chart': {
-                    'fill': pd.DataFrame({
-                        'Series 1': 'red',
-                        'Series 2': 'yellow',
-                        'Series 3': ['#f88', '#f44', '#f00', '#800'],
-                    }),
-                    'text': pd.DataFrame({
-                        'Series 1': ['<a bold="y">1.1</a>', '1.2', '1.3', '1.4'],
-                        'Series 2': ['<a bold="y">2.1</a>', '2.2', '2.3', '2.4'],
-                        'Series 3': ['<a bold="y">3.1</a>', '3.2', '3.3', '3.4'],
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Bar Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Series 1': 'red',
+                                    'Series 2': 'yellow',
+                                    'Series 3': ['#f88', '#f44', '#f00', '#800'],
+                                }
+                            ),
+                            'text': pd.DataFrame(
+                                {
+                                    'Series 1': ['<a bold="y">1.1</a>', '1.2', '1.3', '1.4'],
+                                    'Series 2': ['<a bold="y">2.1</a>', '2.2', '2.3', '2.4'],
+                                    'Series 3': ['<a bold="y">3.1</a>', '3.2', '3.3', '3.4'],
+                                }
+                            ),
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Bar Chart').chart.series
         eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
@@ -1029,15 +1229,26 @@ class TestPPTGen(TestCase):
                 eq_(frame.paragraphs[0].runs[0].text, f'{series_index + 1}.{point_index + 1}')
                 eq_(frame.paragraphs[0].runs[0].font.bold, True if point_index == 0 else None)
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Column Chart': {
-                'chart': {'fill': pd.DataFrame({
-                    'Series 1': 'red',
-                    'Series 2': 'yellow',
-                    'Series 3': ['#f88', '#f44', '#f00', '#800'],
-                })}
-            },
-        }])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Column Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Series 1': 'red',
+                                    'Series 2': 'yellow',
+                                    'Series 3': ['#f88', '#f44', '#f00', '#800'],
+                                }
+                            )
+                        }
+                    },
+                }
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Column Chart').chart.series
         eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
@@ -1052,15 +1263,26 @@ class TestPPTGen(TestCase):
         eq_(series[2].points[2].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[2].points[3].format.fill.fore_color.rgb, (136, 0, 0))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Radar Chart': {
-                'chart': {'stroke': pd.DataFrame({
-                    'Series 1': ['red', 'blue', 'green', '#777'],
-                    'Series 2': ['yellow', 'black', 'red', '#088'],
-                    'Series 3': ['#ccc', '#aaa', '#777', '#444'],
-                })}
-            },
-        }])
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Radar Chart': {
+                        'chart': {
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Series 1': ['red', 'blue', 'green', '#777'],
+                                    'Series 2': ['yellow', 'black', 'red', '#088'],
+                                    'Series 3': ['#ccc', '#aaa', '#777', '#444'],
+                                }
+                            )
+                        }
+                    },
+                }
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Radar Chart').chart.series
         eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.line.fill.fore_color.rgb, (0, 0, 255))
@@ -1075,20 +1297,31 @@ class TestPPTGen(TestCase):
         eq_(series[2].points[2].format.line.fill.fore_color.rgb, (119, 119, 119))
         eq_(series[2].points[3].format.line.fill.fore_color.rgb, (68, 68, 68))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'XY Chart': {
-                'chart': {
-                    'fill': pd.DataFrame({
-                        'Y-Values': ['red', 'blue', 'green', '#777'],
-                        'Z-Values': ['yellow', 'black', 'red', '#088'],
-                    }),
-                    'stroke': pd.DataFrame({
-                        'Y-Values': ['red', 'blue', 'green', '#777'],
-                        'Z-Values': ['yellow', 'black', 'red', '#088'],
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'XY Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Y-Values': ['red', 'blue', 'green', '#777'],
+                                    'Z-Values': ['yellow', 'black', 'red', '#088'],
+                                }
+                            ),
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Y-Values': ['red', 'blue', 'green', '#777'],
+                                    'Z-Values': ['yellow', 'black', 'red', '#088'],
+                                }
+                            ),
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'XY Chart').chart.series
         # TODO: Test fill
         eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
@@ -1098,18 +1331,29 @@ class TestPPTGen(TestCase):
         eq_(series[1].points[1].format.line.fill.fore_color.rgb, (0, 0, 0))
         eq_(series[1].points[2].format.line.fill.fore_color.rgb, (255, 0, 0))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Pie Chart': {
-                'chart': {
-                    'fill': pd.DataFrame({
-                        'Sales': ['red', 'blue', 'green', '#777'],
-                    }),
-                    'stroke': pd.DataFrame({
-                        'Sales': ['red', 'blue', 'green', '#777'],
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Pie Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Sales': ['red', 'blue', 'green', '#777'],
+                                }
+                            ),
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Sales': ['red', 'blue', 'green', '#777'],
+                                }
+                            ),
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Pie Chart').chart.series
         eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.fill.fore_color.rgb, (0, 0, 255))
@@ -1120,18 +1364,29 @@ class TestPPTGen(TestCase):
         eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
         eq_(series[0].points[3].format.line.fill.fore_color.rgb, (119, 119, 119))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Donut Chart': {
-                'chart': {
-                    'fill': pd.DataFrame({
-                        'Sales': ['red', 'blue', 'green', '#777'],
-                    }),
-                    'stroke': pd.DataFrame({
-                        'Sales': ['red', 'blue', 'green', '#777'],
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Donut Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Sales': ['red', 'blue', 'green', '#777'],
+                                }
+                            ),
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Sales': ['red', 'blue', 'green', '#777'],
+                                }
+                            ),
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Donut Chart').chart.series
         eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.fill.fore_color.rgb, (0, 0, 255))
@@ -1142,17 +1397,26 @@ class TestPPTGen(TestCase):
         eq_(series[0].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
         eq_(series[0].points[3].format.line.fill.fore_color.rgb, (119, 119, 119))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Line Chart': {
-                'chart': {
-                    'stroke': pd.DataFrame({
-                        'Series 1': ['red'] * 4,
-                        'Series 2': ['blue'] * 4,
-                        'Series 3': ['green'] * 4,
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Line Chart': {
+                        'chart': {
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Series 1': ['red'] * 4,
+                                    'Series 2': ['blue'] * 4,
+                                    'Series 3': ['green'] * 4,
+                                }
+                            )
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Line Chart').chart.series
         eq_(series[0].points[0].format.line.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.line.fill.fore_color.rgb, (255, 0, 0))
@@ -1167,20 +1431,31 @@ class TestPPTGen(TestCase):
         eq_(series[2].points[2].format.line.fill.fore_color.rgb, (0, 128, 0))
         eq_(series[2].points[3].format.line.fill.fore_color.rgb, (0, 128, 0))
 
-        prs = pptgen(source=self.input, target=self.output, only=slides, rules=[{
-            'Area Chart': {
-                'chart': {
-                    'fill': pd.DataFrame({
-                        'Series 1': ['red'] * 4,
-                        'Series 2': ['blue'] * 4,
-                    }),
-                    'stroke': pd.DataFrame({
-                        'Series 1': ['red'] * 4,
-                        'Series 2': ['blue'] * 4,
-                    })
+        prs = pptgen(
+            source=self.input,
+            target=self.output,
+            only=slides,
+            rules=[
+                {
+                    'Area Chart': {
+                        'chart': {
+                            'fill': pd.DataFrame(
+                                {
+                                    'Series 1': ['red'] * 4,
+                                    'Series 2': ['blue'] * 4,
+                                }
+                            ),
+                            'stroke': pd.DataFrame(
+                                {
+                                    'Series 1': ['red'] * 4,
+                                    'Series 2': ['blue'] * 4,
+                                }
+                            ),
+                        }
+                    },
                 }
-            },
-        }])
+            ],
+        )
         series = self.get_shape(prs.slides[0].shapes, 'Area Chart').chart.series
         eq_(series[0].points[0].format.fill.fore_color.rgb, (255, 0, 0))
         eq_(series[0].points[1].format.fill.fore_color.rgb, (255, 0, 0))
@@ -1207,28 +1482,25 @@ class TestPPTGen(TestCase):
         # "slidesense nonexistent.yaml" prints an error
         with LogCapture() as logs:
             commandline(['nonexistent.yaml'])
-        logs.check_present(
-            ('gramex', 'ERROR', 'No rules found in file: nonexistent.yaml')
-        )
+        logs.check_present(('gramex', 'ERROR', 'No rules found in file: nonexistent.yaml'))
         # "slidesense gramex.yaml nonexistent-url" prints an error
         with LogCapture() as logs:
             path = os.path.join(folder, 'slidesense-gramex.yaml')
             commandline([path, 'nonexistent-url'])
-        logs.check_present(
-            ('gramex', 'ERROR', 'No PPTXHandler matched in file: ' + path)
-        )
+        logs.check_present(('gramex', 'ERROR', 'No PPTXHandler matched in file: ' + path))
 
         target = os.path.join(folder, 'output.pptx')
         non_target = os.path.join(folder, 'nonexistent.pptx')
 
         for args in (
-            ('slidesense-config.yaml', ),
-            ('slidesense-gramex.yaml', ),
+            ('slidesense-config.yaml',),
+            ('slidesense-gramex.yaml',),
             ('slidesense-gramex.yaml', 'slidesense-test'),
         ):
             self.remove_output()
-            commandline([os.path.join(folder, args[0]), *args[1:],
-                         f'--target={target}', '--no-open'])
+            commandline(
+                [os.path.join(folder, args[0]), *args[1:], f'--target={target}', '--no-open']
+            )
             ok_(os.path.exists(target))
             ok_(not os.path.exists(non_target))
 

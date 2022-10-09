@@ -28,8 +28,10 @@ class TestWatch(unittest.TestCase):
         When handler(event) is called, it adds {type:event_type, event:event}
         to self.events[queue].
         '''
+
         def handler(event):
             self.events[queue].append(AttrDict(type=event_type, event=event))
+
         return handler
 
     delays = (0, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5)
@@ -68,10 +70,12 @@ class TestWatch(unittest.TestCase):
         # re-registering the same watcher does not create multiple events.
         for reregistration_count in range(times):
             watcher.watch(
-                name + '-' + key, [self.files[key]],
+                name + '-' + key,
+                [self.files[key]],
                 on_created=self.on('created', ('created', key)),
                 on_modified=self.on('modified', ('modified', key)),
-                on_deleted=self.on('deleted', ('deleted', key)))
+                on_deleted=self.on('deleted', ('deleted', key)),
+            )
         # Capture the count of other event queues. This should not change
         other_events = self.other_events(key)
         # Create and delete the file

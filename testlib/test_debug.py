@@ -19,21 +19,21 @@ def line_no():
 class TestPrint(unittest.TestCase):
     def test_single(self):
         stream = StringIO()
-        gramex.debug.print('x', stream=stream)      # noqa
+        gramex.debug.print('x', stream=stream)  # noqa
         line = line_no() - 1
         val = stream.getvalue().replace('.pyc', '.py')
         eq_(val, testfile + '(%d).test_single: x\n' % line)
 
     def test_kwarg(self):
         stream = StringIO()
-        gramex.debug.print(val=[10, 20, 30], stream=stream)     # noqa
+        gramex.debug.print(val=[10, 20, 30], stream=stream)  # noqa
         line = line_no() - 1
         val = stream.getvalue().replace('.pyc', '.py')
         eq_(val, '\n' + testfile + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
 
     def test_multi(self):
         stream = StringIO()
-        gramex.debug.print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)    # noqa
+        gramex.debug.print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)  # noqa
         line = line_no() - 1
         val = stream.getvalue().replace('.pyc', '.py')
         ok_(val.startswith('\n'))

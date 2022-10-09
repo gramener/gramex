@@ -26,15 +26,38 @@ class TestLog(unittest.TestCase):
                 'args.x': handler.get_argument("x", ""),
                 'request.scheme': getattr(handler.request, "scheme", ""),
                 'headers.X-Gramex-Key': handler.request.headers.get("X-Gramex-Key", ""),
-                'cookies.sid': (handler.request.cookies["sid"].value
-                                if "sid" in handler.request.cookies else ""),
+                'cookies.sid': (
+                    handler.request.cookies["sid"].value
+                    if "sid" in handler.request.cookies
+                    else ""
+                ),
                 'user.email': (handler.current_user or {}).get("email", ""),
                 'env.HOME': os.environ.get("HOME", ""),
                 'event': event,
             }
-        result = build_log_info([
-            'name', 'class', 'time', 'datetime', 'method', 'uri', 'ip', 'status', 'duration',
-            'port', 'user', 'error', 'args.x', 'request.scheme',
-            'headers.X-Gramex-Key', 'cookies.sid', 'user.email', 'env.HOME', 'event'
-        ], 'event')
+
+        result = build_log_info(
+            [
+                'name',
+                'class',
+                'time',
+                'datetime',
+                'method',
+                'uri',
+                'ip',
+                'status',
+                'duration',
+                'port',
+                'user',
+                'error',
+                'args.x',
+                'request.scheme',
+                'headers.X-Gramex-Key',
+                'cookies.sid',
+                'user.email',
+                'env.HOME',
+                'event',
+            ],
+            'event',
+        )
         eqfn(actual=result, expected=log_info)

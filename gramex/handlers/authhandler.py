@@ -27,12 +27,23 @@ _user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
 
 class AuthHandler(BaseHandler):
     '''The parent handler for all Auth handlers.'''
+
     _RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
     @classmethod
-    def setup(cls, prepare=None, action=None, delay=None, session_expiry=None,
-              session_inactive=None, user_key='user', lookup=None, recaptcha=None,
-              rules=None, **kwargs):
+    def setup(
+        cls,
+        prepare=None,
+        action=None,
+        delay=None,
+        session_expiry=None,
+        session_inactive=None,
+        user_key='user',
+        lookup=None,
+        recaptcha=None,
+        rules=None,
+        **kwargs,
+    ):
         # Set up default redirection based on ?next=...
         if 'redirect' not in kwargs:
             kwargs['redirect'] = AttrDict([('query', 'next'), ('header', 'Referer')])
@@ -81,7 +92,8 @@ class AuthHandler(BaseHandler):
                 conf={'function': prepare},
                 vars={'handler': None, 'args': None},
                 filename=f'url:{cls.name}:prepare',
-                iter=False)
+                iter=False,
+            )
         # Prepare recaptcha
         if recaptcha is not None:
             if 'key' not in recaptcha:
@@ -98,16 +110,19 @@ class AuthHandler(BaseHandler):
             if not isinstance(action, list):
                 action = [action]
             for conf in action:
-                cls.actions.append(build_transform(
-                    conf, vars={'handler': None},
-                    filename=f'url:{cls.name}:{conf.function}'))
+                cls.actions.append(
+                    build_transform(
+                        conf, vars={'handler': None}, filename=f'url:{cls.name}:{conf.function}'
+                    )
+                )
 
     @coroutine
     def prepare(self):
         super(AuthHandler, self).prepare()
         if 'prepare' in self.auth_methods:
             result = yield gramex.service.threadpool.submit(
-                self.auth_methods['prepare'], handler=self, args=self.args)
+                self.auth_methods['prepare'], handler=self, args=self.args
+            )
             if result is not None:
                 self.args = result
         if 'recaptcha' in self.auth_methods:
@@ -150,13 +165,17 @@ class AuthHandler(BaseHandler):
         if self.lookup is not None:
             # Look up the user ID in the lookup table and fetch all matching rows
             users = yield gramex.service.threadpool.submit(
-                gramex.data.filter, args={self.lookup_id: [user['id']]}, **self.lookup)
+                gramex.data.filter, args={self.lookup_id: [user['id']]}, **self.lookup
+            )
             if len(users) > 0 and self.lookup_id in users.columns:
                 # Update the user attributes with the non-null items in the looked up row
-                user.update({
-                    key: val for key, val in users.iloc[0].iteritems()
-                    if not gramex.data.pd.isnull(val)
-                })
+                user.update(
+                    {
+                        key: val
+                        for key, val in users.iloc[0].iteritems()
+                        if not gramex.data.pd.isnull(val)
+                    }
+                )
 
         # Persist user attributes (e.g. refresh_token from Google auth.)
         # If new user object doesn't have anything from previous login, restore it.
@@ -205,11 +224,9 @@ class AuthHandler(BaseHandler):
         token = self.get_argument('recaptcha', None)
         if token is None:
             raise HTTPError(FORBIDDEN, "'recaptcha' argument missing from POST")
-        body = urlencode({
-            'secret': conf.secret,
-            'response': token,
-            'remoteip': self.request.remote_ip
-        })
+        body = urlencode(
+            {'secret': conf.secret, 'response': token, 'remoteip': self.request.remote_ip}
+        )
         http = tornado.httpclient.AsyncHTTPClient()
         response = yield http.fetch(self._RECAPTCHA_VERIFY_URL, method='POST', body=body)
         result = json.loads(response.body)
@@ -240,16 +257,15 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     def get(self):
         self.settings[self._OAUTH_SETTINGS_KEY] = {
             'key': self.kwargs['key'],
-            'secret': self.kwargs['secret']
+            'secret': self.kwargs['secret'],
         }
         code = self.get_arg('code', '')
         if code:
-            access = yield self.get_authenticated_user(
-                redirect_uri=self.xredirect_uri,
-                code=code)
+            access = yield self.get_authenticated_user(redirect_uri=self.xredirect_uri, code=code)
             user = yield self.oauth2_request(
                 'https://www.googleapis.com/oauth2/v1/userinfo',
-                access_token=access['access_token'])
+                access_token=access['access_token'],
+            )
             merge(user, access, mode='setdefault')
             yield self.set_user(user, id='email')
             self.session['google_access_token'] = access['access_token']
@@ -266,7 +282,8 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 client_id=self.kwargs['key'],
                 scope=scope,
                 response_type='code',
-                extra_params=self.kwargs.get('extra_params', {}))
+                extra_params=self.kwargs.get('extra_params', {}),
+            )
 
     @classmethod
     @coroutine
@@ -299,12 +316,14 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
                 refresh_token = user['refresh_token']
             else:
                 raise HTTPError(FORBIDDEN, "No refresh_token provided")
-        body = urlencode({
-            'grant_type': 'refresh_token',
-            'client_id': cls.kwargs['key'],
-            'client_secret': cls.kwargs['secret'],
-            'refresh_token': refresh_token,
-        })
+        body = urlencode(
+            {
+                'grant_type': 'refresh_token',
+                'client_id': cls.kwargs['key'],
+                'client_secret': cls.kwargs['secret'],
+                'refresh_token': refresh_token,
+            }
+        )
         http = tornado.httpclient.AsyncHTTPClient()
         response = yield http.fetch(cls._OAUTH_ACCESS_TOKEN_URL, method='POST', body=body)
         result = json.loads(response.body)
@@ -358,6 +377,7 @@ class SimpleAuth(AuthHandler):
     3. Application checks username and password. On match, redirects.
     4. On any error, shows template (with error)
     '''
+
     @classmethod
     def setup(cls, **kwargs):
         super(SimpleAuth, cls).setup(**kwargs)
@@ -399,8 +419,10 @@ def csv_encode(values, *args, **kwargs):
     '''
     buf = io.StringIO()
     writer = csv.writer(buf, *args, **kwargs)
-    writer.writerow([
-        v if isinstance(v, str) else
-        v.decode('utf-8') if isinstance(v, bytes) else repr(v)
-        for v in values])
+    writer.writerow(
+        [
+            v if isinstance(v, str) else v.decode('utf-8') if isinstance(v, bytes) else repr(v)
+            for v in values
+        ]
+    )
     return buf.getvalue().strip()

@@ -14,6 +14,7 @@ class WebSocketHandler(BaseWebSocketHandler):
 
     Functions can use `handler.write_message(msg: str)` to sends a message back to the client.
     '''
+
     @classmethod
     def setup(cls, **kwargs):
         super(WebSocketHandler, cls).setup(**kwargs)
@@ -33,11 +34,16 @@ class WebSocketHandler(BaseWebSocketHandler):
         }
         for method in override_methods:
             if method in kwargs:
-                setattr(cls, method, build_transform(
-                    kwargs[method],
-                    vars={arg: None for arg in override_methods[method]},
-                    filename=f'url:{cls.name}.{method}',
-                    iter=False))
+                setattr(
+                    cls,
+                    method,
+                    build_transform(
+                        kwargs[method],
+                        vars={arg: None for arg in override_methods[method]},
+                        filename=f'url:{cls.name}.{method}',
+                        iter=False,
+                    ),
+                )
 
     def check_origin(self, origin):
         origins = self.kwargs.get('origins', [])

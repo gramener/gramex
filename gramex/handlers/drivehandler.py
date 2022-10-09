@@ -27,9 +27,18 @@ class DriveHandler(FormHandler):
 
     File metadata is stored in <path>/.meta.db as SQLite
     '''
+
     @classmethod
-    def setup(cls, path, user_fields=None, tags=None, allow=None, ignore=None, max_file_size=None,
-              **kwargs):
+    def setup(
+        cls,
+        path,
+        user_fields=None,
+        tags=None,
+        allow=None,
+        ignore=None,
+        max_file_size=None,
+        **kwargs,
+    ):
         cls.path = path
         cls.user_fields = cls._ensure_type('user_fields', user_fields)
         cls.tags = cls._ensure_type('tags', tags)
@@ -48,12 +57,12 @@ class DriveHandler(FormHandler):
         # Ensure all tags and user_fields are present in "drive" table
         cls._db_cols = {
             'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
-            'file': {'type': 'text'},   # Original file name
-            'ext': {'type': 'text'},    # Original file extension
-            'path': {'type': 'text'},   # Saved file relative path
-            'size': {'type': 'int'},    # File size
-            'mime': {'type': 'text'},   # MIME type
-            'date': {'type': 'int'},    # Uploaded date
+            'file': {'type': 'text'},  # Original file name
+            'ext': {'type': 'text'},  # Original file extension
+            'path': {'type': 'text'},  # Saved file relative path
+            'size': {'type': 'int'},  # File size
+            'mime': {'type': 'text'},  # MIME type
+            'date': {'type': 'int'},  # Uploaded date
         }
         for s in cls.user_fields:
             cls._db_cols[f'user_{s}'] = {'type': 'text'}
@@ -74,8 +83,7 @@ class DriveHandler(FormHandler):
                 raise HTTPError(NOT_FOUND, f'Missing file for id={ids[0]}')
             handler.set_header('Content-Type', data['mime'][0])
             handler.set_header('Content-Length', os.stat(path).st_size)
-            handler.set_header(
-                'Content-Disposition', f'attachment; filename="{data["file"][0]}"')
+            handler.set_header('Content-Disposition', f'attachment; filename="{data["file"][0]}"')
             with open(path, 'rb') as handle:
                 return handle.read()
 
@@ -109,7 +117,7 @@ class DriveHandler(FormHandler):
             path = slug.filename(file)
             # B311:random random() is safe since it's for non-cryptographic use
             while os.path.exists(os.path.join(self.path, path)):
-                randomletter = choice(digits + ascii_lowercase)     # nosec B311
+                randomletter = choice(digits + ascii_lowercase)  # nosec B311
                 path = os.path.splitext(path)[0] + randomletter + ext
             self.args['file'][i] = file
             self.args['ext'][i] = ext.lower()
@@ -158,8 +166,7 @@ class DriveHandler(FormHandler):
             self.args.setdefault('size', []).append(len(uploads[0]['body']))
             self.args.setdefault('date', []).append(int(time.time()))
             for s in self.user_fields:
-                self.args.setdefault(f'user_{s.replace(".", "_")}', []).append(
-                    objectpath(user, s))
+                self.args.setdefault(f'user_{s.replace(".", "_")}', []).append(objectpath(user, s))
         conf = self.datasets.data
         files = gramex.data.filter(conf.url, table=conf.table, args={'id': id})
         result = yield super().put(*path_args, **path_kwargs)

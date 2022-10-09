@@ -24,6 +24,7 @@ class SMTPMailer(object):
         ... attachments=['1.pdf', '2.txt'],
         ... images={'logo': '/path/to/logo.png'})
     '''
+
     clients = {
         'gmail': {'host': 'smtp.gmail.com'},
         'yahoo': {'host': 'smtp.mail.yahoo.com'},
@@ -37,14 +38,18 @@ class SMTPMailer(object):
         'smtps': {},
     }
     # SMTP port, depending on whether TLS is True or False
-    ports = {
-        True: 587,
-        False: 25
-    }
+    ports = {True: 587, False: 25}
 
     def __init__(
-            self, type: str, email: str = None, password: str = None,
-            host: str = None, port: int = None, tls: bool = True, stub: str = None):
+        self,
+        type: str,
+        email: str = None,
+        password: str = None,
+        host: str = None,
+        port: int = None,
+        tls: bool = True,
+        stub: str = None,
+    ):
         '''
         Parameters:
             type: Email service type
@@ -144,7 +149,8 @@ class SMTPMailer(object):
         # Test cases specify stub: true. This uses a stub that logs emails
         if self.stub:
             server = SMTPStub(
-                self.client['host'], self.client.get('port', self.ports[tls]), self.stub)
+                self.client['host'], self.client.get('port', self.ports[tls]), self.stub
+            )
         else:
             server = smtplib.SMTP(self.client['host'], self.client.get('port', self.ports[tls]))
         if tls:
@@ -171,11 +177,12 @@ def recipients(**kwargs):
 
 
 def message(
-        body: str = None,
-        html: str = None,
-        attachments: List[Union[str, dict]] = [],
-        images: dict = {},
-        **kwargs: dict):
+    body: str = None,
+    html: str = None,
+    attachments: List[Union[str, dict]] = [],
+    images: dict = {},
+    **kwargs: dict,
+):
     # Returns a MIME message object based on text or HTML content, and optional attachments.
     if html:
         if not images:
@@ -214,17 +221,20 @@ def message(
             msg.set_payload(content)
             encoders.encode_base64(msg)
             msg.add_header(
-                'Content-Disposition', 'attachment', filename=os.path.basename(filename))
+                'Content-Disposition', 'attachment', filename=os.path.basename(filename)
+            )
             msg_addon.attach(msg)
         msg = msg_addon
 
     # set headers
     for arg, value in kwargs.items():
-        header = '-'.join([
-            # All SMTP headers are capitalised, except abbreviations
-            w.upper() if w in {'ID', 'MTS', 'IPMS'} else w.capitalize()
-            for w in arg.split('_')
-        ])
+        header = '-'.join(
+            [
+                # All SMTP headers are capitalised, except abbreviations
+                w.upper() if w in {'ID', 'MTS', 'IPMS'} else w.capitalize()
+                for w in arg.split('_')
+            ]
+        )
         msg[header] = _merge(value)
 
     return msg

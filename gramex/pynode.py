@@ -21,6 +21,7 @@ class Node(object):
         node = Node(port=9966, node_path='/tmp/')
         total = await node.js('return {"total": x + y}', x='a', y=10)['total']
     '''
+
     _source = os.path.join(variables['GRAMEXAPPS'], 'pynode')
     _delay = 0.01
 
@@ -45,23 +46,29 @@ class Node(object):
                 self.conn = yield websocket_connect(self.url, connect_timeout=self.timeout)
             except OSError as exc:
                 import errno
+
                 if exc.errno != errno.ECONNREFUSED:
                     raise
                 self.proc = yield daemon(
                     [
                         self.node_path,
                         os.path.join(self._source, 'index.js'),
-                        f'--port={self.port}'
+                        f'--port={self.port}',
                     ],
                     first_line=re.compile(r'pynode: 1.\d+.\d+ port: %s' % self.port),
                     cwd=self.cwd,
                     # New node modules will be installed in self.cwd.
                     # But pynode/index.js also uses its own packages.
                     # So set NODE_PATH to both node_modules. Node will require() from both.
-                    env=dict(os.environ, NODE_PATH=os.pathsep.join([
-                        os.path.join(self._source, 'node_modules'),
-                        os.path.join(self.cwd, 'node_modules'),
-                    ]))
+                    env=dict(
+                        os.environ,
+                        NODE_PATH=os.pathsep.join(
+                            [
+                                os.path.join(self._source, 'node_modules'),
+                                os.path.join(self.cwd, 'node_modules'),
+                            ]
+                        ),
+                    ),
                 )
                 self.conn = yield websocket_connect(self.url, connect_timeout=self.timeout)
 

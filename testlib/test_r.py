@@ -18,6 +18,7 @@ def test_init():
     # But Gramex uses Conda PATH
     r('1 + 2')
     import rpy2.rinterface
+
     # Note: in your machine, ensure "conda" is part of your Anaconda PATH
     rpy2.rinterface.initr()
     try:
@@ -31,10 +32,12 @@ def test_command():
     eq_(r('sum(c(1,2,3))')[0], 6)
 
     # Multi-ine command
-    total = r('''
+    total = r(
+        '''
         x <- c(1,2,3,4)
         sum(x)
-    ''')
+    '''
+    )
     eq_(total[0], 10)
 
     # Variables preserved across calls
@@ -51,40 +54,49 @@ def test_script():
 def test_args():
     r(path='script1.R')
     eq_(r('incr(n)', n=5)[0], 6)
-    eq_(r(
-        'mean(x, na.rm=narm, trim=trim)',
-        x=pd.Series([0, 1, 2, 3, 4, 5, 6, None]),
-        narm=True,
-        trim=0.2,
-    )[0], 3)
-    cars = r('''
+    eq_(
+        r(
+            'mean(x, na.rm=narm, trim=trim)',
+            x=pd.Series([0, 1, 2, 3, 4, 5, 6, None]),
+            narm=True,
+            trim=0.2,
+        )[0],
+        3,
+    )
+    cars = r(
+        '''
         data(cars)
         cars
-    ''')
+    '''
+    )
     ok_(isinstance(cars, pd.DataFrame))
 
 
 def test_install():
-    r('''
+    r(
+        '''
         packages <- c('rprojroot', 'lifecycle')
         new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
         if (length(new.packages)) install.packages(new.packages)
-    ''')
+    '''
+    )
     eq_(r(path='scriptpath.R')[0], os.path.join(folder, 'flags.csv').replace(os.sep, '/'))
 
 
 def test_plots():
     if os.environ.get('BRANCH', '') not in {'dev', 'master'}:
         raise SkipTest('Install slow ggplot2 only on dev/master')
-    r('''
+    r(
+        '''
         packages <- c('ggplot2')
         new.packages <- packages[!(packages %in% installed.packages()[,"Package"])]
         if (length(new.packages)) install.packages(new.packages)
-    ''')
+    '''
+    )
     path = r(path='scriptplot.R')
     img = Image.open(path[0])
-    eq_(img.size, (512, 512))           # noqa: E912 Size matches
+    eq_(img.size, (512, 512))  # noqa: E912 Size matches
     freq = {color: count for count, color in img.convert('RGB').getcolors()}
-    ok_(freq[255, 255, 255] < 50000)    # noqa: E912 Not filled with white
-    ok_(freq[235, 235, 235] > 100000)   # noqa: E912 Mostly light grey
-    ok_(freq[89, 89, 89] > 20000)       # noqa: E912 and some dark grey
+    ok_(freq[255, 255, 255] < 50000)  # noqa: E912 Not filled with white
+    ok_(freq[235, 235, 235] > 100000)  # noqa: E912 Mostly light grey
+    ok_(freq[89, 89, 89] > 20000)  # noqa: E912 and some dark grey

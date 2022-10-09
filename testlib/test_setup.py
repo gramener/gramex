@@ -9,8 +9,7 @@ class TestSetup(unittest.TestCase):
     src_dir = os.path.dirname(inspect.getfile(gramex))
 
     def exists(self, path):
-        self.assertTrue(os.path.exists(os.path.join(self.src_dir, path)),
-                        'Missing %s' % path)
+        self.assertTrue(os.path.exists(os.path.join(self.src_dir, path)), 'Missing %s' % path)
 
     def test_setup(self):
         # List all files mentioned in setup.py - package_data: key

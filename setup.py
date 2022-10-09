@@ -79,7 +79,6 @@ setup(
     long_description_content_type='text/markdown',
     # Auto-detect, but ignore test packages (tests, testlib)
     packages=[pkg for pkg in find_packages() if not pkg.startswith('test')],
-
     # Read: http://stackoverflow.com/a/2969087/100904
     # package_data includes data files for binary & source distributions
     # include_package_data is only for source distributions, uses MANIFEST.in
@@ -93,9 +92,7 @@ setup(
     # Gramex cannot be installed from a ZIP file. setup() reads from gramex/release.json and
     # README.md. So Gramex must be unzipped first, and THEN installed.
     zip_safe=False,
-    entry_points={
-        'console_scripts': release['console']
-    },
+    entry_points={'console_scripts': release['console']},
     # NOTE: tests_require is deprecated. Also, setup.py can't install nose plugins like coverage.
     # Use `run testsetup` to install rest requirements from tests/requirements.txt.
     **release['info']

@@ -9,8 +9,9 @@ import requests
 import tornado.gen
 from orderedattrdict import AttrDict
 from threading import Thread, Lock
+
 # B404:import_subprocess only for JS compilation
-from subprocess import Popen, PIPE, STDOUT      # nosec B404
+from subprocess import Popen, PIPE, STDOUT  # nosec B404
 from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
@@ -22,18 +23,18 @@ _PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.prese
 # HTTP headers not to forward to chromecapture.js.
 # Keep this sync-ed with the same list in chromecapture.js
 _IGNORE_HEADERS = {
-    'host',             # The URL will determine the host
-    'connection',       # Let Tornado manage the connection
-    'upgrade',          # .. and the upgrades
-    'content-length',   # The new request will have a different content - length
-    'content-md5',      # ... and different content - md5
+    'host',  # The URL will determine the host
+    'connection',  # Let Tornado manage the connection
+    'upgrade',  # .. and the upgrades
+    'content-length',  # The new request will have a different content - length
+    'content-md5',  # ... and different content - md5
 }
 DEFAULT_TIMEOUT = 10
 
 
 class Capture(object):
-    default_port = 9900         # Default port to run CaptureJS at
-    check_interval = 0.05       # Frequency (seconds) to check if self.started
+    default_port = 9900  # Default port to run CaptureJS at
+    check_interval = 0.05  # Frequency (seconds) to check if self.started
     # Set engine configurations for PhantomJS and Puppeteer
     engines = AttrDict(
         phantomjs=AttrDict(
@@ -41,14 +42,14 @@ class Capture(object):
             script='capture.js',
             first_line=b'PhantomJS.*capture\\.js',
             name='Capture',
-            version='1.0'
+            version='1.0',
         ),
         chrome=AttrDict(
             cmd='node',
             script='chromecapture.js',
             first_line=b'node\\.js.*chromecapture\\.js',
             name='ChromeCapture',
-            version='1.1'
+            version='1.1',
         ),
     )
 
@@ -74,6 +75,7 @@ class Capture(object):
     capture.js is running at ``url``. If not, it runs ``cmd`` and checks again.
     Until capture.js is detected, all capture methods will fail.
     '''
+
     def __init__(self, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT):
         # Set default values for port, url and cmd
         self.engine = self.engines['phantomjs' if engine is None else engine]
@@ -101,8 +103,7 @@ class Capture(object):
         :class:`CaptureHandler` calls this method if ``?start`` is passed.
         '''
         with self.lock:
-            thread = Thread(target=self._start,
-                            name=f'Capture {self.engine} @ {self.url}')
+            thread = Thread(target=self._start, name=f'Capture {self.engine} @ {self.url}')
             thread.daemon = True
             thread.start()
 
@@ -128,8 +129,7 @@ class Capture(object):
             self.close()
             # B603:subprocess_without_shell_equals_true is safe since self.cmd is taken from
             # the YAML configuration (from developers)
-            self.proc = Popen(      # nosec B603
-                shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)
+            self.proc = Popen(shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)  # nosec B603
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?
@@ -194,8 +194,14 @@ class Capture(object):
         if not self.started:
             raise RuntimeError(f'{self.engine.script} not started. See logs')
         r = yield self.browser.fetch(
-            self.url, method='POST', body=urlencode(kwargs, doseq=True), raise_error=False,
-            connect_timeout=self.timeout, request_timeout=self.timeout, headers=headers)
+            self.url,
+            method='POST',
+            body=urlencode(kwargs, doseq=True),
+            raise_error=False,
+            connect_timeout=self.timeout,
+            request_timeout=self.timeout,
+            headers=headers,
+        )
         if r.code == OK:
             self._validate_server(r)
         raise tornado.gen.Return(r)
@@ -272,6 +278,7 @@ class CaptureHandler(BaseHandler):
     The page is called with the same args as :meth:`Capture.capture`. It also
     accepts a ``?start`` parameter that restarts capture.js if required.
     '''
+
     # Each config maps to a Capture() object. cls.captures[config] = Capture()
     captures = {}
 
@@ -331,8 +338,7 @@ class CaptureHandler(BaseHandler):
         args['url'] = urljoin(self.xrequest_full_url, args['url'])
         # Copy all relevant HTTP headers as-is
         args['headers'] = {
-            key: val for key, val in self.request.headers.items()
-            if key not in _IGNORE_HEADERS
+            key: val for key, val in self.request.headers.items() if key not in _IGNORE_HEADERS
         }
         if 'cookie' not in args:
             cookie = self.request.headers.get('Cookie', None)
@@ -347,14 +353,19 @@ class CaptureHandler(BaseHandler):
 
         if response.code == OK:
             self.set_header('Content-Type', info['mime'])
-            self.set_header('Content-Disposition',
-                            'attachment; filename="{file}.{ext}"'.format(**args))
+            self.set_header(
+                'Content-Disposition', 'attachment; filename="{file}.{ext}"'.format(**args)
+            )
             self.write(response.body)
         elif response.code == CLIENT_TIMEOUT:
             self.set_status(GATEWAY_TIMEOUT, 'Capture is busy')
             self.set_header('Content-Type', 'application/json')
-            self.write({'status': 'fail', 'msg': [
-                f'Capture did not respond within timeout: {self.capture.timeout}s']})
+            self.write(
+                {
+                    'status': 'fail',
+                    'msg': [f'Capture did not respond within timeout: {self.capture.timeout}s'],
+                }
+            )
         else:
             self.set_status(response.code, 'capture.js error')
             self.set_header('Content-Type', 'application/json')

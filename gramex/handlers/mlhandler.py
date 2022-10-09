@@ -51,12 +51,12 @@ def get_model(mclass: str, model_params: dict, **kwargs) -> ml.AbstractModel:
 
 
 class MLHandler(FormHandler):
-
     @classmethod
     def setup(cls, data=None, model={}, config_dir='', template=DEFAULT_TEMPLATE, **kwargs):
         if not config_dir:
-            config_dir = op.join(gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler',
-                                 slugify(cls.name))
+            config_dir = op.join(
+                gramex.config.variables['GRAMEXDATA'], 'apps', 'mlhandler', slugify(cls.name)
+            )
         cls.store = ml.ModelStore(config_dir)
         cls.template = template
         super(MLHandler, cls).setup(**kwargs)
@@ -67,7 +67,9 @@ class MLHandler(FormHandler):
                 data['transform'] = build_transform(
                     {'function': data['transform']},
                     vars={'data': None, 'handler': None},
-                    filename='MLHandler:data', iter=False)
+                    filename='MLHandler:data',
+                    iter=False,
+                )
                 cls._built_transform = staticmethod(data['transform'])
             else:
                 cls._built_transform = staticmethod(lambda x: x)
@@ -103,8 +105,9 @@ class MLHandler(FormHandler):
         elif data is not None:
             data = cls._filtercols(data)
             data = cls._filterrows(data)
-            cls.model = get_model(mclass, model_params, data=data, cats=cats,
-                                  nums=nums, target_col=target_col)
+            cls.model = get_model(
+                mclass, model_params, data=data, cats=cats, nums=nums, target_col=target_col
+            )
             # train the model
             if issubclass(cls.model.__class__, TransformerMixin):
                 target = None
@@ -113,9 +116,12 @@ class MLHandler(FormHandler):
                 target = data[target_col]
                 train = data.drop([target_col], axis=1)
             gramex.service.threadpool.submit(
-                cls.model.fit, train, target,
-                model_path=cls.store.model_path, name=cls.name,
-                **cls.store.model_kwargs()
+                cls.model.fit,
+                train,
+                target,
+                model_path=cls.store.model_path,
+                name=cls.name,
+                **cls.store.model_kwargs(),
             )
 
     def _parse_multipart_form_data(self):
@@ -230,10 +236,7 @@ class MLHandler(FormHandler):
     def get(self, *path_args, **path_kwargs):
         self.set_header('Content-Type', 'application/json')
         if '_params' in self.args:
-            params = {
-                'opts': self.store.load('transform'),
-                'params': self.store.load('model')
-            }
+            params = {'opts': self.store.load('transform'), 'params': self.store.load('model')}
             try:
                 attrs = get_model(self.store.model_path, {}).get_attributes()
             except (AttributeError, ImportError, FileNotFoundError):
@@ -246,8 +249,10 @@ class MLHandler(FormHandler):
             self._check_model_path()
             if '_download' in self.args:
                 self.set_header('Content-Type', 'application/octet-strem')
-                self.set_header('Content-Disposition',
-                                f'attachment; filename={op.basename(self.store.model_path)}')
+                self.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename={op.basename(self.store.model_path)}',
+                )
                 with open(self.store.model_path, 'rb') as fout:
                     self.write(fout.read())
             elif '_model' in self.args:
@@ -264,8 +269,7 @@ class MLHandler(FormHandler):
                     data = []
                 if len(data) > 0:
                     data = data.drop([self.store.load('target_col')], axis=1, errors='ignore')
-                    prediction = yield gramex.service.threadpool.submit(
-                        self._predict, data)
+                    prediction = yield gramex.service.threadpool.submit(self._predict, data)
                     self.write(json.dumps(prediction, indent=2, cls=CustomJSONEncoder))
                 else:
                     self.set_header('Content-Type', 'text/html')
@@ -283,9 +287,12 @@ class MLHandler(FormHandler):
         data = self._filtercols(data)
         data = self._filterrows(data)
         self.model = get_model(
-            self.store.load('class'), self.store.load('params'),
-            data=data, target_col=target_col,
-            nums=self.store.load('nums'), cats=self.store.load('cats')
+            self.store.load('class'),
+            self.store.load('params'),
+            data=data,
+            target_col=target_col,
+            nums=self.store.load('nums'),
+            cats=self.store.load('cats'),
         )
         if not isinstance(self.model, ml.SklearnTransformer):
             target = data[target_col]
@@ -354,7 +361,6 @@ class MLHandler(FormHandler):
 
 
 class MLPredictor(FormHandler):
-
     @classmethod
     def setup(cls, config_dir, data, target_col=None, columns=None, **kwargs):
         cls.config_dir = config_dir

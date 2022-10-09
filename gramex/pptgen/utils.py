@@ -5,9 +5,10 @@ import copy
 import platform
 import numpy as np
 import pandas as pd
+
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml import objectify              # nosec B410
-from lxml.builder import ElementMaker   # nosec B410
+from lxml import objectify  # nosec B410
+from lxml.builder import ElementMaker  # nosec B410
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.enum.base import EnumValue
@@ -46,8 +47,7 @@ def is_slide_allowed(change, slide, number):
         title = slide.shapes.title
         title = title.text if title is not None else ''
         if isinstance(slide_title, (list, dict)):
-            match = match and any(
-                re.search(expr, title, re.IGNORECASE) for expr in slide_title)
+            match = match and any(re.search(expr, title, re.IGNORECASE) for expr in slide_title)
         elif isinstance(slide_title, str):
             match = match and re.search(slide_title, title, re.IGNORECASE)
     return match
@@ -57,8 +57,10 @@ def stack_elements(replica, shape, stack=False, margin=None):
     '''Function to extend elements horizontally or vertically.'''
     if not stack:
         return
-    config = {'vertical': {'axis': 'y', 'attr': 'height'},
-              'horizontal': {'axis': 'x', 'attr': 'width'}}
+    config = {
+        'vertical': {'axis': 'y', 'attr': 'height'},
+        'horizontal': {'axis': 'x', 'attr': 'width'},
+    }
     grp_sp = shape.element
     # Adding a 15% default margin between original and new object.
     default_margin = 0.15
@@ -118,8 +120,7 @@ def delete_run(run):
 
 def generate_slide(prs, source):
     '''Create a slide layout.'''
-    layout_items_count = [
-        len(layout.placeholders) for layout in prs.slide_layouts]
+    layout_items_count = [len(layout.placeholders) for layout in prs.slide_layouts]
     min_items = min(layout_items_count)
     blank_layout_id = layout_items_count.index(min_items)
     return prs.slide_layouts[blank_layout_id]
@@ -257,7 +258,7 @@ def decimals(series):
     series = series.reshape((series.size,))
     diffs = np.diff(series[series.argsort()])
     inf_diff = 1e-10
-    min_float = .999999
+    min_float = 0.999999
     diffs = diffs[diffs > inf_diff]
     if len(diffs) > 0:
         smallest = np.nanmin(diffs.filled(np.Inf))
@@ -271,6 +272,7 @@ def convert_color_code(colorcode):
     '''Convert color code to valid PPTX color code.'''
     colorcode = colorcode.rsplit('#')[-1].lower()
     return colorcode + ('0' * (6 - len(colorcode)))
+
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
 
@@ -305,7 +307,7 @@ def make_element():
     nsmap = {
         'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
         'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     }
     a = ElementMaker(namespace=nsmap['a'], nsmap=nsmap)
     p = ElementMaker(namespace=nsmap['p'], nsmap=nsmap)
@@ -401,7 +403,8 @@ def call(val, g, group, default):
 
 def cust_shape(x, y, w, h, _id):
     '''Custom shapes.'''
-    return objectify.fromstring(f'''
+    return objectify.fromstring(
+        f'''
         <p:sp {xmlns("p", "a")}>
           <p:nvSpPr>
             <p:cNvPr id='{_id}' name='Freeform {_id}'/>
@@ -421,7 +424,8 @@ def cust_shape(x, y, w, h, _id):
               <a:rect l='0' t='0' r='0' b='0'/>
             </a:custGeom>
           </p:spPr>
-        </p:sp>''')
+        </p:sp>'''
+    )
 
 
 def draw_sankey(data, spec):
@@ -440,10 +444,12 @@ def draw_sankey(data, spec):
     fill_color = spec.get('color')
 
     g = data.groupby(group)
-    frame = pd.DataFrame({
-        'size': g[group[0]].count() if size is None else g[size].sum(),
-        'seq': 0 if order is None else order(g),
-    })
+    frame = pd.DataFrame(
+        {
+            'size': g[group[0]].count() if size is None else g[size].sum(),
+            'seq': 0 if order is None else order(g),
+        }
+    )
     frame['width'] = frame['size'] / float(frame['size'].sum()) * width
     frame['fill'] = call(fill_color, g, group, default_color)
     result = call(text, g, group, '')
@@ -592,10 +598,8 @@ class SubTreemap(object):
             summary = summary[summary[key] == filter[key]]
 
         # Aggregate by the key up to the current level
-        summary = summary.groupby(
-            self.args['keys'][:level + 1]
-        ).agg(self.args.get('values', {}))
-        for key in self.args['keys'][:level + 1]:
+        summary = summary.groupby(self.args['keys'][: level + 1]).agg(self.args.get('values', {}))
+        for key in self.args['keys'][: level + 1]:
             if hasattr(summary, 'reset_index'):
                 # Just pop the key out. .reset_index(key) should do this.
                 # But on Pandas 0.20.1, this fails
@@ -612,7 +616,7 @@ class SubTreemap(object):
 
         # Find the positions of each box at this level
         key = self.args['keys'][level]
-        rows = (summary.to_records() if hasattr(summary, 'to_records') else summary)
+        rows = summary.to_records() if hasattr(summary, 'to_records') else summary
 
         rects = squarified(x, y * aspect, width, height * aspect, self.args['size'](rows))
         for i2, (x2, y2, w2, h2) in enumerate(rects):
@@ -620,24 +624,26 @@ class SubTreemap(object):
             y2, h2 = y2 / aspect, h2 / aspect
             # Ignore invalid boxes generated by Squarified
             if (
-                np.isnan([x2, y2, w2, h2]).any() or
-                np.isinf([x2, y2, w2, h2]).any() or
-                w2 < 0 or h2 < 0
+                np.isnan([x2, y2, w2, h2]).any()
+                or np.isinf([x2, y2, w2, h2]).any()
+                or w2 < 0
+                or h2 < 0
             ):
                 continue
 
             # For each box, dive into the next level
             filter2 = dict(filter)
             filter2.update({key: v2[key]})
-            for output in self.draw(w2 - 2 * pad, h2 - 2 * pad, x=x2 + pad, y=y2 + pad,
-                                    filter=filter2, level=level + 1):
+            for output in self.draw(
+                w2 - 2 * pad, h2 - 2 * pad, x=x2 + pad, y=y2 + pad, filter=filter2, level=level + 1
+            ):
                 yield output
 
             # Once we've finished yielding smaller boxes, yield the parent box
             yield x2, y2, w2, h2, (level, v2)
 
 
-class TableProperties():
+class TableProperties:
     '''Get/Set Table's properties.'''
 
     def extend_table(self, shape, data, total_rows, total_columns):
