@@ -1,5 +1,6 @@
 <script src="https://www.google.com/recaptcha/api.js?render={{ kwargs.recaptcha.key }}"></script>
 <script>
+  /* globals grecaptcha */
   grecaptcha.ready(function () {
     grecaptcha.execute('{{ kwargs.recaptcha.key }}', { action: '{{ kwargs.recaptcha.action }}' }).then(function (token) {
       var input = document.createElement('input')

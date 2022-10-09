@@ -88,7 +88,7 @@ function prepare_form_values(_values) {
     _values['component'] = item.tagName.toLowerCase()
     if(_values.component === 'bs4-html')
     _values.value = _values.value.replace(/\n/g, "\\n")
-    if(typeof item !== undefined) {
+    if(typeof item !== 'undefined') {
       delete _values.$target
       form_values.push(_values)
     }

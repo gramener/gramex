@@ -6,7 +6,10 @@
 // ... or add a .eslintrc.js
 module.exports = {
   'parserOptions': {
-    'ecmaVersion': 6    // Use ES6 parser. Browsers other than IE support it
+    'ecmaVersion': 'latest'
+  },
+  'env': {
+    'browser': true,
   },
   // These default plugins are installed in the root gramex director via package.json
   'plugins': [

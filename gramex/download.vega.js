@@ -1,3 +1,4 @@
+/* globals vega, vl, vegam */
 (function (conf) {
   var script = document.currentScript
   var id = script.getAttribute('data-id') || conf.id || String(Math.random())
