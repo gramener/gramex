@@ -16,12 +16,12 @@ url:
     handler: FileHandler
     kwargs:
       path:
-        '(.+\.scss)': '$YAMLPATH/theme/{0}'
-        '(.+\.png)': '$YAMLPATH/theme/{0}'
-        '.+': $YAMLPATH/theme/sample.html
-        '.*': $YAMLPATH/theme/index.html
-      sass: '*.scss, *.sass'
-      template: '*.html'
+        '(.+\.scss)': "$YAMLPATH/theme/{0}"
+        '(.+\.png)': "$YAMLPATH/theme/{0}"
+        ".+": $YAMLPATH/theme/sample.html
+        ".*": $YAMLPATH/theme/index.html
+      sass: "*.scss, *.sass"
+      template: "*.html"
       auth: false
       headers:
         Cache-Control: public, max-age=86400

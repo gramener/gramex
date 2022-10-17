@@ -1,11 +1,11 @@
 variables:
-  MYSQL_SERVER: {default: localhost}
-  POSTGRES_SERVER: {default: localhost}
-  REDIS_SERVER: {default: localhost}
+  MYSQL_SERVER: { default: localhost }
+  POSTGRES_SERVER: { default: localhost }
+  REDIS_SERVER: { default: localhost }
   STRING: abc
   NUMBER: 1
   LIST: [1, 2, 3]
-  DICT: {b: 1}
+  DICT: { b: 1 }
   TRANSLATE_DB: $YAMLPATH/translate.db
   TRANSLATE_XLSX: $YAMLPATH/translate.xlsx
 
@@ -20,14 +20,15 @@ handlers:
 
 app:
   listen:
-    port: 9999              # Avoid clash with default Gramex port running tests
+    port: 9999 # Avoid clash with default Gramex port running tests
   session:
-    cookie: sid2                # Name the cookie differently from "sid"
-    domain: .localhost.local    # RequestCookieJar uses this domain for localhost. Remove to test sessions manually
-    secure: false               # Don't set this to true. We're using HTTP, so it will fail
-    samesite: Strict            # Check if SameSite=Strict is sent
-    cookiepath: /               # NOTE: This is not tested automatically, only manually.
-                                # That's because tests NEED the cookie path to be / to work
+    cookie: sid2 # Name the cookie differently from "sid"
+    domain: .localhost.local # RequestCookieJar uses this domain for localhost. Remove to test sessions manually
+    secure: false # Don't set this to true. We're using HTTP, so it will fail
+    samesite: Strict # Check if SameSite=Strict is sent
+    cookiepath:
+      / # NOTE: This is not tested automatically, only manually.
+      # That's because tests NEED the cookie path to be / to work
     # httponly: true            # Not required. Already set in base gramex.yaml
 
 cache:
@@ -55,7 +56,7 @@ url:
     pattern: invalid\gpattern
     handler: FileHandler
     kwargs:
-        path: $YAMLPATH
+      path: $YAMLPATH
   invalid-handler:
     pattern: /invalid-handler
     handler: NonExistent
@@ -66,17 +67,53 @@ url:
     pattern: /invalid-function
     handler: FunctionHandler
     kwargs:
-        function: nonexistent
+      function: nonexistent
 
   # TestGramex
-  pathdepth1: {pattern: "/path/.*",       handler: "gramex.handlers.FunctionHandler", kwargs: {function: str("/path/.*")}}
-  pathdepth2: {pattern: "/path/file",     handler: FunctionHandler, kwargs: {function: str("/path/file")     }}
-  pathdepth3: {pattern: "/path/dir/.*",   handler: FunctionHandler, kwargs: {function: str("/path/dir/.*")   }}
-  pathdepth4: {pattern: "/path/dir/file", handler: FunctionHandler, kwargs: {function: str("/path/dir/file") }}
-  pathdepth5: {pattern: "/path/priority", priority: 1, handler: "FunctionHandler", kwargs: {function: str("/path/priority") }}
+  pathdepth1:
+    {
+      pattern: "/path/.*",
+      handler: "gramex.handlers.FunctionHandler",
+      kwargs: { function: str("/path/.*") },
+    }
+  pathdepth2:
+    {
+      pattern: "/path/file",
+      handler: FunctionHandler,
+      kwargs: { function: str("/path/file") },
+    }
+  pathdepth3:
+    {
+      pattern: "/path/dir/.*",
+      handler: FunctionHandler,
+      kwargs: { function: str("/path/dir/.*") },
+    }
+  pathdepth4:
+    {
+      pattern: "/path/dir/file",
+      handler: FunctionHandler,
+      kwargs: { function: str("/path/dir/file") },
+    }
+  pathdepth5:
+    {
+      pattern: "/path/priority",
+      priority: 1,
+      handler: "FunctionHandler",
+      kwargs: { function: str("/path/priority") },
+    }
 
-  pathnorm1: {pattern: "/./path/norm1", handler: FunctionHandler, kwargs: {function: str("/path/norm1") }}
-  pathnorm2: {pattern: "/path/./norm2", handler: FunctionHandler, kwargs: {function: str("/path/norm2") }}
+  pathnorm1:
+    {
+      pattern: "/./path/norm1",
+      handler: FunctionHandler,
+      kwargs: { function: str("/path/norm1") },
+    }
+  pathnorm2:
+    {
+      pattern: "/path/./norm2",
+      handler: FunctionHandler,
+      kwargs: { function: str("/path/norm2") },
+    }
 
   # TestSchedule
   schedule-key:
@@ -109,7 +146,7 @@ url:
     pattern: /alias-command
     service: Command
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
 
   alias-data:
     pattern: /alias-data
@@ -121,7 +158,7 @@ url:
   alias-function:
     pattern: /alias-function
     service: Function
-    handler: nonexistent    # service: overrides handler:
+    handler: nonexistent # service: overrides handler:
     kwargs:
       function: utils.params_as_json(0, 1, a="a", b="b")
 
@@ -146,7 +183,7 @@ url:
     kwargs:
       function: utils.params_as_json
       args: [0, 1]
-      kwargs: {a: a, b: b}
+      kwargs: { a: a, b: b }
 
   func/args-variable:
     pattern: /func/args-variable
@@ -174,7 +211,7 @@ url:
     kwargs:
       function: utils.async_args
       args: [0, 1]
-      kwargs: {a: a, b: b}
+      kwargs: { a: a, b: b }
 
   func/get_arg:
     pattern: /func/get_arg
@@ -218,7 +255,7 @@ url:
     kwargs:
       function: utils.params_as_json
       args: [0, =handler]
-      kwargs: {a: {b: 1}, handler: =handler}
+      kwargs: { a: { b: 1 }, handler: =handler }
 
   func/compositenested-variable:
     pattern: /func/compositenested-variable
@@ -226,7 +263,7 @@ url:
     kwargs:
       function: utils.params_as_json
       args: [0, =handler]
-      kwargs: {a: $DICT, handler: =handler}
+      kwargs: { a: $DICT, handler: =handler }
 
   func/dumpx:
     pattern: /func/dumpx
@@ -384,7 +421,7 @@ url:
     kwargs:
       function:
         - { name: x, function: '"--"' }
-        - { name: n, function: 2}
+        - { name: n, function: 2 }
         - (x + handler.request.path) * n
   func/pipeline-number:
     pattern: /func/pipeline-number
@@ -397,7 +434,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function:
-        - [3, x, null, false]   # Returns [3, "x", false]
+        - [3, x, null, false] # Returns [3, "x", false]
   # TestPyNode
   pynode/run:
     pattern: /pynode/run
@@ -522,8 +559,8 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/sass/
-      scss: ' missing.scss,import.scss, a.scss b.scss'
-      sass: '*.sass'
+      scss: " missing.scss,import.scss, a.scss b.scss"
+      sass: "*.sass"
   dir/transform-vue:
     pattern: /dir/transform-vue/(.*)
     handler: FileHandler
@@ -539,7 +576,7 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/vue/
-      vue: '*.vue'
+      vue: "*.vue"
   dir/transform-ts:
     pattern: /dir/transform-ts/(.*)
     handler: FileHandler
@@ -555,13 +592,13 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/ts/
-      ts: '*.ts'
+      ts: "*.ts"
   dir/template:
     pattern: "/dir/template/(.*)"
     handler: FileHandler
     kwargs:
       path: dir/
-      template: '*'
+      template: "*"
   dir/template-true:
     pattern: "/dir/template-true/(.*)"
     handler: FileHandler
@@ -573,7 +610,7 @@ url:
     handler: FileHandler
     kwargs:
       path: dir/
-      template: 'index*'
+      template: "index*"
   dir/args:
     pattern: /dir/args/(.*)
     handler: FileHandler
@@ -581,7 +618,7 @@ url:
       path: dir
       default_filename: index.html
       transform:
-        'index.html':
+        "index.html":
           function: utils.args_as_json(handler)
   dir/merge.txt:
     pattern: /dir/merge.txt
@@ -591,10 +628,10 @@ url:
         - dir/alpha.txt
         - dir/beta.html
       transform:
-        'alpha.txt':
+        "alpha.txt":
           encoding: utf-8
           function: str.upper(content)
-        'beta.html':
+        "beta.html":
           encoding: utf-8
           function: str.title(content)
   dir/merge.html:
@@ -605,10 +642,10 @@ url:
         - dir/beta.html
         - dir/alpha.txt
       transform:
-        'beta.html':
+        "beta.html":
           encoding: utf-8
           function: str.upper(content)
-        'alpha.txt':
+        "alpha.txt":
           encoding: utf-8
           function: str.title(content)
   dir/map:
@@ -616,18 +653,18 @@ url:
     handler: FileHandler
     kwargs:
       path:
-        '': dir/index.html
-        '(.*)/(.*)/(.*)': 'dir/{0}{1}{2}'
-        'url': 'dir/{file}{mid}.{ext}'
-        '(?P<ext>txt)/(.*)': 'dir/{1}.{ext}'
-        '(?P<n>\w+)/(.*)': 'dir/{n}.{1}'
-        '(.*)': 'dir/subdir/{0}.txt'
+        "": dir/index.html
+        "(.*)/(.*)/(.*)": "dir/{0}{1}{2}"
+        "url": "dir/{file}{mid}.{ext}"
+        "(?P<ext>txt)/(.*)": "dir/{1}.{ext}"
+        '(?P<n>\w+)/(.*)': "dir/{n}.{1}"
+        "(.*)": "dir/subdir/{0}.txt"
       default:
-        file: ''
-        mid: ''
+        file: ""
+        mid: ""
         ext: txt
       transform:
-        'alpha.txt':
+        "alpha.txt":
           encoding: utf-8
           function: str.upper(content)
   dir/map2:
@@ -635,10 +672,10 @@ url:
     handler: FileHandler
     kwargs:
       path:
-        '': 'dir/{file}{mid}.{ext}'
+        "": "dir/{file}{mid}.{ext}"
       default:
-        file: ''
-        mid: ''
+        file: ""
+        mid: ""
         ext: txt
   dir/headers:
     pattern: /header/
@@ -655,27 +692,27 @@ url:
       path: dir/
       headers:
         Root: x
-        'alpha.txt':
+        "alpha.txt":
           Root: a
           Sub: a
-        'beta.html':
+        "beta.html":
           Root: b
           Sub: b
-        '*':
+        "*":
           All: x
-        '**/install/**':
+        "**/install/**":
           Sub: x
-        '**/gramex-bower-package':
+        "**/gramex-bower-package":
           Sub: y
 
   dir/data:
-    pattern: /dir/data                # Check that a pattern without brackets works
+    pattern: /dir/data # Check that a pattern without brackets works
     handler: FileHandler
     kwargs:
       path: dir/data.csv
       headers:
-        Content-Type: text/plain      # Test header overriding
-        Content-Disposition: null     # Test header clearing
+        Content-Type: text/plain # Test header overriding
+        Content-Disposition: null # Test header clearing
 
   dir/pattern-text:
     pattern: "/dir/pattern/(.*)/text"
@@ -709,7 +746,7 @@ url:
       path: dir/
       ignore:
         - ignore-list.txt
-        - '*.Ext*'
+        - "*.Ext*"
 
   # Allow overrides global handler ignores
   dir/allow-file:
@@ -734,7 +771,7 @@ url:
     kwargs:
       path: dir/
       default_filename: index.html
-      ignore: '*'
+      ignore: "*"
       allow: index.html
 
   methods/get-only:
@@ -757,12 +794,12 @@ url:
     handler: FormHandler
     kwargs:
       url: sales.xlsx
-      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      xsrf_cookies: false # We're testing PUT/PUST/DELETE to see if they fail
       # columns is ignored for files
       columns:
-        id: {type: int, primary_key: True, autoincrement: True}
-        email: {nullable: True, default: none}
-        age: {type: float, nullable: False, default: 18}
+        id: { type: int, primary_key: True, autoincrement: True }
+        email: { nullable: True, default: none }
+        age: { type: float, nullable: False, default: 18 }
         dept: varchar(10)
 
   formhandler/exceltable:
@@ -772,14 +809,14 @@ url:
       url: sales.xlsx
       sheet_name: table
       table: MainTable
-      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      xsrf_cookies: false # We're testing PUT/PUST/DELETE to see if they fail
 
   formhandler/url:
     pattern: /formhandler/url
     handler: FormHandler
     kwargs:
       url: http://localhost:9999/sales.xlsx
-      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      xsrf_cookies: false # We're testing PUT/PUST/DELETE to see if they fail
 
   formhandler/methods:
     pattern: /formhandler/methods
@@ -839,7 +876,7 @@ url:
       big:
         url: sqlite:///formhandler.db
         table: sales
-        query: 'SELECT * FROM sales WHERE sales > 100'
+        query: "SELECT * FROM sales WHERE sales > 100"
       by-growth:
         url: sqlite:///formhandler.db
         table: sales
@@ -847,7 +884,7 @@ url:
       big-by-growth:
         url: sqlite:///formhandler.db
         table: sales
-        query: 'SELECT * FROM sales WHERE sales > 100'
+        query: "SELECT * FROM sales WHERE sales > 100"
         function: data.sort_values('growth')
 
   formhandler/file-function:
@@ -885,7 +922,7 @@ url:
     kwargs:
       url: sales.xlsx
       default:
-        'sales>': 50
+        "sales>": 50
         _limit: 2
         _format: csv
 
@@ -905,7 +942,7 @@ url:
       city:
         url: sqlite:///formhandler.db
         table: sales
-        query: 'SELECT city, SUM(sales) as sales FROM sales GROUP BY city'
+        query: "SELECT city, SUM(sales) as sales FROM sales GROUP BY city"
         modify: data.assign(rank=data['sales'].rank())
       big:
         url: sales.xlsx
@@ -926,40 +963,40 @@ url:
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
-      sheet_name: '{table}'
+      sheet_name: "{table}"
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1, table: sales}
+      default: { x: 1, table: sales }
 
   formhandler/edits-xlsx-multikey:
     pattern: /formhandler/edits-xlsx-multikey
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
-      sheet_name: '{table}'
+      sheet_name: "{table}"
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1, table: sales}
+      default: { x: 1, table: sales }
 
   formhandler/edits-sqlite-singlekey:
     pattern: /formhandler/edits-sqlite-singlekey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: '{table}'
+      table: "{table}"
       id: [sales]
       xsrf_cookies: false
-      default: {x: 1, table: sales}
+      default: { x: 1, table: sales }
 
   formhandler/edits-sqlite-multikey:
     pattern: /formhandler/edits-sqlite-multikey
     handler: FormHandler
     kwargs:
       url: sqlite:///formhandler-edits.db
-      table: '{table}'
+      table: "{table}"
       id: [city, product]
       xsrf_cookies: false
-      default: {x: 1, table: sales}
+      default: { x: 1, table: sales }
 
   formhandler/edits-xlsx-redirect:
     pattern: /formhandler/edits-xlsx-redirect
@@ -968,49 +1005,49 @@ url:
       url: sales-edits.xlsx
       id: [city, product]
       xsrf_cookies: false
-      redirect: {url: /redirected}
+      redirect: { url: /redirected }
 
   formhandler/edits-multidata:
     pattern: /formhandler/edits-multidata
     handler: FormHandler
     kwargs:
       csv:
-        url: '{file}'
+        url: "{file}"
         encoding: utf-8
         id: [city, product]
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: '{table}'
+        table: "{table}"
         id: [city, product]
       xsrf_cookies: false
-      default: {file: sales-edits.csv, table: sales}
+      default: { file: sales-edits.csv, table: sales }
 
   formhandler/edits-multidata-modify:
     pattern: /formhandler/edits-multidata-modify
     handler: FormHandler
     kwargs:
       csv:
-        url: '{file}'
+        url: "{file}"
         encoding: utf-8
         id: [city, product]
         modify: len(handler.args.keys())
       sql:
         url: mysql+pymysql://root@$MYSQL_SERVER/test_formhandler?charset=utf8
-        table: '{table}'
+        table: "{table}"
         id: [city, product]
       modify: len(handler.args.keys())
       xsrf_cookies: false
-      default: {file: sales-edits.csv, table: sales}
+      default: { file: sales-edits.csv, table: sales }
 
   formhandler/edits-dates:
     pattern: /formhandler/edits-dates
     handler: FormHandler
     kwargs:
       url: sales-edits.xlsx
-      sheet_name: '{table}'
+      sheet_name: "{table}"
       id: [sales]
       xsrf_cookies: false
-      default: {table: dates}
+      default: { table: dates }
 
   formhandler/chart:
     pattern: /formhandler/chart
@@ -1020,12 +1057,12 @@ url:
       formats:
         common: &FORMHANDLER_CHART
           format: sns
-          chart: '{chart}'
-          x: '{x}'
-          y: '{y}'
-          dpi: '{dpi}'
-          width: '{width}'
-          height: '{height}'
+          chart: "{chart}"
+          x: "{x}"
+          y: "{y}"
+          dpi: "{dpi}"
+          width: "{width}"
+          height: "{height}"
         svg:
           ext: svg
           headers:
@@ -1053,12 +1090,12 @@ url:
     handler: FormHandler
     kwargs:
       url: sales.xlsx
-      xsrf_cookies: false     # We're testing PUT/PUST/DELETE to see if they fail
+      xsrf_cookies: false # We're testing PUT/PUST/DELETE to see if they fail
       formats:
         json:
           headers:
             X-JSON: ok
-            X-Base: ok        # Overrides base headers
+            X-Base: ok # Overrides base headers
       headers:
         X-Base: not ok
         X-Root: ok
@@ -1066,9 +1103,9 @@ url:
     pattern: /formhandler/arg-url
     handler: FormHandler
     kwargs:
-      url: '{path}.xlsx'
-      ext: '{ext}'
-      sheet_name: '{sheet}'
+      url: "{path}.xlsx"
+      ext: "{ext}"
+      sheet_name: "{sheet}"
       default:
         ext: xlsx
   formhandler/arg-table:
@@ -1076,15 +1113,15 @@ url:
     handler: FormHandler
     kwargs:
       url: sqlite:///{db}.db
-      table: '{table}{skip}'
+      table: "{table}{skip}"
       default:
-        skip: ''
+        skip: ""
   formhandler/arg-query:
     pattern: /formhandler/arg-query
     handler: FormHandler
     kwargs:
       url: sqlite:///{db}.db
-      query: 'SELECT * FROM {table} WHERE {col}=:val'
+      query: "SELECT * FROM {table} WHERE {col}=:val"
       default:
         table: sales
   formhandler/path_arg:
@@ -1092,8 +1129,7 @@ url:
     handler: FormHandler
     kwargs:
       url: sqlite:///$YAMLPATH/{_0}.db
-      query:
-        SELECT {group}, SUM(sales) AS sales
+      query: SELECT {group}, SUM(sales) AS sales
         FROM {_1}
         WHERE {col}=:val
         GROUP BY {group}
@@ -1102,8 +1138,7 @@ url:
     handler: FormHandler
     kwargs:
       url: sqlite:///$YAMLPATH/{db}.db
-      query:
-        SELECT {group}, SUM(sales) AS sales
+      query: SELECT {group}, SUM(sales) AS sales
         FROM {table}
         WHERE {col}=:val
         GROUP BY {group}
@@ -1123,12 +1158,12 @@ url:
     kwargs:
       url: dir:///$YAMLPATH/{root}
       default:
-        root: '.'
+        root: "."
       # columns is ignored for directories
       columns:
-        id: {type: int, primary_key: True, autoincrement: True}
-        email: {nullable: True, default: none}
-        age: {type: float, nullable: False, default: 18}
+        id: { type: int, primary_key: True, autoincrement: True }
+        email: { nullable: True, default: none }
+        age: { type: float, nullable: False, default: 18 }
         dept: varchar(10)
 
   formhandler/columns/mysql:
@@ -1140,11 +1175,11 @@ url:
       id: id
       xsrf_cookies: false
       columns:
-        id: {type: int, primary_key: True, autoincrement: True}
+        id: { type: int, primary_key: True, autoincrement: True }
         # MySQL doesn't allow TEXT to have a default value on Linux. Use varchar instead.
         # https://stackoverflow.com/a/4553664
-        email: {type: varchar(99), nullable: True, default: none}
-        age: {type: float, nullable: False, default: 18}
+        email: { type: varchar(99), nullable: True, default: none }
+        age: { type: float, nullable: False, default: 18 }
         dept: varchar(10)
   formhandler/columns/postgres:
     pattern: /formhandler/columns/postgres
@@ -1155,9 +1190,9 @@ url:
       id: id
       xsrf_cookies: false
       columns:
-        id: {type: int, primary_key: True, autoincrement: True}
-        email: {nullable: True, default: none}
-        age: {type: float, nullable: False, default: 18}
+        id: { type: int, primary_key: True, autoincrement: True }
+        email: { nullable: True, default: none }
+        age: { type: float, nullable: False, default: 18 }
         dept: varchar(10)
   formhandler/columns/sqlite:
     pattern: /formhandler/columns/sqlite
@@ -1168,9 +1203,9 @@ url:
       id: id
       xsrf_cookies: false
       columns:
-        id: {type: int, primary_key: True, autoincrement: True}
-        email: {nullable: True, default: none}
-        age: {type: float, nullable: False, default: 18}
+        id: { type: int, primary_key: True, autoincrement: True }
+        email: { nullable: True, default: none }
+        age: { type: float, nullable: False, default: 18 }
         dept: varchar(10)
 
   mlhandler/blank:
@@ -1345,46 +1380,48 @@ url:
     pattern: /process/args
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
   process/args-pipe:
     pattern: /process/args-pipe
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       stdout: pipe
       stderr: pipe
   process/args-no-stderr:
     pattern: /process/args-no-stderr
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       stderr: false
   process/args-no-stdout:
     pattern: /process/args-no-stdout
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       stdout: false
   process/args-stdout-file:
     pattern: /process/args-stdout-file
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       stdout: $YAMLPATH/processtest.stdout
   process/args-both-file:
     pattern: /process/args-both-file
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       stdout: $YAMLPATH/processtest.both
       stderr: $YAMLPATH/processtest.both
   process/args-multi-file:
     pattern: /process/args-multi-file
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
-      stdout: [$YAMLPATH/processtest.stdout.1, $YAMLPATH/processtest.stdout.2, pipe]
-      stderr: [$YAMLPATH/processtest.stderr.1, $YAMLPATH/processtest.stderr.2, pipe]
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
+      stdout:
+        [$YAMLPATH/processtest.stdout.1, $YAMLPATH/processtest.stdout.2, pipe]
+      stderr:
+        [$YAMLPATH/processtest.stderr.1, $YAMLPATH/processtest.stderr.2, pipe]
   process/shell:
     pattern: /process/shell
     handler: ProcessHandler
@@ -1395,13 +1432,13 @@ url:
     pattern: /process/cwd
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       cwd: "${YAMLPATH}/../"
   process/get-only:
     pattern: /process/get-only
     handler: ProcessHandler
     kwargs:
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       cwd: "${YAMLPATH}/../"
       methods: GET
       xsrf_cookies: false
@@ -1501,7 +1538,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.httpbin
-      kwargs: {rand: 99999999}
+      kwargs: { rand: 99999999 }
     cache:
       key: [invalid, invalid.invalid]
   cache/filehandler:
@@ -1518,7 +1555,7 @@ url:
       path: dir
       allow: .cache-file*
     cache:
-        status: [200, 404]
+      status: [200, 404]
   cache/subprocess:
     pattern: /cache/subprocess
     handler: FunctionHandler
@@ -1531,8 +1568,8 @@ url:
     kwargs:
       data:
         x: "1"
-        y: {z: 2}
-        z: [a, b, {m: 1, n: 2, 'x/y': 3}]
+        y: { z: 2 }
+        z: [a, b, { m: 1, n: 2, "x/y": 3 }]
   json/write:
     pattern: /json/write/(.*)
     handler: JSONHandler
@@ -1635,8 +1672,8 @@ url:
     handler: DriveHandler
     kwargs:
       path: $YAMLPATH/drive/
-      user_fields: {id: str, role: str}
-      tags: [tag, cat, date, m]   # date tag will be ignored
+      user_fields: { id: str, role: str }
+      tags: [tag, cat, date, m] # date tag will be ignored
       allow: [.txt, .html, .csv, .md, .xlsx, .zip, .py, .jpg]
       ignore: [.py, .zip]
       max_file_size: 10000
@@ -1703,11 +1740,11 @@ url:
     pattern: /auth/ldap
     handler: LDAPAuth
     kwargs:
-      template: $YAMLPATH/auth.html     # This has the login form
-      host: ipa.demo1.freeipa.org       # Server to connect to
-      use_ssl: true                     # Whether to use SSL or not
-      user: 'uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
-      password: '{password}'
+      template: $YAMLPATH/auth.html # This has the login form
+      host: ipa.demo1.freeipa.org # Server to connect to
+      use_ssl: true # Whether to use SSL or not
+      user: "uid={user},cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org"
+      password: "{password}"
       xsrf_cookies: false
 
   # http://www.forumsys.com/tutorials/integration-how-to/ldap/online-ldap-test-server/
@@ -1717,46 +1754,46 @@ url:
     kwargs:
       template: $YAMLPATH/auth.html
       host: ldap.forumsys.com
-      use_ssl: false                    # ldap.forumsys.com does not accept SSL
-      user: 'uid={user},dc=example,dc=com'
-      password: '{password}'
+      use_ssl: false # ldap.forumsys.com does not accept SSL
+      user: "uid={user},dc=example,dc=com"
+      password: "{password}"
       search:
-        base: 'dc=example,dc=com'                   # Search in this domain
-        filter: '(mail={user}@ldap.forumsys.com)'   # Using a mail ID filter
-        user: 'email:{mail}'                        # Replace with this user ID
-      redirect: {url: /auth/session}
+        base: "dc=example,dc=com" # Search in this domain
+        filter: "(mail={user}@ldap.forumsys.com)" # Using a mail ID filter
+        user: "email:{mail}" # Replace with this user ID
+      redirect: { url: /auth/session }
       xsrf_cookies: false
 
-  auth/ldap2-bind:                          # Test the "bind" mode of LDAP auth
+  auth/ldap2-bind: # Test the "bind" mode of LDAP auth
     pattern: /auth/ldap2-bind
     handler: LDAPAuth
     kwargs:
       template: $YAMLPATH/auth.html
       host: ldap.forumsys.com
-      use_ssl: false                      # ldap.forumsys.com does not accept SSL
-      bind:                               # By default, bind as this user
-        user: 'uid=euler,dc=example,dc=com'
-        password: 'password'
+      use_ssl: false # ldap.forumsys.com does not accept SSL
+      bind: # By default, bind as this user
+        user: "uid=euler,dc=example,dc=com"
+        password: "password"
       search:
-        base: 'dc=example,dc=com'       # Search in this domain
-        filter: '(mail={user})'         # Using a mail ID filter
-        password: '{password}'          # and the password field as password
+        base: "dc=example,dc=com" # Search in this domain
+        filter: "(mail={user})" # Using a mail ID filter
+        password: "{password}" # and the password field as password
       xsrf_cookies: false
 
-  auth/ldap2-bind-wrong-bind:               # Test the "bind" mode of LDAP auth with a wrong bind
+  auth/ldap2-bind-wrong-bind: # Test the "bind" mode of LDAP auth with a wrong bind
     pattern: /auth/ldap2-bind-wrong-bind
     handler: LDAPAuth
     kwargs:
       template: $YAMLPATH/auth.html
       host: ldap.forumsys.com
-      use_ssl: false                      # ldap.forumsys.com does not accept SSL
-      bind:                               # By default, bind as this user
-        user: 'uid=euler,dc=example,dc=com'
-        password: 'wrong-password'      # This will fail. We test for that.
+      use_ssl: false # ldap.forumsys.com does not accept SSL
+      bind: # By default, bind as this user
+        user: "uid=euler,dc=example,dc=com"
+        password: "wrong-password" # This will fail. We test for that.
       search:
-        base: 'dc=example,dc=com'       # Search in this domain
-        filter: '(mail={user})'         # Using a mail ID filter
-        password: '{password}'          # and the password field as password
+        base: "dc=example,dc=com" # Search in this domain
+        filter: "(mail={user})" # Using a mail ID filter
+        password: "{password}" # and the password field as password
       xsrf_cookies: false
 
   auth/simple:
@@ -1764,8 +1801,8 @@ url:
     handler: SimpleAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      user: {arg: user}
-      password: {arg: password}
+      user: { arg: user }
+      password: { arg: password }
       credentials:
         alpha: alpha
         beta: beta
@@ -1778,12 +1815,10 @@ url:
         header: NEXT
         url: /dir/index/
       action:
-        -
-          function: utils.set_session
+        - function: utils.set_session
           kwargs:
             action_set: true
-        -
-          function: ensure_single_session
+        - function: ensure_single_session
       xsrf_cookies: false
 
   auth/simple-no-redirect:
@@ -1811,7 +1846,7 @@ url:
     pattern: /auth/inactive
     handler: SimpleAuth
     kwargs:
-      session_inactive: 0.000011574     # 1 second in days
+      session_inactive: 0.000011574 # 1 second in days
       template: $YAMLPATH/auth.html
       credentials:
         alpha: alpha
@@ -1841,8 +1876,8 @@ url:
     handler: SimpleAuth
     kwargs:
       template: $YAMLPATH/authtemplate.html
-      user: {arg: user}
-      password: {arg: password}
+      user: { arg: user }
+      password: { arg: password }
       credentials:
         alpha: alpha
       xsrf_cookies: false
@@ -1852,47 +1887,47 @@ url:
     handler: DBAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
+      url: "mysql+pymysql://root@${MYSQL_SERVER}/test_auth"
       table: users
       user:
-          column: user
-          arg: user
+        column: user
+        arg: user
       password:
-          column: password
-          arg: password
-          function: utils.encrypt(handler, content)
+        column: password
+        arg: password
+        function: utils.encrypt(handler, content)
       delay: [0.4, 0.8]
       redirect:
-          query: next
-          header: NEXT
-          url: /dir/index/
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   auth/dbschema:
     pattern: /auth/dbschema
     handler: DBAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      url: 'postgresql://postgres@$POSTGRES_SERVER/test_auth'
-      table: auth.users         # Test that schemas work
+      url: "postgresql://postgres@$POSTGRES_SERVER/test_auth"
+      table: auth.users # Test that schemas work
       user:
-          column: user
-          arg: user
+        column: user
+        arg: user
       password:
-          column: password
-          arg: password
-          function: utils.encrypt(handler, content)
+        column: password
+        arg: password
+        function: utils.encrypt(handler, content)
       delay: [0.4, 0.8]
       redirect:
-          query: next
-          header: NEXT
-          url: /dir/index/
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   auth/dbsignup:
     pattern: /auth/dbsignup
     handler: DBAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      url: 'mysql+pymysql://root@${MYSQL_SERVER}/test_auth'
+      url: "mysql+pymysql://root@${MYSQL_SERVER}/test_auth"
       table: users
       user:
         column: user
@@ -1905,9 +1940,9 @@ url:
         email_from: smtps_stub
       signup: true
       redirect:
-          query: next
-          header: NEXT
-          url: /dir/index/
+        query: next
+        header: NEXT
+        url: /dir/index/
   auth/dbcsv:
     pattern: /auth/dbcsv
     handler: DBAuth
@@ -1915,17 +1950,17 @@ url:
       template: $YAMLPATH/auth.html
       url: $YAMLPATH/login.csv
       user:
-          column: user
-          arg: user
+        column: user
+        arg: user
       password:
-          column: password
-          arg: password
-          function: utils.encrypt(handler, content)
+        column: password
+        arg: password
+        function: utils.encrypt(handler, content)
       delay: [0.4, 0.8]
       redirect:
-          query: next
-          header: NEXT
-          url: /dir/index/
+        query: next
+        header: NEXT
+        url: /dir/index/
   auth/dbexcel:
     pattern: /auth/dbexcel
     handler: DBAuth
@@ -1934,17 +1969,17 @@ url:
       url: $YAMLPATH/login.xlsx
       sheet_name: auth
       user:
-          column: user
-          arg: user
+        column: user
+        arg: user
       password:
-          column: password
-          arg: password
-          function: utils.encrypt(handler, content)
+        column: password
+        arg: password
+        function: utils.encrypt(handler, content)
       delay: [0.4, 0.8]
       redirect:
-          query: next
-          header: NEXT
-          url: /dir/index/
+        query: next
+        header: NEXT
+        url: /dir/index/
 
   auth/functionhandler:
     pattern: /auth/functionhandler
@@ -1952,7 +1987,7 @@ url:
     kwargs:
       auth: true
       function: str
-      args: 'OK'
+      args: "OK"
       xsrf_cookies: false
   auth/filehandler:
     pattern: /auth/filehandler
@@ -1966,14 +2001,14 @@ url:
     handler: JSONHandler
     kwargs:
       auth: true
-      data: {x: 1}
+      data: { x: 1 }
       xsrf_cookies: false
   auth/processhandler:
     pattern: /auth/processhandler
     handler: ProcessHandler
     kwargs:
       auth: true
-      args: [python, "$YAMLPATH/processtest.py", a, '1', 'x y']
+      args: [python, "$YAMLPATH/processtest.py", a, "1", "x y"]
       xsrf_cookies: false
   auth/twitterresthandler:
     pattern: /auth/twitterresthandler
@@ -2010,10 +2045,8 @@ url:
       path: dir/alpha.txt
       auth:
         membership:
-          -
-            user: alpha
-          -
-            user: beta
+          - user: alpha
+          - user: beta
       xsrf_cookies: false
   auth/condition:
     pattern: /auth/condition
@@ -2023,7 +2056,7 @@ url:
       auth:
         condition:
           function: str.endswith
-          args: [=handler.current_user.user, 'ta']        # beta, delta
+          args: [=handler.current_user.user, "ta"] # beta, delta
       xsrf_cookies: false
   auth/login-url:
     pattern: /auth/login-url
@@ -2046,7 +2079,7 @@ url:
     pattern: /auth/simple-query
     handler: SimpleAuth
     kwargs:
-      credentials: {alpha: alpha}
+      credentials: { alpha: alpha }
       redirect:
         query: later
         url: /dir/index/
@@ -2074,8 +2107,8 @@ url:
     handler: SimpleAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      user: {arg: user}
-      password: {arg: password}
+      user: { arg: user }
+      password: { arg: password }
       prepare: utils.auth_prepare(args, handler)
       credentials:
         alpha: alpha1
@@ -2086,8 +2119,8 @@ url:
     handler: SimpleAuth
     kwargs:
       template: $YAMLPATH/auth.html
-      user: {arg: user}
-      password: {arg: password}
+      user: { arg: user }
+      password: { arg: password }
       credentials:
         activeuser: activeuser1
 
@@ -2136,7 +2169,7 @@ url:
         γ:
           password: gamma
           gender: male
-          empty: ''
+          empty: ""
       rules:
         url: sqlite:///$YAMLPATH/rules.db
         table: rules
@@ -2158,7 +2191,7 @@ url:
         γ:
           password: gamma
           gender: male
-          empty: ''
+          empty: ""
       rules:
         url: $YAMLPATH/rules.xlsx
         sheet_name: rules
@@ -2180,7 +2213,7 @@ url:
         γ:
           password: gamma
           gender: male
-          empty: ''
+          empty: ""
       rules: {}
 
   pptx/source:
@@ -2195,11 +2228,11 @@ url:
       source: template.pptx
       change-text:
         slide-number: 1
-        Text1: {text: New Text1}
-        Arabic: {text: سعيد}
-        Chinese: {text: 高兴}
-        Hindi: {text: खुश}
-        Russian: {text: счастливый}
+        Text1: { text: New Text1 }
+        Arabic: { text: سعيد }
+        Chinese: { text: 高兴 }
+        Hindi: { text: खुश }
+        Russian: { text: счастливый }
   pptx/change-text-args:
     pattern: /pptx/change-text-args
     handler: PPTXHandler
@@ -2207,11 +2240,11 @@ url:
       source: template.pptx
       change-text:
         slide-number: 1
-        Text1: {text: "{{ args['text'] }}"}
-        Arabic: {text: سعيد}
-        Chinese: {text: 高兴}
-        Hindi: {text: खुश}
-        Russian: {text: счастливый}
+        Text1: { text: "{{ args['text'] }}" }
+        Arabic: { text: سعيد }
+        Chinese: { text: 高兴 }
+        Hindi: { text: खुश }
+        Russian: { text: счастливый }
 
   proxy/httpbin/:
     pattern: /proxy/httpbin(.*?)/(.*)
@@ -2224,7 +2257,7 @@ url:
         X-Csrftoken: true
         Cookie: true
         X-From: ProxyHandler
-        Session: 'Session {handler.session[id]}'
+        Session: "Session {handler.session[id]}"
       default:
         y: [1, 2]
         z: 3
@@ -2445,7 +2478,7 @@ url:
     openapi:
       get:
         responses:
-          '400':
+          "400":
             description: You served a bad request
 
   openapi/form:
@@ -2481,7 +2514,7 @@ url:
     openapi:
       get:
         responses:
-          '400':
+          "400":
             description: You served a bad request
 
   variables:
@@ -2537,16 +2570,29 @@ url:
 gramexlog:
   flush: 0.2
   default:
-      host: localhost
+    host: localhost
   extra:
-      host: localhost
-      keys: [
-        name, class, method, uri, status, port, error,
-        args.x, args.y, request.path, headers.Host, cookies.sid, user.id, env.HOME
+    host: localhost
+    keys:
+      [
+        name,
+        class,
+        method,
+        uri,
+        status,
+        port,
+        error,
+        args.x,
+        args.y,
+        request.path,
+        headers.Host,
+        cookies.sid,
+        user.id,
+        env.HOME,
       ]
-      index: extraindex
+    index: extraindex
   nonexistent:
-      host: nonexistent
+    host: nonexistent
 
 sms:
   amazonsns:
@@ -2558,20 +2604,20 @@ sms:
 
 # Display Gramex logs on console with indentation
 log:
-    version: 1
-    root:
-      level: DEBUG
-      handlers:
-        - error
+  version: 1
+  root:
+    level: DEBUG
     handlers:
-      error:
-        class: logging.StreamHandler
-        level: INFO
-        stream: ext://sys.stdout
-        formatter: inline
-    formatters:
-      inline:
-        format: '        %(message)s'
+      - error
+  handlers:
+    error:
+      class: logging.StreamHandler
+      level: INFO
+      stream: ext://sys.stdout
+      formatter: inline
+  formatters:
+    inline:
+      format: "        %(message)s"
 
 watch:
   watch_template:
@@ -2591,7 +2637,7 @@ watch:
     paths: dir
   invalid-event:
     paths: dir
-    on_modified: nonexistent            # This should not throw an error, only report a warning
+    on_modified: nonexistent # This should not throw an error, only report a warning
 
 schedule:
   make-circles:
@@ -2601,7 +2647,7 @@ schedule:
     function: utils.schedule_start
     startup: true
   schedule-slow-count:
-    function: utils.slow_count          # Set global schedule-count every 10ms
+    function: utils.slow_count # Set global schedule-count every 10ms
     thread: true
   schedule-timed:
     function: gramex.config.app_log.info('schedule-timed ran now')
@@ -2625,156 +2671,162 @@ email:
     password: userpassword
 
 alert:
-    alert-no-service:
-      subject: Hello world
-      to: admin@example.org
-    alert-no-startup:
-      service: smtps_stub
-      to: nostartup@example.org
-      subject: No startup
-    alert-startup:
-      service: smtps_stub
-      startup: true
-      to: startup@example.org
-      subject: Gramex started
-    alert-schedule:
-      service: smtps_stub
-      days: '*'
-      hours: '*'
-      minutes: '0'
-      to: admin@example.org
-      subject: Scheduled alert
-    alert-template:
-      service: smtps_stub
-      to: "{{ 'user@example.org' }}"
-      cc: "{{ 'cc@example.org' }}"
-      bcc: "{{ 'bcc@example.org' }}"
-      reply_to: "{{ 'reply_to@example.org' }}"
-      on_behalf_of: "{{ 'on_behalf_of@example.org' }}"
-      subject: "{{ 'subject' }}"
-      body: "{{ 'body' }}"
-      html: "{{ 'html' }}"
-      bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}    # These are ignored.
-      htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}    # body & html take precendence
-    alert-templatefile:
-      service: smtps_stub
-      to: 'user@example.org'
-      bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}
-      htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}
-    alert-markdown:
-      service: smtps_stub
-      to: 'user@example.org'
-      body: 'markdown'
-      html: '<p>HTML content will be overwritten by markdown</p>'
-      markdown: '{{ "# markdown" }}'
-      markdownfile: $YAMLPATH/{{ 'template-alert.md' }}   # Ignored. markdown takes precedence
-    alert-markdown-template:
-      service: smtps_stub
-      to: 'user@example.org'
-      body: 'markdown'
-      html: '<p>HTML content will be overwritten by markdown</p>'
-      markdownfile: $YAMLPATH/{{ 'template-alert.md' }}
-    alert-attachments:
-      service: smtps_stub
-      to: user@example.org
-      subject: Gramex attachments
-      html: '<img src="cid:img">'
-      attachments:
-        - $YAMLPATH/install-test.zip
-      images:
-        img: sample.png
-    alert-data:
-      service: smtps_stub
-      data: actors.csv
-      to: user@example.org
-      subject: '{{ len(data) }} actors from {{ config.service }}'
-      body: '{{ data["votes"].sum() }} votes'
-    alert-condition-df:
-      service: smtps_stub
-      data: actors.csv
-      to: user@example.org
-      condition: data[data['votes'] > 100]
-      subject: '{{ len(data) }} actors'
-      body: '{{ data["votes"].sum() }} votes'
-    alert-condition-false:
-      service: smtps_stub
-      to: user@example.org
-      condition: 'False'
-    alert-condition-0:
-      service: smtps_stub
-      to: user@example.org
-      condition: '0'
-    alert-condition-dict:
-      service: smtps_stub
-      data:
-        actors: $YAMLPATH/actors.csv
-      condition: '{"to": "user@example.org", "val": "hello"}'
-      to: '{{ to }}, admin@example.org'
-      subject: '{{ len(actors) }} actors'
-      body: 'val is {{ val }}'
-    alert-each:
-      service: smtps_stub
-      data: $YAMLPATH/actors.csv
-      condition: data[data['votes'] > 120]
-      each: data
-      to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
-      subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
-      salutation: "Congrats"
-      prefix: "You got"
-      attachments:
-        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/user&ext=pdf
-      user:
-        id: "{{ row['name'] }}"
-    alert-data-inplace:
-      service: smtps_stub
-      data:
-        - to: x@example.org
-        - to: y@example.org
-      each: data
-      to: '{{ row.to }}'
-      subject: '{{ row.to }}'
-      body: 'Body is {{ row.to }}'
-    alert-capture:
-      service: smtps_stub
-      to: user@example.org
-      subject: CaptureHandler attachments id={{ config.user.id }}, role={{ config.user.role }}
-      html: The attachment should show the user name and role below for user
-      user:
-        id: login@example.org
-        role: manager
-      attachments:
-        - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/session&ext=pdf
-    alert-run-args:
-      service: smtps_stub
-      to: "{{ args.get('to', 'default@local') }}"
-      subject: "{{ args.get('subject', 'default') }}"
-    alert-notify:
-      data:
-        - {email: alpha@example.org}
-        - {email: beta@example.org}
-        - {email: gamma@example.org}
-      each: data
-      to: "{{ row['email'] }}"
-      subject: "#{{ index }}: 1/val={{ 1 // args['val'][index] }}"
-      notify: [alert-notify-always, alert-notify-success, alert-notify-failure, alert-notify-nonexistent]
-    alert-notify-always:
-      service: smtps_stub
-      to: always@example.org
-      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
-    alert-notify-success:
-      service: smtps_stub
-      to: success@example.org
-      subject: '{{ len(args["done"]) }} done'
-      condition: not args["fail"]
-    alert-notify-failure:
-      service: smtps_stub
-      to: failure@example.org
-      subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
-      condition: args["fail"]
+  alert-no-service:
+    subject: Hello world
+    to: admin@example.org
+  alert-no-startup:
+    service: smtps_stub
+    to: nostartup@example.org
+    subject: No startup
+  alert-startup:
+    service: smtps_stub
+    startup: true
+    to: startup@example.org
+    subject: Gramex started
+  alert-schedule:
+    service: smtps_stub
+    days: "*"
+    hours: "*"
+    minutes: "0"
+    to: admin@example.org
+    subject: Scheduled alert
+  alert-template:
+    service: smtps_stub
+    to: "{{ 'user@example.org' }}"
+    cc: "{{ 'cc@example.org' }}"
+    bcc: "{{ 'bcc@example.org' }}"
+    reply_to: "{{ 'reply_to@example.org' }}"
+    on_behalf_of: "{{ 'on_behalf_of@example.org' }}"
+    subject: "{{ 'subject' }}"
+    body: "{{ 'body' }}"
+    html: "{{ 'html' }}"
+    bodyfile: $YAMLPATH/{{ 'template-alert.txt' }} # These are ignored.
+    htmlfile: $YAMLPATH/{{ 'template-alert.txt' }} # body & html take precendence
+  alert-templatefile:
+    service: smtps_stub
+    to: "user@example.org"
+    bodyfile: $YAMLPATH/{{ 'template-alert.txt' }}
+    htmlfile: $YAMLPATH/{{ 'template-alert.txt' }}
+  alert-markdown:
+    service: smtps_stub
+    to: "user@example.org"
+    body: "markdown"
+    html: "<p>HTML content will be overwritten by markdown</p>"
+    markdown: '{{ "# markdown" }}'
+    markdownfile: $YAMLPATH/{{ 'template-alert.md' }} # Ignored. markdown takes precedence
+  alert-markdown-template:
+    service: smtps_stub
+    to: "user@example.org"
+    body: "markdown"
+    html: "<p>HTML content will be overwritten by markdown</p>"
+    markdownfile: $YAMLPATH/{{ 'template-alert.md' }}
+  alert-attachments:
+    service: smtps_stub
+    to: user@example.org
+    subject: Gramex attachments
+    html: '<img src="cid:img">'
+    attachments:
+      - $YAMLPATH/install-test.zip
+    images:
+      img: sample.png
+  alert-data:
+    service: smtps_stub
+    data: actors.csv
+    to: user@example.org
+    subject: "{{ len(data) }} actors from {{ config.service }}"
+    body: '{{ data["votes"].sum() }} votes'
+  alert-condition-df:
+    service: smtps_stub
+    data: actors.csv
+    to: user@example.org
+    condition: data[data['votes'] > 100]
+    subject: "{{ len(data) }} actors"
+    body: '{{ data["votes"].sum() }} votes'
+  alert-condition-false:
+    service: smtps_stub
+    to: user@example.org
+    condition: "False"
+  alert-condition-0:
+    service: smtps_stub
+    to: user@example.org
+    condition: "0"
+  alert-condition-dict:
+    service: smtps_stub
+    data:
+      actors: $YAMLPATH/actors.csv
+    condition: '{"to": "user@example.org", "val": "hello"}'
+    to: "{{ to }}, admin@example.org"
+    subject: "{{ len(actors) }} actors"
+    body: "val is {{ val }}"
+  alert-each:
+    service: smtps_stub
+    data: $YAMLPATH/actors.csv
+    condition: data[data['votes'] > 120]
+    each: data
+    to: "{{ row['name'].replace(' ', '_') + '@example.org' }}"
+    subject: "{{ config.salutation }} #{{ index }}! {{ config['prefix'] }} {{ row['votes'] }} votes"
+    salutation: "Congrats"
+    prefix: "You got"
+    attachments:
+      - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/user&ext=pdf
+    user:
+      id: "{{ row['name'] }}"
+  alert-data-inplace:
+    service: smtps_stub
+    data:
+      - to: x@example.org
+      - to: y@example.org
+    each: data
+    to: "{{ row.to }}"
+    subject: "{{ row.to }}"
+    body: "Body is {{ row.to }}"
+  alert-capture:
+    service: smtps_stub
+    to: user@example.org
+    subject: CaptureHandler attachments id={{ config.user.id }}, role={{ config.user.role }}
+    html: The attachment should show the user name and role below for user
+    user:
+      id: login@example.org
+      role: manager
+    attachments:
+      - http://localhost:9999/capturechrome?url=http://localhost:9999/auth/session&ext=pdf
+  alert-run-args:
+    service: smtps_stub
+    to: "{{ args.get('to', 'default@local') }}"
+    subject: "{{ args.get('subject', 'default') }}"
+  alert-notify:
+    data:
+      - { email: alpha@example.org }
+      - { email: beta@example.org }
+      - { email: gamma@example.org }
+    each: data
+    to: "{{ row['email'] }}"
+    subject: "#{{ index }}: 1/val={{ 1 // args['val'][index] }}"
+    notify:
+      [
+        alert-notify-always,
+        alert-notify-success,
+        alert-notify-failure,
+        alert-notify-nonexistent,
+      ]
+  alert-notify-always:
+    service: smtps_stub
+    to: always@example.org
+    subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+  alert-notify-success:
+    service: smtps_stub
+    to: success@example.org
+    subject: '{{ len(args["done"]) }} done'
+    condition: not args["fail"]
+  alert-notify-failure:
+    service: smtps_stub
+    to: failure@example.org
+    subject: '{{ len(args["done"]) }} done, {{ len(args["fail"]) }} failed'
+    condition: args["fail"]
 
 import:
   # Import from all subdirectories
-  subdir: '*/gramex.yaml'
+  subdir: "*/gramex.yaml"
   gramex-update:
     path: $GRAMEXAPPS/update/gramex.yaml
     YAMLURL: /update/
@@ -2795,7 +2847,7 @@ import:
       logo: logo.png
       title: Custom title
       components: [users, info, shell]
-      theme: '?font-family-base=roboto'
+      theme: "?font-family-base=roboto"
       authhandler: auth/db
 
   admin/auth:
@@ -2821,4 +2873,4 @@ eventlog:
 storelocations:
   # The `otp:` section defines where to store one-time passwords
   otp:
-      url: sqlite:///$YAMLPATH/otp.db
+    url: sqlite:///$YAMLPATH/otp.db

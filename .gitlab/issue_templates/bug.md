@@ -7,11 +7,11 @@
 (How one can reproduce the issue - this is very important)
 (Mention the OS and Gramex version. If relevant, Browser version and Anaconda/Python/Pandas/library version)
 
-### What is the current *bug* behavior?
+### What is the current _bug_ behavior?
 
 (What actually happens. Paste screenshot. Add logs. Format logs inside code blocks (```) - else it's very hard to read. Link to a page on demo/uat.gramener.com if possible.)
 
-### What is the expected *correct* behavior?
+### What is the expected _correct_ behavior?
 
 (What you should see instead)
 

@@ -1,15 +1,15 @@
 capture:
-    target: $GRAMEXPATH/apps/capture/
+  target: $GRAMEXPATH/apps/capture/
 forms:
-    target: $GRAMEXPATH/apps/forms/
+  target: $GRAMEXPATH/apps/forms/
 guide:
-    target: $GRAMEXDATA/apps/guide/
-    url: https://github.com/gramexrecipes/gramex-guide/archive/v1.84.0.zip
+  target: $GRAMEXDATA/apps/guide/
+  url: https://github.com/gramexrecipes/gramex-guide/archive/v1.84.0.zip
 gramex-update:
-    target: $GRAMEXPATH/apps/update/
+  target: $GRAMEXPATH/apps/update/
 logviewer:
-    target: $GRAMEXPATH/apps/logviewer/
+  target: $GRAMEXPATH/apps/logviewer/
 mail:
-    target: $GRAMEXPATH/apps/mail/
+  target: $GRAMEXPATH/apps/mail/
 smartalerts:
-    target: $GRAMEXPATH/apps/smartalerts/
+  target: $GRAMEXPATH/apps/smartalerts/

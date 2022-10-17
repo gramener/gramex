@@ -1,18 +1,18 @@
 variables:
-    ROOT: {default: subdir}
-    THIS: "subdir"
-    SUBDIR_DEFAULT: {default: subdir}
-    YAMLURL_VAR: $YAMLURL
-    FUNCTION:
-        function: str
-        args: ['subdir']
-    DEFAULT_FUNCTION:
-        default:
-            function: str
-            args: ['subdir']
-    FUNCTION_VAR:
-        function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
-    DERIVED: $THIS/derived
+  ROOT: { default: subdir }
+  THIS: "subdir"
+  SUBDIR_DEFAULT: { default: subdir }
+  YAMLURL_VAR: $YAMLURL
+  FUNCTION:
+    function: str
+    args: ["subdir"]
+  DEFAULT_FUNCTION:
+    default:
+      function: str
+      args: ["subdir"]
+  FUNCTION_VAR:
+    function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
+  DERIVED: $THIS/derived
 
 subdir_DOT: "{.}"
 subdir_YAMLPATH: $YAMLPATH
@@ -34,5 +34,5 @@ subdir_GRAMEXPATH: $GRAMEXPATH
 subdir_GRAMEXAPPS: $GRAMEXAPPS
 subdir_GRAMEXHOST: $GRAMEXHOST
 
-path: $YAMLPATH     # import must not over-ride path in config.template.base.yaml
-subpath: $YAMLPATH  # ... but specify defaults
+path: $YAMLPATH # import must not over-ride path in config.template.base.yaml
+subpath: $YAMLPATH # ... but specify defaults

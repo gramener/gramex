@@ -2,7 +2,7 @@
 # on 2020-10-27 by bhanu.k <bhanu.kamapantula@gramener.com>
 
 variables:
-  FORMS_URL: 'sqlite:///$GRAMEXDATA/uifactory/uifactory.db'
+  FORMS_URL: "sqlite:///$GRAMEXDATA/uifactory/uifactory.db"
   FORMS_TABLE: uifactory
   FORMS_ID: id
   FORMS_PATH: $GRAMEXDATA/uifactory
@@ -30,7 +30,7 @@ url:
         # Templates may have user-specific content. Cache privately.
         # Keep max-age small (in case we log out & log in as another user.)
         Cache-Control: private, max-age=1
-    cache: {expiry: {duration: 1}}
+    cache: { expiry: { duration: 1 } }
 
   uifactory/create-$*:
     pattern: /$YAMLURL/create
@@ -42,7 +42,7 @@ url:
         # Templates may have user-specific content. Cache privately.
         # Keep max-age small (in case we log out & log in as another user.)
         Cache-Control: private, max-age=1
-    cache: {expiry: {duration: 1}}
+    cache: { expiry: { duration: 1 } }
 
   uifactory/publish-$*:
     pattern: /$YAMLURL/publish
@@ -87,7 +87,7 @@ url:
     kwargs:
       function: form_builder.endpoint(handler)
       headers:
-        Access-Control-Allow-Origin: '*'        # Allow CORS from any domain
+        Access-Control-Allow-Origin: "*" # Allow CORS from any domain
 
   uifactory/analytics-$*:
     pattern: /$YAMLURL/analytics/(.*)
@@ -96,32 +96,32 @@ url:
       each_form:
         url: $FORMS_URL
         table: analytics
-        id: id                      # The "id" column is primary key
+        id: id # The "id" column is primary key
         columns:
-          response: TEXT            # Use any SQL type allowed by DB
+          response: TEXT # Use any SQL type allowed by DB
           id:
-            type: INTEGER           # Define an integer ID column
-            primary_key: true       # as a primary key
-            autoincrement: true     # that auto-increments
+            type: INTEGER # Define an integer ID column
+            primary_key: true # as a primary key
+            autoincrement: true # that auto-increments
           form_id: INTEGER
         modify: form_builder.modify_columns(handler, data)
       analytics:
-        url: 'sqlite:///$GRAMEXDATA/uifactory/ui.db'    # Pick any database
-        table: analytics                                # Pick any table name to create
-        id: id                      # The "id" column is primary key
+        url: "sqlite:///$GRAMEXDATA/uifactory/ui.db" # Pick any database
+        table: analytics # Pick any table name to create
+        id: id # The "id" column is primary key
         columns:
-          response: TEXT            # Use any SQL type allowed by DB
+          response: TEXT # Use any SQL type allowed by DB
           id:
-            type: INTEGER           # Define an integer ID column
-            primary_key: true       # as a primary key
-            autoincrement: true     # that auto-increments
+            type: INTEGER # Define an integer ID column
+            primary_key: true # as a primary key
+            autoincrement: true # that auto-increments
 
   uifactory/snippets/all:
     pattern: /$YAMLURL/snippets/
     handler: FileHandler
     kwargs:
       path:
-        '': $YAMLPATH/snippets/{type}/{file}.{ext}
+        "": $YAMLPATH/snippets/{type}/{file}.{ext}
       headers:
         Content-Type: text/plain
         Content-Disposition: none
@@ -135,14 +135,14 @@ url:
     handler: FileHandler
     kwargs:
       path: $YAMLPATH
-      default_filename: index.html    #   default filename
-      index: true                     #   display the index
+      default_filename: index.html #   default filename
+      index: true #   display the index
       sass: "*.scss"
       headers:
-          Cache-Control: max-age=60   # By default, cache for a minute
-          # Standard libraries won't ever change. Cache for 10 years
-          'node_modules/**':
-            Cache-Control: public, max-age=315360000
+        Cache-Control: max-age=60 # By default, cache for a minute
+        # Standard libraries won't ever change. Cache for 10 years
+        "node_modules/**":
+          Cache-Control: public, max-age=315360000
 
   uifactory/edit-components:
     pattern: /$YAMLURL/edit/(|[a-z0-9_]+\-[a-z0-9_]+)

@@ -2,8 +2,7 @@ These are the main test cases for Gramex. Running any test will start Gramex in 
 new thread (the `setUp()` function in `__init__.py` calls
 `server.start_gramex()`.)
 
-Running tests
--------------
+## Running tests
 
 Use `python setup.py nosetests`, or just `nosetests`.
 

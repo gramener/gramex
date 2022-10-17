@@ -4,224 +4,223 @@
 variables:
   # Dummy variable created for the YAML anchor. This is used to rotate files weekly
   _LOG_ROTATE_WEEKLY: &ROTATE_WEEKLY
-      encoding: utf-8         # encoded as UTF-8
-      when: W0                # rotate the log file weekly
-      interval: 1             # every single week
-      utc: False              # using local time zone, not UTC
-      backupCount: 52         # keep only last 52 backups
-      delay: true             # do not create file until called
+    encoding: utf-8 # encoded as UTF-8
+    when: W0 # rotate the log file weekly
+    interval: 1 # every single week
+    utc: False # using local time zone, not UTC
+    backupCount: 52 # keep only last 52 backups
+    delay: true # do not create file until called
 
 # Gramex APIs are versioned. The version key is required. Currently, 1.0 is the
 # only version supported.
 version: 1.0
 # Define custom MIME types here
 mime:
-    .yml:       text/yaml
-    .yaml:      text/yaml
-    .md:        text/markdown
-    .markdown:  text/markdown
-    .json:      application/json
-    .svg:       image/svg+xml
-    .py:        text/plain
-    .R:         text/plain
-    .h5:        application/x-hdf5
-    .hdf5:      application/x-hdf5
-    .pkl:       application/octet-stream
-    .ttf:       font/ttf
-    .otf:       font/otf
-    .woff:      font/woff
-    .woff2:     font/woff2
+  .yml: text/yaml
+  .yaml: text/yaml
+  .md: text/markdown
+  .markdown: text/markdown
+  .json: application/json
+  .svg: image/svg+xml
+  .py: text/plain
+  .R: text/plain
+  .h5: application/x-hdf5
+  .hdf5: application/x-hdf5
+  .pkl: application/octet-stream
+  .ttf: font/ttf
+  .otf: font/otf
+  .woff: font/woff
+  .woff2: font/woff2
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
-    workers: 16                 # Max number of parallel threads
+  workers: 16 # Max number of parallel threads
 
 # Define system caches.
 cache:
-    memory:
-        type: memory            # An in-memory cache
-        size: 500000000         # that stores up to 500 MB of data
-        default: true           # Use as the default cache for gramex.cache.open
+  memory:
+    type: memory # An in-memory cache
+    size: 500000000 # that stores up to 500 MB of data
+    default: true # Use as the default cache for gramex.cache.open
 
 # Intialise handlers kwargs.
 # BaseHandler.setup_default_kwargs() adds these as defaults for each handler.
 handlers:
-    BaseHandler:
-        error:
-            400: {path: $YAMLPATH/handlers/400.html}
-            401: {path: $YAMLPATH/handlers/401.html}
-            403: {path: $YAMLPATH/handlers/403.html}
-            404: {path: $YAMLPATH/handlers/404.html}
-            500: {path: $YAMLPATH/handlers/500.html}
+  BaseHandler:
+    error:
+      400: { path: $YAMLPATH/handlers/400.html }
+      401: { path: $YAMLPATH/handlers/401.html }
+      403: { path: $YAMLPATH/handlers/403.html }
+      404: { path: $YAMLPATH/handlers/404.html }
+      500: { path: $YAMLPATH/handlers/500.html }
 
-    FileHandler:
-        ignore:
-            - gramex*.yaml              # Always ignore gramex config files
-            - ".*"                      # Hide dotfiles
-            - "*.py*"                   # Hide Python scripts
-        allow: '.allow'                 # Allow special dotfile
+  FileHandler:
+    ignore:
+      - gramex*.yaml # Always ignore gramex config files
+      - ".*" # Hide dotfiles
+      - "*.py*" # Hide Python scripts
+    allow: ".allow" # Allow special dotfile
 
-    FormHandler:
-        formats: &FORMATS
-            json:
-                format: json
-                headers:
-                    Content-Type: application/json
-            csv:
-                format: csv
-                headers:
-                    Content-Type: text/csv;charset=UTF-8
-                    Content-Disposition: attachment;filename=data.csv
-            html:
-                format: html
-                headers:
-                    Content-Type: text/html;charset=UTF-8
-            xlsx:
-                format: xlsx
-                headers:
-                    Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-                    Content-Disposition: attachment;filename=data.xlsx
-            pptx:
-                format: pptx
-                headers:
-                    Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
-                    Content-Disposition: attachment;filename=download.pptx
+  FormHandler:
+    formats: &FORMATS
+      json:
+        format: json
+        headers:
+          Content-Type: application/json
+      csv:
+        format: csv
+        headers:
+          Content-Type: text/csv;charset=UTF-8
+          Content-Disposition: attachment;filename=data.csv
+      html:
+        format: html
+        headers:
+          Content-Type: text/html;charset=UTF-8
+      xlsx:
+        format: xlsx
+        headers:
+          Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+          Content-Disposition: attachment;filename=data.xlsx
+      pptx:
+        format: pptx
+        headers:
+          Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+          Content-Disposition: attachment;filename=download.pptx
 
-        default:
-          _limit: 10000      # Limit entries by default
+    default:
+      _limit: 10000 # Limit entries by default
 
-    FilterHandler:
-        formats: *FORMATS
+  FilterHandler:
+    formats: *FORMATS
 
-        default:
-          _limit: 10000      # Limit entries by default
-
+    default:
+      _limit: 10000 # Limit entries by default
 
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.
 # https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
 log:
-    version: 1
-    root:
-        level: DEBUG
-        handlers:
-            - console
-            - logfile
-    loggers:
-        gramex:
-            level: DEBUG
-            propagate: false
-            handlers: [gramex-console, gramex-logfile]
-        gramex.user:
-            level: INFO
-            propagate: false
-            handlers: [user]
-        gramex.alert:
-            level: INFO
-            propagate: false
-            handlers: [alert]
-        gramex.requests:
-            level: INFO
-            propagate: false
-            handlers: [requests]
-        # Disable tornado loggers. Let them propagate to root
-        tornado.access: {}
-        tornado.application: {}
-        tornado.general: {}
-        # Elasticsearch DEBUG logs are verbose. Restrict to INFO
-        elasticsearch:
-            level: INFO
+  version: 1
+  root:
+    level: DEBUG
     handlers:
-        none:
-            class: logging.NullHandler
-        console:
-            class: logging.StreamHandler
-            formatter: console
-        gramex-console:
-            class: logging.StreamHandler
-            formatter: gramex-console
-        # Used by AuthHandler to log user events as a CSV file
-        user:
-            class: gramex.config.TimedRotatingCSVHandler
-            filename: $GRAMEXDATA/logs/user.csv
-            keys: [datetime, event, session, user, ip, headers.User-Agent]
-            level: INFO
-            <<: *ROTATE_WEEKLY
-        # Used by alerts to log alerts sent a CSV file
-        alert:
-            class: gramex.config.TimedRotatingCSVHandler
-            filename: $GRAMEXDATA/logs/alert.csv
-            keys: [datetime, alert, service, from, to, cc, bcc, subject, attachments]
-            level: INFO
-            <<: *ROTATE_WEEKLY
-        # Saves all Gramex logs (what's printed to the console) to a file
-        logfile:
-            formatter: text
-            class: logging.handlers.TimedRotatingFileHandler
-            filename: $GRAMEXDATA/logs/gramex.log
-            <<: *ROTATE_WEEKLY
-        # Saves all Gramex logs (with additional attributes from Gramex) to a file
-        # Same as logfile, except that it uses a different formatter
-        gramex-logfile:
-            class: logging.handlers.TimedRotatingFileHandler
-            filename: $GRAMEXDATA/logs/gramex.log
-            formatter: gramex-text
-            <<: *ROTATE_WEEKLY
-        # Saves all HTTP requests to a CSV file
-        requests:
-            class: gramex.config.TimedRotatingCSVHandler
-            filename: $GRAMEXDATA/logs/requests.csv
-            level: INFO
-            keys: [time, ip, user.id, status, duration, method, uri, error]
-            <<: *ROTATE_WEEKLY
-        # text is a legacy logger. Not recommended post v1.23
-        text:
-            class: logging.StreamHandler
-            formatter: text
-        # access-log is a legacy logger. Not recommended post v1.23
-        access-log:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: INFO
-            formatter: file         # save it as a CSV file
-            filename: $GRAMEXDATA/logs/access.csv    # file name to save as
-            <<: *ROTATE_WEEKLY
-        # warn-log is a legacy logger. Not recommended post v1.23
-        warn-log:
-            class: logging.handlers.TimedRotatingFileHandler
-            level: WARN
-            formatter: file         # save it as a CSV file
-            filename: $GRAMEXDATA/logs/warn.csv      # file name to save as
-            <<: *ROTATE_WEEKLY
-    formatters:
-        text:
-            format: '%(levelname)1.1s %(asctime)s %(name)s:%(module)s %(message)s'
-            datefmt: '%d-%b %H:%M:%S'
-        gramex-text:
-            format: '%(levelname)1.1s %(asctime)s %(name)s:%(module)s %(port)s %(message)s'
-            datefmt: '%d-%b %H:%M:%S'
-        console:
-            '()': colorlog.ColoredFormatter
-            format: '%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(name)s:%(module)s%(reset)s %(message)s'
-            datefmt: '%d-%b %H:%M:%S'
-        gramex-console:
-            '()': colorlog.ColoredFormatter
-            format: '%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(name)s:%(module)s%(reset)s %(green)s%(port)s%(reset)s %(message)s'
-            datefmt: '%d-%b %H:%M:%S'
-        # Legacy formats. Not recommended post v1.23. Use TimedRotatingCSVHandler instead
-        file:
-            format: '%(levelname)1.1s,%(asctime)s,%(name)s:%(module)s,%(lineno)d,"%(message)s"'
-            datefmt: '%Y-%m-%d %H:%M:%S'
-        csv-message:
-            format: '%(asctime)s,%(message)s'
-            datefmt: '%Y-%m-%d %H:%M:%S'
-        message:
-            format: '%(message)s'
-            datefmt: '%Y-%m-%d %H:%M:%S'
+      - console
+      - logfile
+  loggers:
+    gramex:
+      level: DEBUG
+      propagate: false
+      handlers: [gramex-console, gramex-logfile]
+    gramex.user:
+      level: INFO
+      propagate: false
+      handlers: [user]
+    gramex.alert:
+      level: INFO
+      propagate: false
+      handlers: [alert]
+    gramex.requests:
+      level: INFO
+      propagate: false
+      handlers: [requests]
+    # Disable tornado loggers. Let them propagate to root
+    tornado.access: {}
+    tornado.application: {}
+    tornado.general: {}
+    # Elasticsearch DEBUG logs are verbose. Restrict to INFO
+    elasticsearch:
+      level: INFO
+  handlers:
+    none:
+      class: logging.NullHandler
+    console:
+      class: logging.StreamHandler
+      formatter: console
+    gramex-console:
+      class: logging.StreamHandler
+      formatter: gramex-console
+    # Used by AuthHandler to log user events as a CSV file
+    user:
+      class: gramex.config.TimedRotatingCSVHandler
+      filename: $GRAMEXDATA/logs/user.csv
+      keys: [datetime, event, session, user, ip, headers.User-Agent]
+      level: INFO
+      <<: *ROTATE_WEEKLY
+    # Used by alerts to log alerts sent a CSV file
+    alert:
+      class: gramex.config.TimedRotatingCSVHandler
+      filename: $GRAMEXDATA/logs/alert.csv
+      keys: [datetime, alert, service, from, to, cc, bcc, subject, attachments]
+      level: INFO
+      <<: *ROTATE_WEEKLY
+    # Saves all Gramex logs (what's printed to the console) to a file
+    logfile:
+      formatter: text
+      class: logging.handlers.TimedRotatingFileHandler
+      filename: $GRAMEXDATA/logs/gramex.log
+      <<: *ROTATE_WEEKLY
+    # Saves all Gramex logs (with additional attributes from Gramex) to a file
+    # Same as logfile, except that it uses a different formatter
+    gramex-logfile:
+      class: logging.handlers.TimedRotatingFileHandler
+      filename: $GRAMEXDATA/logs/gramex.log
+      formatter: gramex-text
+      <<: *ROTATE_WEEKLY
+    # Saves all HTTP requests to a CSV file
+    requests:
+      class: gramex.config.TimedRotatingCSVHandler
+      filename: $GRAMEXDATA/logs/requests.csv
+      level: INFO
+      keys: [time, ip, user.id, status, duration, method, uri, error]
+      <<: *ROTATE_WEEKLY
+    # text is a legacy logger. Not recommended post v1.23
+    text:
+      class: logging.StreamHandler
+      formatter: text
+    # access-log is a legacy logger. Not recommended post v1.23
+    access-log:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: INFO
+      formatter: file # save it as a CSV file
+      filename: $GRAMEXDATA/logs/access.csv # file name to save as
+      <<: *ROTATE_WEEKLY
+    # warn-log is a legacy logger. Not recommended post v1.23
+    warn-log:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: WARN
+      formatter: file # save it as a CSV file
+      filename: $GRAMEXDATA/logs/warn.csv # file name to save as
+      <<: *ROTATE_WEEKLY
+  formatters:
+    text:
+      format: "%(levelname)1.1s %(asctime)s %(name)s:%(module)s %(message)s"
+      datefmt: "%d-%b %H:%M:%S"
+    gramex-text:
+      format: "%(levelname)1.1s %(asctime)s %(name)s:%(module)s %(port)s %(message)s"
+      datefmt: "%d-%b %H:%M:%S"
+    console:
+      "()": colorlog.ColoredFormatter
+      format: "%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(name)s:%(module)s%(reset)s %(message)s"
+      datefmt: "%d-%b %H:%M:%S"
+    gramex-console:
+      "()": colorlog.ColoredFormatter
+      format: "%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(name)s:%(module)s%(reset)s %(green)s%(port)s%(reset)s %(message)s"
+      datefmt: "%d-%b %H:%M:%S"
+    # Legacy formats. Not recommended post v1.23. Use TimedRotatingCSVHandler instead
+    file:
+      format: '%(levelname)1.1s,%(asctime)s,%(name)s:%(module)s,%(lineno)d,"%(message)s"'
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    csv-message:
+      format: "%(asctime)s,%(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    message:
+      format: "%(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
 
 # Application start stop event logs are captured in this database. The logs are
 # stored in a table called "events".
 eventlog:
-    path: $GRAMEXDATA/logs/events.db          # Location of application event logs.
+  path: $GRAMEXDATA/logs/events.db # Location of application event logs.
 
 # ------------------------------------------------------------------------------
 # The app, schedule, url sections are defined at the end to allow these to use
@@ -229,139 +228,139 @@ eventlog:
 
 # The `app:` section defines the settings for the main Gramex application
 app:
-    browser: False                      # Open the browser on startup
-    watch: True                         # To watch gramex.yaml changes and run init
-    listen:
-        port: 9988                      # Port to bind to. (8888 used by Jupyter)
-        xheaders: True                  # X-Real-Ip/X-Forwarded-For and X-Scheme/X-Forwarded-Proto override remote IP, scheme
-        max_buffer_size: 1000000000     # Max length of data that can be POSTed
-        max_header_size: 1000000000     # Max length of header that can be received
-        max_body_size: 1000000000       # Max length of data that can be uploaded
+  browser: False # Open the browser on startup
+  watch: True # To watch gramex.yaml changes and run init
+  listen:
+    port: 9988 # Port to bind to. (8888 used by Jupyter)
+    xheaders: True # X-Real-Ip/X-Forwarded-For and X-Scheme/X-Forwarded-Proto override remote IP, scheme
+    max_buffer_size: 1000000000 # Max length of data that can be POSTed
+    max_header_size: 1000000000 # Max length of header that can be received
+    max_body_size: 1000000000 # Max length of data that can be uploaded
 
-    # These are Tornado application settings. See
-    # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
-    settings:                           # Tornado app settings
-        # default_host: 'host'          # Optional name of default host
-        compress_response: True         # GZip the HTTP response
+  # These are Tornado application settings. See
+  # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.Application.settings
+  settings: # Tornado app settings
+    # default_host: 'host'          # Optional name of default host
+    compress_response: True # GZip the HTTP response
 
-        # Debug=true enables all the below parameters, as well as Ctrl+D for pdb debugging on console
-        debug: False                    # autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
-        # Debug parameters
-        # autoreload: False               # Reload Gramex when imported Python file changes
-        # compiled_template_cache: True   # Cache template files across requests
-        # static_hash_cache: True         # Cache static files across requests
-        serve_traceback: True             # Show traceback on browser if there's an error
+    # Debug=true enables all the below parameters, as well as Ctrl+D for pdb debugging on console
+    debug: False # autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
+    # Debug parameters
+    # autoreload: False               # Reload Gramex when imported Python file changes
+    # compiled_template_cache: True   # Cache template files across requests
+    # static_hash_cache: True         # Cache static files across requests
+    serve_traceback: True # Show traceback on browser if there's an error
 
-        # Cookie parameters
-        xsrf_cookies: True              # Reject POST/PUT/DELETE unless _xsrf header / form input is present
-        xsrf_cookie_kwargs:
-            httponly: true              # Don't allow JavaScript access to cookies
-            # secure: false               # Allow cookies only in HTTPS
-        cookie_secret: secret-key       # Encrypt cookies with this secret key
-        key_version: 2                  # Cookie encryption version. 2 is the latest
+    # Cookie parameters
+    xsrf_cookies: True # Reject POST/PUT/DELETE unless _xsrf header / form input is present
+    xsrf_cookie_kwargs:
+      httponly: true # Don't allow JavaScript access to cookies
+      # secure: false               # Allow cookies only in HTTPS
+    cookie_secret: secret-key # Encrypt cookies with this secret key
+    key_version: 2 # Cookie encryption version. 2 is the latest
 
-        # Template parameters
-        autoescape: xhtml_escape        # Escape HTML tags in templates
-        template_path: .                # Default location of templates (not currently used)
-        static_path: './static'         # Local path for static files (not currently used)
-        static_url_prefix: '/static/'   # URL prefix for static files (not currently used)
+    # Template parameters
+    autoescape: xhtml_escape # Escape HTML tags in templates
+    template_path: . # Default location of templates (not currently used)
+    static_path: "./static" # Local path for static files (not currently used)
+    static_url_prefix: "/static/" # URL prefix for static files (not currently used)
 
-        # Login parameters
-        login_url: /login/              # URL used to log in
+    # Login parameters
+    login_url: /login/ # URL used to log in
 
-    session:
-        cookie: sid     # Name of the session ID cookie
-        type: json      # Type of store to use: hdf5, json or memory
-        flush: 5        # Write store to disk periodically (in seconds)
-                        # For type:json, use 5 seconds. It does not save to disk automatically
-                        # For type:hdf5 or sqlite, 60 seconds or so is fine
-        purge: 3600     # Purge every hour
-        path: $GRAMEXDATA/session.json  # Path to the store (ignored for memory)
-        expiry: 31              # Session cookies expiry in days
-        httponly: true          # Only HTTP access, no JS access
-
+  session:
+    cookie: sid # Name of the session ID cookie
+    type: json # Type of store to use: hdf5, json or memory
+    flush:
+      5 # Write store to disk periodically (in seconds)
+      # For type:json, use 5 seconds. It does not save to disk automatically
+      # For type:hdf5 or sqlite, 60 seconds or so is fine
+    purge: 3600 # Purge every hour
+    path: $GRAMEXDATA/session.json # Path to the store (ignored for memory)
+    expiry: 31 # Session cookies expiry in days
+    httponly: true # Only HTTP access, no JS access
 
 # The storelocations: section defines where Gramex stores its data.
 storelocations:
   # The `otp:` section defines where to store one-time passwords
   otp:
-      url: sqlite:///$GRAMEXDATA/auth.recover.db
-      table: users
-      columns:
-        user: TEXT
-        type: TEXT
-        token: TEXT
-        expire: REAL    # Seconds since epoch
+    url: sqlite:///$GRAMEXDATA/auth.recover.db
+    table: users
+    columns:
+      user: TEXT
+      type: TEXT
+      token: TEXT
+      expire: REAL # Seconds since epoch
   # Store pipeline execution runs
   pipeline:
     url: sqlite:///$GRAMEXDATA/pipeline.db
     table: runs
     columns:
       name: TEXT
-      start: TEXT   # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
-      end: TEXT     # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
-      error: TEXT   # Error stage + traceback
+      start: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
+      end: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
+      error: TEXT # Error stage + traceback
 
 # The `schedule:` section defines when specific code is to run.
 schedule:
-    # Every day and on startup, check if Gramex needs to be updated
-    gramex_update:
-        function: gramex.gramex_update(url='https://gramener.com/gramex-update/')
-        startup: true
-        minutes: 0
-        hours: 0
-        dates: '*'
-        thread: true
+  # Every day and on startup, check if Gramex needs to be updated
+  gramex_update:
+    function: gramex.gramex_update(url='https://gramener.com/gramex-update/')
+    startup: true
+    minutes: 0
+    hours: 0
+    dates: "*"
+    thread: true
 
-    # Every day and on startup, purge expired keys from storelocations.otp
-    gramex_purge_otp:
-        function: gramex.services._storelocations_purge()
-        startup: true
-        minutes: 1
-        hours: 0
-        dates: '*'
-        thread: true
+  # Every day and on startup, purge expired keys from storelocations.otp
+  gramex_purge_otp:
+    function: gramex.services._storelocations_purge()
+    startup: true
+    minutes: 1
+    hours: 0
+    dates: "*"
+    thread: true
 
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
 # Define this section at the end, to allow it to use previous services.
 url:
-    default:                            # A unique name for this handler
-        priority: -100                  # Apply this pattern with low than normal priority
-        pattern: /(.*)                  # All URLs beginning with /
-        handler: FileHandler                # Handler used
-        kwargs:                             # Options to the handler
-            path: .                         # Path is current dir
-            default_filename:               # Choose default file for a directory from
-              - default.template.html       #   Template files, else
-              - default.tmpl.html
-              - index.html                  #   HTML file, else
-            index: true                     # Display directory indices
-            sass: ['*.scss', '*.sass']      # Handle SASS files
-            ts: ['*.ts']                    # Handle TypeScript files
-            vue: ['*.vue']                  # Handle Vue files
-            template:                       # Handle template files
-              - '*.template.html'
-              - '*.tmpl.html'
-            headers:
-                Cache-Control: max-age=60   # By default, cache for a minute
-                # Standard libraries won't ever change. Cache for 10 years
-                'node_modules/**':
-                  Cache-Control: public, max-age=315360000
-                # Local assets don't change too frequently. Cache for 1 day
-                'assets/**':
-                  Cache-Control: public, max-age=86400
-                'favicon.ico':
-                  Cache-Control: public, max-age=86400
+  default: # A unique name for this handler
+    priority: -100 # Apply this pattern with low than normal priority
+    pattern: /(.*) # All URLs beginning with /
+    handler: FileHandler # Handler used
+    kwargs: # Options to the handler
+      path: . # Path is current dir
+      default_filename: # Choose default file for a directory from
+        - default.template.html #   Template files, else
+        - default.tmpl.html
+        - index.html #   HTML file, else
+      index: true # Display directory indices
+      sass: ["*.scss", "*.sass"] # Handle SASS files
+      ts: ["*.ts"] # Handle TypeScript files
+      vue: ["*.vue"] # Handle Vue files
+      template: # Handle template files
+        - "*.template.html"
+        - "*.tmpl.html"
+      headers:
+        Cache-Control: max-age=60 # By default, cache for a minute
+        # Standard libraries won't ever change. Cache for 10 years
+        "node_modules/**":
+          Cache-Control: public, max-age=315360000
+        # Local assets don't change too frequently. Cache for 1 day
+        "assets/**":
+          Cache-Control: public, max-age=86400
+        "favicon.ico":
+          Cache-Control: public, max-age=86400
 
-    # Provide a default favicon.ico from the Gramex/ directory.
-    # Reduces the number of HTTP 404 errors, and bandwidth.
-    # Keep priority higher than default to ensure it gets executed.
-    favicon:
-        priority: -90
-        pattern: /favicon.ico
-        handler: FileHandler
-        kwargs:
-            path: $GRAMEXPATH/favicon.ico
-            headers:
-                # Keep header expiry at 1 day. Allows changing favicon
-                Cache-Control: public, max-age=86400
+  # Provide a default favicon.ico from the Gramex/ directory.
+  # Reduces the number of HTTP 404 errors, and bandwidth.
+  # Keep priority higher than default to ensure it gets executed.
+  favicon:
+    priority: -90
+    pattern: /favicon.ico
+    handler: FileHandler
+    kwargs:
+      path: $GRAMEXPATH/favicon.ico
+      headers:
+        # Keep header expiry at 1 day. Allows changing favicon
+        Cache-Control: public, max-age=86400

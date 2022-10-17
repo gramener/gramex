@@ -7,10 +7,15 @@ variables:
     default: "4.4"
   LT_TARGET: $GRAMEXDATA/languagetool/
   LT_SRC: https://languagetool.org/download/LanguageTool-${LT_VERSION}.zip
-  LT_CMD: [
-    'java', '-cp', 'languagetool-server.jar',
-    'org.languagetool.server.HTTPServer', '--port', '{LT_PORT}'
-  ]
+  LT_CMD:
+    [
+      "java",
+      "-cp",
+      "languagetool-server.jar",
+      "org.languagetool.server.HTTPServer",
+      "--port",
+      "{LT_PORT}",
+    ]
   LT_CWD: ${LT_TARGET}/LanguageTool-${LT_VERSION}
   LT_URL: "http://localhost:{LT_PORT}/v2/check?"
 

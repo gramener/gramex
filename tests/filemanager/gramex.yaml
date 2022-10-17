@@ -9,7 +9,7 @@ import:
     path: $GRAMEXAPPS/filemanager/gramex.yaml
     YAMLURL: /$YAMLURL/multidrive/
     FILEMANAGER_KWARGS:
-      drives: ['drive2', 'drive1']
+      drives: ["drive2", "drive1"]
       title: Multidrive
 
 url:

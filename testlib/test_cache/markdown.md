@@ -1,9 +1,10 @@
-title:      Meta-Data Extension
-id:         100
+title: Meta-Data Extension
+id: 100
 
 # markdown
 
 ## attr_list
+
 {: class="alert alert-danger"}
 
 ## codehilight
@@ -14,8 +15,8 @@ id:         100
 ## definition_lists
 
 Apple
-:   Pomaceous fruit of plants of the genus Malus in 
-    the family Rosaceae.
+: Pomaceous fruit of plants of the genus Malus in
+the family Rosaceae.
 
 ## fenced
 
@@ -27,8 +28,9 @@ x = 1   # Fenced code block
 
 Footnotes[^1] have a label[xx] and the footnote's content.
 
-[^1]: This is a footnote content.
-[xx]: A footnote on the label: "xx".
+[^1]:
+    This is a footnote content.
+    [xx]: A footnote on the label: "xx".
 
 ## sane_lists
 
@@ -37,8 +39,8 @@ Footnotes[^1] have a label[xx] and the footnote's content.
 
 ## smarty_strong
 
-double__underscore__words are OK.
-__Strong__ still works.
+double**underscore**words are OK.
+**Strong** still works.
 
 ## smarty
 

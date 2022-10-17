@@ -38,11 +38,11 @@ url:
     kwargs:
       path: $YAMLPATH
       headers:
-          Cache-Control: max-age=60
-          'node_modules/**':
-            Cache-Control: public, max-age=315360000
-          'bower_components/**':
-            Cache-Control: public, max-age=315360000
+        Cache-Control: max-age=60
+        "node_modules/**":
+          Cache-Control: public, max-age=315360000
+        "bower_components/**":
+          Cache-Control: public, max-age=315360000
 
   apps/controlpanel/query-$*:
     pattern: /$YAMLURL/users/
@@ -50,8 +50,8 @@ url:
     kwargs: $ADMIN_LOOKUP
 
   apps/controlpanel/pop-user-$*:
-    pattern: /$YAMLURL/pop_user   # Map this URL
-    handler: FunctionHandler      # to the logout handler
+    pattern: /$YAMLURL/pop_user # Map this URL
+    handler: FunctionHandler # to the logout handler
     kwargs:
       function: controlpanel.pop_user
 

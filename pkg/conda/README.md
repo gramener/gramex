@@ -27,7 +27,6 @@ make conda
 
 ## Conda snippets
 
-
 ```bash
 # Create a new test environment with a specified Python version, and no default packages
 conda create --name testenv python=3.7 --no-default-packages
@@ -47,6 +46,7 @@ conda env remove --name testenv
 - How can I create a package for Linux, Windows and OSX from Windows? [NO]
 
 - Test on
+
   - Standard Python
     - pip install
   - Existing Anaconda
