@@ -305,7 +305,7 @@ class TestFilter(unittest.TestCase):
                     # Don't check_dtype in that case.
                     eq(args, subset, check_dtype=len(subset) > 0)
 
-        # _by= empty
+        # Test _by= empty
         aggs = ['growth|sum', 'sales|sum']
         expected = pd.DataFrame(
             [[sales[agg[0]].agg(agg[1]) for agg in [x.split('|') for x in aggs]]], columns=aggs
@@ -405,7 +405,7 @@ class TestFilter(unittest.TestCase):
         ]
         eqframe(actual, expected)
 
-        # _by= _sort= _c=agg(s)
+        # Test _by= _sort= _c=agg(s)
         by = ['product']
         aggs = ['growth|sum', 'sales|sum']
         sort = ['sales|sum']
@@ -492,8 +492,8 @@ class TestFilter(unittest.TestCase):
         size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
         size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
         # TODO: NOT NULL
-        # size(args={'sales!': []}, b=2)
-        # size(args={'sales': []}, b=22)
+        # TEST size(args={'sales!': []}, b=2)
+        # TEST size(args={'sales': []}, b=22)
 
         size(query={'sales': {'$lt': 100}}, b=11)
         size(query={'देश': {'$in': ['भारत', 'Singapore']}}, b=16)
@@ -552,8 +552,7 @@ class TestInsert(unittest.TestCase):
         new_files = [
             {'url': os.path.join(folder, 'insert.csv'), 'encoding': 'utf-8'},
             {'url': os.path.join(folder, 'insert.xlsx'), 'sheet_name': 'test'},
-            # Insertion into HDF files is deprecated. We don't use it much.
-            # {'url': os.path.join(folder, 'insert.hdf'), 'key': 'test'},
+            # Skip insert.hdf: HDF files is deprecated. We don't use it much.
         ]
         for conf in new_files:
             remove_if_possible(conf['url'])
@@ -764,8 +763,8 @@ class FilterColsMixin(object):
         eq_(set(result.keys()), set(keys))
 
     def test_filtercols_frame(self):
-        # ?_c=District returns up to 100 distinct values of the District column like
-        # {'District': ['d1', 'd2', 'd3', ...]}
+        # ?_c=District returns up to 100 distinct values of the District column
+        # like {'District': ['d1', 'd2', 'd3', ...]}
         cols = ['District']
         args = {'_c': cols}
         result = gramex.data.filtercols(args=args, **self.urls['census'])
@@ -784,8 +783,8 @@ class FilterColsMixin(object):
             eqframe(val, self.unique_of(self.census, key).head(limit))
 
     def test_filtercols_multicols(self):
-        # ?_c=city&_c=product returns distinct values for both City and Product like
-        # {'City': ['c1', 'c1', ...], 'Product': ['p1', 'p2', ...]}
+        # ?_c=city&_c=product returns distinct values for both City and Product
+        # like {'City': ['c1', 'c1', ...], 'Product': ['p1', 'p2', ...]}
         cols = ['city', 'product']
         args = {'_c': cols}
         result = gramex.data.filtercols(args=args, **self.urls['sales'])
@@ -951,9 +950,7 @@ class TestAlter(unittest.TestCase):
         # Test types
         for table in (meta.tables['sales'], meta.tables['new']):
             eq_(table.columns.id.type.python_type, int)
-            # eq_(table.columns.id.nullable, True)
             eq_(table.columns.email.type.python_type, str)
-            # eq_(table.columns.email.nullable, True)
             eq_(table.columns.age.type.python_type, float)
             eq_(table.columns.age.nullable, False)
         # sales: insert and test row for default and types
@@ -1003,5 +1000,4 @@ class TestAlter(unittest.TestCase):
 # TODO: insert() and update() should auto-run alter()
 
 # BUG: update() doesn't handle this right
-# ?id=1&data=x&id=2&data=y
-# {id: [1, 2], data: [x, y]}
+# ?id=1&data=x&id=2&data=y should return {id: [1, 2], data: [x, y]}

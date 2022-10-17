@@ -837,9 +837,9 @@ cmdlist = {
     'chart': chart,
     'chart-data': lambda shape, spec, data: chart(shape, {'data': spec}, data),
     # Custom charts
-    # 'sankey': sankey,
-    # 'bullet': bullet,
-    # 'treemap': treemap,
-    # 'heatgrid': heatgrid,
-    # 'calendarmap': calendarmap,
+    #   sankey
+    #   bullet
+    #   treemap
+    #   heatgrid
+    #   calendarmap
 }

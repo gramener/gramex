@@ -41,12 +41,6 @@ class TestFilterHandler(TestGramex):
         expected = unique_of(self.sales, 'city').sort_values('city')
         eqframe(result['city'], expected)
 
-        # _args = {'_c': ['city'], '_sort': ['-city']}
-        # result = self.get('/filters/sales', params=_args).json()
-        # expected = self.sales.sort_values('sales', ascending=False)[['city']]
-        # expected = expected.drop_duplicates().head(100)
-        # eqframe(result['city'], expected)
-
         _args = {'_c': ['city'], '_sort': ['city', '-sales']}
         result = self.get('/filters/sales', params=_args).json()
         expected = self.sales.sort_values(['city', 'sales'], ascending=[True, False])
@@ -70,20 +64,6 @@ class TestFilterHandler(TestGramex):
         filtered = filtered[filtered['State'] == 'KERALA']
         for col in ['District', 'DistrictCaps']:
             eqframe(result[col], unique_of(filtered, col).head(10))
-
-        # _args = {
-        #     '_c': ['DistrictCaps'],
-        #     '_sort': ['State', 'District'],
-        #     'State': ['KERALA'],
-        #     'District>~': ['K'],
-        #     '_limit': [10],
-        # }
-        # result = self.get('/filters/census', params=_args).json()
-        # filtered = self.census.sort_values(['State', 'District'])
-        # filtered = filtered[filtered['State'] == 'KERALA']
-        # filtered = filtered[filtered['District'] >= 'K']
-        # filtered = filtered[['DistrictCaps']].drop_duplicates().head(10)
-        # eqframe(result['DistrictCaps'], filtered)
 
         for col in ['city', 'product']:
             _args = {'_c': [col], 'देश': ['भारत']}

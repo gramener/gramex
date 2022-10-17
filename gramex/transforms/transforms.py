@@ -794,8 +794,7 @@ def build_log_info(keys: List, *vars: List):
         'status': 'handler.get_status()',
         'duration': 'round(handler.request.request_time() * 1000, 0)',
         'port': 'conf.app.listen.port',
-        # TODO: get_content_size() is not available in RequestHandler
-        # 'size': 'handler.get_content_size()',
+        # TODO: 'size': 'handler.get_content_size()' is not available in RequestHandler
         'user': '(handler.current_user or {}).get("id", "")',
         'session': 'handler.session.get("id", "")',
         'error': 'getattr(handler, "_exception", "")',

@@ -67,7 +67,7 @@ def filter(
     Examples:
         >>> gramex.data.filter(dataframe, args=handler.args)
         >>> gramex.data.filter('file.csv', args=handler.args)
-        >>> gramex.data.filter('mysql://server/db', table='table', args=handler.args)
+        >>> gramex.data.filter('mysql://server/db', table='table', args={'user': [user']})
 
     Parameters:
 
@@ -100,18 +100,31 @@ def filter(
     Returns:
         Filtered DataFrame
 
-    Remaining kwargs are passed to [gramex.cache.open][] if `url` is a file, or
-    `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL. Specifically, kwargs can include:
+    To filter a DataFrame where column x=1 and y=2:
+
+        >>> filtered = gramex.data.filter(dataframe, args={'x': [1], 'y': [2]})
+
+    `args` is always a dict of lists, which is compatible with Gramex's `handler.args`.
+    So you can replace the above with:
+
+        >>> filtered = gramex.data.filter(dataframe, args=handle.args)
+
+    To filter ?city=Rome from a CSV/XLS/any file supported by [gramex.cache.open][]:
+
+        >>> gramex.data.filter('path/to/file.csv', rel=True, args={'city': ['Rome']})
+
+    Remaining `kwargs` are passed to [gramex.cache.open][] if `url` is a file. So `rel=True` works
+
+    To filter ?city=Rome from a SQLite, MySQL, PostgreSQL or any SQLAlchemy-supported DB:
+
+        >>> gramex.data.filter('sqlite:///x.db', table='data', args={'city': ['Rome']})
+
+    Remaining `kwargs` are passed to `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL. E.g.
 
     - `table`: table name (if url is an SQLAlchemy URL), `.format`-ed using `args`.
     - `state`: optional SQL query to check if data has changed.
 
-    If this is used in a handler as
-
-        >>> filtered = gramex.data.filter(dataframe, args=handler.args)
-
-    ... then calling the handler with `?x=1&y=2` returns all rows in
-    `dataframe` where x is 1 and y is 2.
+    TODO: Document how to pass params -- for each database
 
     If `table` or `query` is passed to an SQLAlchemy url, it is formatted using `args`.
     For example
@@ -253,6 +266,7 @@ def filter(
                 elif table is not None:
                     raise ValueError(f'table: must be string or list of strings, not {table!r}')
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
+            # sa.text() provides backend-neutral :name for bind parameters
             data = gramex.cache.query(sa.text(query), engine, state, params=all_params)
             data = transform(data) if callable(transform) else data
             return _filter_frame(data, meta=meta, controls=controls, args=args)

@@ -116,7 +116,6 @@ class TestWatch(unittest.TestCase):
             watcher.unwatch('new-watch-' + key)
             watcher.unwatch('third-watch-' + key)
 
-        # eq_(list(watcher.observer._handlers.values()), [set()])
         for key in self.files.keys():
             self.register_and_check_watch(key, name='fresh-watch', times=10, result_count=1)
 

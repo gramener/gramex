@@ -255,8 +255,7 @@ class TestPathConfig(unittest.TestCase):
         # Check if variables of different types are string substituted
         eq_(conf['numeric_subst'], '/1')
         eq_(conf['boolean_subst'], '/True')
-        # Actually, conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
-        # eq_(conf['object_subst'], "/{'x': 1}")
+        # NOTE: conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
         eq_(conf['list_subst'], '/[1, 2]')
 
         # Check condition variables
@@ -355,7 +354,6 @@ class TestConfig(unittest.TestCase):
             # merging a + b gives c
             eq_(yaml.load(c, Loader=ConfigYAMLLoader), merge(old, new, mode))
             # new is unchanged
-            # eq_(old, yaml.load(a, Loader=ConfigYAMLLoader))
             eq_(new, yaml.load(b, Loader=ConfigYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')

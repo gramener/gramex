@@ -804,7 +804,8 @@ class TestPPTGen(TestCase):
             'next': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=nextslide'},
             'previous': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=previousslide'},
             'prev': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=previousslide'},
-            # 'end': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=endshow'},
+            # Don't see a reason to link to end of show?
+            # Skip 'end': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=endshow'},
             'back': {'target': '', 'action': 'ppaction://hlinkshowjump?jump=lastslideviewed'},
             'noaction': {'target': '', 'action': 'ppaction://noaction'},
             '1': {

@@ -80,7 +80,6 @@ def stack_elements(replica, shape, stack=False, margin=None):
         # Setting graphic position of newly created object to slide.
         setattr(extend_shape, axis, int(set_attr))
         # Adding newly created object to slide.
-        # grp_sp.addnext(extend_shape)
         grp_sp.addprevious(extend_shape)
     shape.element.delete()
 
@@ -157,10 +156,6 @@ def move_slide(presentation, old_index, new_index):
 
 def delete_slide(presentation, index):
     '''Delete a slide from Presentation.'''
-    # xml_slides = presentation.slides._sldIdLst
-    # slides = list(xml_slides)
-    # del presentation.slides[index]
-    # xml_slides.remove(slides[index])
     rid = presentation.slides._sldIdLst[index].rId
     presentation.part.drop_rel(rid)
     del presentation.slides._sldIdLst[index]
@@ -221,10 +216,10 @@ def scale(series, lo=None, hi=None):
     Examples::
 
         >>> stats.scale([1, 2, 3, 4, 5])
-        # array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
+        ... array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
 
         >>> stats.scale([1, 2, 3, 4, 5], lo=2, hi=4)
-        # array([-0.5,  0. ,  0.5,  1. ,  1.5])
+        ... array([-0.5,  0. ,  0.5,  1. ,  1.5])
     '''
     series = np.array(series, dtype=float)
     lo = np.nanmin(series) if lo is None or np.isnan(lo) else lo

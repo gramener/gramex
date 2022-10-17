@@ -72,8 +72,9 @@ class TestModelHandler(TestGramex):
             '/model/iris/', method='post', data=json.dumps(data_df.to_dict(orient='list'))
         )
         eq_(multi.json(), single_responses)
-        # eq_([result['result'] for result in multi.json()], ['setosa', 'versicolor', 'virginica'])
         # This currently does not work since the model is not deterministic
+        # Skip eq_([result['result'] for result in multi.json()],
+        #          ['setosa', 'versicolor', 'virginica'])
 
     def test_predict_incomplete(self):
         self.check('/model/iris/', method='post', data=json.dumps({'sepal_length': 5}), code=500)
@@ -113,21 +114,15 @@ class TestModelHandler(TestGramex):
         training_file = pd.read_csv(os.path.join(folder, 'iris.csv'), encoding='utf-8')
         eq_(len(r), len(training_file))
 
-    # def test_add_training_data(self):
-    # Gets interpreted as string which breaks other tests
-    # TODO: Fix Data.py update and insert types then re-add this test
-    # self.check('/model/iris/', method='put',
-    #            data=json.dumps({'url': 'iris.csv'}),
-    #            request_headers={'Model-Retrain': 'True'})
-    # self.check('/model/iris/data', data=json.dumps({'sepal_width': 10,
-    #                                                 'sepal_length': 10,
-    #                                                 'petal_length': 10,
-    #                                                 'petal_width': 10,
-    #                                                 'specis':'test_insert'}),
-    #                                                 method='post')
+    def test_add_training_data(self):
+        # Gets interpreted as string which breaks other tests
+        # TODO: Fix Data.py update and insert types then re-add this test
+        ...
 
-    # def test_remove_training_data(self):
-    #     ...
+    def test_remove_training_data(self):
+        # TODO: Write after test_add_training_data()
+        ...
 
-    # def test_update_training_data(self):
-    #     ...
+    def test_update_training_data(self):
+        # TODO: Write after test_add_training_data()
+        ...

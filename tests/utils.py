@@ -123,7 +123,7 @@ def async_calc(handler):
     df = pd.DataFrame(np.arange(rows * len(cols)).reshape((rows, len(cols))), columns=cols)
     df = df % 4
     counts = yield [thread_pool.submit(count_group, df, col) for col in cols]
-    # result is [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
+    # result must be [[250,250,250],[250,250,250],[250,250,250],[250,250,250]]
     raise gen.Return(pd.concat(counts, axis=1).to_json(orient='values'))
 
 

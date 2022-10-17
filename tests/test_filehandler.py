@@ -35,7 +35,7 @@ def setUpModule():
 
 class TestFileHandler(TestGramex):
     def test_directoryhandler(self):
-        # DirectoryHandler == FileHandler
+        # Test DirectoryHandler == FileHandler
         from gramex.handlers import DirectoryHandler, FileHandler
 
         self.assertEqual(DirectoryHandler, FileHandler)

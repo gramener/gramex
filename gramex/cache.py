@@ -1225,8 +1225,7 @@ def hashed(val):
             return None
 
 
-# gramex.cache.open() stores its cache here.
-# {(path, callback): {data: ..., stat: ...}}
+# gramex.cache.open() stores its cache here as {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
 # If _OPEN_CACHE is a Redis/Disk/... cache that can't store the object, use fallback memory cache
 _FALLBACK_MEMORY_CACHE = {}

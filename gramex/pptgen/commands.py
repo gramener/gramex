@@ -140,7 +140,6 @@ def image(shape, spec, data):
         os.unlink(handle.name)
     else:
         new_img_part, new_rid = shape.part.get_or_add_image_part(image)
-    # old_rid = shape._pic.blip_rId
     shape._pic.blipFill.blip.rEmbed = new_rid
     shape.part.related_parts[new_rid].blob = new_img_part.blob
 
@@ -168,7 +167,6 @@ def add_text_to_shape(shape, textval, **kwargs):
     '''Function to add text to shape.'''
     min_inc = 13000
     pixel_inch = 10000
-    # kwargs['font-size'] = max(kwargs.get('font-size', 16), min_inc)
     if (kwargs.get('font-size', 14) * pixel_inch) < min_inc:
         return
     paragraph = shape.text_frame.paragraphs[0]

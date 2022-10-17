@@ -525,7 +525,6 @@ class TestPPTGen(TestCase):
             # Getting shape name
             shapes = input_rect.slides[slidenumber - 1].shapes
             _shp = [shape for shape in shapes if shape.name == shpname][0]
-            # width, height = _shp.width, _shp.height
             height = _shp.height if orient == 'horizontal' else _shp.width
             width = _shp.width if orient == 'horizontal' else _shp.height
             lo = update_data.get('lo', 0)

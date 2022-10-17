@@ -435,9 +435,8 @@ def eventlog(conf: dict) -> None:
 
     def shutdown():
         add('shutdown', {'version': __version__, 'pid': os.getpid()})
-        # Don't close the connection here. gramex.gramex_update() runs in a thread. If we start and
+        # Don't conn.close() here. gramex.gramex_update() runs in a thread. If we start and
         # stop gramex quickly, allow gramex_update to add too this entry
-        # conn.close()
 
     info.eventlog.query = query
     info.eventlog.add = add
@@ -1004,8 +1003,7 @@ def _cache_generator(conf, name):
     cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
     cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
-    # This method will be added to the handler class as "cache", and called as
-    # self.cache()
+    # This method will be added to the handler class as "cache". Called as self.cache()
     def get_cachefile(handler):
         return cachefile_class(
             key=url_cache_key(handler),

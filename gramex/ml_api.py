@@ -172,9 +172,6 @@ def assemble_pipeline(
     """
     if isinstance(model, str):
         model, _ = search_modelclass(model)(**kwargs)
-    # if is_statsmodel(model):
-    #     warnings.warn("Pipelines are not supported for statsmodels.")
-    #     return model
     nums = set(nums) - {target_col} if nums else set()
     cats = set(cats) - {target_col} if cats else set()
     both = nums & cats

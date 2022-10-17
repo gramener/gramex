@@ -133,7 +133,7 @@ class TestDriveHandler(TestGramex):
         r = requests.get(self.url, params={'_download': '', 'id': data.id.iloc[0]})
         eq_(r.headers['Content-Disposition'], 'attachment; filename="index.html"')
         # TODO: FormHandler returns Content-Type using _format, so don't check for Content-Type
-        # eq_(r.headers['Content-Type'], 'text/html')
+        # Skip eq_(r.headers['Content-Type'], 'text/html')
         # Serves file with correct length despite unicode
         eq_(int(r.headers['Content-Length']), os.stat('dir/index.html').st_size)
         # If the ID is invalid, raises a NOT FOUND

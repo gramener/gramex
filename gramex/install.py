@@ -696,8 +696,7 @@ email:
     type: gmail
     email: $GRAMEXMAILUSER
     password: $GRAMEXMAILPASSWORD
-    # Uncomment the next line to test the application without sending mails
-    # stub: log
+    # Add stub: log to test the application without sending mails
 
 # See https://gramener.com/gramex/guide/alert/
 alert:
