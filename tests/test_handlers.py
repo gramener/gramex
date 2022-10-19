@@ -64,15 +64,15 @@ class TestXSRF(TestGramex):
         r = requests.post(server.base_url + '/xsrf/yes')
         eq_(r.status_code, FORBIDDEN)
 
-    def test_ajax(self):
+    def test_xsrf_ajax(self):
         # Requests sent with X-Requested-With should not need an XSRF cookie
-        r = requests.post(
-            server.base_url + '/xsrf/yes',
-            headers={
-                # Mangle case below to ensure Gramex handles it case-insensitively
-                'X-Requested-With': 'xMlHtTpReQuESt',
-            },
-        )
+        url = server.base_url + '/xsrf/yes'
+        # Mangle case below to ensure Gramex handles it case-insensitively
+        r = requests.post(url, headers={'X-Requested-With': 'xMlHtTpReQuESt'})
+        eq_(r.status_code, OK)
+        r = requests.post(url, headers={'Sec-Fetch-Site': 'xxx'})
+        eq_(r.status_code, OK)
+        r = requests.post(url, headers={'Origin': 'xxx'})
         eq_(r.status_code, OK)
 
 

@@ -546,13 +546,34 @@ class BaseMixin(object):
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
 
+    def is_browser_request(self):
+        '''Returns True if the request is (likely) from a browser. Else False.
+
+        This is used to handle XSRF. If the request is NOT from a browser (e.g. server, AJAX),
+        no AJAX checks are required. If any of the following are true, it's not a browser request.
+
+        1. `X-Requested-With: XMLHttpRequest`. XMLHttpRequest sends this
+        2. `Sec-Fetch-*: *`. [Fetch sends these][H-Fetch]
+        3. `Origin: *`. All browsers send this except for same-origin GET/POST [Ref][H-Origin]
+
+        [H-Fetch]: https://developer.mozilla.org/en-US/docs/Glossary/Fetch_metadata_request_header
+        [H-Origin]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin
+        '''
+        return not (
+            self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
+            or self.request.headers.get('Sec-Fetch-Site', '')
+            or self.request.headers.get('Sec-Fetch-Mode', '')
+            or self.request.headers.get('Sec-Fetch-User', '')
+            or self.request.headers.get('Sec-Fetch-Dest', '')
+            or self.request.headers.get('Origin', '')
+        )
+
     def xsrf_ajax(self):
+        '''Validates XSRF cookies if it's a browser-request (not AJAX)
+
+        Internally, it uses Tornado's check_xsrf_cookie().
         '''
-        TODO: explain things clearly.
-        Same as Tornado's check_xsrf_cookie() -- but is ignored for AJAX requests
-        '''
-        ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
-        if not ajax:
+        if self.is_browser_request():
             return super(BaseHandler, self).check_xsrf_cookie()
 
     def noop(self):
@@ -991,9 +1012,8 @@ class BaseHandler(RequestHandler, BaseMixin):
         if self.request.method == 'OPTIONS' and getattr(self, '_cors', {}).get('auth'):
             return
         if not self.current_user:
-            # Redirect non-AJAX requests GET/HEAD to login URL (if it's a string)
-            ajax = self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
-            if not ajax and self.request.method in ('GET', 'HEAD'):
+            # Redirect browser GET/HEAD requests to login URL (if it's a string)
+            if self.is_browser_request() and self.request.method in ('GET', 'HEAD'):
                 auth = getattr(self, '_auth', {})
                 url = auth.get('login_url', self.gramex_root + self.get_login_url())
                 # If login_url: false, don't redirect to a login URL. Only redirect if it's a URL
