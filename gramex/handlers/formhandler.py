@@ -221,6 +221,7 @@ class FormHandler(BaseHandler):
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
             # method() should set the schema only on first load. Pop it once done
             dataset.pop('schema', None)
+        self.after_update()
         for key, val in result.items():
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
@@ -281,3 +282,7 @@ class FormHandler(BaseHandler):
                     value, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
                 )
                 self.set_header(prefix.format(dataset, key), string_value)
+
+    def after_update(self, **kwargs):
+        '''Called after inserting records into DB. Subclasses use it for additional processing'''
+        pass

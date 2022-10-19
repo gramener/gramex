@@ -44,6 +44,9 @@ class TestDriveHandler(TestGramex):
             headers['X-Gramex-User'] = create_signed_value(secret, 'user', json.dumps(user))
         r = requests.post(self.url, files=files, data=data, headers=headers)
         eq_(r.status_code, code, '%s: code %d != %d' % (self.url, r.status_code, code))
+        if code is OK:
+            paths_exist = json.loads(r.headers['Paths-Exist'])
+            eq_(paths_exist, {f.get('name', os.path.basename(f['file'])): True for f in fileinfo})
         data = gramex.data.filter(self.con, table='drive')
         data = data.sort_values('id').tail(len(files))
         if not check:

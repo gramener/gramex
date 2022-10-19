@@ -467,6 +467,14 @@ class CounterHandler(BaseHandler):
 def drivehandler_modify(data, key, handler):
     if handler.request.method == 'GET':
         data['m'] = 'OK'
+    if handler.request.method == 'POST':
+        # Set Paths-Exist: {file: True, file: True, ...}
+        # Keys are file names uploaded. Values are whether the file exists.
+        # We're checking if the modify function is called AFTER the files are saved.
+        handler.set_header('Paths-Exist', json.dumps({
+            f: os.path.exists(os.path.join(handler.kwargs.path, p))
+            for p, f in zip(handler.args['path'], handler.args['file'])
+        }))
     return data
 
 

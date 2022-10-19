@@ -133,6 +133,11 @@ class DriveHandler(FormHandler):
                 self.args[f'user_{s.replace(".", "_")}'][i] = objectpath(user, s)
         self.check_filelimits()
         yield super().post(*path_args, **path_kwargs)
+
+    def after_update(self, **kwargs):
+        if self.request.method != 'POST':
+            return
+        uploads = self.request.files.get('file', [])
         for upload, path in zip(uploads, self.args['path']):
             with open(os.path.join(self.path, path), 'wb') as handle:
                 handle.write(upload['body'])
