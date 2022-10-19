@@ -3,28 +3,25 @@ width: 400
 height: 200
 padding: 5
 scales:
-  -
-    name: xscale
+  - name: xscale
     type: band
-    domain: {data: data, field: देश}
+    domain: { data: data, field: देश }
     range: width
     padding: 0.05
     round: true
-  -
-    name: yscale
-    domain: {data: data, field: sales}
+  - name: yscale
+    domain: { data: data, field: sales }
     nice: true
     range: height
 axes:
-  - {orient: bottom, scale: xscale}
-  - {orient: left, scale: yscale}
+  - { orient: bottom, scale: xscale }
+  - { orient: left, scale: yscale }
 marks:
-  -
-    type: rect
-    from: {data: data}
+  - type: rect
+    from: { data: data }
     encode:
       enter:
-        x: {scale: xscale, field: देश}
-        width: {scale: xscale, band: 1}
-        y: {scale: yscale, field: sales}
-        y2: {scale: yscale, value: 0}
+        x: { scale: xscale, field: देश }
+        width: { scale: xscale, band: 1 }
+        y: { scale: yscale, field: sales }
+        y2: { scale: yscale, value: 0 }

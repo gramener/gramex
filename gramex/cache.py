@@ -9,8 +9,9 @@ import os
 import pandas as pd
 import re
 import requests
+
 # B404:import_subprocess only developers can access this, not users
-import subprocess       # nosec B404
+import subprocess  # nosec B404
 import sys
 import tempfile
 import time
@@ -27,17 +28,21 @@ from typing import List, Tuple, Union, Dict, Callable, BinaryIO
 from urllib.parse import urlparse
 
 
-MILLISECOND = 0.001         # in seconds
-_opener_defaults = dict(mode='r', buffering=-1, encoding='utf-8', errors='strict',
-                        newline=None, closefd=True)
-_markdown_defaults = dict(output_format='html5', extensions=[
-    'markdown.extensions.codehilite',
-    'markdown.extensions.extra',
-    'markdown.extensions.toc',
-    'markdown.extensions.meta',
-    'markdown.extensions.sane_lists',
-    'markdown.extensions.smarty',
-])
+MILLISECOND = 0.001  # in seconds
+_opener_defaults = dict(
+    mode='r', buffering=-1, encoding='utf-8', errors='strict', newline=None, closefd=True
+)
+_markdown_defaults = dict(
+    output_format='html5',
+    extensions=[
+        'markdown.extensions.codehilite',
+        'markdown.extensions.extra',
+        'markdown.extensions.toc',
+        'markdown.extensions.meta',
+        'markdown.extensions.sane_lists',
+        'markdown.extensions.smarty',
+    ],
+)
 # A set of temporary files to delete on program exit
 _TEMP_FILES = set()
 _ID_CACHE = set()
@@ -55,8 +60,12 @@ atexit.register(_delete_temp_files)
 
 
 def open(
-        path: str, callback: Union[str, Callable] = None, transform: Callable = None,
-        rel: bool = False, **kwargs: dict):
+    path: str,
+    callback: Union[str, Callable] = None,
+    transform: Callable = None,
+    rel: bool = False,
+    **kwargs: dict,
+):
     '''Reads a file, processes it via a callback, caches the result and returns it.
 
     When called again, returns the cached result unless the file has updated.
@@ -173,8 +182,10 @@ def open(
             _FALLBACK_MEMORY_CACHE[key] = cached
         except ValueError:
             size = sys.getsizeof(data)
-            app_log.exception(f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. ' +
-                              'Increase cache.memory.size in gramex.yaml')
+            app_log.exception(
+                f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. '
+                + 'Increase cache.memory.size in gramex.yaml'
+            )
         except Exception:
             app_log.exception(f'gramex.cache.open: {type(_cache)} cannot cache {data!r}')
 
@@ -207,8 +218,13 @@ def stat(path: str) -> Tuple[Union[float, None], Union[int, None]]:
     return (None, None)
 
 
-def save(data: pd.DataFrame, url: str, rel: bool = False, callback: Union[str, Callable] = None,
-         **kwargs: dict) -> None:
+def save(
+    data: pd.DataFrame,
+    url: str,
+    rel: bool = False,
+    callback: Union[str, Callable] = None,
+    **kwargs: dict,
+) -> None:
     '''
     Saves a Pandas DataFrame into file at url.
 
@@ -288,7 +304,8 @@ def query(sql, engine, state=None, **kwargs):
         result = _cache[key]['data']
     else:
         app_log.debug(
-            f'gramex.cache.query: {sql}. engine: {engine}. state: {state}. kwargs: {kwargs}')
+            f'gramex.cache.query: {sql}. engine: {engine}. state: {state}. kwargs: {kwargs}'
+        )
         result = pd.read_sql(sql, engine, **kwargs)
         if store_cache:
             _cache[key] = {
@@ -337,6 +354,7 @@ def reload_module(*modules: List[ModuleType]) -> None:
         if fstat != _MODULE_CACHE.get(name, fstat):
             app_log.info(f'Reloading module {name}')
             import importlib
+
             importlib.reload(module)
         _MODULE_CACHE[name] = fstat
 
@@ -456,9 +474,13 @@ class Subprocess(object):
     '''
 
     def __init__(
-            self, args: List[str], stream_stdout: List[Union[Callable, str]] = [],
-            stream_stderr: List[Union[Callable, str]] = [], buffer_size: Union[str, int] = 0,
-            **kwargs: dict):
+        self,
+        args: List[str],
+        stream_stdout: List[Union[Callable, str]] = [],
+        stream_stderr: List[Union[Callable, str]] = [],
+        buffer_size: Union[str, int] = 0,
+        **kwargs: dict,
+    ):
         '''
         Parameters:
             args: command line arguments passed as a list to Subprocess
@@ -486,14 +508,15 @@ class Subprocess(object):
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
         # B603:subprocess_without_shell_equals_true: only developers can access this, not users
-        self.proc = subprocess.Popen(args, **kwargs)        # nosec B603
-        self.thread = {}        # Has the running threads
-        self.future = {}        # Stores the futures indicating stream close
+        self.proc = subprocess.Popen(args, **kwargs)  # nosec B603
+        self.thread = {}  # Has the running threads
+        self.future = {}  # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
 
         # Buffering has 2 modes. buffer_size='line' reads and writes line by line
         # buffer_size=<number> reads in byte chunks. Define the appropriate method
         if hasattr(buffer_size, 'lower') and 'line' in buffer_size.lower():
+
             def _write(stream, callbacks, future, retval):
                 '''Call callbacks with content from stream. On EOF mark future as done'''
                 while True:
@@ -509,6 +532,7 @@ class Subprocess(object):
                 while self.proc.poll() is None:
                     time.sleep(MILLISECOND)
                 self.loop.add_callback(future.set_result, retval())
+
         else:
             # If the buffer size is 0 or negative, use the default buffer size to read
             if buffer_size <= 0:
@@ -543,7 +567,7 @@ class Subprocess(object):
                 callbacks = [ret_stream.write]
                 retval = ret_stream.getvalue
             else:
-                retval = lambda: b''        # noqa
+                retval = lambda: b''  # noqa
             # If stream_stdout or stream_stderr has 'out' or 'err', create these
             # as queue attributes (self.out, self.err)
             callbacks = list(callbacks) if isinstance(callbacks, list) else [callbacks]
@@ -570,8 +594,9 @@ class Subprocess(object):
             self.thread[stream] = t = Thread(
                 target=_write,
                 name=f'cache.Subprocess: {args}',
-                args=(getattr(self.proc, stream), callbacks, future, retval))
-            t.daemon = True     # Thread dies with the program
+                args=(getattr(self.proc, stream), callbacks, future, retval),
+            )
+            t.daemon = True  # Thread dies with the program
             t.start()
 
     def wait_for_exit(self):
@@ -626,7 +651,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     # If process was never started, start it
     if key not in _daemons:
         # B404:import_subprocess only developers can access this, not users
-        started = _daemons[key] = Subprocess(args, **kwargs)    # nosec B404
+        started = _daemons[key] = Subprocess(args, **kwargs)  # nosec B404
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
@@ -634,7 +659,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
         # B404:import_subprocess only developers can access this, not users
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)   # nosec B404
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)  # nosec B404
     if proc.proc.returncode is not None:
         raise RuntimeError(f'Error {proc.proc.returncode} starting {arg_str}')
     if started:
@@ -644,15 +669,19 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
     # If process was started, wait until it has initialized. Else just return the proc
     if first_line and started:
         if isinstance(first_line, str):
+
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if first_line not in actual:
                     raise AssertionError(f'{arg_str}: first line is "{actual}" not "{first_line}"')
+
         elif isinstance(first_line, _regex_type):
+
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
                 if not first_line.search(actual):
                     raise AssertionError(f'{arg_str}: wrong first line: {actual}')
+
         elif callable(first_line):
             check = first_line
         loop = _get_current_ioloop()
@@ -665,8 +694,8 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
             else:
                 loop.add_callback(future.set_result, proc)
 
-        proc._check_thread = t = Thread(target=checker, args=(proc, ))
-        t.daemon = True     # Thread dies with the program
+        proc._check_thread = t = Thread(target=checker, args=(proc,))
+        t.daemon = True  # Thread dies with the program
         t.start()
     else:
         future.set_result(proc)
@@ -714,9 +743,7 @@ class KeyStore(object):
         if callable(purge_keys):
             self.purge_keys = purge_keys
         elif purge_keys is not None:
-            app_log.error(
-                'KeyStore: purge_keys=%r invalid. Must be function(dict)',
-                purge_keys)
+            app_log.error('KeyStore: purge_keys=%r invalid. Must be function(dict)', purge_keys)
         # Periodically flush and purge buffers
         if flush is not None:
             tornado.ioloop.PeriodicCallback(self.flush, callback_time=flush * 1000).start()
@@ -788,6 +815,7 @@ class RedisStore(KeyStore):
     def __init__(self, path=None, *args, **kwargs):
         super(RedisStore, self).__init__(*args, **kwargs)
         from gramex.services.rediscache import get_redis
+
         self.store = get_redis(path, decode_responses=True, encoding='utf-8')
 
     def load(self, key, default=None):
@@ -795,8 +823,7 @@ class RedisStore(KeyStore):
         if result is None:
             return default
         try:
-            return json.loads(
-                result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
+            return json.loads(result, object_pairs_hook=AttrDict, cls=CustomJSONDecoder)
         except ValueError:
             app_log.error(f'RedisStore("{self.store}").load("{key}") is not JSON "{result!r}"')
             return default
@@ -806,10 +833,8 @@ class RedisStore(KeyStore):
             self.store.delete(key)
         else:
             value = json.dumps(
-                value,
-                ensure_ascii=True,
-                separators=(',', ':'),
-                cls=CustomJSONEncoder)
+                value, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
+            )
             self.store.set(key, value)
 
     def close(self):
@@ -839,10 +864,14 @@ class SQLiteStore(KeyStore):
         super(SQLiteStore, self).__init__(*args, **kwargs)
         self.path = _create_path(path)
         from sqlitedict import SqliteDict
+
         self.store = SqliteDict(
-            self.path, tablename=table, autocommit=True,
-            encode=lambda v: json.dumps(v, separators=(',', ':'), ensure_ascii=True,
-                                        cls=CustomJSONEncoder),
+            self.path,
+            tablename=table,
+            autocommit=True,
+            encode=lambda v: json.dumps(
+                v, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+            ),
             decode=lambda v: json.loads(v, object_pairs_hook=AttrDict, cls=CustomJSONDecoder),
         )
 
@@ -880,6 +909,7 @@ class HDF5Store(KeyStore):
         self.path = _create_path(path)
         self.changed = False
         import h5py
+
         # h5py.File fails with OSError: Unable to create file (unable to open file: name =
         # '.meta.h5', errno = 17, error message = 'File exists', flags = 15, o_flags = 502)
         # TODO: identify why this happens and resolve it.
@@ -905,10 +935,8 @@ class HDF5Store(KeyStore):
             if key in self.store:
                 del self.store[key]
             self.store[key] = json.dumps(
-                value,
-                ensure_ascii=True,
-                separators=(',', ':'),
-                cls=CustomJSONEncoder)
+                value, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
+            )
             self.changed = True
 
     def _escape(self, key):
@@ -979,20 +1007,21 @@ class JSONStore(KeyStore):
     def _init_store(self, contents):
         self.store = contents
         self._original = copy.deepcopy(self.store)  # copy of original contents
-        self.changed = False    # boolean: has the store contents changed?
-        self.update = {}        # all key-values added since flush
+        self.changed = False  # boolean: has the store contents changed?
+        self.update = {}  # all key-values added since flush
 
     def _read_json(self):
         try:
-            with io.open(self.path) as handle:      # noqa: no encoding for json
+            with io.open(self.path) as handle:  # noqa: no encoding for json
                 return json.load(handle, cls=CustomJSONDecoder)
         except (IOError, ValueError):
             return {}
 
     def _write_json(self, data):
-        json_value = json.dumps(data, ensure_ascii=True, separators=(',', ':'),
-                                cls=CustomJSONEncoder)
-        with io.open(self.path, 'w') as handle:     # noqa: no encoding for json
+        json_value = json.dumps(
+            data, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
+        )
+        with io.open(self.path, 'w') as handle:  # noqa: no encoding for json
             handle.write(json_value)
 
     def dump(self, key, value):
@@ -1076,6 +1105,7 @@ def opener(callback, read=False, **open_kwargs):
             with io.open(path, **open_args) as handle:
                 result = handle.read()
                 return callback(result, **kwargs) if callable(callback) else result
+
     else:
         if not callable(callback):
             raise ValueError(f'opener callback {callback!r} not a function')
@@ -1085,21 +1115,24 @@ def opener(callback, read=False, **open_kwargs):
             open_args = {key: kwargs.pop(key, val) for key, val in open_kwargs.items()}
             with io.open(path, **open_args) as handle:
                 return callback(handle, **kwargs)
+
     return method
 
 
 @opener
 def _markdown(handle, **kwargs):
     from markdown import markdown
+
     return markdown(handle.read(), **{k: kwargs.pop(k, v) for k, v in _markdown_defaults.items()})
 
 
 @opener
 def _yaml(handle, **kwargs):
     import yaml
+
     kwargs.setdefault('Loader', yaml.SafeLoader)
     # B506:yaml_load we load safely using SafeLoader
-    return yaml.load(handle.read(), **kwargs)   # nosec B506
+    return yaml.load(handle.read(), **kwargs)  # nosec B506
 
 
 def _template(path, **kwargs):
@@ -1108,9 +1141,14 @@ def _template(path, **kwargs):
 
 
 def read_excel(
-        io: Union[str, BinaryIO], sheet_name: Union[str, int] = 0, table: str = None,
-        name: str = None, range: str = None, header: Union[None, int, List[int]] = ...,
-        **kwargs: dict) -> pd.DataFrame:
+    io: Union[str, BinaryIO],
+    sheet_name: Union[str, int] = 0,
+    table: str = None,
+    name: str = None,
+    range: str = None,
+    header: Union[None, int, List[int]] = ...,
+    **kwargs: dict,
+) -> pd.DataFrame:
     '''Read data from an XLSX as a DataFrame using `openpyxl`.
 
     Parameters:
@@ -1130,10 +1168,12 @@ def read_excel(
     if not any((range, name, table)):
         # Pandas defaults to xlrd, but we prefer openpyxl
         kwargs.setdefault('engine', 'openpyxl')
-        return pd.read_excel(io, sheet_name=sheet_name, header=0 if header is ... else header,
-                             **kwargs)
+        return pd.read_excel(
+            io, sheet_name=sheet_name, header=0 if header is ... else header, **kwargs
+        )
 
     import openpyxl
+
     wb = openpyxl.load_workbook(io, data_only=True)
     # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
     ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
@@ -1161,12 +1201,16 @@ def read_excel(
     # Header defaults to 0 if undefined. If it's not None, apply the header
     header = 0 if header is ... else header
     if header is not None:
-        data = (data.T.set_index(header).T      # Set header rows as column names
-                    .reset_index(drop=True)     # Drop index with "holes" where headers were
-                    .rename_axis(               # Column name has header index (e.g. 0). Drop it
-                        [None] * len(header) if isinstance(header, (list, tuple)) else None,
-                        axis=1))
-    return data.infer_objects()                 # Convert data types
+        data = (
+            data.T.set_index(header)
+            .T.reset_index(  # Set header rows as column names
+                drop=True
+            )  # Drop index with "holes" where headers were
+            .rename_axis(  # Column name has header index (e.g. 0). Drop it
+                [None] * len(header) if isinstance(header, (list, tuple)) else None, axis=1
+            )
+        )
+    return data.infer_objects()  # Convert data types
 
 
 def hashed(val):
@@ -1181,8 +1225,7 @@ def hashed(val):
             return None
 
 
-# gramex.cache.open() stores its cache here.
-# {(path, callback): {data: ..., stat: ...}}
+# gramex.cache.open() stores its cache here as {(path, callback): {data: ..., stat: ...}}
 _OPEN_CACHE = {}
 # If _OPEN_CACHE is a Redis/Disk/... cache that can't store the object, use fallback memory cache
 _FALLBACK_MEMORY_CACHE = {}
@@ -1210,7 +1253,7 @@ open_callback = dict(
     template=_template,
     config=PathConfig,
     yml=_yaml,
-    yaml=_yaml
+    yaml=_yaml,
 )
 
 
@@ -1274,8 +1317,9 @@ def _wheres(dbkey, tablekey, default_db, names, fn=None):
         if not fn:
             where.append("({}='{}' AND {}='{}')".format(dbkey, db, tablekey, table))
         else:
-            where.append("({}={}('{}') AND {}={}('{}'))".format(
-                dbkey, fn[0], db, tablekey, fn[1], table))
+            where.append(
+                "({}={}('{}') AND {}={}('{}'))".format(dbkey, fn[0], db, tablekey, fn[1], table)
+            )
     return ' OR '.join(where)
 
 
@@ -1300,20 +1344,24 @@ def _table_status(engine, tables):
             # https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html
             # Works only on MySQL 5.7 and above
             # B608:hardcoded_sql_expressions only used internally
-            q = ('SELECT update_time FROM information_schema.tables WHERE ' +   # nosec B608
-                 _wheres('table_schema', 'table_name', db, tables))
+            w = _wheres('table_schema', 'table_name', db, tables)
+            q = 'SELECT update_time FROM information_schema.tables WHERE ' + w  # nosec B608
         elif dialect == 'snowflake':
             # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
-            q = ('SELECT last_altered FROM information_schema.tables WHERE ' +  # nosec B608
-                 _wheres('table_schema', 'table_name', db, tables))
+            w = _wheres('table_schema', 'table_name', db, tables)
+            q = 'SELECT last_altered FROM information_schema.tables WHERE ' + w  # nosec B608
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
-            q = ('SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' +  # nosec B608
-                 _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID']))
+            w = _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID'])
+            q = 'SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' + w  # nosec B608
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
-            q = ('SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables ' +  # nosec B608
-                 'WHERE ' + _wheres('schemaname', 'relname', 'public', tables))
+            w = _wheres('schemaname', 'relname', 'public', tables)
+            q = (
+                'SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables '  # nosec B608
+                + 'WHERE '
+                + w
+            )
         elif dialect == 'sqlite':
             if not db:
                 raise KeyError(f'gramex.cache.query: does not support memory sqlite "{dialect}"')
@@ -1334,10 +1382,11 @@ def _get_current_ioloop():
     This allows daemon() to be run without Tornado / asyncio.
     '''
     from gramex.services import info
+
     return (
-        info.main_ioloop or
-        tornado.ioloop.IOLoop.current() or
-        AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
+        info.main_ioloop
+        or tornado.ioloop.IOLoop.current()
+        or AttrDict(add_callback=lambda fn, *args, **kwargs: fn(*args, **kwargs))
     )
 
 

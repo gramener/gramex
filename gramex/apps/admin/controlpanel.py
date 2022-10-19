@@ -18,30 +18,26 @@ def get_config_id(handler):
     if handler.kwargs.get('admin_kwargs', '') == '':
         handler.kwargs.admin_kwargs = {'hide': []}
 
-    return json.dumps({
-        'id': handler.kwargs.variables.get('id', None),
-        'hide': handler.kwargs.admin_kwargs.get('hide', []),
-        'forgot_key': handler.kwargs.admin_kwargs.get('forgot_key', 'forgot'),
-        'login_url': handler.kwargs.auth.get('login_url')
-    })
+    return json.dumps(
+        {
+            'id': handler.kwargs.variables.get('id', None),
+            'hide': handler.kwargs.admin_kwargs.get('hide', []),
+            'forgot_key': handler.kwargs.admin_kwargs.get('forgot_key', 'forgot'),
+            'login_url': handler.kwargs.auth.get('login_url'),
+        }
+    )
 
 
 def active_users():
     all_users = {}
     for key in user_info.keys():
         all_users[key] = user_info.load(key)
-    return json.dumps({
-        user: 1 for user, info in all_users.items()
-        if info.get('active') == 'y'
-    })
+    return json.dumps({user: 1 for user, info in all_users.items() if info.get('active') == 'y'})
 
 
 def is_admin(handler, admin_user=None, admin_role=None):
     user = handler.current_user
-    admin_identifiers = {
-        'id': admin_user,
-        'role': admin_role
-    }
+    admin_identifiers = {'id': admin_user, 'role': admin_role}
     for key, value in admin_identifiers.items():
         if value is not None:
             if isinstance(value, str) and user.get(key, None) == value:
@@ -71,8 +67,11 @@ def pop_user(handler):
         session = handler._session_store.load(key)
         if session is not None:
             other_user = session.get('user')
-            if (other_user is not None and other_user.get('id') and
-               arg_user == other_user.get('id')):
+            if (
+                other_user is not None
+                and other_user.get('id')
+                and arg_user == other_user.get('id')
+            ):
                 session.pop('user')
                 user_dets = user_info.load(arg_user)
                 user_dets.update({'active': ''})
@@ -82,14 +81,11 @@ def pop_user(handler):
 
 def last_login():
     """Get last login details."""
-    user_logs_path = os.path.join(
-        variables.GRAMEXDATA, 'authmodule', 'user.csv')
+    user_logs_path = os.path.join(variables.GRAMEXDATA, 'authmodule', 'user.csv')
     names = ['time', 'event', 'sid', 'user', 'ip', 'user-agent']
     if os.path.exists(user_logs_path):
-        data = gramex.cache.open(
-            user_logs_path, 'csv', header=None, names=names)
-        dt = datetime.datetime.strptime(
-            data.tail(1)['time'].values[0], "%Y-%m-%d %H:%M:%SZ")
+        data = gramex.cache.open(user_logs_path, 'csv', header=None, names=names)
+        dt = datetime.datetime.strptime(data.tail(1)['time'].values[0], "%Y-%m-%d %H:%M:%SZ")
         return dt
     return ''
 
@@ -121,7 +117,7 @@ def evaluate(handler, code):
         if mode == 'eval':
             result = eval(co, context)  # nosec B307
         else:
-            exec(co, context)           # nosec B102
+            exec(co, context)  # nosec B102
             result = None
     except Exception as e:
         result = e

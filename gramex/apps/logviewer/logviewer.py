@@ -2,8 +2,9 @@ import re
 import sys
 import os.path
 from glob import glob
+
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import Element              # nosec B410
+from lxml.etree import Element  # nosec B410
 from lxml.html import fromstring, tostring  # nosec B410
 import numpy as np
 import pandas as pd
@@ -20,15 +21,8 @@ if sys.version_info.major == 3:
 DB_CONFIG = {
     'table': 'agg{}',
     'levels': ['M', 'W', 'D'],
-    'dimensions': [
-        {'key': 'time', 'freq': '?level'},
-        'user.id', 'ip', 'status', 'uri'
-    ],
-    'metrics': {
-        'duration': ['count', 'sum'],
-        'new_session': ['sum'],
-        'session_time': ['sum']
-    }
+    'dimensions': [{'key': 'time', 'freq': '?level'}, 'user.id', 'ip', 'status', 'uri'],
+    'metrics': {'duration': ['count', 'sum'], 'new_session': ['sum'], 'session_time': ['sum']},
 }
 
 # TODO: extra_columns should not be a global. Once instance may use multiple logviewers!
@@ -39,12 +33,9 @@ for key in conf.get('schedule', []):
 
 DB_CONFIG['dimensions'].extend(extra_columns)
 
-DB_CONFIG['table_columns'] = [
-    f'{k}_{x}'
-    for k, v in DB_CONFIG['metrics'].items()
-    for x in v] + [
-        x['key'] if isinstance(x, dict) else x
-        for x in DB_CONFIG['dimensions']]
+DB_CONFIG['table_columns'] = [f'{k}_{x}' for k, v in DB_CONFIG['metrics'].items() for x in v] + [
+    x['key'] if isinstance(x, dict) else x for x in DB_CONFIG['dimensions']
+]
 
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -66,7 +57,7 @@ def pdagg(df, groups, aggfuncs):
 
 def add_session(df, duration=30, cutoff_buffer=0):
     '''add new_session based on `duration` threshold
-       add cutoff_buffer in minutes for first and last session requests
+    add cutoff_buffer in minutes for first and last session requests
     '''
     s = df.groupby('user.id')['time'].diff().dt.total_seconds()
     flag = s.isnull() | s.ge(duration * 60)
@@ -101,12 +92,13 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims={}):
 
 
 def summarize(
-        db: dict,
-        transforms: List[dict] = [],
-        post_transforms: List[dict] = [],
-        session_threshold: float = 15,
-        cutoff_buffer: float = 0,
-        custom_dims: dict = None) -> None:
+    db: dict,
+    transforms: List[dict] = [],
+    post_transforms: List[dict] = [],
+    session_threshold: float = 15,
+    cutoff_buffer: float = 0,
+    custom_dims: dict = None,
+) -> None:
     '''Summarizes log files into a database periodically.
 
     Parameters:
@@ -144,7 +136,7 @@ def summarize(
         log_filter = gramex.data.filter(**db, table=table(levels[-1]), args={})
         max_date = log_filter.sort_values('time', ascending=False)['time'].iloc[0]
         max_date = pd.to_datetime(max_date)
-    except Exception:   # noqa
+    except Exception:  # noqa
         max_date = None
     else:
         app_log.info(f'logviewer.summarize: processing since {max_date}')
@@ -157,17 +149,24 @@ def summarize(
     # Create dataframe from log files
     columns = conf.log.handlers.requests['keys']
     app_log.info(f'logviewer.summarize: processing {log_files}')
-    data = pd.concat([
-        pd.read_csv(f, names=columns, index_col=False, encoding='utf-8').fillna('-')
-        for f in log_files
-    ], ignore_index=True)
+    data = pd.concat(
+        [
+            pd.read_csv(f, names=columns, index_col=False, encoding='utf-8').fillna('-')
+            for f in log_files
+        ],
+        ignore_index=True,
+    )
     app_log.info(
         'logviewer.summarize: prepare_logs {} rows with session_threshold={}'.format(
-            len(data.index), session_threshold))
-    data = prepare_logs(df=data,
-                        session_threshold=session_threshold,
-                        cutoff_buffer=cutoff_buffer,
-                        custom_dims=custom_dims)
+            len(data.index), session_threshold
+        )
+    )
+    data = prepare_logs(
+        df=data,
+        session_threshold=session_threshold,
+        cutoff_buffer=cutoff_buffer,
+        custom_dims=custom_dims,
+    )
     app_log.info('logviewer.summarize: processed {} rows'.format(len(data.index)))
     # apply transforms on raw data
     app_log.info('logviewer.summarize: applying transforms')
@@ -265,24 +264,24 @@ def apply_transform(data, spec):
         'NOTIN': lambda s, v: ~s.isin(v),
         'CONTAINS': {
             'function': lambda s, v, **ops: s.str.contains(v, **ops),
-            'defaults': {'case': False}
+            'defaults': {'case': False},
         },
         'NOTCONTAINS': {
             'function': lambda s, v, **ops: ~s.str.contains(v, **ops),
-            'defaults': {'case': False}
+            'defaults': {'case': False},
         },
         'LEN': lambda s, _: s.str.len(),
         'LOWER': lambda s, _: s.str.lower(),
         'UPPER': lambda s, _: s.str.upper(),
         'PROPER': lambda s, _: s.str.capitalize(),
         'STARTSWITH': lambda s, v: s.str.startswith(v),
-        'ENDSWITH': lambda s, v: s.str.endswith(v)
+        'ENDSWITH': lambda s, v: s.str.endswith(v),
     }
     # TODO: STRREPLACE
     if spec['type'] == 'function':
         fn = build_transform(
-            {'function': spec['expr']}, vars={'data': None},
-            filename=f'lv: {spec.get("name")}')
+            {'function': spec['expr']}, vars={'data': None}, filename=f'lv: {spec.get("name")}'
+        )
         fn(data)  # applies on copy
         return data
     expr = spec['expr']

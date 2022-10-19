@@ -42,8 +42,10 @@ class TestColor(unittest.TestCase):
         aeq(c([-1000, +1000]), ['#000000', '#ffffff'])
 
         c = color([0, 1, 2, 3], ['black', '#3f3f3f', '#c0c0c0', 'white'])
-        aeq(c([0, 0.5, 1, 1.5, 2, 2.5, 3]),
-            ['#000000', '#1f1f1f', '#3f3f3f', '#808080', '#c0c0c0', '#e0e0e0', '#ffffff'])
+        aeq(
+            c([0, 0.5, 1, 1.5, 2, 2.5, 3]),
+            ['#000000', '#1f1f1f', '#3f3f3f', '#808080', '#c0c0c0', '#e0e0e0', '#ffffff'],
+        )
         aeq(c([-1000, +1000]), ['#000000', '#ffffff'])
 
     def test_bin(self):
@@ -53,9 +55,20 @@ class TestColor(unittest.TestCase):
         aeq(c([-1000, +1000]), ['#000000', '#ffffff'])
 
         c = color([-2, -1, 0, +1, +2], ['black', '#111', '#eee', 'white'], bin=True)
-        aeq(c([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]), [
-            '#000000', '#000000', '#111111', '#111111',
-            '#eeeeee', '#eeeeee', '#ffffff', '#ffffff', '#ffffff'])
+        aeq(
+            c([-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]),
+            [
+                '#000000',
+                '#000000',
+                '#111111',
+                '#111111',
+                '#eeeeee',
+                '#eeeeee',
+                '#ffffff',
+                '#ffffff',
+                '#ffffff',
+            ],
+        )
         aeq(c([-1000, +1000]), ['#000000', '#ffffff'])
 
         # But len(range) must be 1 less than len(domain)
@@ -71,10 +84,20 @@ class TestColor(unittest.TestCase):
         aeq(c([-1, -0.5, 0, 0.5, 1]), ['#a50026', '#a50026', '#006837', '#006837', '#006837'])
 
         c = color([-1, -0.5, 0, 0.5, 1], 'RdYlGn', bin=True)
-        aeq(c([-1, -0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1]), [
-            '#a50026', '#a50026', '#fdbf6f', '#fdbf6f',
-            '#b7e075', '#b7e075', '#006837', '#006837', '#006837'
-        ])
+        aeq(
+            c([-1, -0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1]),
+            [
+                '#a50026',
+                '#a50026',
+                '#fdbf6f',
+                '#fdbf6f',
+                '#b7e075',
+                '#b7e075',
+                '#006837',
+                '#006837',
+                '#006837',
+            ],
+        )
         # Test valid and invalid color maps
         for cm in ['viridis', 'plasma', 'Blues', 'RdYlGn', 'PuBuGn', 'Pastel1', 'twilight']:
             color([-1, 0, 1], cm)

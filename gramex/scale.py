@@ -57,7 +57,9 @@ def color(domain, range, bin=False, to='hex', name='Gramex color'):
     # If convertors are not present, add them.
     # Run on demand (not when module loads) to defer importing numpy.
     if to == 'hex' and 'hex' not in _color_convert:
-        _color_convert['hex'] = _make_convertor(colors.to_hex,)
+        _color_convert['hex'] = _make_convertor(
+            colors.to_hex,
+        )
     elif to == 'rgb' and 'rgb' not in _color_convert:
         _color_convert['rgb'] = _make_convertor(colors.to_rgb)
     convert = _color_convert[to]
@@ -66,4 +68,5 @@ def color(domain, range, bin=False, to='hex', name='Gramex color'):
 
 def _make_convertor(method):
     import numpy as np
+
     return lambda v: method(v) if isinstance(v, tuple) else np.apply_along_axis(method, 1, v)

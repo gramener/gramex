@@ -90,8 +90,10 @@ __all__ = [
 try:
     # If Gramex enterprise is available, import all handlers
     import gramexenterprise.handlers
+
     if hasattr(gramexenterprise, 'handlers'):
-        from gramexenterprise.handlers import *             # noqa
+        from gramexenterprise.handlers import *  # noqa
+
         __all__ += gramexenterprise.handlers.__all__
 except ImportError:
     pass

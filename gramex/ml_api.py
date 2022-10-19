@@ -172,9 +172,6 @@ def assemble_pipeline(
     """
     if isinstance(model, str):
         model, _ = search_modelclass(model)(**kwargs)
-    # if is_statsmodel(model):
-    #     warnings.warn("Pipelines are not supported for statsmodels.")
-    #     return model
     nums = set(nums) - {target_col} if nums else set()
     cats = set(cats) - {target_col} if cats else set()
     both = nums & cats
@@ -298,9 +295,7 @@ class SklearnModel(AbstractModel):
         **kwargs,
     ):
         if not isinstance(model, Pipeline) and any([nums, cats]):
-            self.model = assemble_pipeline(
-                data, target_col, model, nums, cats, **kwargs
-            )
+            self.model = assemble_pipeline(data, target_col, model, nums, cats, **kwargs)
         else:
             self.model = model
         self.kwargs = kwargs
@@ -348,14 +343,10 @@ class SklearnModel(AbstractModel):
         try:
             y = self.model.predict(X, **kwargs)
         except RuntimeError:
-            y = self.model.predict(
-                X[self.model["transform"]._feature_names_in], **kwargs
-            )
+            y = self.model.predict(X[self.model["transform"]._feature_names_in], **kwargs)
         return y
 
-    def predict(
-        self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs
-    ):
+    def predict(self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs):
         """Get a prediction.
 
         Parameters
@@ -425,8 +416,6 @@ class HFTransformer(SklearnModel):
         text = X.squeeze("columns")
         self.model.fit(text, y, model_path, **kwargs)
 
-    def _predict(
-        self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs
-    ):
+    def _predict(self, X: Union[pd.DataFrame, np.ndarray], target_col: str = "", **kwargs):
         text = X["text"]
         return self.model.predict(text)

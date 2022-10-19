@@ -22,8 +22,9 @@ from gramex.transforms import build_transform, build_log_info
 from gramex.transforms.template import CacheLoader
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED
 from gramex.cache import get_store
+
 # We don't use these, but these stores used to be defined here. Programs may import these
-from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore    # noqa
+from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore  # noqa
 
 server_header = f'Gramex/{__version__}'
 session_store_cache = {}
@@ -37,12 +38,21 @@ class BaseMixin(object):
     '''Common utilities for all handlers. This is usde by [gramex.handlers.BaseHandler][] and
     [gramex.handlers.BaseWebSocketHandler][].
     '''
+
     @classmethod
-    def setup(cls, transform={}, redirect={}, methods=None,
-              auth: Union[None, bool, dict] = None,
-              log=None, set_xsrf=None, error=None, xsrf_cookies=None,
-              cors: Union[None, bool, dict] = None,
-              **kwargs):
+    def setup(
+        cls,
+        transform={},
+        redirect={},
+        methods=None,
+        auth: Union[None, bool, dict] = None,
+        log=None,
+        set_xsrf=None,
+        error=None,
+        xsrf_cookies=None,
+        cors: Union[None, bool, dict] = None,
+        **kwargs,
+    ):
         '''
         One-time setup for all request handlers. This is called only when
         gramex.yaml is parsed / changed.
@@ -70,8 +80,18 @@ class BaseMixin(object):
             cls.log_exception = cls.debug_exception
 
     # A list of special keys for BaseHandler. Can be extended by other classes.
-    special_keys = ['transform', 'redirect', 'methods', 'auth', 'log', 'set_xsrf',
-                    'error', 'xsrf_cookies', 'cors', 'headers']
+    special_keys = [
+        'transform',
+        'redirect',
+        'methods',
+        'auth',
+        'log',
+        'set_xsrf',
+        'error',
+        'xsrf_cookies',
+        'cors',
+        'headers',
+    ]
 
     @classmethod
     def clear_special_keys(cls, kwargs, *args):
@@ -113,8 +133,11 @@ class BaseMixin(object):
     def check_http_method(self):
         '''If method: [...] is specified, reject all methods not in the allowed methods set'''
         if self.request.method not in self._http_methods:
-            raise HTTPError(METHOD_NOT_ALLOWED, f'{self.name}: method {self.request.method} ' +
-                            f'not in allowed methods {self._http_methods}')
+            raise HTTPError(
+                METHOD_NOT_ALLOWED,
+                f'{self.name}: method {self.request.method} '
+                + f'not in allowed methods {self._http_methods}',
+            )
 
     @classmethod
     def setup_cors(cls, cors: Union[None, bool, dict], auth):
@@ -172,8 +195,10 @@ class BaseMixin(object):
         origin, cred = self.cors_origin()
         if not origin:
             origin = self.request.headers.get('Origin', '')
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS origin {origin} '
-                                         f'not in {self._cors["origins"]}')
+            raise HTTPError(
+                BAD_REQUEST,
+                f'url:{self.name}: CORS origin {origin} ' f'not in {self._cors["origins"]}',
+            )
 
         # Check if method is in cors.methods
         method = self.request.headers.get('Access-Control-Request-Method', '').upper()
@@ -181,8 +206,10 @@ class BaseMixin(object):
             if fnmatch(method, pattern.upper()):
                 break
         else:
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS method {method} '
-                                         f'not in {self._cors["methods"]}')
+            raise HTTPError(
+                BAD_REQUEST,
+                f'url:{self.name}: CORS method {method} ' f'not in {self._cors["methods"]}',
+            )
 
         # Check if headers is in cors.headers
         headers = self.request.headers.get('Access-Control-Request-Headers', '')
@@ -194,13 +221,16 @@ class BaseMixin(object):
                 if header.lower() not in allowed_headers:
                     diff.add(header)
         if diff:
-            raise HTTPError(BAD_REQUEST, f'url:{self.name}: CORS headers {diff} '
-                                         f'not in {self._cors["headers"]}')
+            raise HTTPError(
+                BAD_REQUEST,
+                f'url:{self.name}: CORS headers {diff} ' f'not in {self._cors["headers"]}',
+            )
 
         # If it succeeds, set relevant headers
         self.set_header('Access-Control-Allow-Origin', origin)
-        methods = (self._all_methods if '*' in self._cors['methods']
-                   else ', '.join(self._cors['methods']))
+        methods = (
+            self._all_methods if '*' in self._cors['methods'] else ', '.join(self._cors['methods'])
+        )
         self.set_header('Access-Control-Allow-Methods', methods)
         headers |= self._cors['headers']
         if '*' in headers:
@@ -240,8 +270,8 @@ class BaseMixin(object):
         for pattern, trans in transform.items():
             cls.transform[pattern] = {
                 'function': build_transform(
-                    trans, vars={'content': None, 'handler': None},
-                    filename=f'url:{cls.name}'),
+                    trans, vars={'content': None, 'handler': None}, filename=f'url:{cls.name}'
+                ),
                 'headers': trans.get('headers', {}),
                 'encoding': trans.get('encoding'),
             }
@@ -292,14 +322,15 @@ class BaseMixin(object):
                 path=store_path,
                 flush=session_conf.get('flush'),
                 purge=session_conf.get('purge'),
-                purge_keys=cls._purge_keys
+                purge_keys=cls._purge_keys,
             )
         cls._session_store = session_store_cache[key]
         cls.session = property(cls.get_session)
         cls._session_expiry = session_conf.get('expiry')
         cls._session_cookie_id = session_conf.get('cookie', 'sid')
         cls._session_cookie = {
-            key: session_conf[key] for key in ('httponly', 'secure', 'samesite', 'domain')
+            key: session_conf[key]
+            for key in ('httponly', 'secure', 'samesite', 'domain')
             if key in session_conf
         }
         # Note: We cannot use path: to specify the Cookie path attribute.
@@ -362,6 +393,7 @@ class BaseMixin(object):
 
         # redirect.external=False disallows external URLs
         if not redirect.get('external', False):
+
             def no_external(method):
                 def redirect_method(handler):
                     next_uri = method(handler)
@@ -373,7 +405,9 @@ class BaseMixin(object):
                         if req.protocol == target.scheme and req.host == target.netloc:
                             return next_uri
                         app_log.error(f'Not redirecting to external url: {next_uri}')
+
                 return redirect_method
+
             cls.redirects = [no_external(method) for method in cls.redirects]
 
     @classmethod
@@ -388,14 +422,19 @@ class BaseMixin(object):
         if isinstance(auth, dict):
             cls._auth = auth
             cls._auth_methods = cls.get_list(
-                auth.get('methods', ''), 'auth.methods', '[GET, POST, OPTIONS]')
+                auth.get('methods', ''), 'auth.methods', '[GET, POST, OPTIONS]'
+            )
             cls._on_init_methods.append(cls.authorize)
             cls.permissions = []
             # Add check for condition
             if auth.get('condition'):
                 cls.permissions.append(
-                    build_transform(auth['condition'], vars={'handler': None},
-                                    filename=f'url:{cls.name}.auth.permission'))
+                    build_transform(
+                        auth['condition'],
+                        vars={'handler': None},
+                        filename=f'url:{cls.name}.auth.permission',
+                    )
+                )
             # Add check for membership
             memberships = auth.get('membership', [])
             if not isinstance(memberships, list):
@@ -475,12 +514,15 @@ class BaseMixin(object):
                 if error_path:
                     error_config.pop('path')
                     app_log.warning(
-                        f'url.{cls.name}.error.{error_code} has function:. Ignoring path:')
-                cls.error[error_code] = {'function': build_transform(
-                    error_config,
-                    vars={'status_code': None, 'kwargs': None, 'handler': None},
-                    filename=f'url:{cls.name}.error.{error_code}'
-                )}
+                        f'url.{cls.name}.error.{error_code} has function:. Ignoring path:'
+                    )
+                cls.error[error_code] = {
+                    'function': build_transform(
+                        error_config,
+                        vars={'status_code': None, 'kwargs': None, 'handler': None},
+                        filename=f'url:{cls.name}.error.{error_code}',
+                    )
+                }
             elif error_path:
                 encoding = error_config.get('encoding', 'utf-8')
                 cls.error[error_code] = {'function': cls._error_fn(error_code, error_config)}
@@ -574,6 +616,7 @@ class BaseMixin(object):
         except ImportError:
             import pdb  # noqa: T100
             import warnings
+
             warnings.warn('"pip install ipdb" for better debugging')
         pdb.post_mortem(tb)
 
@@ -581,7 +624,8 @@ class BaseMixin(object):
         if status_code in self.error:
             try:
                 result = self.error[status_code]['function'](
-                    status_code=status_code, kwargs=kwargs, handler=self)
+                    status_code=status_code, kwargs=kwargs, handler=self
+                )
                 headers = self.error[status_code].get('conf', {}).get('headers', {})
                 self._write_headers(headers.items())
                 # result may be a generator / list from build_transform,
@@ -624,11 +668,14 @@ class BaseMixin(object):
             pass
         # Warn if app.session.domain is x.com but request comes from y.com.
         host = self.request.host_name
-        if ('domain' in kwargs and
-                not host.endswith(kwargs['domain']) and
-                not kwargs['domain'].endswith('.local')):
-            app_log.warning(f'{self.name}: session.domain={kwargs["domain"]} '
-                            f'but cookie sent to {host}')
+        if (
+            'domain' in kwargs
+            and not host.endswith(kwargs['domain'])
+            and not kwargs['domain'].endswith('.local')
+        ):
+            app_log.warning(
+                f'{self.name}: session.domain={kwargs["domain"]} ' f'but cookie sent to {host}'
+            )
         return session_id
 
     def get_session(self, expires_days=None, new=False):
@@ -698,11 +745,12 @@ class BaseMixin(object):
             self._session_store.dump(self._session['id'], self._session)
 
     def otp(
-            self,
-            expire: float = 60,
-            user: Union[str, dict] = None,
-            size: int = None,
-            type: str = 'OTP') -> str:
+        self,
+        expire: float = 60,
+        user: Union[str, dict] = None,
+        size: int = None,
+        type: str = 'OTP',
+    ) -> str:
         '''Return one-time password valid for ``expire`` seconds.
 
         The OTP is used as the X-Gramex-OTP header or in `?gramex-otp=` on any request.
@@ -730,10 +778,17 @@ class BaseMixin(object):
         if not user:
             raise HTTPError(UNAUTHORIZED)
         from uuid import uuid4
+
         otp = uuid4().hex[:size]
-        gramex.data.insert(**gramex.service.storelocations.otp, args={
-            'token': [otp], 'user': [json.dumps(user)], 'type': [type],
-            'expire': [time.time() + expire]})
+        gramex.data.insert(
+            **gramex.service.storelocations.otp,
+            args={
+                'token': [otp],
+                'user': [json.dumps(user)],
+                'type': [type],
+                'expire': [time.time() + expire],
+            },
+        )
         return otp
 
     def get_otp(self, key: str, revoke: bool = False) -> Union[str, dict, None]:
@@ -753,7 +808,8 @@ class BaseMixin(object):
         row = rows.iloc[0].to_dict()
         if revoke:
             gramex.data.delete(
-                **gramex.service.storelocations.otp, id=['token'], args={'token': [key]})
+                **gramex.service.storelocations.otp, id=['token'], args={'token': [key]}
+            )
         if row['expire'] > time.time():
             row['user'] = json.loads(row['user'])
             return row
@@ -787,9 +843,14 @@ class BaseMixin(object):
         cipher = headers.get('X-Gramex-User')
         if cipher:
             try:
-                user = json.loads(decode_signed_value(
-                    conf.app.settings['cookie_secret'], 'user', cipher,
-                    max_age_days=self._session_expiry))
+                user = json.loads(
+                    decode_signed_value(
+                        conf.app.settings['cookie_secret'],
+                        'user',
+                        cipher,
+                        max_age_days=self._session_expiry,
+                    )
+                )
             except Exception:
                 raise HTTPError(BAD_REQUEST, f'{self.name}: invalid X-Gramex-User: {cipher}')
             else:
@@ -800,15 +861,16 @@ class BaseMixin(object):
         # API Key is specified as an X-Gramex-Key header or ?gramex-key argument.
         # Override the user if either is specified.
         for key in ('OTP', 'Key'):
-            token = (
-                headers.get(f'X-Gramex-{key}') or
-                self.get_argument(f'gramex-{key.lower()}', None))
+            token = headers.get(f'X-Gramex-{key}') or self.get_argument(
+                f'gramex-{key.lower()}', None
+            )
             if token:
                 # Revoke OTP keys. Don't revoke API keys
                 row = self.get_otp(token, revoke=key == 'OTP')
                 if not row:
                     raise HTTPError(
-                        BAD_REQUEST, f'{self.name}: invalid/expired Gramex {key}: {token}')
+                        BAD_REQUEST, f'{self.name}: invalid/expired Gramex {key}: {token}'
+                    )
                 self.session['user'] = row['user']
 
     def set_last_visited(self):
@@ -830,6 +892,7 @@ class BaseHandler(RequestHandler, BaseMixin):
     BaseHandler provides auth, caching and other services common to all request
     handlers. All RequestHandlers must inherit from BaseHandler.
     '''
+
     def initialize(self, **kwargs):
         # self.request.arguments does not handle unicode keys well.
         # In Py2, it returns a str (not unicode). In Py3, it returns latin-1 unicode.
@@ -887,7 +950,8 @@ class BaseHandler(RequestHandler, BaseMixin):
         # For third-party redirection (e.g. Google Auth / Twitter needs a callback URI), then use
         # the full URL WITHOUT query parameters
         self.xredirect_uri = '{0.scheme:s}://{0.netloc:s}{0.path:s}'.format(
-            urlsplit(self.xrequest_full_url))
+            urlsplit(self.xrequest_full_url)
+        )
         # If X-Gramex-Root is specified, treat that as the application's root URL
         self.gramex_root = self.request.headers.get('X-Gramex-Root', '').rstrip('/')
         for method in self._on_init_methods:
@@ -1067,7 +1131,8 @@ class BaseHandler(RequestHandler, BaseMixin):
                         newval.append(newtype(v))
                     except ValueError:
                         raise HTTPError(
-                            BAD_REQUEST, f'{key}: type error ?{name}={v} to {newtype!r}')
+                            BAD_REQUEST, f'{key}: type error ?{name}={v} to {newtype!r}'
+                        )
                 val = newval
 
             # choices: check valid items
@@ -1099,8 +1164,11 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def create_template_loader(self, template_path):
         settings = self.application.settings
-        return CacheLoader(template_path, autoescape=settings['autoescape'],
-                           whitespace=settings.get('template_whitespace', None))
+        return CacheLoader(
+            template_path,
+            autoescape=settings['autoescape'],
+            whitespace=settings.get('template_whitespace', None),
+        )
 
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
@@ -1146,6 +1214,7 @@ class SetupFailedHandler(RequestHandler, BaseMixin):
     Used by gramex.services.init() when setting up URLs. If it's not able to set
     up a handler, it replaces it with this handler.
     '''
+
     def get(self):
         six.reraise(*self.exc_info)
 
@@ -1156,10 +1225,13 @@ def check_membership(memberships):
     any membership is allowed, else False
     '''
     # Pre-process memberships into an array of {objectpath: set(values)}
-    conds = [{
-        keypath: set(values) if isinstance(values, list) else {values}
-        for keypath, values in cond.items()
-    } for cond in memberships]
+    conds = [
+        {
+            keypath: set(values) if isinstance(values, list) else {values}
+            for keypath, values in cond.items()
+        }
+        for cond in memberships
+    ]
 
     def allowed(self):
         user = self.current_user

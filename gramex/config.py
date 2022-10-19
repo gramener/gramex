@@ -43,12 +43,13 @@ from yaml.constructor import ConstructorError
 from orderedattrdict import AttrDict, DefaultAttrDict
 from slugify import slugify
 from errno import EACCES, EPERM
+
 # We don't use six -- but import into globals() for _yaml_open().
 # This allows YAML conditionals like `key if six.text_type(...): val`
-import six      # noqa
+import six  # noqa
 
 
-ERROR_SHARING_VIOLATION = 32        # from winerror.ERROR_SHARING_VIOLATION
+ERROR_SHARING_VIOLATION = 32  # from winerror.ERROR_SHARING_VIOLATION
 
 # gramex.config.app_log is the default logger used by all of gramex
 # If it's not there, create one.
@@ -195,7 +196,8 @@ def setup_variables():
             variables['GRAMEXDATA'] = os.path.join(variables['LOCALAPPDATA'], 'Gramex Data')
         elif sys.platform == 'darwin':
             variables['GRAMEXDATA'] = os.path.expanduser(
-                '~/Library/Application Support/Gramex Data')
+                '~/Library/Application Support/Gramex Data'
+            )
         else:
             variables['GRAMEXDATA'] = os.path.abspath('.')
             app_log.warning(f'$GRAMEXDATA set to {variables["GRAMEXDATA"]} for OS {sys.platform}')
@@ -239,6 +241,7 @@ def _calc_value(val, key):
     if isinstance(val, dict):
         if val.get('function'):
             from .transforms import build_transform
+
             function = build_transform(val, vars={'key': None}, filename=f'config:{key}')
             try:
                 for result in function(key):
@@ -261,7 +264,7 @@ _valid_key_chars = string.ascii_letters + string.digits
 def random_string(size, chars=_valid_key_chars):
     '''Return random string of length size using chars (which defaults to alphanumeric)'''
     # B311:random random() is safe since it's for non-cryptographic use
-    return ''.join(choice(chars) for index in range(size))   # nosec B311
+    return ''.join(choice(chars) for index in range(size))  # nosec B311
 
 
 RANDOM_KEY = r'$*'
@@ -276,7 +279,8 @@ def _from_yaml(loader, node):
     yield attrdict
     if not isinstance(node, MappingNode):
         raise ConstructorError(
-            None, None, f'expected a mapping node, but found {node.id}', node.start_mark)
+            None, None, f'expected a mapping node, but found {node.id}', node.start_mark
+        )
     loader.flatten_mapping(node)
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=False)
@@ -288,12 +292,18 @@ def _from_yaml(loader, node):
             hash(key)
         except TypeError as exc:
             raise ConstructorError(
-                'while constructing a mapping', node.start_mark,
-                f'found unacceptable key ({exc})', key_node.start_mark)
+                'while constructing a mapping',
+                node.start_mark,
+                f'found unacceptable key ({exc})',
+                key_node.start_mark,
+            )
         if key in attrdict:
             raise ConstructorError(
-                'while constructing a mapping', node.start_mark,
-                f'found duplicate key ({key})', key_node.start_mark)
+                'while constructing a mapping',
+                node.start_mark,
+                f'found duplicate key ({key})',
+                key_node.start_mark,
+            )
         attrdict[key] = loader.construct_object(value_node, deep=False)
 
 
@@ -305,6 +315,7 @@ class ConfigYAMLLoader(SafeLoader):
 
     If there are duplicate keys, this raises an error.
     '''
+
     def __init__(self, *args, **kwargs):
         super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
         self.add_constructor('tag:yaml.org,2002:map', _from_yaml)
@@ -334,7 +345,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     with path.open(encoding='utf-8') as handle:
         try:
             # B506:yaml_load we use a safe loader
-            result = yaml.load(handle, Loader=ConfigYAMLLoader)     # nosec B506
+            result = yaml.load(handle, Loader=ConfigYAMLLoader)  # nosec B506
         except Exception:
             app_log.exception(f'Config error: {path}')
             return default
@@ -345,8 +356,8 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
 
     # Variables based on YAML file location
     yaml_path = str(path.parent)
-    kwargs.setdefault('YAMLPATH', yaml_path)    # Path to YAML folder
-    kwargs.setdefault('YAMLFILE', str(path))    # Path to YAML file
+    kwargs.setdefault('YAMLPATH', yaml_path)  # Path to YAML folder
+    kwargs.setdefault('YAMLFILE', str(path))  # Path to YAML file
     # $YAMLURL defaults to the relative URL from cwd to YAML folder.
     try:
         yamlurl = os.path.relpath(yaml_path)
@@ -595,6 +606,7 @@ class PathConfig(AttrDict):
             The ``os.stat()`` information about this file (or ``None`` if the
             file is missing.)
     '''
+
     duplicate_warn = None
 
     def __init__(self, path, warn=None):
@@ -618,8 +630,10 @@ class PathConfig(AttrDict):
                 reload = True
                 app_log.debug(f'Config deleted: {imp.path}')
                 break
-            if exists and (imp.path.stat().st_mtime > imp.stat.st_mtime or
-                           imp.path.stat().st_size != imp.stat.st_size):
+            if exists and (
+                imp.path.stat().st_mtime > imp.stat.st_mtime
+                or imp.path.stat().st_size != imp.stat.st_size
+            ):
                 reload = True
                 app_log.info(f'Updated config: {imp.path}')
                 break
@@ -659,13 +673,15 @@ class CustomJSONEncoder(JSONEncoder):
     '''
     Encodes object to JSON, additionally converting datetime into ISO 8601 format
     '''
+
     def default(self, obj):
         import numpy as np
 
         if hasattr(obj, 'to_dict'):
             # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
-            return loads(obj.to_json(orient='records', date_format='iso'),
-                         object_pairs_hook=OrderedDict)
+            return loads(
+                obj.to_json(orient='records', date_format='iso'), object_pairs_hook=OrderedDict
+            )
         elif isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:
@@ -673,7 +689,7 @@ class CustomJSONEncoder(JSONEncoder):
             return obj.isoformat()
         elif isinstance(obj, np.datetime64):
             obj = obj.item()
-            if (isinstance(obj, datetime.datetime) and obj.tzinfo is None):
+            if isinstance(obj, datetime.datetime) and obj.tzinfo is None:
                 obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
             return obj.isoformat()
         elif isinstance(obj, np.integer):
@@ -693,6 +709,7 @@ class CustomJSONDecoder(JSONDecoder):
     '''
     Decodes JSON string, converting ISO 8601 datetime to datetime
     '''
+
     # Check if a string might be a datetime. Handles variants like:
     # 2001-02-03T04:05:06Z
     # 2001-02-03T04:05:06+000
@@ -768,6 +785,7 @@ class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
     column keys. When ``.emit()`` is called, it expects an object with the
     same keys as ``keys``.
     '''
+
     def __init__(self, *args, **kwargs):
         self.keys = kwargs.pop('keys')
         super(TimedRotatingCSVHandler, self).__init__(*args, **kwargs)
@@ -863,10 +881,11 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
     if secrets_url and secrets_key:
         from urllib.request import urlopen
         from tornado.web import decode_signed_value
+
         app_log.info(f'Fetching remote secrets from {secrets_url}')
         # Load string from the URL -- but ignore comments. file:// URLs are fine too
         # B310:urllib_urlopen secrets can be local files or URLs
-        value = yaml.safe_load(urlopen(secrets_url))    # nosec B310
+        value = yaml.safe_load(urlopen(secrets_url))  # nosec B310
         value = decode_signed_value(secrets_key, '', value, max_age_days=max_age_days)
         result.update(loads(value.decode('utf-8')))
     # If SECRETS_IMPORT: is set, fetch secrets from those file(s) as well.
@@ -874,9 +893,13 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
     secrets_import = result.pop('SECRETS_IMPORT', None)
     if secrets_import:
         # Create a list of file patterns to import from
-        imports = (list(secrets_import.values()) if isinstance(secrets_import, dict) else
-                   secrets_import if isinstance(secrets_import, (list, tuple)) else
-                   [secrets_import])
+        imports = (
+            list(secrets_import.values())
+            if isinstance(secrets_import, dict)
+            else secrets_import
+            if isinstance(secrets_import, (list, tuple))
+            else [secrets_import]
+        )
         for pattern in imports:
             for import_path in path.parent.glob(pattern):
                 setup_secrets(import_path, max_age_days, clear=False)

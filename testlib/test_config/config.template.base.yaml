@@ -1,81 +1,81 @@
 variables:
-    ROOT: "base"
-    THIS: "base"
-    BASE_DEFAULT: {default: base}
-    YAMLURL_VAR: $YAMLURL
-    FUNCTION:
-        function: str
-        args: ['base']
-        default: ignored-value
-    DEFAULT_FUNCTION:
-        default:
-            function: str
-            args: ['base']
-    INVALID_FUNCTION:
-        function: nonexistent()
-        default: DEFAULT
-    DEFAULT_OBJECT:
-        default:
-            x: $THIS
-    FUNCTION_VAR:
-        function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
-    DERIVED: $THIS/derived
-    NUMERIC: 1
-    BOOLEAN: true
-    OBJECT: {x: 1}
-    OBJECT_CALC: {x: $THIS}
-    LIST: [1, 2]
-    LIST_CALC: [$THIS]
+  ROOT: "base"
+  THIS: "base"
+  BASE_DEFAULT: { default: base }
+  YAMLURL_VAR: $YAMLURL
+  FUNCTION:
+    function: str
+    args: ["base"]
+    default: ignored-value
+  DEFAULT_FUNCTION:
+    default:
+      function: str
+      args: ["base"]
+  INVALID_FUNCTION:
+    function: nonexistent()
+    default: DEFAULT
+  DEFAULT_OBJECT:
+    default:
+      x: $THIS
+  FUNCTION_VAR:
+    function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
+  DERIVED: $THIS/derived
+  NUMERIC: 1
+  BOOLEAN: true
+  OBJECT: { x: 1 }
+  OBJECT_CALC: { x: $THIS }
+  LIST: [1, 2]
+  LIST_CALC: [$THIS]
 
-    CONDITION1:
-        function: condition
-        args:
-            - "$ROOT == 'base'"
-            - condition1
-        default: invalid
-    CONDITION2:
-        function: condition
-        args:
-            - $NUMERIC >= 2
-            - invalid
-            - $NUMERIC <= 0
-            - invalid
-            - 0 < $NUMERIC < 2
-            - condition2
-        default: invalid
-    CONDITION3:
-        function: condition
-        args:
-            - "'x' in $OBJECT and sum($LIST) == 3"
-            - condition3
-    CONDITION4:
-        function: condition
-        args:
-            - False
-            - invalid
-        default: condition4
-    CONDITION5:
-        function: condition
-        args:
-            "$ROOT == 'base'": condition5
-    CONDITION6:
-        function: condition
-        args:
-            '$NUMERIC >= 2': invalid
-            '$NUMERIC <= 0': invalid
-            '0 < $NUMERIC < 2': condition6
-    CONDITION7:
-        function: condition
-        args:
-            - False
-            - invalid
-            - condition7
-    CONDITION8:
-        function: condition
-        args:
-            '1 == 2': invalid
-            '2 == 3': invalid
-        default: condition8
+  CONDITION1:
+    function: condition
+    args:
+      - "$ROOT == 'base'"
+      - condition1
+    default: invalid
+  CONDITION2:
+    function: condition
+    args:
+      - $NUMERIC >= 2
+      - invalid
+      - $NUMERIC <= 0
+      - invalid
+      - 0 < $NUMERIC < 2
+      - condition2
+    default: invalid
+  CONDITION3:
+    function: condition
+    args:
+      - "'x' in $OBJECT and sum($LIST) == 3"
+      - condition3
+  CONDITION4:
+    function: condition
+    args:
+      - False
+      - invalid
+    default: condition4
+  CONDITION5:
+    function: condition
+    args:
+      "$ROOT == 'base'": condition5
+  CONDITION6:
+    function: condition
+    args:
+      "$NUMERIC >= 2": invalid
+      "$NUMERIC <= 0": invalid
+      "0 < $NUMERIC < 2": condition6
+  CONDITION7:
+    function: condition
+    args:
+      - False
+      - invalid
+      - condition7
+  CONDITION8:
+    function: condition
+    args:
+      "1 == 2": invalid
+      "2 == 3": invalid
+    default: condition8
 
 base_DOT: "{.}"
 base_YAMLPATH: $YAMLPATH
@@ -100,7 +100,7 @@ base_GRAMEXHOST: $GRAMEXHOST
 path: $YAMLPATH
 
 numeric: "$NUMERIC"
-boolean: '$BOOLEAN'
+boolean: "$BOOLEAN"
 object: $OBJECT
 object_calc: $OBJECT_CALC
 object_default: $DEFAULT_OBJECT
@@ -112,17 +112,17 @@ object_subst: "/${OBJECT}"
 list_subst: "/${LIST}"
 
 import:
-    subdir: dir/config.template.subdir.yaml
+  subdir: dir/config.template.subdir.yaml
 
 conditions:
-    condition1: is-$CONDITION1
-    condition2: is-$CONDITION2
-    condition3: is-$CONDITION3
-    condition4: is-$CONDITION4
-    condition5: is-$CONDITION5
-    condition6: is-$CONDITION6
-    condition7: is-$CONDITION7
-    condition8: is-$CONDITION8
+  condition1: is-$CONDITION1
+  condition2: is-$CONDITION2
+  condition3: is-$CONDITION3
+  condition4: is-$CONDITION4
+  condition5: is-$CONDITION5
+  condition6: is-$CONDITION6
+  condition7: is-$CONDITION7
+  condition8: is-$CONDITION8
 
 # Defined by config.importvars.yaml
 custom: $CUSTOM

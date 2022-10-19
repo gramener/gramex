@@ -108,7 +108,8 @@ def app(conf: dict) -> None:
             if e.errno not in port_used_codes.values():
                 raise
             logging.error(
-                'Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex', conf.listen.port)
+                'Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex', conf.listen.port
+            )
             sys.exit(1)
 
         def callback():
@@ -118,7 +119,8 @@ def app(conf: dict) -> None:
 
             # If enterprise version is installed, user must accept license
             try:
-                import gramexenterprise         # noqa
+                import gramexenterprise  # noqa
+
                 gramex.license.accept()
             except ImportError:
                 pass
@@ -166,8 +168,9 @@ def app(conf: dict) -> None:
                         try:
                             import ipdb as pdb  # noqa: T100
                         except ImportError:
-                            import pdb          # noqa: T100
+                            import pdb  # noqa: T100
                             import warnings
+
                             warnings.warn('"pip install ipdb" for better debugging')
                         pdb.set_trace()  # noqa: T100
                     # If Ctrl-B is pressed, start the browser
@@ -198,6 +201,7 @@ def schedule(conf: dict) -> None:
     '''Set up the Gramex scheduler'''
     # Create tasks running on ioloop for the given schedule, store it in info.schedule
     from . import scheduler
+
     _stop_all_tasks(info.schedule)
     for name, sched in conf.items():
         _key = cache_key('schedule', sched)
@@ -207,8 +211,7 @@ def schedule(conf: dict) -> None:
             continue
         try:
             app_log.info(f'Initialising schedule:{name}')
-            _cache[_key] = scheduler.Task(
-                name, sched, info.threadpool, ioloop=info.main_ioloop)
+            _cache[_key] = scheduler.Task(name, sched, info.threadpool, ioloop=info.main_ioloop)
             info.schedule[name] = _cache[_key]
         except Exception as e:
             app_log.exception(e)
@@ -219,6 +222,7 @@ def alert(conf: dict) -> None:
     Sets up the alert service
     '''
     from . import scheduler
+
     _stop_all_tasks(info.alert)
     schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
 
@@ -235,8 +239,9 @@ def alert(conf: dict) -> None:
         schedule['function'] = create_alert(name, alert)
         if schedule['function'] is not None:
             try:
-                _cache[_key] = scheduler.Task(name, schedule, info.threadpool,
-                                              ioloop=info.main_ioloop)
+                _cache[_key] = scheduler.Task(
+                    name, schedule, info.threadpool, ioloop=info.main_ioloop
+                )
                 info.alert[name] = _cache[_key]
             except Exception:
                 app_log.exception(f'Failed to initialize alert: {name}')
@@ -284,7 +289,7 @@ def url(conf: dict) -> None:
             class_vars['cache'] = _cache_generator(spec['cache'], name=name)
         else:
             class_vars['cache'] = None
-        handler = type(spec.handler, (handler_class, ), class_vars)
+        handler = type(spec.handler, (handler_class,), class_vars)
 
         # Ensure that there's a kwargs: dict in the spec
         spec.setdefault('kwargs', AttrDict())
@@ -294,14 +299,14 @@ def url(conf: dict) -> None:
         # If there's a setup method, call it to initialize the class
         if hasattr(handler_class, 'setup'):
             try:
-                handler.setup_default_kwargs()      # Updates spec.kwargs with base handlers
+                handler.setup_default_kwargs()  # Updates spec.kwargs with base handlers
                 handler.setup(**spec.kwargs)
             except Exception:
                 app_log.exception(f'url:{name} ({spec.handler}) invalid configuration')
                 # Since we can't set up the handler, all requests must report the error instead
                 class_vars['exc_info'] = sys.exc_info()
                 error_handler = locate('SetupFailedHandler', modules=['gramex.handlers'])
-                handler = type(spec.handler, (error_handler, ), class_vars)
+                handler = type(spec.handler, (error_handler,), class_vars)
                 spec.kwargs = {}
                 handler.setup(**spec.kwargs)
 
@@ -361,14 +366,14 @@ def watch(conf: dict) -> None:
 
 _cache_defaults = {
     'memory': {
-        'size': 500000000,      # 500 MiB
+        'size': 500000000,  # 500 MiB
     },
     'disk': {
-        'size': 10000000000,    # 10 GiB
+        'size': 10000000000,  # 10 GiB
     },
     'redis': {
-        'size': 500000000,      # 500 MiB
-    }
+        'size': 500000000,  # 500 MiB
+    },
 }
 
 
@@ -382,11 +387,13 @@ def cache(conf: dict) -> None:
         config = merge(dict(config), _cache_defaults[cache_type], mode='setdefault')
         if cache_type == 'memory':
             info.cache[name] = urlcache.MemoryCache(
-                maxsize=config['size'], getsizeof=gramex.cache.sizeof)
+                maxsize=config['size'], getsizeof=gramex.cache.sizeof
+            )
         elif cache_type == 'disk':
             path = config.get('path', '.cache-' + name)
             info.cache[name] = urlcache.DiskCache(
-                path, size_limit=config['size'], eviction_policy='least-recently-stored')
+                path, size_limit=config['size'], eviction_policy='least-recently-stored'
+            )
             atexit.register(info.cache[name].close)
         elif cache_type == 'redis':
             path = config['path'] if 'path' in config else None
@@ -428,16 +435,17 @@ def eventlog(conf: dict) -> None:
 
     def shutdown():
         add('shutdown', {'version': __version__, 'pid': os.getpid()})
-        # Don't close the connection here. gramex.gramex_update() runs in a thread. If we start and
+        # Don't conn.close() here. gramex.gramex_update() runs in a thread. If we start and
         # stop gramex quickly, allow gramex_update to add too this entry
-        # conn.close()
 
     info.eventlog.query = query
     info.eventlog.add = add
 
     query('CREATE TABLE IF NOT EXISTS events (time REAL, event TEXT, data TEXT)')
-    add('startup', {'version': __version__, 'pid': os.getpid(),
-                    'args': sys.argv, 'cwd': os.getcwd()})
+    add(
+        'startup',
+        {'version': __version__, 'pid': os.getpid(), 'args': sys.argv, 'cwd': os.getcwd()},
+    )
     atexit.register(shutdown)
 
 
@@ -496,6 +504,7 @@ def test(conf: dict) -> None:
 def gramexlog(conf: dict) -> None:
     '''Set up gramexlog service'''
     from gramex.transforms import build_log_info
+
     try:
         from elasticsearch import Elasticsearch, helpers
     except ImportError:
@@ -555,6 +564,7 @@ def storelocations(conf: dict) -> None:
 
 def _storelocations_purge() -> None:
     import time
+
     gramex.data.delete(
         **gramex.service.storelocations.otp,
         id=['token'],
@@ -569,11 +579,11 @@ class GramexApp(tornado.web.Application):
             handler.log_request()
         # Log the request with the handler name at the end.
         status = handler.get_status()
-        if status < 400:                    # noqa: < 400 is any successful request
+        if status < 400:  # noqa: < 400 is any successful request
             log_method = gramex.cache.app_log.info
-        elif status < 500:                  # noqa: 400-499 is a user error
+        elif status < 500:  # noqa: 400-499 is a user error
             log_method = gramex.cache.app_log.warning
-        else:                               # 500+ is a server error
+        else:  # 500+ is a server error
             log_method = gramex.cache.app_log.error
         request_time = 1000.0 * handler.request.request_time()
         handler_name = getattr(handler, 'name', handler.__class__.__name__)
@@ -665,7 +675,10 @@ def create_alert(name, alert):
     vars.update({'config': None, 'args': None})
     condition = build_transform(
         {'function': alert.get('condition', 'True')},
-        filename=f'alert: {name}', vars=vars, iter=False)
+        filename=f'alert: {name}',
+        vars=vars,
+        iter=False,
+    )
 
     alert_logger = logging.getLogger('gramex.alert')
 
@@ -695,8 +708,10 @@ def create_alert(name, alert):
             elif hasattr(each_data, 'iterrows'):
                 each += list(each_data.iterrows())
             else:
-                raise ValueError(f'alert: {name}: each: data.{alert["each"]} must be ' +
-                                 'dict/list/DF, not {type(each_data)}')
+                raise ValueError(
+                    f'alert: {name}: each: data.{alert["each"]} must be '
+                    + 'dict/list/DF, not {type(each_data)}'
+                )
         else:
             each.append((0, None))
 
@@ -726,7 +741,8 @@ def create_alert(name, alert):
                 node[key] = _tmpl(val).generate(**data).decode('utf-8')
             user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
             headers['X-Gramex-User'] = tornado.web.create_signed_value(
-                info.app.settings['cookie_secret'], 'user', user)
+                info.app.settings['cookie_secret'], 'user', user
+            )
         if 'markdown' in mail:
             mail['html'] = _markdown_convert(mail.pop('markdown'))
         if 'images' in alert:
@@ -741,9 +757,11 @@ def create_alert(name, alert):
                         bytestoread = 80
                         first_line = temp_file.read(bytestoread)
                     # TODO: let admin know that the image was not processed
-                    app_log.error(f'alert: {name}: {cid}: {urldata["r"].status_code} '
-                                  f'({urldata["content_type"]}) not an image: {urlpath}\n'
-                                  f'{first_line!r}')
+                    app_log.error(
+                        f'alert: {name}: {cid}: {urldata["r"].status_code} '
+                        f'({urldata["content_type"]}) not an image: {urlpath}\n'
+                        f'{first_line!r}'
+                    )
         if 'attachments' in alert:
             mail['attachments'] = [
                 urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
@@ -785,9 +803,14 @@ def create_alert(name, alert):
             else:
                 done.append(v)
                 event = {
-                    'alert': name, 'service': service, 'from': mailer.email or '',
-                    'to': '', 'cc': '', 'bcc': '', 'subject': '',
-                    'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+                    'alert': name,
+                    'service': service,
+                    'from': mailer.email or '',
+                    'to': '',
+                    'cc': '',
+                    'bcc': '',
+                    'subject': '',
+                    'datetime': datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ"),
                 }
                 event.update({k: v for k, v in v.mail.items() if k in event})
                 event['attachments'] = ', '.join(v.mail.get('attachments', []))
@@ -813,15 +836,19 @@ def _markdown_convert(content):
     # Cache the markdown converter
     if '_markdown' not in info:
         import markdown
-        info['_markdown'] = markdown.Markdown(extensions=[
-            'markdown.extensions.extra',
-            'markdown.extensions.meta',
-            'markdown.extensions.codehilite',
-            'markdown.extensions.smarty',
-            'markdown.extensions.sane_lists',
-            'markdown.extensions.fenced_code',
-            'markdown.extensions.toc',
-        ], output_format='html5')
+
+        info['_markdown'] = markdown.Markdown(
+            extensions=[
+                'markdown.extensions.extra',
+                'markdown.extensions.meta',
+                'markdown.extensions.codehilite',
+                'markdown.extensions.smarty',
+                'markdown.extensions.sane_lists',
+                'markdown.extensions.fenced_code',
+                'markdown.extensions.toc',
+            ],
+            output_format='html5',
+        )
     return info['_markdown'].convert(content)
 
 
@@ -847,10 +874,9 @@ def _sort_url_patterns(entry):
     pattern = spec.get('pattern', '')
     # URLs are resolved in this order:
     return (
-        spec.get('priority', 0),    # by explicity priority: parameter
-        pattern.count('/'),         # by path depth (deeper paths are higher)
-        -(pattern.count('*') +
-          pattern.count('+')),      # by wildcards (wildcards get lower priority)
+        spec.get('priority', 0),  # by explicity priority: parameter
+        pattern.count('/'),  # by path depth (deeper paths are higher)
+        -(pattern.count('*') + pattern.count('+')),  # by wildcards (wildcards get lower priority)
     )
     # TODO: patterns like (js/.*|css/.*|img/.*) will have path depth of 3.
     # But this should really count only as 1.
@@ -899,10 +925,13 @@ def _get_cache_key(conf, name):
             key_getters.append(f'request.headers.get({val}, missing)')
         elif parts[0].startswith('cookie'):
             key_getters.append(
-                f'request.cookies[{val}].value if {val} in request.cookies else missing')
+                f'request.cookies[{val}].value if {val} in request.cookies else missing'
+            )
         elif parts[0].startswith('user'):
-            key_getters.append(f'str(handler.current_user.get({val}, missing)) '
-                               'if handler.current_user else missing')
+            key_getters.append(
+                f'str(handler.current_user.get({val}, missing)) '
+                'if handler.current_user else missing'
+            )
         elif parts[0].startswith('arg'):
             key_getters.append(f'argsep.join(handler.args.get({val}, [missing]))')
         else:
@@ -916,10 +945,10 @@ def _get_cache_key(conf, name):
     method += f'\treturn ({", ".join(key_getters)})'
     context = {
         'missing': '~',
-        'argsep': ', ',         # join args using comma
+        'argsep': ', ',  # join args using comma
     }
     # B102:exec_used is safe since the code is constructed entirely in this function
-    exec(method, context)       # nosec B102
+    exec(method, context)  # nosec B102
     return context['cache_key']
 
 
@@ -974,11 +1003,14 @@ def _cache_generator(conf, name):
     cache_statuses = conf.get('status', [OK, NOT_MODIFIED])
     cache_expiry_duration = cache_expiry.get('duration', MAXTTL)
 
-    # This method will be added to the handler class as "cache", and called as
-    # self.cache()
+    # This method will be added to the handler class as "cache". Called as self.cache()
     def get_cachefile(handler):
-        return cachefile_class(key=url_cache_key(handler), store=store,
-                               handler=handler, expire=cache_expiry_duration,
-                               statuses=set(cache_statuses))
+        return cachefile_class(
+            key=url_cache_key(handler),
+            store=store,
+            handler=handler,
+            expire=cache_expiry_duration,
+            statuses=set(cache_statuses),
+        )
 
     return get_cachefile

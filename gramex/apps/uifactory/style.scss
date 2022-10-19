@@ -24,7 +24,8 @@
   -o-filter: grayscale(100%);
   filter: gray;
 }
-.gallery-grid .card:hover, .create-form:hover {
+.gallery-grid .card:hover,
+.create-form:hover {
   border-color: #007bff;
 }
 .sourcecode-container {
@@ -36,7 +37,7 @@
 #editor-html {
   width: 90%;
   height: 30vw;
-  border:1px solid grey;
+  border: 1px solid grey;
 }
 // view form
 .modal-content .form-control:focus {

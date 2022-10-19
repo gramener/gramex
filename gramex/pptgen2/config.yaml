@@ -214,7 +214,7 @@ transition:
     in: { dir: in }
     out: { dir: out }
   wedge: {}
-  wheel: {}     # spokes=<int>
+  wheel: {} # spokes=<int>
   wheelReverse: # spokes=int
     ns: p14
   window:
@@ -325,9 +325,9 @@ link-action:
 # Links can be specified on shapes or text, and they're defined on different OXML tags
 link-attrs:
   # For shapes, modify <p:cNvPr> under shape._element
-  shape: {tag: p:cNvPr, el: _element}
+  shape: { tag: p:cNvPr, el: _element }
   # For text, odify <a:rPr> under run._r
-  text: {tag: a:rPr, el: _r}
+  text: { tag: a:rPr, el: _r }
 
 # If link: target is one of these file types, use ppaction://hlinkpres indicating that it's a PPTX
 link-ppt-files: [.ppt, .pptx, .pptm, .pps, .ppsm]
@@ -336,23 +336,23 @@ link-ppt-files: [.ppt, .pptx, .pptm, .pps, .ppsm]
 # ---------------------------------------------------------------------
 chart-type:
   # All valid children of <plotArea>
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}area3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}areaChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}bar3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}barChart': Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}area3DChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}areaChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}bar3DChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}barChart": Category
   # Bubble charts are not yet supported
   # '{http://schemas.openxmlformats.org/drawingml/2006/chart}bubbleChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}doughnutChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}line3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}lineChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}ofPieChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}pie3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}pieChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}radarChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}scatterChart': Xy
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}stockChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}surface3DChart': Category
-  '{http://schemas.openxmlformats.org/drawingml/2006/chart}surfaceChart': Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}doughnutChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}line3DChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}lineChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}ofPieChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}pie3DChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}pieChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}radarChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}scatterChart": Xy
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}stockChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}surface3DChart": Category
+  "{http://schemas.openxmlformats.org/drawingml/2006/chart}surfaceChart": Category
 
 new-chart-layouts:
   # These have reltype http://schemas.microsoft.com/office/2014/relationships/chartEx

@@ -100,8 +100,16 @@ class FileHandler(BaseHandler):
     '''
 
     @classmethod
-    def setup(cls, path, default_filename=None, index=None, index_template=None,
-              headers={}, default={}, **kwargs):
+    def setup(
+        cls,
+        path,
+        default_filename=None,
+        index=None,
+        index_template=None,
+        headers={},
+        default={},
+        **kwargs,
+    ):
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
@@ -110,8 +118,9 @@ class FileHandler(BaseHandler):
             if val:
                 # template/sass/...: true is the same as template: '*'
                 val = '*' if val is True else val if isinstance(val, (list, tuple)) else [val]
-                kwargs.setdefault('transform', AttrDict()).update({
-                    v: AttrDict(function=key) for v in val})
+                kwargs.setdefault('transform', AttrDict()).update(
+                    {v: AttrDict(function=key) for v in val}
+                )
         super(FileHandler, cls).setup(**kwargs)
 
         cls.root, cls.pattern = None, None
@@ -244,8 +253,11 @@ class FileHandler(BaseHandler):
             raise HTTPError(FORBIDDEN, f'{self.file} not allowed')
 
         # Display the list of files for directories without a default file
-        if self.path.is_dir() and self.index and not (
-                self.default_filename and self.file.exists()):
+        if (
+            self.path.is_dir()
+            and self.index
+            and not (self.default_filename and self.file.exists())
+        ):
             self.set_header('Content-Type', 'text/html; charset=UTF-8')
             content = []
             file_template = string.Template('<li><a href="$path">$name</a></li>')
@@ -257,10 +269,12 @@ class FileHandler(BaseHandler):
                 else:
                     name_suffix = path_suffix = ''
                 path = str(path.relative_to(self.path))
-                content.append(file_template.substitute(
-                    path=path + path_suffix,
-                    name=path + name_suffix,
-                ))
+                content.append(
+                    file_template.substitute(
+                        path=path + path_suffix,
+                        name=path + name_suffix,
+                    )
+                )
             content.append('</ul>')
             try:
                 tmpl = gramex.cache.open(self.index_template, _tmpl_opener)

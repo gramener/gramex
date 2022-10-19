@@ -62,8 +62,9 @@ def postgres_drop_db(server, db):
     conn = engine.connect()
     conn.execute('commit')
     # Terminate all other sessions using the test_datahandler database
-    conn.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                 "WHERE datname='%s'" % db)
+    conn.execute(
+        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity " "WHERE datname='%s'" % db
+    )
     conn.execute('commit')
     conn.execute('DROP DATABASE IF EXISTS %s' % db)
     conn.execute('commit')
@@ -92,6 +93,7 @@ def sqlite_drop_db(db):
 
 def mongodb_create_db(url, database, **tables):
     import pymongo
+
     client = pymongo.MongoClient(url)
     db = client[database]
     for collection, data in tables.items():
@@ -101,5 +103,6 @@ def mongodb_create_db(url, database, **tables):
 
 def mongodb_drop_db(url, database):
     import pymongo
+
     client = pymongo.MongoClient(url)
     client.drop_database(database)

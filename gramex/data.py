@@ -35,7 +35,7 @@ _agg_type = {
     'sum': float,
     'count': int,
     'avg': float,
-    'stdev': float,         # MS SQL version of stddev
+    'stdev': float,  # MS SQL version of stddev
     'stddev': float,
     'rank': int,
     'percent_rank': float,
@@ -50,16 +50,24 @@ plugins = {}
 
 
 def filter(
-        url: Union[str, pd.DataFrame], args: dict = {}, meta: dict = {}, engine: str = None,
-        ext: str = None, columns: dict = None, query: str = None,
-        queryfile: str = None, transform: Callable = None,
-        transform_kwargs: dict = {}, **kwargs: dict) -> pd.DataFrame:
+    url: Union[str, pd.DataFrame],
+    args: dict = {},
+    meta: dict = {},
+    engine: str = None,
+    ext: str = None,
+    columns: dict = None,
+    query: str = None,
+    queryfile: str = None,
+    transform: Callable = None,
+    transform_kwargs: dict = {},
+    **kwargs: dict,
+) -> pd.DataFrame:
     '''Filter data using URL query parameters.
 
     Examples:
         >>> gramex.data.filter(dataframe, args=handler.args)
         >>> gramex.data.filter('file.csv', args=handler.args)
-        >>> gramex.data.filter('mysql://server/db', table='table', args=handler.args)
+        >>> gramex.data.filter('mysql://server/db', table='table', args={'user': [user']})
 
     Parameters:
 
@@ -92,18 +100,31 @@ def filter(
     Returns:
         Filtered DataFrame
 
-    Remaining kwargs are passed to [gramex.cache.open][] if `url` is a file, or
-    `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL. Specifically, kwargs can include:
+    To filter a DataFrame where column x=1 and y=2:
+
+        >>> filtered = gramex.data.filter(dataframe, args={'x': [1], 'y': [2]})
+
+    `args` is always a dict of lists, which is compatible with Gramex's `handler.args`.
+    So you can replace the above with:
+
+        >>> filtered = gramex.data.filter(dataframe, args=handle.args)
+
+    To filter ?city=Rome from a CSV/XLS/any file supported by [gramex.cache.open][]:
+
+        >>> gramex.data.filter('path/to/file.csv', rel=True, args={'city': ['Rome']})
+
+    Remaining `kwargs` are passed to [gramex.cache.open][] if `url` is a file. So `rel=True` works
+
+    To filter ?city=Rome from a SQLite, MySQL, PostgreSQL or any SQLAlchemy-supported DB:
+
+        >>> gramex.data.filter('sqlite:///x.db', table='data', args={'city': ['Rome']})
+
+    Remaining `kwargs` are passed to `sqlalchemy.create_engine` if `url` is a SQLAlchemy URL. E.g.
 
     - `table`: table name (if url is an SQLAlchemy URL), `.format`-ed using `args`.
     - `state`: optional SQL query to check if data has changed.
 
-    If this is used in a handler as
-
-        >>> filtered = gramex.data.filter(dataframe, args=handler.args)
-
-    ... then calling the handler with `?x=1&y=2` returns all rows in
-    `dataframe` where x is 1 and y is 2.
+    TODO: Document how to pass params -- for each database
 
     If `table` or `query` is passed to an SQLAlchemy url, it is formatted using `args`.
     For example
@@ -187,19 +208,22 @@ def filter(
         engine = get_engine(url)
 
     # Pass the meta= argument from kwargs (if any)
-    meta.update({
-        'filters': [],      # Applied filters as [(col, op, val), ...]
-        'ignored': [],      # Ignored filters as [(col, vals), ...]
-        'sort': [],         # Sorted columns as [(col, asc), ...]
-        'offset': 0,        # Offset as integer
-        'limit': None,      # Limit as integer - None if not applied
-        'by': [],           # Group by columns as [col, ...]
-    })
-    args = dict(args)       # Do not modify the args -- keep a copy
+    meta.update(
+        {
+            'filters': [],  # Applied filters as [(col, op, val), ...]
+            'ignored': [],  # Ignored filters as [(col, vals), ...]
+            'sort': [],  # Sorted columns as [(col, asc), ...]
+            'offset': 0,  # Offset as integer
+            'limit': None,  # Limit as integer - None if not applied
+            'by': [],  # Group by columns as [col, ...]
+        }
+    )
+    args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     transform = _transform_fn(transform, transform_kwargs)
     url, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, ext, query, queryfile, **kwargs)
+        engine, args, url, ext, query, queryfile, **kwargs
+    )
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
@@ -218,8 +242,15 @@ def filter(
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['filter']
-        return method(url=url, controls=controls, args=args, meta=meta, query=query,
-                      columns=columns, **kwargs)
+        return method(
+            url=url,
+            controls=controls,
+            args=args,
+            meta=meta,
+            query=query,
+            columns=columns,
+            **kwargs,
+        )
     elif engine == 'sqlalchemy':
         table = kwargs.pop('table', None)
         state = kwargs.pop('state', None)
@@ -235,6 +266,7 @@ def filter(
                 elif table is not None:
                     raise ValueError(f'table: must be string or list of strings, not {table!r}')
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
+            # sa.text() provides backend-neutral :name for bind parameters
             data = gramex.cache.query(sa.text(query), engine, state, params=all_params)
             data = transform(data) if callable(transform) else data
             return _filter_frame(data, meta=meta, controls=controls, args=args)
@@ -251,10 +283,20 @@ def filter(
 
 
 def delete(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
-        table: str = None, ext: str = None, id: str = None, columns: dict = None,
-        query: str = None, queryfile: str = None, transform: Callable = None,
-        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    url: Union[str, pd.DataFrame],
+    meta: dict = {},
+    args: dict = {},
+    engine: str = None,
+    table: str = None,
+    ext: str = None,
+    id: str = None,
+    columns: dict = None,
+    query: str = None,
+    queryfile: str = None,
+    transform: Callable = None,
+    transform_kwargs: dict = {},
+    **kwargs: dict,
+) -> int:
     '''Deletes data using URL query parameters.
 
     Examples:
@@ -274,37 +316,62 @@ def delete(
     args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     url, table, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, table, ext, query, queryfile, **kwargs)
+        engine, args, url, table, ext, query, queryfile, **kwargs
+    )
     if engine == 'dataframe':
-        data_filtered = _filter_frame(url, meta=meta, controls=controls,
-                                      args=args, source='delete', id=id)
+        data_filtered = _filter_frame(
+            url, meta=meta, controls=controls, args=args, source='delete', id=id
+        )
         return len(data_filtered)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
-        data_filtered = _filter_frame(data, meta=meta, controls=controls,
-                                      args=args, source='delete', id=id)
+        data_filtered = _filter_frame(
+            data, meta=meta, controls=controls, args=args, source='delete', id=id
+        )
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_filtered)
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['delete']
-        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
-                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
+        return method(
+            url=url,
+            meta=meta,
+            controls=controls,
+            args=args,
+            id=id,
+            table=table,
+            columns=columns,
+            ext=ext,
+            query=query,
+            queryfile=queryfile,
+            **kwargs,
+        )
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
-                          source='delete', id=id)
+        return _filter_db(
+            engine, table, meta=meta, controls=controls, args=args, source='delete', id=id
+        )
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def update(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
-        table: str = None, ext: str = None, id: str = None, columns: dict = None,
-        query: str = None, queryfile: str = None, transform: Callable = None,
-        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    url: Union[str, pd.DataFrame],
+    meta: dict = {},
+    args: dict = {},
+    engine: str = None,
+    table: str = None,
+    ext: str = None,
+    id: str = None,
+    columns: dict = None,
+    query: str = None,
+    queryfile: str = None,
+    transform: Callable = None,
+    transform_kwargs: dict = {},
+    **kwargs: dict,
+) -> int:
     '''Update data using URL query parameters.
 
     Examples:
@@ -324,37 +391,62 @@ def update(
     args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     url, table, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, table, ext, query, queryfile, **kwargs)
+        engine, args, url, table, ext, query, queryfile, **kwargs
+    )
     if engine == 'dataframe':
         data_updated = _filter_frame(
-            url, meta=meta, controls=controls, args=args, source='update', id=id)
+            url, meta=meta, controls=controls, args=args, source='update', id=id
+        )
         return len(data_updated)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
         data_updated = _filter_frame(
-            data, meta=meta, controls=controls, args=args, source='update', id=id)
+            data, meta=meta, controls=controls, args=args, source='update', id=id
+        )
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_updated)
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['update']
-        return method(url=url, meta=meta, controls=controls, args=args, id=id, table=table,
-                      columns=columns, ext=ext, query=query, queryfile=queryfile, **kwargs)
+        return method(
+            url=url,
+            meta=meta,
+            controls=controls,
+            args=args,
+            id=id,
+            table=table,
+            columns=columns,
+            ext=ext,
+            query=query,
+            queryfile=queryfile,
+            **kwargs,
+        )
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(engine, table, meta=meta, controls=controls, args=args,
-                          source='update', id=id)
+        return _filter_db(
+            engine, table, meta=meta, controls=controls, args=args, source='update', id=id
+        )
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def insert(
-        url: Union[str, pd.DataFrame], meta: dict = {}, args: dict = {}, engine: str = None,
-        table: str = None, ext: str = None, id: str = None, columns: dict = None,
-        query: str = None, queryfile: str = None, transform: Callable = None,
-        transform_kwargs: dict = {}, **kwargs: dict) -> int:
+    url: Union[str, pd.DataFrame],
+    meta: dict = {},
+    args: dict = {},
+    engine: str = None,
+    table: str = None,
+    ext: str = None,
+    id: str = None,
+    columns: dict = None,
+    query: str = None,
+    queryfile: str = None,
+    transform: Callable = None,
+    transform_kwargs: dict = {},
+    **kwargs: dict,
+) -> int:
     '''Insert data using URL query parameters.
 
     Examples:
@@ -372,7 +464,7 @@ def insert(
     '''
     if engine is None:
         engine = get_engine(url)
-    args = dict(args)       # Do not modify the args -- keep a copy
+    args = dict(args)  # Do not modify the args -- keep a copy
     _pop_controls(args)
     if not args:
         raise ValueError('No args: specified')
@@ -383,11 +475,14 @@ def insert(
         rows = len(val)
         if 0 < rows < rowcount:
             val += [val[-1]] * (rowcount - rows)
-            app_log.warning(f'data.insert: column {key} has {rows} rows not {rowcount}. '
-                            f'Extended last value {val[-1]}')
+            app_log.warning(
+                f'data.insert: column {key} has {rows} rows not {rowcount}. '
+                f'Extended last value {val[-1]}'
+            )
     rows = pd.DataFrame.from_dict(args)
     url, table, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, table, ext, query, queryfile, **kwargs)
+        engine, args, url, table, ext, query, queryfile, **kwargs
+    )
     if engine == 'dataframe':
         rows = _pop_columns(rows, url.columns, meta['ignored'])
         url = url.append(rows, sort=False)
@@ -436,8 +531,9 @@ def insert(
             # without the `id` column. SQLAlchemy won't return inserted_primary_key unless the
             # metadata has a primary key. So, hoping that the table already has a primary key,
             # load table from DB via extend_existing=True.
-            sa_table = sa.Table(table, tbl.table.metadata,
-                                extend_existing=True, autoload_with=engine)
+            sa_table = sa.Table(
+                table, tbl.table.metadata, extend_existing=True, autoload_with=engine
+            )
             r = conn.execute(sa_table.insert(), data)
             # SQLAlchemy 1.4+ supports inserted_primary_key_rows.
             if hasattr(r, 'inserted_primary_key_rows'):
@@ -462,12 +558,16 @@ def insert(
 
         # kwargs might contain additonal unexpected values, pass expected arguments explicitly
         pd.io.sql.to_sql(
-            rows, table, engine, if_exists='append', index=False,
+            rows,
+            table,
+            engine,
+            if_exists='append',
+            index=False,
             schema=kwargs.get('schema', None),
             index_label=kwargs.get('index_label', None),
             chunksize=kwargs.get('chunksize', None),
             dtype=kwargs.get('dtype', None),
-            method=kwargs.get('method', None)
+            method=kwargs.get('method', None),
         )
 
         return len(rows)
@@ -529,8 +629,12 @@ def get_table(engine: sa.engine.base.Engine, table: str, **kwargs: dict) -> sa.T
 
 
 def download(
-        data: Union[pd.DataFrame, List[pd.DataFrame]], format: str = 'json',
-        template: str = None, args: dict = {}, **kwargs: dict) -> bytes:
+    data: Union[pd.DataFrame, List[pd.DataFrame]],
+    format: str = 'json',
+    template: str = None,
+    args: dict = {},
+    **kwargs: dict,
+) -> bytes:
     '''
     Download a DataFrame or dict of DataFrames in various formats. This is used
     by [gramex.handlers.FormHandler][]. You are **strongly** advised to
@@ -618,7 +722,8 @@ def download(
         return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
     elif format == 'template':
         return gramex.cache.open(template, 'template').generate(
-            data=data if multiple else data['data'], **kwargs)
+            data=data if multiple else data['data'], **kwargs
+        )
     elif format == 'html':
         out = io.StringIO()
         kw(index=False)
@@ -636,19 +741,28 @@ def download(
                 val.to_excel(writer, sheet_name=key, **kwargs)
         return out.getvalue()
     elif format in {'pptx', 'ppt'}:
-        from gramex.pptgen import pptgen    # noqa
+        from gramex.pptgen import pptgen  # noqa
+
         out = io.BytesIO()
         pptgen(target=out, data=data, **kwargs)
         return out.getvalue()
     elif format in {'seaborn', 'sns'}:
         kw = AttrDict()
-        defaults = {'chart': 'barplot', 'ext': 'png', 'data': 'data', 'dpi': 96,
-                    'width': 640, 'height': 480}
+        defaults = {
+            'chart': 'barplot',
+            'ext': 'png',
+            'data': 'data',
+            'dpi': 96,
+            'width': 640,
+            'height': 480,
+        }
         for key, default in defaults.items():
             kw[key] = kwargs.pop(key, default)
         import matplotlib
-        matplotlib.use('Agg')       # Before importing seaborn, set a headless backend
+
+        matplotlib.use('Agg')  # Before importing seaborn, set a headless backend
         import seaborn as sns
+
         plot = getattr(sns, kw.chart)(data=data.get(kw.data), **kwargs)
         out = io.BytesIO()
         fig = plot.figure if hasattr(plot, 'figure') else plot.fig
@@ -743,25 +857,47 @@ def dirstat(url: str, timeout: int = 10, **kwargs: dict) -> pd.DataFrame:
             path = os.path.join(dirpath, name)
             stat = os.stat(path)
             dirname = dirpath.replace(target, '').replace(os.sep, '/') + '/'
-            result.append({
-                'path': path, 'dir': dirname, 'name': name, 'type': 'dir',
-                'size': stat.st_size, 'mtime': stat.st_mtime, 'level': dirname.count('/'),
-            })
+            result.append(
+                {
+                    'path': path,
+                    'dir': dirname,
+                    'name': name,
+                    'type': 'dir',
+                    'size': stat.st_size,
+                    'mtime': stat.st_mtime,
+                    'level': dirname.count('/'),
+                }
+            )
         for name in filenames:
             path = os.path.join(dirpath, name)
             stat = os.stat(path)
             dirname = dirpath.replace(target, '').replace(os.sep, '/') + '/'
-            result.append({
-                'path': path, 'dir': dirname, 'name': name, 'type': os.path.splitext(name)[-1],
-                'size': stat.st_size, 'mtime': stat.st_mtime, 'level': dirname.count('/'),
-            })
+            result.append(
+                {
+                    'path': path,
+                    'dir': dirname,
+                    'name': name,
+                    'type': os.path.splitext(name)[-1],
+                    'size': stat.st_size,
+                    'mtime': stat.st_mtime,
+                    'level': dirname.count('/'),
+                }
+            )
     return pd.DataFrame(result)
 
 
 def filtercols(
-        url: Union[str, pd.DataFrame], args: dict = {}, meta: dict = {}, engine: str = None,
-        ext: str = None, query: str = None, queryfile: str = None, transform: Callable = None,
-        transform_kwargs: dict = {}, **kwargs: dict) -> pd.DataFrame:
+    url: Union[str, pd.DataFrame],
+    args: dict = {},
+    meta: dict = {},
+    engine: str = None,
+    ext: str = None,
+    query: str = None,
+    queryfile: str = None,
+    transform: Callable = None,
+    transform_kwargs: dict = {},
+    **kwargs: dict,
+) -> pd.DataFrame:
     '''Filter data and extract unique values of each column using URL query parameters.
 
     Examples:
@@ -937,7 +1073,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
                 # Use eval() to handle direct types like INTEGER *and* expressions like VARCHAR(3)
                 # eval() is safe here since `col_type` is written by app developer
                 # B307:eval is safe here since `col_type` is written by app developer
-                row['type'] = eval(col_type.upper(), vars(sa.types))    # nosec B307
+                row['type'] = eval(col_type.upper(), vars(sa.types))  # nosec B307
             row['type_'] = row.pop('type')
             if 'default' in row:
                 row['server_default'] = str(row.pop('default'))
@@ -964,7 +1100,8 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
                     # This syntax works on DB2, MySQL, Oracle, PostgreSQL, SQLite
                     conn.execute(
                         f'ALTER TABLE {quote(table)} '
-                        f'ADD COLUMN {quote(name)} {col_type} {" ".join(constraints)}')
+                        f'ADD COLUMN {quote(name)} {col_type} {" ".join(constraints)}'
+                    )
         # Refresh table metadata after altering
         get_table(engine, table, extend_existing=True)
     return engine
@@ -995,9 +1132,7 @@ def _replace(engine, args, *vars, **kwargs):
 def _pop_controls(args):
     '''Filter out data controls: _sort, _limit, _offset, _c (column) and _by from args'''
     return {
-        key: args.pop(key)
-        for key in ('_sort', '_limit', '_offset', '_c', '_by')
-        if key in args
+        key: args.pop(key) for key in ('_sort', '_limit', '_offset', '_c', '_by') if key in args
     }
 
 
@@ -1050,7 +1185,7 @@ def _filter_col(col, cols):
     # Check if it matches a non-empty operator, like ?col>~=
     for op in operators:
         if col.endswith(op):
-            name = col[:-len(op)]
+            name = col[: -len(op)]
             if name in colset:
                 return name, None, op
             # If there's an aggregator, split it out, like ?col|SUM>~=
@@ -1076,9 +1211,10 @@ def _convertor(conv):
     '''
     # Convert based on Pandas datatype. But for boolean, convert from string as below
     if conv in {np.bool_, bool}:
-        conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True # noqa
+        conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True  # noqa
     elif conv in {datetime}:
         from dateutil.parser import parse
+
         conv = parse
     return conv
 
@@ -1126,10 +1262,10 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
         meta['ignored'].append((key, vals))
     elif op == '':
         # Test if column is not NULL. != None is NOT the same as is not None
-        query = method(column.in_(vals) if len(vals) else column != None)      # noqa
+        query = method(column.in_(vals) if len(vals) else column != None)  # noqa
     elif op == '!':
         # Test if column is NULL. == None is NOT the same as is None
-        query = method(column.notin_(vals) if len(vals) else column == None)   # noqa
+        query = method(column.notin_(vals) if len(vals) else column == None)  # noqa
     elif op == '>':
         query = method(column > min(vals))
     elif op == '>~':
@@ -1240,8 +1376,13 @@ _frame_functions = {
 
 
 def _filter_frame(
-        data: pd.DataFrame, meta: dict, controls: dict, args: dict, source: str = 'select',
-        id: List[str] = []) -> pd.DataFrame:
+    data: pd.DataFrame,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    source: str = 'select',
+    id: List[str] = [],
+) -> pd.DataFrame:
     '''
     If `source` is `'select'`, returns a DataFrame in which the DataFrame
     `data` is filtered using `args`. Additional controls like _sort, etc are
@@ -1306,8 +1447,11 @@ def _filter_frame(
             # TODO: This does not support ?_c=-<col> to hide a column
             col_list = controls.get('_c', None)
             if col_list is None:
-                col_list = [col + _agg_sep + 'sum' for col in data.columns      # noqa
-                            if pd.api.types.is_numeric_dtype(data[col])]
+                col_list = [
+                    col + _agg_sep + 'sum'
+                    for col in data.columns  # noqa
+                    if pd.api.types.is_numeric_dtype(data[col])
+                ]
             agg_cols = []
             agg_dict = AttrDict()
             for key in col_list:
@@ -1341,8 +1485,7 @@ def _filter_frame(
             data = data[show_cols]
         sorts = _filter_sort_columns(controls, data.columns, meta)
         if sorts:
-            data = data.sort_values(by=[c[0] for c in sorts],
-                                    ascending=[c[1] for c in sorts])
+            data = data.sort_values(by=[c[0] for c in sorts], ascending=[c[1] for c in sorts])
         offset, limit = _filter_offset_limit(controls, meta)
         if offset is not None:
             data = data.iloc[offset:]
@@ -1352,8 +1495,14 @@ def _filter_frame(
 
 
 def _filter_db(
-        engine: str, table: str, meta: dict, controls: dict, args: dict, source: str = 'select',
-        id: List[str] = []):
+    engine: str,
+    table: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    source: str = 'select',
+    id: List[str] = [],
+):
     '''
     Parameters:
         engine: constructed sqlalchemy string
@@ -1390,8 +1539,9 @@ def _filter_db(
                 cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
             # Apply filters
-            query = _filter_db_col(query, query.where, key, col, op, vals,
-                                   cols[col], cols[col].type.python_type, meta)
+            query = _filter_db_col(
+                query, query.where, key, col, op, vals, cols[col], cols[col].type.python_type, meta
+            )
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in cols or len(vals) == 0:
@@ -1418,10 +1568,13 @@ def _filter_db(
             # TODO: This does not support ?_c=-<col> to hide a column
             col_list = controls.get('_c', None)
             if col_list is None:
-                col_list = [col + _agg_sep + 'sum' for col, column in cols.items()  # noqa
-                            if column.type.python_type.__name__ in _numeric_types]
-            agg_cols = AttrDict([(col, cols[col]) for col in by])   # {label: ColumnElement}
-            typ = {}                                                # {label: python type}
+                col_list = [
+                    col + _agg_sep + 'sum'
+                    for col, column in cols.items()  # noqa
+                    if column.type.python_type.__name__ in _numeric_types
+                ]
+            agg_cols = AttrDict([(col, cols[col]) for col in by])  # {label: ColumnElement}
+            typ = {}  # {label: python type}
             for key in col_list:
                 col, agg, val = _filter_col(key, colslist)
                 if agg is not None:
@@ -1440,8 +1593,9 @@ def _filter_db(
                 query = query.with_only_columns(agg_cols.values())
             # Apply HAVING operators
             for key, col, op, vals in cols_having:
-                query = _filter_db_col(query, query.having, key, col, op, vals,
-                                       agg_cols[col], typ[col], meta)
+                query = _filter_db_col(
+                    query, query.having, key, col, op, vals, agg_cols[col], typ[col], meta
+                )
         elif '_c' in controls:
             show_cols = _filter_select_columns(controls, colslist, meta)
             query = query.with_only_columns([cols[col] for col in show_cols])
@@ -1465,14 +1619,7 @@ _VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
 # MongoDB Operations
 # ----------------------------------------
 
-_mongodb_op_map = {
-    '<': '$lt',
-    '<~': '$lte',
-    '>': '$gt',
-    '>~': '$gte',
-    '': '$in',
-    '!': '$nin'
-}
+_mongodb_op_map = {'<': '$lt', '<~': '$lte', '>': '$gt', '>~': '$gte', '': '$in', '!': '$nin'}
 
 
 def _mongodb_query(args, table, id=[], **kwargs):
@@ -1522,27 +1669,64 @@ def _mongodb_collection(url, database, collection, **kwargs):
     # Support all MongoDB client arguments
     # https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html
     mongo_kwargs = {
-        'host', 'port', 'document_class', 'tz_aware', 'connect', 'type_registry',
+        'host',
+        'port',
+        'document_class',
+        'tz_aware',
+        'connect',
+        'type_registry',
         # Other optional parameters can be passed as keyword arguments
-        'directConnection', 'maxPoolSize', 'minPoolSize', 'maxIdleTimeMS', 'maxConnecting',
-        'socketTimeoutMS', 'connectTimeoutMS', 'server_selector', 'serverSelectionTimeoutMS',
-        'waitQueueTimeoutMS', 'heartbeatFrequencyMS', 'appname', 'driver', 'event_listeners',
-        'retryWrites', 'retryReads', 'compressors', 'zlibCompressionLevel', 'uuidRepresentation',
-        'unicode_decode_error_handler', 'srvServiceName',
+        'directConnection',
+        'maxPoolSize',
+        'minPoolSize',
+        'maxIdleTimeMS',
+        'maxConnecting',
+        'socketTimeoutMS',
+        'connectTimeoutMS',
+        'server_selector',
+        'serverSelectionTimeoutMS',
+        'waitQueueTimeoutMS',
+        'heartbeatFrequencyMS',
+        'appname',
+        'driver',
+        'event_listeners',
+        'retryWrites',
+        'retryReads',
+        'compressors',
+        'zlibCompressionLevel',
+        'uuidRepresentation',
+        'unicode_decode_error_handler',
+        'srvServiceName',
         # Write Concern options
-        'w', 'wTimeoutMS', 'journal', 'fsync',
+        'w',
+        'wTimeoutMS',
+        'journal',
+        'fsync',
         # Read Concern options
         'readConcernLevel',
         # Replica set keyword arguments
         'replicaSet',
         # Read Preference
-        'readPreference', 'readPreferenceTags', 'maxStalenessSeconds',
+        'readPreference',
+        'readPreferenceTags',
+        'maxStalenessSeconds',
         # Authentication
-        'username', 'password', 'authSource', 'authMechanism', 'authMechanismProperties',
+        'username',
+        'password',
+        'authSource',
+        'authMechanism',
+        'authMechanismProperties',
         # TLS/SSL configuration
-        'tls', 'tlsInsecure', 'tlsAllowInvalidCertificates', 'tlsAllowInvalidHostnames',
-        'tlsCAFile', 'tlsCertificateKeyFile', 'tlsCRLFile', 'tlsCertificateKeyFilePassword',
-        'tlsDisableOCSPEndpointCheck', 'ssl',
+        'tls',
+        'tlsInsecure',
+        'tlsAllowInvalidCertificates',
+        'tlsAllowInvalidHostnames',
+        'tlsCAFile',
+        'tlsCertificateKeyFile',
+        'tlsCRLFile',
+        'tlsCertificateKeyFilePassword',
+        'tlsDisableOCSPEndpointCheck',
+        'ssl',
         # Client side encryption options
         'auto_encryption_opts',
         # Versioned API options
@@ -1565,8 +1749,9 @@ def _mongodb_json(obj):
     return result
 
 
-def _filter_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
-                    columns=None, **kwargs):
+def _filter_mongodb(
+    url, controls, args, meta, database=None, collection=None, query=None, columns=None, **kwargs
+):
     # TODO: Document function and usage
     table = _mongodb_collection(url, database, collection, **kwargs)
     # TODO: If data is missing, identify columns using columns:
@@ -1595,6 +1780,7 @@ def _filter_mongodb(url, controls, args, meta, database=None, collection=None, q
     # Convert Object IDs into strings to allow JSON conversion
     if len(data) > 0:
         import bson
+
         for col, val in data.iloc[0].iteritems():
             if type(val) in {bson.objectid.ObjectId}:
                 data[col] = data[col].map(str)
@@ -1602,16 +1788,18 @@ def _filter_mongodb(url, controls, args, meta, database=None, collection=None, q
     return data
 
 
-def _delete_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
-                    **kwargs):
+def _delete_mongodb(
+    url, controls, args, meta, database=None, collection=None, query=None, **kwargs
+):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table)
     result = table.delete_many(query)
     return result.deleted_count
 
 
-def _update_mongodb(url, controls, args, meta, database=None, collection=None, query=None,
-                    id=[], **kwargs):
+def _update_mongodb(
+    url, controls, args, meta, database=None, collection=None, query=None, id=[], **kwargs
+):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
     row = table.find_one(query)
@@ -1640,19 +1828,15 @@ def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwar
 
 def _get_influxdb_schema(client, bucket):
     imports = 'import "influxdata/influxdb/schema"\n'
-    meas = client.query_api().query(
-        imports + f'schema.measurements(bucket: "{bucket}")'
-    )[0]
+    meas = client.query_api().query(imports + f'schema.measurements(bucket: "{bucket}")')[0]
     tags = client.query_api().query(imports + f'schema.tagKeys(bucket: "{bucket}")')[0]
     tags = [r.get_value() for r in tags.records]
     tags = [r for r in tags if not r.startswith("_")]
-    fields = client.query_api().query(
-        imports + f'schema.fieldKeys(bucket: "{bucket}")'
-    )[0]
+    fields = client.query_api().query(imports + f'schema.fieldKeys(bucket: "{bucket}")')[0]
     return {
         "_measurement": [r.get_value() for r in meas.records],
         "_tags": tags,
-        "_fields": [r.get_value() for r in fields.records]
+        "_fields": [r.get_value() for r in fields.records],
     }
 
 
@@ -1732,19 +1916,26 @@ def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
     return 0
 
 
-def _influxdb_client(url, token, org, debug=None, timeout=60_000, enable_gzip=False,
-                     default_tags=None, **kwargs):
+def _influxdb_client(
+    url, token, org, debug=None, timeout=60_000, enable_gzip=False, default_tags=None, **kwargs
+):
     from influxdb_client import InfluxDBClient
 
     url = re.sub(r"^influxdb:", "", url)
     return InfluxDBClient(
-        url, token, org=org, debug=debug, enable_gzip=enable_gzip, default_tags=default_tags,
-        timeout=timeout
+        url,
+        token,
+        org=org,
+        debug=debug,
+        enable_gzip=enable_gzip,
+        default_tags=default_tags,
+        timeout=timeout,
     )
 
 
 def _timestamp_df(df, index_col="_time"):
     from tzlocal import get_localzone
+
     now = datetime.now(get_localzone())
     if index_col not in df:
         df[index_col] = [now] * len(df)
@@ -1770,9 +1961,7 @@ def _get_ts_points(df, measurement, tags):
 
 def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     measurement = rows.pop("measurement").unique()[0]
-    tags = (
-        rows.pop("tags").dropna().drop_duplicates().tolist() if "tags" in rows else []
-    )
+    tags = rows.pop("tags").dropna().drop_duplicates().tolist() if "tags" in rows else []
     # Ensure that the index is timestamped
     rows = _timestamp_df(rows)
 
@@ -1783,9 +1972,7 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 
     with _influxdb_client(url, **kwargs) as db:
         with db.write_api(
-            write_options=WriteOptions(
-                ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000
-            )
+            write_options=WriteOptions(ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000)
         ) as client:
             client.write(
                 bucket=bucket,
@@ -1800,6 +1987,7 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 
 # ServiceNow Operations
 # ----------------------------------------
+
 
 def _filter_servicenow(url, controls, args, meta, table=None, columns=None, query=None, **kwargs):
     import pysnow
@@ -1816,7 +2004,8 @@ def _filter_servicenow(url, controls, args, meta, table=None, columns=None, quer
     table_columns = json.loads(json.dumps(config.columns[urlinfo.path]))
     for col, colinfo in (columns or {}).items():
         table_columns.setdefault(col, {}).update(
-            colinfo if isinstance(colinfo, dict) else {'type': colinfo})
+            colinfo if isinstance(colinfo, dict) else {'type': colinfo}
+        )
     for col, colinfo in table_columns.items():
         colinfo['_convert'] = _convertor(locate(colinfo['type'], modules=['datetime']))
     col_names = table_columns.keys()
@@ -1888,6 +2077,4 @@ plugins["influxdb"] = {
     "insert": _insert_influxdb,
     "update": _insert_influxdb,
 }
-plugins["servicenow"] = {
-    "filter": _filter_servicenow
-}
+plugins["servicenow"] = {"filter": _filter_servicenow}

@@ -11,6 +11,7 @@ import logging
 import functools
 from trace import Trace
 from textwrap import indent
+
 try:
     import line_profiler
 except ImportError:
@@ -33,6 +34,7 @@ class Timer(object):
         >>>     slow_running_code()
         WARNING:gramex:1.000s optional message [<file>:<func>:line]
     '''
+
     def __init__(self, msg='', level=logging.WARNING):
         self.msg = msg
         self.level = logging.WARNING
@@ -54,11 +56,11 @@ def _write(obj, prefix=None, stream=sys.stdout):
         stream.write(indent(text, ' .. '))
     else:
         text = indent(text, ' .. ' + ' ' * len(prefix) + '   ')
-        stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix):])
+        stream.write(' .. ' + prefix + ' = ' + text[7 + len(prefix) :])
     stream.write('\n')
 
 
-def print(*args, **kwargs):             # noqa
+def print(*args, **kwargs):  # noqa
     '''
     A replacement for the ``print`` function that also logs the (file, function,
     line, msg) from where it is called. For example::
@@ -98,7 +100,7 @@ def trace(trace=True, exclude=None, **kwargs):
     When ``method()`` is called, every line of execution is traced.
     '''
     if exclude is None:
-        ignoredirs = (sys.prefix, )
+        ignoredirs = (sys.prefix,)
     elif isinstance(exclude, str):
         ignoredirs = (sys.prefix, os.path.abspath(exclude))
     elif isinstance(exclude, (list, tuple)):
@@ -109,16 +111,20 @@ def trace(trace=True, exclude=None, **kwargs):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             return tracer.runfunc(func, *args, **kwargs)
+
         return wrapper
 
     return decorator
 
 
 if line_profiler is None:
+
     def lineprofile(func):
         app_log.warning('@lineprofile requires line_profiler module')
         return func
+
 else:
+
     def lineprofile(func):
         '''
         A decorator that prints the time taken for each line of a function every
@@ -140,6 +146,7 @@ else:
                 profile.disable_by_count()
             profile.print_stats(stripzeros=True)
             return result
+
         return wrapper
 
 
@@ -155,6 +162,7 @@ if os.name == 'nt':
         # TODO: flush the buffer
         return msvcrt.getch() if msvcrt.kbhit() else None
 
+
 # Posix (Linux, OS X)
 else:
     import sys
@@ -163,6 +171,7 @@ else:
     from select import select
 
     if sys.__stdin__.isatty():
+
         def _init_non_blocking_terminal():
             fd = sys.__stdin__.fileno()
             old_term = termios.tcgetattr(fd)
@@ -171,7 +180,7 @@ else:
 
             # New terminal setting unbuffered
             new_term = termios.tcgetattr(fd)
-            new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
+            new_term[3] = new_term[3] & ~termios.ICANON & ~termios.ECHO
             termios.tcsetattr(fd, termios.TCSAFLUSH, new_term)
 
         def getch():
@@ -188,6 +197,7 @@ else:
         _init_non_blocking_terminal()
 
     else:
+
         def getch():
             return None
 
@@ -202,6 +212,7 @@ def _make_timer():
         >>> gramex.debug.timer('def')
         WARNING:gramex:3.707s def [<file>:<function>:1]     # Time since last call
     '''
+
     class Context:
         start = timeit.default_timer()
 

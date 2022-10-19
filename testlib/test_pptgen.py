@@ -45,10 +45,8 @@ class TestPPTGen(TestCase):
     def draw_chart(self, slidenumber, data, rule):
         # Function to change data in pptx native charts.
         return pptgen.pptgen(
-            source=self.input,
-            only=slidenumber,
-            data={'data': data},
-            edit_chart=rule)
+            source=self.input, only=slidenumber, data={'data': data}, edit_chart=rule
+        )
 
     def check_if_number(self, data):
         # Function to check if data is a number
@@ -98,10 +96,9 @@ class TestPPTGen(TestCase):
             source=self.input,
             only=1,
             register={
-                'custom_function1': {
-                    'function': 'lambda shape, spec, data: (shape, spec, data)'
-                }
-            })
+                'custom_function1': {'function': 'lambda shape, spec, data: (shape, spec, data)'}
+            },
+        )
         ok_('custom_function1' in pptgen.COMMANDS_LIST)
         pptgen.COMMANDS_LIST['custom_function1'](**{'shape': 1, 'spec': {}, 'data': {}})
         with assert_raises(TypeError):
@@ -110,9 +107,8 @@ class TestPPTGen(TestCase):
         pptgen.pptgen(
             source=self.input,
             only=1,
-            register={
-                'custom_function2': 'lambda x: x(shape, spec, data)'
-            })
+            register={'custom_function2': 'lambda x: x(shape, spec, data)'},
+        )
         ok_('custom_function2' in pptgen.COMMANDS_LIST)
         pptgen.COMMANDS_LIST['custom_function2'](**{'shape': 1, 'spec': {}, 'data': {}})
         with assert_raises(TypeError):
@@ -142,12 +138,14 @@ class TestPPTGen(TestCase):
         # Title change test case with unicode value.
         text = '高σ高λس►'
         target = pptgen.pptgen(
-            source=self.input, only=1,
-            change={                  # Configurations are same as when loading from the YAML file
-                'Title 1': {            # Take the shape named 'Title 1'
-                    'text': text          # Replace its text with new text
+            source=self.input,
+            only=1,
+            change={  # Configurations are same as when loading from the YAML file
+                'Title 1': {  # Take the shape named 'Title 1'
+                    'text': text  # Replace its text with new text
                 }
-            })
+            },
+        )
         eq_(target.slides[0].shapes.title.text, text)
 
     def test_text_xml(self):
@@ -155,16 +153,12 @@ class TestPPTGen(TestCase):
         text = 'New Title<text color="#00ff00" bold="True" font-size="14"> Green Bold Text</text>'
         font_size, text_color, pix_to_inch = 12, '#ff0000', 10000
         target = pptgen.pptgen(
-            source=self.input, only=1,
+            source=self.input,
+            only=1,
             change={
-                'Title 1': {
-                    'style': {
-                        'color': text_color,
-                        'font-size': font_size
-                    },
-                    'text': text
-                }
-            })
+                'Title 1': {'style': {'color': text_color, 'font-size': font_size}, 'text': text}
+            },
+        )
         eq_(target.slides[0].shapes.title.text, 'New Title Green Bold Text')
         text_shape = self.get_shape(target, 'Title 1')[0]
         total_runs = 2
@@ -196,16 +190,17 @@ class TestPPTGen(TestCase):
             replicate_slide={
                 'replicate': True,
                 'data': 'data["data"]',
-                'sales-text': {
-                    'data': 'data[0]',
-                    'text': tmpl
-                }
-            })
+                'sales-text': {'data': 'data[0]', 'text': tmpl},
+            },
+        )
         eq_(data.ngroups, len(target.slides))
         contents_ex = [self.template(tmpl, grp.iloc[0]) for _, grp in data]
-        contents_ppt = [shape.text for slide in target.slides
-                        for shape in slide.shapes
-                        if shape.name == 'sales-text']
+        contents_ppt = [
+            shape.text
+            for slide in target.slides
+            for shape in slide.shapes
+            if shape.name == 'sales-text'
+        ]
         eq_(contents_ex, contents_ppt)
 
     def test_text_style(self):
@@ -214,24 +209,16 @@ class TestPPTGen(TestCase):
             source=self.input,
             only=4,
             replicate_slide={
-                'Title 1': {
-                    'text': 'New title',
-                    'style': {
-                        'color': '#ff0000'
-                    }
-                },
-                'Text 1': {
-                    'text': 'New text',
-                    'style': {
-                        'color': '#00ff00',
-                        'bold': True
-                    }
-                }
-            })
+                'Title 1': {'text': 'New title', 'style': {'color': '#ff0000'}},
+                'Text 1': {'text': 'New text', 'style': {'color': '#00ff00', 'bold': True}},
+            },
+        )
         slides = target.slides
         eq_(len(slides), 1)
-        name_map = {'Title 1': {'color': 'FF0000', 'text': 'Title 1'},
-                    'Text 1': {'color': '00FF00', 'text': 'Text 1'}}
+        name_map = {
+            'Title 1': {'color': 'FF0000', 'text': 'Title 1'},
+            'Text 1': {'color': '00FF00', 'text': 'Text 1'},
+        }
         for shape in slides[0].shapes:
             if shape.name in ['Title 1', 'Text 1']:
                 continue
@@ -249,15 +236,9 @@ class TestPPTGen(TestCase):
                     only=5,
                     group_test={
                         'slide-title': 'Group Test',
-                        'Group 1': {
-                            'Caption': {
-                                'text': 'New caption'
-                            },
-                            'Picture': {
-                                'image': img
-                            }
-                        }
-                    })
+                        'Group 1': {'Caption': {'text': 'New caption'}, 'Picture': {'image': img}},
+                    },
+                )
             except requests.ConnectionError:
                 raise SkipTest('No internet connection. Skipping HTTPS image test')
             eq_(len(target.slides), 1)
@@ -293,9 +274,10 @@ class TestPPTGen(TestCase):
                     'data': 'data["data"]',
                     'stack': 'vertical',
                     'margin': 0.10,
-                    'text': tmpl
-                }
-            })
+                    'text': tmpl,
+                },
+            },
+        )
         eq_(len(target.slides), 1)
         contents_ex = [self.template(tmpl, item) for item in data]
         contents_ppt = [shape.text for shape in self.get_shape(target, 'TextBox 1')]
@@ -304,16 +286,13 @@ class TestPPTGen(TestCase):
     def test_replace(self):
         # Test case for replace command.
         target = pptgen.pptgen(
-            source=self.input, only=7,
+            source=self.input,
+            only=7,
             change={
                 'slide-number': [1],
-                'TextBox 1': {
-                    'replace': {
-                        'Old': 'New',
-                        'Title': 'Heading'
-                    }
-                }
-            })
+                'TextBox 1': {'replace': {'Old': 'New', 'Title': 'Heading'}},
+            },
+        )
         eq_(len(target.slides), 1)
         txt_box = self.get_shape(target, 'TextBox 1')[0]
         ok_(txt_box.has_text_frame)
@@ -325,7 +304,8 @@ class TestPPTGen(TestCase):
         spec = {'width': 200, 'height': 200, 'top': 100, 'left': 50}
         opacity_val, opacity_constant = 0.1, 100000
         target = pptgen.pptgen(
-            source=self.input, only=8,
+            source=self.input,
+            only=8,
             change={
                 'Rectangle 1': {
                     'css': {
@@ -337,11 +317,12 @@ class TestPPTGen(TestCase):
                             'width': spec['width'],
                             'height': spec['height'],
                             'left': spec['left'],
-                            'top': spec['top']
+                            'top': spec['top'],
                         }
                     }
                 }
-            })
+            },
+        )
         eq_(len(target.slides), 1)
         shape = self.get_shape(target, 'Rectangle 1')[0]
         opacity = shape.fill.fore_color._xFill.srgbClr.xpath('./a:alpha')[0].values()[0]
@@ -355,29 +336,18 @@ class TestPPTGen(TestCase):
         # Function to test `table` command.
         with assert_raises(AttributeError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                change={
-                    'Invalid Input': {
-                        'table': {
-                            'data': 'data'
-                        }
-                    }
-                })
+                change={'Invalid Input': {'table': {'data': 'data'}}},
+            )
 
         target = pptgen.pptgen(
-            source=self.input, only=9,
+            source=self.input,
+            only=9,
             data={'data': self.data},
-            change={
-                'Table 1': {
-                    'table': {
-                        'data': 'data["data"]',
-                        'style': {
-                            'fill': '#cccccc'
-                        }
-                    }
-                }
-            })
+            change={'Table 1': {'table': {'data': 'data["data"]', 'style': {'fill': '#cccccc'}}}},
+        )
         eq_(len(target.slides), 1)
         shape = self.get_shape(target, 'Table 1')[0]
         eq_(len(shape.table.rows), len(self.data.index) + 1)
@@ -402,21 +372,25 @@ class TestPPTGen(TestCase):
         # Test case for all native charts charts.
         with assert_raises(AttributeError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                change={
-                    'Invalid Input': {
-                        'chart': {
-                            'data': 'data'
-                        }
-                    }
-                })
+                change={'Invalid Input': {'chart': {'data': 'data'}}},
+            )
 
         xaxis, opacity = 'city', 0.5
         slidenumbers = AttrDict(
-            Bar_Chart=2, Column_Chart=10, Line_Chart=11, Area_Chart=12,
-            Scatter_Chart=13, Bubble_Chart=14, Bubble_Chart_3D=15,
-            Radar_Chart=16, Donut_Chart=17, Pie_Chart=18)
+            Bar_Chart=2,
+            Column_Chart=10,
+            Line_Chart=11,
+            Area_Chart=12,
+            Scatter_Chart=13,
+            Bubble_Chart=14,
+            Bubble_Chart_3D=15,
+            Radar_Chart=16,
+            Donut_Chart=17,
+            Pie_Chart=18,
+        )
         for chart_name, slidenumber in slidenumbers.items():
             # Replacing `_` with a white space. Because chart names in input slides contains
             # spaces not `_`.
@@ -429,7 +403,7 @@ class TestPPTGen(TestCase):
                     'Bangalore': '#A28E6A',
                     'Coimbatore': '#956251',
                     'Newport Beach': '#918485',
-                    'South Plainfield': '#855D5D'
+                    'South Plainfield': '#855D5D',
                 }
             else:
                 series = ['growth', 'sales']
@@ -444,7 +418,7 @@ class TestPPTGen(TestCase):
                         'data': 'data["data"]',
                         'x': xaxis,
                         'color': chart_colors,
-                        'opacity': opacity
+                        'opacity': opacity,
                     }
                 }
             }
@@ -457,12 +431,15 @@ class TestPPTGen(TestCase):
         # If shape is not a rectangle
         with assert_raises(NotImplementedError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                drawtreemap={'Invalid Input': {'treemap': {'data': 'data'}}})
+                drawtreemap={'Invalid Input': {'treemap': {'data': 'data'}}},
+            )
 
         target = pptgen.pptgen(
-            source=self.input, only=19,
+            source=self.input,
+            only=19,
             data={'data': self.data},
             drawtreemap={
                 'Treemap Rectangle': {
@@ -477,12 +454,11 @@ class TestPPTGen(TestCase):
                         'color': {
                             'function': 'lambda v: _color.gradient(v["growth"]/100, _color.RdYlGn)'
                         },
-                        'text': {
-                            'function': 'lambda v: "{}".format(v["city"])'
-                        }
+                        'text': {'function': 'lambda v: "{}".format(v["city"])'},
                     }
                 }
-            })
+            },
+        )
         data = self.data.groupby('city', as_index=False).agg({'sales': 'sum', 'growth': 'sum'})
         # Sorting as per treemap logic in chart and taking a subset to compare with
         # chart data
@@ -507,9 +483,11 @@ class TestPPTGen(TestCase):
         # If shape is not a rectangle
         with assert_raises(NotImplementedError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                drawbullet={'Invalid Input': {'bullet': {'data': 'data'}}})
+                drawbullet={'Invalid Input': {'bullet': {'data': 'data'}}},
+            )
 
         default_size = 10000
         change_data = [
@@ -518,14 +496,14 @@ class TestPPTGen(TestCase):
                 'poor': 20,
                 'slidenumber': 20,
                 'shapename': 'Bullet Rectangle Horizontal',
-                'orient': 'horizontal'
+                'orient': 'horizontal',
             },
             {
                 'text': False,
                 'poor': 0,
                 'shapename': 'Bullet Rectangle Vertical',
                 'orient': 'vertical',
-                'slidenumber': 21
+                'slidenumber': 21,
             },
             {
                 'text': False,
@@ -534,8 +512,8 @@ class TestPPTGen(TestCase):
                 'lo': 10,
                 'shapename': 'Bullet Rectangle Vertical',
                 'orient': 'vertical',
-                'slidenumber': 21
-            }
+                'slidenumber': 21,
+            },
         ]
 
         input_rect = Presentation(self.input)
@@ -547,14 +525,14 @@ class TestPPTGen(TestCase):
             # Getting shape name
             shapes = input_rect.slides[slidenumber - 1].shapes
             _shp = [shape for shape in shapes if shape.name == shpname][0]
-            # width, height = _shp.width, _shp.height
             height = _shp.height if orient == 'horizontal' else _shp.width
             width = _shp.width if orient == 'horizontal' else _shp.height
             lo = update_data.get('lo', 0)
             hi = update_data.get('hi', self.data['sales'].max())
             good = 100
             target = pptgen.pptgen(
-                source=self.input, only=slidenumber,
+                source=self.input,
+                only=slidenumber,
                 data={'data': self.data},
                 draw_bullet={
                     shpname: {
@@ -569,10 +547,11 @@ class TestPPTGen(TestCase):
                             'average': 'data["data"]["sales"].mean()',
                             'orient': orient,
                             'gradient': 'Oranges',
-                            'text': update_data['text']
+                            'text': update_data['text'],
                         }
                     }
-                })
+                },
+            )
             eq_(len(target.slides), 1)
             textboxes, rectangles = 0, 0
             rects_width, rects_height = [], []
@@ -624,9 +603,11 @@ class TestPPTGen(TestCase):
         # If shape is not a rectangle
         with assert_raises(NotImplementedError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                drawheatgrid={'Invalid Input': {'heatgrid': {'data': 'data'}}})
+                drawheatgrid={'Invalid Input': {'heatgrid': {'data': 'data'}}},
+            )
 
         pix_to_inch = 10000
         white = '#cccccc'
@@ -634,7 +615,8 @@ class TestPPTGen(TestCase):
         row, column, value, color = 'देश', 'city', 'sales', 'RdYlGn'
         data = self.data.groupby([row, column], as_index=False).agg({value: 'sum'})
         target = pptgen.pptgen(
-            source=self.input, only=22,
+            source=self.input,
+            only=22,
             data={'data': data},
             drawheatgrid={
                 'Heatgrid Rectangle': {
@@ -643,33 +625,30 @@ class TestPPTGen(TestCase):
                         'row': row,
                         'column': column,
                         'value': value,
-                        'text': {
-                            'function': '"{}".format(data["' + column + '"])'
-                        },
+                        'text': {'function': '"{}".format(data["' + column + '"])'},
                         'left-margin': leftmargin,
                         'cell-width': cell_width,
                         'cell-height': cell_height,
                         'na-text': 'NA',
                         'na-color': white,
                         'style': {
-                            'gradient': {
-                                'function': 'lambda data, handler: "{}"'.format(color)
-                            },
+                            'gradient': {'function': 'lambda data, handler: "{}"'.format(color)},
                             'font-size': font,
                             'text-align': 'center',
                             'stroke': '#cccccc',
-                            'padding': {
-                                'left': 5
-                            }
-                        }
+                            'padding': {'left': 5},
+                        },
                     }
                 }
-            })
+            },
+        )
         eq_(len(target.slides), 1)
         gradient = matplotlib.cm.get_cmap(color)
         cross = pptgen.utils.scale(data.pivot(row, column, value))
-        colors_ex = [white if np.isnan(x) else matplotlib.colors.to_hex(gradient(x))
-                     for x in cross.flatten()]
+        colors_ex = [
+            white if np.isnan(x) else matplotlib.colors.to_hex(gradient(x))
+            for x in cross.flatten()
+        ]
         label_rows = np.sort(data[row].unique())
         label_cols = np.sort(data[column].unique())
         labels = label_cols
@@ -700,9 +679,11 @@ class TestPPTGen(TestCase):
         # If shape is not a rectangle
         with assert_raises(NotImplementedError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                drawsankey={'Invalid Input': {'sankey': {'data': 'data'}}})
+                drawsankey={'Invalid Input': {'sankey': {'data': 'data'}}},
+            )
 
         shpname = 'Sankey Rectangle'
         slidenumber = 23
@@ -714,7 +695,8 @@ class TestPPTGen(TestCase):
         color = {'function': 'lambda g: _color.gradient(g["growth"].sum(), _color.RdYlGn)'}
         data = self.data.fillna(0)
         target = pptgen.pptgen(
-            source=self.input, only=slidenumber,
+            source=self.input,
+            only=slidenumber,
             data={'data': data},
             drawsankey={
                 shpname: {
@@ -724,21 +706,24 @@ class TestPPTGen(TestCase):
                         'groups': groups,
                         'color': color,
                         'text': text,
-                        'order': order
+                        'order': order,
                     }
                 }
-            })
+            },
+        )
         eq_(len(target.slides), 1)
         total_cust_shapes, get_rect_order, get_rect_width = 0, [], []
         grp_order = 'lambda g: g["sales"].sum()'
 
         for index, grp in enumerate(groups):
             grpobj = data.groupby(grp)
-            frame = pd.DataFrame({
-                'size': grpobj[grp].count(),
-                # B307:eval is safe here since we've constructed `grp_order`
-                'seq': eval(grp_order)(grpobj),  # nosec B307
-            })
+            frame = pd.DataFrame(
+                {
+                    'size': grpobj[grp].count(),
+                    # B307:eval is safe here since we've constructed `grp_order`
+                    'seq': eval(grp_order)(grpobj),  # nosec B307
+                }
+            )
             frame['width'] = frame['size'] / float(frame['size'].sum()) * width
             frame = frame.sort_values(by=['seq'])
             get_rect_width.extend([int(i) for i in frame['width'].tolist()])
@@ -770,20 +755,23 @@ class TestPPTGen(TestCase):
         # If shape is not a rectangle
         with assert_raises(NotImplementedError):
             pptgen.pptgen(
-                source=self.input, only=25,
+                source=self.input,
+                only=25,
                 data={'data': {}},
-                drawcalendarmap={'Invalid Input': {'calendarmap': {'data': 'data'}}})
+                drawcalendarmap={'Invalid Input': {'calendarmap': {'data': 'data'}}},
+            )
 
         width, slidenumber, periods, weekstart = 34, 24, 150, 2
         data = pd.DataFrame({'date': pd.date_range('1/1/2017', periods=periods, freq='D')})
-        data['column'] = 100. * np.random.rand(len(data))
+        data['column'] = 100.0 * np.random.rand(len(data))
         data = data.sort_values(by=['date']).set_index('date')
         label = 40
         labels = [[0, 0], [0, label], [label, 0], [label, label]]
         for case in labels:
             left, top = case
             target = pptgen.pptgen(
-                source=self.input, only=slidenumber,
+                source=self.input,
+                only=slidenumber,
                 data={'data': data},
                 drawcalendar={
                     'Calendar Rectangle': {
@@ -794,27 +782,34 @@ class TestPPTGen(TestCase):
                             'label_left': left,
                             'label_top': top,
                             'text-color': '#000000',
-                            'startdate': 'data.index[0]'
+                            'startdate': 'data.index[0]',
                         }
                     }
-                })
+                },
+            )
             startweekday = (data.index[0].weekday() - weekstart) % 7
             eq_(len(target.slides), 1)
             texts_ex = data.index.strftime('%d').tolist()
             weekly_mean, weekday_mean = [], []
             if top:
-                weekly_mean = pd.Series([data['column'][max(0, x):x + 7].mean()
-                                        for x in range(-startweekday, len(data['column']), 7)])
+                weekly_mean = pd.Series(
+                    [
+                        data['column'][max(0, x) : x + 7].mean()
+                        for x in range(-startweekday, len(data['column']), 7)
+                    ]
+                )
                 frmt = pptgen.utils.decimals(weekly_mean.values)
                 weekly_mean = weekly_mean.map(('{:,.%df}' % frmt).format).tolist()
             if left:
-                weekday_mean = pd.Series([data['column'][(x - startweekday) % 7::7].mean()
-                                         for x in range(7)])
+                weekday_mean = pd.Series(
+                    [data['column'][(x - startweekday) % 7 :: 7].mean() for x in range(7)]
+                )
                 frmt = pptgen.utils.decimals(weekday_mean.values)
                 weekday_mean = weekday_mean.map(('{:,.%df}' % frmt).format).tolist()
             gradient = matplotlib.cm.get_cmap('RdYlGn')
-            colors_ex = [matplotlib.colors.to_hex(gradient(x))
-                         for x in pptgen.utils.scale(data['column'])]
+            colors_ex = [
+                matplotlib.colors.to_hex(gradient(x)) for x in pptgen.utils.scale(data['column'])
+            ]
             texts_ppt, colors_ppt, toplabels_ppt, leftlabels_ppt = [], [], [], []
             for shape in target.slides[0].shapes:
                 # Rect cells text and color

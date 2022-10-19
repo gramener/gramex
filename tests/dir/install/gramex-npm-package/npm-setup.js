@@ -1,1 +1,1 @@
-console.log('npm-setup')
+console.log("npm-setup");

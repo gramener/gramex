@@ -89,8 +89,16 @@ class AuthBase(TestGramex):
             headers['Referer'] = referer
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None, referer=None,
-              headers={}, post_args={}):
+    def login(
+        self,
+        user,
+        password,
+        query_next=None,
+        header_next=None,
+        referer=None,
+        headers={},
+        post_args={},
+    ):
         params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
         tree = self.check_css(r.text, ('h1', 'Auth'))
@@ -103,8 +111,9 @@ class AuthBase(TestGramex):
         # Submitting the correct password redirects
         if headers is not None:
             params['headers'].update(headers)
-        return self.session.post(self.url, timeout=self.LOGIN_TIMEOUT,
-                                 data=data, headers=params['headers'])
+        return self.session.post(
+            self.url, timeout=self.LOGIN_TIMEOUT, data=data, headers=params['headers']
+        )
 
     def logout(self, query_next=None, header_next=None):
         url = server.base_url + '/auth/logout'
@@ -183,7 +192,8 @@ class LoginMixin(object):
             ({}, '/dir/index/'),
             ({'headers': {'NEXT': '/header'}}, '/header'),
             ({'data': {'next': '/query'}}, '/query'),
-            ({'headers': {'NEXT': '/header'}, 'data': {'next': '/query'}}, '/query'))
+            ({'headers': {'NEXT': '/header'}, 'data': {'next': '/query'}}, '/query'),
+        )
 
 
 class LoginFailureMixin(object):
@@ -230,8 +240,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
     # Run additional tests for session and login features
     def get_session(self, headers=None, params={}):
-        return self.session.get(server.base_url + '/auth/session',
-                                headers=headers, params=params).json()
+        return self.session.get(
+            server.base_url + '/auth/session', headers=headers, params=params
+        ).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -239,8 +250,10 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
     def test_attributes(self):
         self.login('gamma', 'gamma')
-        in_({'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
-            self.get_session()['user'])
+        in_(
+            {'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
+            self.get_session()['user'],
+        )
 
     def test_logout_action(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
@@ -286,8 +299,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
-        session_data = self.session.get(server.base_url + '/auth/session',
-                                        params={'gramex-otp': otp2}).json()
+        session_data = self.session.get(
+            server.base_url + '/auth/session', params={'gramex-otp': otp2}
+        ).json()
         in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
 
         self.session = requests.Session()
@@ -445,7 +459,8 @@ class TestAuthRedirect(AuthBase):
             ({}, '/'),
             ({'headers': {'Referer': '/header'}}, '/header'),
             ({'data': {'next': '/query'}}, '/query'),
-            ({'headers': {'Referer': '/header'}, 'data': {'next': '/query'}}, '/query'))
+            ({'headers': {'Referer': '/header'}, 'data': {'next': '/query'}}, '/query'),
+        )
 
 
 class TestAuthTemplate(TestGramex):
@@ -665,10 +680,10 @@ class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     def create_database(url):
         writer = pd.ExcelWriter(url)
         dummy = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})
-        dummy.to_excel(writer, 'Sheet1', index=False)       # noqa - encoding not required
+        dummy.to_excel(writer, 'Sheet1', index=False)  # noqa - encoding not required
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_excel(writer, 'auth', index=False)          # noqa - encoding not required
+        data.to_excel(writer, 'auth', index=False)  # noqa - encoding not required
         writer.save()
         tempfiles['dbexcel'] = url
 
@@ -705,42 +720,54 @@ class TestDBAuthSignup(DBAuthBase):
         tree = self.check_css(r.text, ('h1', 'Signup'))
 
         # POST an empty username. Raises HTTP 400: User invalid
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: '',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: '',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, BAD_REQUEST)
         self.assertIn('User cannot be empty', r.text)
 
         # POST an existing username. Raises HTTP 400: User exists
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: 'alpha',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: 'alpha',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, BAD_REQUEST)
         self.assertIn('User exists', r.text)
 
         # POST a new username. That should send a email to our service
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: 'newuser',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: 'newuser',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, OK)
         stubs = requests.get(server.base_url + '/email/stubs').json()
         ok_(len(stubs) > 0)
         mail = stubs[-1]
-        self.assertDictContainsSubset({
-            'host': gramex.conf.email.smtps_stub.host,
-            'email': gramex.conf.email.smtps_stub.email,
-            'password': gramex.conf.email.smtps_stub.password,
-            'from_addr': gramex.conf.email.smtps_stub.email,
-            'starttls': True,
-            'to_addrs': ['any@example.org'],
-            'quit': True,
-        }, mail)
+        self.assertDictContainsSubset(
+            {
+                'host': gramex.conf.email.smtps_stub.host,
+                'email': gramex.conf.email.smtps_stub.email,
+                'password': gramex.conf.email.smtps_stub.password,
+                'from_addr': gramex.conf.email.smtps_stub.email,
+                'starttls': True,
+                'to_addrs': ['any@example.org'],
+                'quit': True,
+            },
+            mail,
+        )
         obj = email.message_from_string(mail['msg'])
         msg = obj.get_payload(decode=True).decode('utf-8')
         ok_('auth/dbsignup?forgot=' in msg)
@@ -764,10 +791,13 @@ class TestDBAuthSignup(DBAuthBase):
         # change password page. Change the password
         r = session.get(self.url + '?forgot=' + token)
         tree = lxml.html.fromstring(r.text)
-        r = session.post(self.url + '?forgot=' + token, data={
-            'password': 'newpassword',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?forgot=' + token,
+            data={
+                'password': 'newpassword',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, OK)
         users2 = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users2 = users2.set_index(self.config.user.column)
@@ -788,8 +818,9 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
     def initialize(self, url, user='alpha', login_url='/login/', next_key='next'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        eq_(r.url, server.base_url + login_url + '?' + urlencode({
-            next_key: server.base_url + url}))
+        eq_(
+            r.url, server.base_url + login_url + '?' + urlencode({next_key: server.base_url + url})
+        )
         r = self.session.post(server.base_url + url)
         eq_(r.url, server.base_url + url)
         eq_(r.status_code, UNAUTHORIZED)
@@ -870,7 +901,11 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')
-        self.check('/auth/unauthorized-template', code=FORBIDDEN,
-                   text='403-template', session=self.session)
+        self.check(
+            '/auth/unauthorized-template',
+            code=FORBIDDEN,
+            text='403-template',
+            session=self.session,
+        )
         self.initialize('/auth/unauthorized-template', user='beta')
         self.check('/auth/unauthorized-template', path='dir/alpha.txt', session=self.session)

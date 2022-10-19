@@ -66,10 +66,13 @@ class TestXSRF(TestGramex):
 
     def test_ajax(self):
         # Requests sent with X-Requested-With should not need an XSRF cookie
-        r = requests.post(server.base_url + '/xsrf/yes', headers={
-            # Mangle case below to ensure Gramex handles it case-insensitively
-            'X-Requested-With': 'xMlHtTpReQuESt',
-        })
+        r = requests.post(
+            server.base_url + '/xsrf/yes',
+            headers={
+                # Mangle case below to ensure Gramex handles it case-insensitively
+                'X-Requested-With': 'xMlHtTpReQuESt',
+            },
+        )
         eq_(r.status_code, OK)
 
 
@@ -79,8 +82,10 @@ class TestSetupErrors(TestGramex):
 
     def test_invalid_setup(self):
         self.check(
-            '/invalid-setup', code=INTERNAL_SERVER_ERROR,
-            text='url:invalid-setup: needs "function:"')
+            '/invalid-setup',
+            code=INTERNAL_SERVER_ERROR,
+            text='url:invalid-setup: needs "function:"',
+        )
 
     def test_invalid_function(self):
         self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')
@@ -98,7 +103,7 @@ class TestErrorHandling(TestGramex):
             eq_(err.code, NOT_FOUND)
             text = err.read().decode('utf-8')
             ok_(' &quot;/error/404-escaped-&lt;script&gt;&quot;' in text)
-            ok_('\n' in text)   # error-404.json template has newlines
+            ok_('\n' in text)  # error-404.json template has newlines
         else:
             ok_(False, '/error/404-escaped-<script> should raise a 404')
 
@@ -110,7 +115,7 @@ class TestErrorHandling(TestGramex):
             eq_(err.code, NOT_FOUND)
             text = err.read().decode('utf-8')
             ok_(' "/error/404-template-<script>' in text)
-            ok_('\n' not in text)   # since whitespace=oneline
+            ok_('\n' not in text)  # since whitespace=oneline
         else:
             ok_(False, '/error/404-template-<script> should raise a 404')
 
@@ -179,17 +184,15 @@ class TestBaseHandler(TestGramex):
 class TestDefaultGramexYAML(TestGramex):
     def test_default_files(self):
         # Default gramex.yaml FileHandler exposes files in the current directory
-        self.check('/README.md', path='README.md', headers={
-            'Cache-Control': 'max-age=60'
-        })
-        self.check('/sample.png', path='sample.png', headers={
-            'Cache-Control': 'max-age=60'
-        })
+        self.check('/README.md', path='README.md', headers={'Cache-Control': 'max-age=60'})
+        self.check('/sample.png', path='sample.png', headers={'Cache-Control': 'max-age=60'})
 
     def test_favicon(self):
-        self.check('/favicon.ico', path='../gramex/favicon.ico', headers={
-            'Cache-Control': 'public, max-age=86400'
-        })
+        self.check(
+            '/favicon.ico',
+            path='../gramex/favicon.ico',
+            headers={'Cache-Control': 'public, max-age=86400'},
+        )
 
 
 class TestAlias(TestGramex):
@@ -207,6 +210,4 @@ class TestConfig(TestGramex):
         # gramex.appconfig should contain the current app configuration
         r = self.check('/appconfig').json()
         eq_(r['url']['appconfig']['pattern'], '/appconfig')
-        eq_(r['url']['appconfig']['kwargs']['headers'], {
-            'Content-Type': 'application/json'
-        })
+        eq_(r['url']['appconfig']['kwargs']['headers'], {'Content-Type': 'application/json'})

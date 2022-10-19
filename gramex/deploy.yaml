@@ -1,42 +1,67 @@
 # A more secure set of options for deployment
 
 handlers:
-    BaseHandler:
-        headers:
-            # https://www.veracode.com/blog/2014/03/guidelines-for-setting-security-headers
-            X-XSS-Protection: 1; mode=block     # Enable XSS protection
-            X-Content-Type-Options: nosniff     # Browsers should not perform MIME-type sniffing
-            X-Frame-Options: SAMEORIGIN         # Don't place in an iframe from external site
-            Server: false                       # Don't reveal the server
+  BaseHandler:
+    headers:
+      # https://www.veracode.com/blog/2014/03/guidelines-for-setting-security-headers
+      X-XSS-Protection: 1; mode=block # Enable XSS protection
+      X-Content-Type-Options: nosniff # Browsers should not perform MIME-type sniffing
+      X-Frame-Options: SAMEORIGIN # Don't place in an iframe from external site
+      Server: false # Don't reveal the server
 
-    # Restrict the files allowed by FileHandlers explicitly
-    FileHandler:
-        ignore: '*'                 # By default, ignore all files
-        allow: [
-          # Document formats (ignore .doc and .ppt: old and unsafe formats)
-          '*.md', '*.markdown', '*.html', '*.htm', '*.txt', '*.pdf', '*.rst',
-          '*.pptx', '*.docx',
-          # Image formats
-          '*.png', '*.svg', '*.jp*g', '*.gif', '*.ico',
-          # Audio-video formats
-          '*.mp3', '*.mp4', '*.avi', '*.flv', '*.mkv',
-          # Font formats
-          '*.ttf', '*.woff*', '*.eot', '*.otf',
-          # Front-end formats
-          '*.js', '*.css', '*.map', '*.ts', '*.vue', '*.sass', '*.scss', '*.less',
-          # Front-end data format:
-          '*.json'
-        ]
+  # Restrict the files allowed by FileHandlers explicitly
+  FileHandler:
+    ignore: "*" # By default, ignore all files
+    allow: [
+        # Document formats (ignore .doc and .ppt: old and unsafe formats)
+        "*.md",
+        "*.markdown",
+        "*.html",
+        "*.htm",
+        "*.txt",
+        "*.pdf",
+        "*.rst",
+        "*.pptx",
+        "*.docx",
+        # Image formats
+        "*.png",
+        "*.svg",
+        "*.jp*g",
+        "*.gif",
+        "*.ico",
+        # Audio-video formats
+        "*.mp3",
+        "*.mp4",
+        "*.avi",
+        "*.flv",
+        "*.mkv",
+        # Font formats
+        "*.ttf",
+        "*.woff*",
+        "*.eot",
+        "*.otf",
+        # Front-end formats
+        "*.js",
+        "*.css",
+        "*.map",
+        "*.ts",
+        "*.vue",
+        "*.sass",
+        "*.scss",
+        "*.less",
+        # Front-end data format:
+        "*.json",
+      ]
 app:
-    settings:
-        # Encrypt cookies with this secret key.
-        # Currently, it defaults to $HOSTNAME.
-        # You should change this to an environment variable via $VARIABLE
-        cookie_secret: gramex-$HOSTNAME
-        # In production, do not show traceback by default
-        serve_traceback: False
+  settings:
+    # Encrypt cookies with this secret key.
+    # Currently, it defaults to $HOSTNAME.
+    # You should change this to an environment variable via $VARIABLE
+    cookie_secret: gramex-$HOSTNAME
+    # In production, do not show traceback by default
+    serve_traceback: False
 
 url:
-    default:                  # Override the default handler with a more secure version
-        kwargs:               # Options to the handler
-            index: false      # Disable listing of files for higher security
+  default: # Override the default handler with a more secure version
+    kwargs: # Options to the handler
+      index: false # Disable listing of files for higher security

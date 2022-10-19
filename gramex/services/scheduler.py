@@ -13,11 +13,12 @@ class Task(object):
     '''Run a task. Then schedule it at the next occurrance.'''
 
     def __init__(
-            self,
-            name: str,
-            schedule: dict,
-            threadpool: ThreadPoolExecutor,
-            ioloop: tornado.ioloop = None):
+        self,
+        name: str,
+        schedule: dict,
+        threadpool: ThreadPoolExecutor,
+        ioloop: tornado.ioloop = None,
+    ):
         '''Create a new task based on a schedule.
 
         Parameters:
@@ -62,13 +63,14 @@ class Task(object):
         if callable(schedule['function']):
             self.function = schedule['function']
         else:
-            self.function = build_transform(schedule, vars={}, iter=False,
-                                            filename=f'schedule:{name}')
+            self.function = build_transform(
+                schedule, vars={}, iter=False, filename=f'schedule:{name}'
+            )
         self.ioloop = ioloop or tornado.ioloop.IOLoop.current()
-        self.every = None       # If set, Task runs every self.every seconds
-        self.cron = None        # If set, Task runs on cron.next()
-        self.callback = None    # Handle for next scheduled run (or None)
-        self.next = None        # Time of next scheduled run (for tests/test_schedule.py)
+        self.every = None  # If set, Task runs every self.every seconds
+        self.cron = None  # If set, Task runs on cron.next()
+        self.callback = None  # Handle for next scheduled run (or None)
+        self.next = None  # Time of next scheduled run (for tests/test_schedule.py)
 
         if self.thread:
             fn = self.function
@@ -95,14 +97,18 @@ class Task(object):
         # But if every: is present, run at a fixed interval
         if 'every' in schedule:
             every = schedule['every']
-            match = re.match(r'''
+            match = re.match(
+                r'''
                 (?:([\d\.]+)\s*w[a-z]*\s*)?     # weeks
                 (?:([\d\.]+)\s*d[a-z]*\s*)?     # days
                 (?:([\d\.]+)\s*h[a-z]*\s*)?     # hours
                 (?:([\d\.]+)\s*m[a-z]*\s*)?     # minutes
                 (?:([\d\.]+)\s*s[a-z]*\s*)?     # seconds
                 $
-            ''', every, re.IGNORECASE + re.VERBOSE)
+            ''',
+                every,
+                re.IGNORECASE + re.VERBOSE,
+            )
             if match is None:
                 app_log.error(f'schedule:{name} has invalid every: {every}')
             else:
@@ -140,8 +146,10 @@ class Task(object):
         '''Schedule next run automatically. Clears any previous scheduled runs'''
         if self.every:
             if self.cron:
-                app_log.warning(f'scheduler:{self.name} has BOTH schedule & every:. '
-                                f'Running every: {self.every}s')
+                app_log.warning(
+                    f'scheduler:{self.name} has BOTH schedule & every:. '
+                    f'Running every: {self.every}s'
+                )
             # Run "every" seconds after last scheduled time
             delay = (self.next or time.time()) + self.every - time.time()
             while delay < 0:

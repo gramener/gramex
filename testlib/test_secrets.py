@@ -16,8 +16,7 @@ class TestSecrets(unittest.TestCase):
         eq_(p.stdout.splitlines(), [b"SECRET_A1: '1'", b"SECRET_B2: '4'"])
 
         p = run(['secrets', 'SECRET_A*', 'SECRET_B2', 'X=Y'], capture_output=True, env=env)
-        eq_(p.stdout.splitlines(), [
-            b"SECRET_A1: '1'",
-            b"SECRET_A2: '2'",
-            b"SECRET_B2: '4'",
-            b"X: Y"])
+        eq_(
+            p.stdout.splitlines(),
+            [b"SECRET_A1: '1'", b"SECRET_A2: '2'", b"SECRET_B2: '4'", b"X: Y"],
+        )

@@ -7,12 +7,12 @@ urltest:
     code: 200
     html:
       html: true
-      head meta[name="viewport"]: {content: [has, width]}
+      head meta[name="viewport"]: { content: [has, width] }
       title: Gramex Guide
       h1: Gramex Guide
-      input[type="search"]: {data-url: search/searchindex.json}
-      nav ul > li > a: {.length: [greater than, 30], href: true}
-      .content ul > li > a: {.length: [greater than, 30], href: true}
+      input[type="search"]: { data-url: search/searchindex.json }
+      nav ul > li > a: { .length: [greater than, 30], href: true }
+      .content ul > li > a: { .length: [greater than, 30], href: true }
 
   - name: formhandler/flags
     fetch: $BASE/formhandler/flags
@@ -22,16 +22,34 @@ urltest:
       X-Missing: null
     json:
       missing: null
-      'length(@)': [[greater than, 150], [less than, 200]]
-      '[0]': {ID: AND, c1: 35, c2: 1, c3: 26, c4: 0, c5: 32, c6: 0, c7: 0, c8: 4,
-              Name: Andorra, Continent: Europe, Symbols: null, Shapes: null,
-              Stripes: Vertical, Cross: null, Union-Flag: null,Text: null}
+      "length(@)": [[greater than, 150], [less than, 200]]
+      "[0]":
+        {
+          ID: AND,
+          c1: 35,
+          c2: 1,
+          c3: 26,
+          c4: 0,
+          c5: 32,
+          c6: 0,
+          c7: 0,
+          c8: 4,
+          Name: Andorra,
+          Continent: Europe,
+          Symbols: null,
+          Shapes: null,
+          Stripes: Vertical,
+          Cross: null,
+          Union-Flag: null,
+          Text: null,
+        }
 
   - name: formhandler/flags-params
     fetch:
       url: $BASE/formhandler/flags
       method: GET
-      params: {Continent: [Europe, Asia], Symbols: Landscape, _sort: ID, _meta: y}
+      params:
+        { Continent: [Europe, Asia], Symbols: Landscape, _sort: ID, _meta: y }
     code: [IS, 302, 200]
     text:
       - [has, Landscape, na]
@@ -39,23 +57,30 @@ urltest:
       - [has, Europe]
       - [has, Asia]
     headers:
-      Fh-Data-By: [is, '[]', na]
+      Fh-Data-By: [is, "[]", na]
       # TODO: type conversion from string to int
-      Fh-Data-Count: '4'
-      Content-Length: [is not, '0', '1']
-      Fh-Data-Filters: [[HAS, Continent], [HAS, Europe], [HAS, Asia], [HAS, Symbols], [HAS, Landscape]]
+      Fh-Data-Count: "4"
+      Content-Length: [is not, "0", "1"]
+      Fh-Data-Filters:
+        [
+          [HAS, Continent],
+          [HAS, Europe],
+          [HAS, Asia],
+          [HAS, Symbols],
+          [HAS, Landscape],
+        ]
       Server: [matches, ^Gramex/\d+\.\d+\.\d+$$]
       Content-Type: [starts with, application, na]
       Date: [ends with, GMT, UTC]
     json:
-      'length(@)': 4
-      '[0].ID': KHM
-      '[0].Text': null
-      '[3].Stripes': Horizontal
+      "length(@)": 4
+      "[0].ID": KHM
+      "[0].Text": null
+      "[3].Stripes": Horizontal
 
 browsers:
   # Only ChromeDriver is installed on Gitlab CI
-  Chrome: {headless: true}
+  Chrome: { headless: true }
 
 uitest:
   - fetch: $BASE
@@ -67,26 +92,27 @@ uitest:
     title: [starts with, Gramex]
   - name: home-page-features
     find h1: Gramex Guide
-    find nav ul > li > a: {.length: [greater than, 30], href: true}
+    find nav ul > li > a: { .length: [greater than, 30], href: true }
     hover: .navbar-toggler-icon
     clear: input
     type input: googleauth
     wait: 0.5
   - name: check-search
-    wait: {selector: '#searchresults > div'}
-    'find #searchresults > div': {.length: 3}
+    wait: { selector: "#searchresults > div" }
+    "find #searchresults > div": { .length: 3 }
     # TODO: at least one of the elements contains this
-    'find xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]': {href: true}
+    'find xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]':
+      { href: true }
   - name: check-script
     script:
       - "return document.title == document.querySelector('h1').textContent": true
       - "return document.title": [has, Gramex Guide]
-    wait: {script: 'document.title.match(/Guide/)'}
+    wait: { script: "document.title.match(/Guide/)" }
   - name: check-xpath
     click: xpath //*[@id="searchresults"]//a[contains(text(), "Google auth")]
     script:
-      - 'return location.pathname': '/auth/'
-      - 'return window.scrollY': [greater than, 0]
+      - "return location.pathname": "/auth/"
+      - "return window.scrollY": [greater than, 0]
   - name: check-back
     back: 1
 

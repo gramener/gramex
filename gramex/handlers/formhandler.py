@@ -22,7 +22,7 @@ def namespaced_args(args, namespace):
     result = {}
     for key, val in args.items():
         if key.startswith(namespace):
-            result[key[len(namespace):]] = val
+            result[key[len(namespace) :]] = val
         elif ':' not in key:
             result[key] = val
     return result
@@ -47,9 +47,9 @@ class FormHandler(BaseHandler):
     @classmethod
     def setup(cls, **kwargs):
         super(FormHandler, cls).setup(**kwargs)
-        conf_kwargs = merge(AttrDict(kwargs),
-                            objectpath(gramex_conf, 'handlers.FormHandler', {}),
-                            'setdefault')
+        conf_kwargs = merge(
+            AttrDict(kwargs), objectpath(gramex_conf, 'handlers.FormHandler', {}), 'setdefault'
+        )
         cls.headers = conf_kwargs.pop('headers', {})
         # Top level formats: key is special. Don't treat it as data
         cls.formats = conf_kwargs.pop('formats', {})
@@ -62,10 +62,14 @@ class FormHandler(BaseHandler):
             cls.single = True
         else:
             if 'modify' in conf_kwargs:
-                cls.modify_all = staticmethod(build_transform(
-                    conf={'function': conf_kwargs.pop('modify', None)},
-                    vars=cls.function_vars['modify'],
-                    filename=f'{cls.name}.modify', iter=False))
+                cls.modify_all = staticmethod(
+                    build_transform(
+                        conf={'function': conf_kwargs.pop('modify', None)},
+                        vars=cls.function_vars['modify'],
+                        filename=f'{cls.name}.modify',
+                        iter=False,
+                    )
+                )
             cls.datasets = conf_kwargs
             cls.single = False
         # Apply defaults to each key
@@ -88,19 +92,22 @@ class FormHandler(BaseHandler):
             conf = {
                 'function': dataset.pop('function', None),
                 'args': dataset.pop('args', None),
-                'kwargs': dataset.pop('kwargs', None)
+                'kwargs': dataset.pop('kwargs', None),
             }
             if conf['function'] is not None:
                 fn_name = f'{cls.name}.{key}.transform'
                 dataset['transform'] = build_transform(
-                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False)
+                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False
+                )
             # Convert modify: and prepare: into a data = modify(data) function
             for fn, fn_vars in cls.function_vars.items():
                 if fn in dataset:
                     dataset[fn] = build_transform(
                         conf={'function': dataset[fn]},
                         vars=fn_vars,
-                        filename=f'{cls.name}.{key}.{fn}', iter=False)
+                        filename=f'{cls.name}.{key}.{fn}',
+                        iter=False,
+                    )
 
     def _options(self, dataset, args, path_args, path_kwargs, key):
         """For each dataset, prepare the arguments."""
@@ -149,7 +156,8 @@ class FormHandler(BaseHandler):
             opt.filter_kwargs.pop('id', None)
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
-                self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
+                self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs
+            )
             # gramex.data.filter() should set the schema only on first load. Pop it once done
             dataset.pop('schema', None)
         result = AttrDict()
@@ -201,11 +209,14 @@ class FormHandler(BaseHandler):
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
                 raise HTTPError(
-                    BAD_REQUEST, f'{self.name}: need id: in kwargs: to {self.request.method}')
+                    BAD_REQUEST, f'{self.name}: need id: in kwargs: to {self.request.method}'
+                )
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, f'{self.name}: missing column(s) in URL query: ' +
-                                ', '.join(missing_args))
+                raise HTTPError(
+                    BAD_REQUEST,
+                    f'{self.name}: missing column(s) in URL query: ' + ', '.join(missing_args),
+                )
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
             # method() should set the schema only on first load. Pop it once done
@@ -266,6 +277,7 @@ class FormHandler(BaseHandler):
         prefix = 'FH-{}-{}'
         for dataset, metadata in meta.items():
             for key, value in metadata.items():
-                string_value = json.dumps(value, separators=(',', ':'),
-                                          ensure_ascii=True, cls=CustomJSONEncoder)
+                string_value = json.dumps(
+                    value, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+                )
                 self.set_header(prefix.format(dataset, key), string_value)

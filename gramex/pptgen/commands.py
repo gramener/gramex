@@ -10,8 +10,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.cm
 import matplotlib.colors
+
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import fromstring   # nosec B410
+from lxml.etree import fromstring  # nosec B410
 from tornado.template import Template
 from tornado.escape import to_unicode
 from pptx.chart import data as pptxcd
@@ -139,7 +140,6 @@ def image(shape, spec, data):
         os.unlink(handle.name)
     else:
         new_img_part, new_rid = shape.part.get_or_add_image_part(image)
-    # old_rid = shape._pic.blip_rId
     shape._pic.blipFill.blip.rEmbed = new_rid
     shape.part.related_parts[new_rid].blob = new_img_part.blob
 
@@ -167,7 +167,6 @@ def add_text_to_shape(shape, textval, **kwargs):
     '''Function to add text to shape.'''
     min_inc = 13000
     pixel_inch = 10000
-    # kwargs['font-size'] = max(kwargs.get('font-size', 16), min_inc)
     if (kwargs.get('font-size', 14) * pixel_inch) < min_inc:
         return
     paragraph = shape.text_frame.paragraphs[0]
@@ -182,7 +181,7 @@ def add_text_to_shape(shape, textval, **kwargs):
 def scale_data(data, lo, hi, factor=None):
     '''Function to scale data.'''
     data = np.array(data, dtype=float)
-    return ((data - lo) / ((hi - lo) or np.nan)) * (factor or 1.)
+    return ((data - lo) / ((hi - lo) or np.nan)) * (factor or 1.0)
 
 
 def rect(shape, x, y, width, height):
@@ -309,17 +308,39 @@ def chart(shape, spec, data):
 
     chart_types = {
         'ChartData': {
-            'AREA', 'AREA_STACKED', 'AREA_STACKED_100', 'BAR_CLUSTERED',
-            'BAR_OF_PIE', 'BAR_STACKED', 'BAR_STACKED_100', 'COLUMN_CLUSTERED',
-            'COLUMN_STACKED', 'COLUMN_STACKED_100', 'LINE',
-            'LINE_MARKERS', 'LINE_MARKERS_STACKED', 'LINE_MARKERS_STACKED_100',
-            'LINE_STACKED', 'LINE_STACKED_100', 'RADAR_MARKERS',
-            'RADAR', 'RADAR_FILLED', 'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE',
-            'DOUGHNUT', 'DOUGHNUT_EXPLODED'},
+            'AREA',
+            'AREA_STACKED',
+            'AREA_STACKED_100',
+            'BAR_CLUSTERED',
+            'BAR_OF_PIE',
+            'BAR_STACKED',
+            'BAR_STACKED_100',
+            'COLUMN_CLUSTERED',
+            'COLUMN_STACKED',
+            'COLUMN_STACKED_100',
+            'LINE',
+            'LINE_MARKERS',
+            'LINE_MARKERS_STACKED',
+            'LINE_MARKERS_STACKED_100',
+            'LINE_STACKED',
+            'LINE_STACKED_100',
+            'RADAR_MARKERS',
+            'RADAR',
+            'RADAR_FILLED',
+            'PIE',
+            'PIE_EXPLODED',
+            'PIE_OF_PIE',
+            'DOUGHNUT',
+            'DOUGHNUT_EXPLODED',
+        },
         'XyChartData': {
-            'XY_SCATTER', 'XY_SCATTER_LINES', 'XY_SCATTER_LINES_NO_MARKERS',
-            'XY_SCATTER_SMOOTH', 'XY_SCATTER_SMOOTH_NO_MARKERS'},
-        'BubbleChartData': {'BUBBLE', 'BUBBLE_THREE_D_EFFECT'}
+            'XY_SCATTER',
+            'XY_SCATTER_LINES',
+            'XY_SCATTER_LINES_NO_MARKERS',
+            'XY_SCATTER_SMOOTH',
+            'XY_SCATTER_SMOOTH_NO_MARKERS',
+        },
+        'BubbleChartData': {'BUBBLE', 'BUBBLE_THREE_D_EFFECT'},
     }
 
     if not chart_type:
@@ -334,8 +355,11 @@ def chart(shape, spec, data):
                 info[prop]['function'] = '{}'.format(info[prop])
             info[prop] = compile_function(info, prop, data, handler)
 
-    style = {'color': info.pop('color', None), 'opacity': info.pop('opacity', None),
-             'stroke': info.pop('stroke', None)}
+    style = {
+        'color': info.pop('color', None),
+        'opacity': info.pop('opacity', None),
+        'stroke': info.pop('stroke', None),
+    }
 
     for key in {'color', 'stroke', 'opacity'}:
         if key in style and isinstance(style[key], (dict,)):
@@ -353,7 +377,8 @@ def chart(shape, spec, data):
         raise NotImplementedError('Input Chart Type {} is not supported'.format(chart_type))
 
     chart_data = _update_chart(
-        info, change_data, getattr(pptxcd, chart_name)(), series_cols, chart=chart_name)
+        info, change_data, getattr(pptxcd, chart_name)(), series_cols, chart=chart_name
+    )
 
     shape.chart.replace_data(chart_data)
     if chart_name == 'scatter' and not style.get('color'):
@@ -361,8 +386,12 @@ def chart(shape, spec, data):
         style['color'] = dict(zip(series_names, _color.distinct(len(series_names))))
 
     if style.get('color'):
-        color_mapping = {'XyChartData': 'point.marker.format', 'ChartData': 'point.format',
-                         'BubbleChartData': 'point.format', 'area': 'series.format'}
+        color_mapping = {
+            'XyChartData': 'point.marker.format',
+            'ChartData': 'point.format',
+            'BubbleChartData': 'point.format',
+            'area': 'series.format',
+        }
         is_area = {'AREA', 'AREA_STACKED', 'AREA_STACKED_100'}
         chart_name = 'area' if chart_type in is_area else chart_name
         is_donut = {'PIE', 'PIE_EXPLODED', 'PIE_OF_PIE', 'DOUGHNUT', 'DOUGHNUT_EXPLODED'}
@@ -372,7 +401,7 @@ def chart(shape, spec, data):
                 args = {
                     'handler': handler,
                     'row': row.to_dict(),
-                    'name': row[info['x']] if chart_type in is_donut else series.name
+                    'name': row[info['x']] if chart_type in is_donut else series.name,
                 }
                 point_css = {}
                 for key in {'opacity', 'color', 'stroke'}:
@@ -392,7 +421,7 @@ def chart(shape, spec, data):
                     chart_css(eval(fillpoint).fill, point_css, point_css['color'])  # nosec B307
                     # Will apply on outer line of chart shape line(like stroke in html)
                     _stroke = point_css.get('stroke', point_css['color'])
-                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)        # nosec B307
+                    chart_css(eval(fillpoint).line.fill, point_css, _stroke)  # nosec B307
 
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
@@ -438,8 +467,7 @@ def sankey(shape, spec, data):
         df = frames[group] = utils.draw_sankey(data, sankey_conf)
         # Adding rectangle
         for key, row in df.iterrows():
-            shp = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, row['x'], y, row['width'], thickness)
+            shp = shapes.add_shape(MSO_SHAPE.RECTANGLE, row['x'], y, row['width'], thickness)
             rectstyle = {'fill': row['fill'], 'stroke': stroke}
             rect_css(shp, **rectstyle)
             text_style = {'color': _color.contrast(row['fill'])}
@@ -463,34 +491,54 @@ def sankey(shape, spec, data):
 
                     _id = shape_ids['shape'] = shape_ids['shape'] + 1
                     shp = utils.cust_shape(
-                        0, 0, '{:.0f}'.format(row['width']), '{:.0f}'.format(ym), _id)
+                        0, 0, '{:.0f}'.format(row['width']), '{:.0f}'.format(ym), _id
+                    )
                     path = elem_schema['a'].path(
-                        w='{:.0f}'.format(row['width']), h='{:.0f}'.format(ym))
+                        w='{:.0f}'.format(row['width']), h='{:.0f}'.format(ym)
+                    )
                     shp.find('.//a:custGeom', namespaces=elem_schema['nsmap']).append(
-                        elem_schema['a'].pathLst(path))
+                        elem_schema['a'].pathLst(path)
+                    )
                     path.append(
-                        elem_schema['a'].moveTo(elem_schema['a'].pt(
-                            x='{:.0f}'.format(x1 + row['width']), y='{:.0f}'.format(y1))))
+                        elem_schema['a'].moveTo(
+                            elem_schema['a'].pt(
+                                x='{:.0f}'.format(x1 + row['width']), y='{:.0f}'.format(y1)
+                            )
+                        )
+                    )
 
-                    path.append(elem_schema['a'].cubicBezTo(
-                        elem_schema['a'].pt(x='{:.0f}'.format(x1 + row['width']),
-                                            y='{:.0f}'.format(ym)),
-                        elem_schema['a'].pt(x='{:.0f}'.format(x2 + row['width']),
-                                            y='{:.0f}'.format(ym)),
-                        elem_schema['a'].pt(x='{:.0f}'.format(x2 + row['width']),
-                                            y='{:.0f}'.format(y2))))
+                    path.append(
+                        elem_schema['a'].cubicBezTo(
+                            elem_schema['a'].pt(
+                                x='{:.0f}'.format(x1 + row['width']), y='{:.0f}'.format(ym)
+                            ),
+                            elem_schema['a'].pt(
+                                x='{:.0f}'.format(x2 + row['width']), y='{:.0f}'.format(ym)
+                            ),
+                            elem_schema['a'].pt(
+                                x='{:.0f}'.format(x2 + row['width']), y='{:.0f}'.format(y2)
+                            ),
+                        )
+                    )
 
-                    path.append(elem_schema['a'].lnTo(
-                        elem_schema['a'].pt(x='{:.0f}'.format(x2), y='{:.0f}'.format(y2))))
+                    path.append(
+                        elem_schema['a'].lnTo(
+                            elem_schema['a'].pt(x='{:.0f}'.format(x2), y='{:.0f}'.format(y2))
+                        )
+                    )
 
-                    path.append(elem_schema['a'].cubicBezTo(
-                        elem_schema['a'].pt(x='{:.0f}'.format(x2), y='{:.0f}'.format(ym)),
-                        elem_schema['a'].pt(x='{:.0f}'.format(x1), y='{:.0f}'.format(ym)),
-                        elem_schema['a'].pt(x='{:.0f}'.format(x1), y='{:.0f}'.format(y1))))
+                    path.append(
+                        elem_schema['a'].cubicBezTo(
+                            elem_schema['a'].pt(x='{:.0f}'.format(x2), y='{:.0f}'.format(ym)),
+                            elem_schema['a'].pt(x='{:.0f}'.format(x1), y='{:.0f}'.format(ym)),
+                            elem_schema['a'].pt(x='{:.0f}'.format(x1), y='{:.0f}'.format(y1)),
+                        )
+                    )
 
                     path.append(elem_schema['a'].close())
-                    shp.spPr.append(elem_schema['a'].solidFill(
-                        utils.fill_color(srgbclr=row['fill'])))
+                    shp.spPr.append(
+                        elem_schema['a'].solidFill(utils.fill_color(srgbclr=row['fill']))
+                    )
                     shapes._spTree.append(shp)
                     pos[0, key1] += row['width']
                     pos[1, key2] += row['width']
@@ -521,8 +569,7 @@ def treemap(shape, spec, data):
     default_rect_color = '#cccccc'
     for x, y, w, h, (level, v) in treemap_data.draw(width, height):
         if level == 0:
-            shp = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, x + x0, y + y0, w, h)
+            shp = shapes.add_shape(MSO_SHAPE.RECTANGLE, x + x0, y + y0, w, h)
             rect_color = default_rect_color
             if spec.get('color'):
                 rect_color = spec['color'](v) if callable(spec['color']) else spec['color']
@@ -587,22 +634,29 @@ def calendarmap(shape, spec, data):
     lo_data = spec.get('lo', scaledata.min())
     range_data = spec.get('hi', scaledata.max()) - lo_data
     gradient = matplotlib.cm.get_cmap(spec.get('gradient', 'RdYlGn'))
-    color = style.get('fill', lambda v: matplotlib.colors.to_hex(
-        gradient((float(v) - lo_data) / range_data)) if not pd.isnull(v) else default_color)
+    color = style.get(
+        'fill',
+        lambda v: matplotlib.colors.to_hex(gradient((float(v) - lo_data) / range_data))
+        if not pd.isnull(v)
+        else default_color,
+    )
 
     startweekday = (startdate.weekday() - spec.get('weekstart', 0)) % 7
     # Weekday Mean and format
-    weekday_mean = pd.Series(
-        [scaledata[(x - startweekday) % 7::7].mean() for x in range(7)])
+    weekday_mean = pd.Series([scaledata[(x - startweekday) % 7 :: 7].mean() for x in range(7)])
     weekday_format = spec.get('format', '{:,.%df}' % utils.decimals(weekday_mean.values))
     # Weekly Mean and format
-    weekly_mean = pd.Series([scaledata[max(0, x):x + 7].mean()
-                             for x in range(-startweekday, len(scaledata), 7)])
+    weekly_mean = pd.Series(
+        [scaledata[max(0, x) : x + 7].mean() for x in range(-startweekday, len(scaledata), 7)]
+    )
     weekly_format = spec.get('format', '{:,.%df}' % utils.decimals(weekly_mean.values))
     # Scale sizes as square roots from 0 to max (not lowest to max -- these
     # should be an absolute scale)
-    sizes = width * utils.scale(
-        [v ** .5 for v in size], lo=0) if size is not None else [width] * len(scaledata)
+    sizes = (
+        width * utils.scale([v**0.5 for v in size], lo=0)
+        if size is not None
+        else [width] * len(scaledata)
+    )
     for i, val in enumerate(data):
         nx = (i + startweekday) // 7
         ny = (i + startweekday) % 7
@@ -615,12 +669,17 @@ def calendarmap(shape, spec, data):
             MSO_SHAPE.RECTANGLE,
             x0 + (width * nx) + (width - sizes[i]) / 2,
             y0 + (width * ny) + (width - sizes[i]) / 2,
-            sizes[i], sizes[i])
+            sizes[i],
+            sizes[i],
+        )
         rectstyle = {'fill': fill, 'stroke': stroke(val) if callable(stroke) else stroke}
         rect_css(shp, **rectstyle)
         text_style = {}
-        text_style['color'] = style.get('color')(val) if callable(
-            style.get('color')) else spec.get('color', _color.contrast(fill))
+        text_style['color'] = (
+            style.get('color')(val)
+            if callable(style.get('color'))
+            else spec.get('color', _color.contrast(fill))
+        )
         text_style['font-size'] = font_size(val) if callable(font_size) else font_size
         for k in ['bold', 'italic', 'underline', 'font-family']:
             text_style[k] = style.get(k)
@@ -629,28 +688,28 @@ def calendarmap(shape, spec, data):
         # Draw the boundary lines between months
         if i >= 7 and d.day == 1 and ny > 0:
             border = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE,
-                x0 + width * nx, y0 + (width * ny), width, 2 * pixel_inch)
+                MSO_SHAPE.RECTANGLE, x0 + width * nx, y0 + (width * ny), width, 2 * pixel_inch
+            )
             border.name = 'border'
             rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
             rect_css(border, **rectstyle)
         if i >= 7 and d.day <= 7 and nx > 0:
             border = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE,
-                x0 + (width * nx), y0 + (width * ny), 2 * pixel_inch, width)
+                MSO_SHAPE.RECTANGLE, x0 + (width * nx), y0 + (width * ny), 2 * pixel_inch, width
+            )
             border.name = 'border'
             rectstyle = {'fill': default_line_color, 'stroke': default_line_color}
             rect_css(border, **rectstyle)
         # Adding weekdays text to the chart (left side)
         if i < 7:
             txt = shapes.add_textbox(
-                x0 - (width / 2), y0 + (width * ny) + (width / 2), width, width)
+                x0 - (width / 2), y0 + (width * ny) + (width / 2), width, width
+            )
             text_style['color'] = default_txt_color
             add_text_to_shape(txt, d.strftime('%a')[0], **text_style)
         # Adding months text to the chart (top)
         if d.day <= 7 and ny == 0:
-            txt = shapes.add_textbox(
-                x0 + (width * nx), y0 - (width / 2), width, width)
+            txt = shapes.add_textbox(x0 + (width * nx), y0 - (width / 2), width, width)
             text_style['color'] = default_txt_color
             add_text_to_shape(txt, d.strftime('%b %Y'), **text_style)
     if label_top:
@@ -659,11 +718,12 @@ def calendarmap(shape, spec, data):
         for nx, val in enumerate(weekly_mean.fillna(0)):
             w = label_top * ((val - lo_weekly) / range_weekly)
             px = x0 + (width * nx)
-            bar = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
+            bar = shapes.add_shape(MSO_SHAPE.RECTANGLE, px, shape_top - w, width, w)
             bar.name = 'summary.top.bar'
-            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
-                         'stroke': stroke(val) if callable(stroke) else stroke}
+            rectstyle = {
+                'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
+                'stroke': stroke(val) if callable(stroke) else stroke,
+            }
             rect_css(bar, **rectstyle)
             label = shapes.add_textbox(px, shape_top - width, width, width)
             label.name = 'summary.top.label'
@@ -675,10 +735,13 @@ def calendarmap(shape, spec, data):
         for ny, val in enumerate(weekday_mean.fillna(0)):
             w = label_left * ((val - lo_weekday) / range_weekday)
             bar = shapes.add_shape(
-                MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width)
+                MSO_SHAPE.RECTANGLE, shape_left - w, y0 + (width * ny), w, width
+            )
             bar.name = 'summary.left.bar'
-            rectstyle = {'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
-                         'stroke': stroke(val) if callable(stroke) else stroke}
+            rectstyle = {
+                'fill': fill_rect(val) if callable(fill_rect) else fill_rect,
+                'stroke': stroke(val) if callable(stroke) else stroke,
+            }
             rect_css(bar, **rectstyle)
             label = shapes.add_textbox(shape_left - width, y0 + (width * ny), w, width)
             label.name = 'summary.left.label'
@@ -716,8 +779,10 @@ def bullet(shape, spec, data):
     shapes = shape._parent
     shape._sp.delete()
     lo = spec.get('lo', 0)
-    hi = spec.get('hi', np.nanmax([spec['data'], spec['target'], spec['poor'],
-                                  spec['average'], spec['good']]))
+    hi = spec.get(
+        'hi',
+        np.nanmax([spec['data'], spec['target'], spec['poor'], spec['average'], spec['good']]),
+    )
     style = {}
     common_style = copy.deepcopy(spec.get('style', {}))
     data_text = common_style.get('data', {}).pop('text', spec.get('text', True))
@@ -727,9 +792,13 @@ def bullet(shape, spec, data):
     if target_text:
         target_text = compile_function({'text': target_text}, 'text', data, handler)
 
-    css = {'data': common_style.pop('data', {}), 'target': common_style.pop('target', {}),
-           'poor': common_style.pop('poor', {}), 'good': common_style.pop('good', {}),
-           'average': common_style.pop('average', {})}
+    css = {
+        'data': common_style.pop('data', {}),
+        'target': common_style.pop('target', {}),
+        'poor': common_style.pop('poor', {}),
+        'good': common_style.pop('good', {}),
+        'average': common_style.pop('average', {}),
+    }
 
     for key, val in css.items():
         _style = copy.deepcopy(common_style)
@@ -782,8 +851,9 @@ def bullet(shape, spec, data):
         default_align = 'left' if orient == 'vertical' else 'right'
         data_txt_style['text-align'] = data_txt_style.get('text-align', default_align)
         # Setting default font-size
-        font_size = (text_width / pixel_inch) * font_aspect / fontwidth.fontwidth(
-            '{}'.format(_data_text))
+        font_size = (
+            (text_width / pixel_inch) * font_aspect / fontwidth.fontwidth('{}'.format(_data_text))
+        )
         font_size = min(text_width / pixel_inch, font_size, np.Inf)
         data_txt_style['font-size'] = data_txt_style.get('font-size', font_size)
         add_text_to_shape(parent, _data_text, **data_txt_style)
@@ -815,8 +885,7 @@ def bullet(shape, spec, data):
             target_txt_style['color'] = target_txt_style.get('color', _color.contrast(fill_max))
             # Setting default font-size
             font_size = font_aspect / fontwidth.fontwidth('{}'.format(_target_text))
-            font_size = min(text_width / pixel_inch,
-                            (text_width / pixel_inch) * font_size, np.Inf)
+            font_size = min(text_width / pixel_inch, (text_width / pixel_inch) * font_size, np.Inf)
             target_txt_style['font-size'] = target_txt_style.get('font-size', font_size)
             add_text_to_shape(parent, _target_text, **target_txt_style)
 
@@ -850,11 +919,10 @@ def heatgrid(shape, spec, data):
     rows = spec.get('row-order') or sorted(data[spec['row']].unique().tolist())
     columns = spec.get('column-order') or sorted(data[spec['column']].unique().tolist())
 
-    left_margin = (width * spec.get('left-margin', 0.15))
+    left_margin = width * spec.get('left-margin', 0.15)
     padding = spec.get('style', {}).get('padding', 5)
     if not isinstance(padding, (dict,)):
-        padding = {'left': padding, 'right': padding,
-                   'top': padding, 'bottom': padding}
+        padding = {'left': padding, 'right': padding, 'top': padding, 'bottom': padding}
 
     styles = copy.deepcopy(spec.get('style', {}))
 
@@ -870,24 +938,29 @@ def heatgrid(shape, spec, data):
     _width = spec.get('cell-width', _width) * pixel_inch
     # Adding Columns to the HeatGrid.
     for idx, column in enumerate(columns):
-        txt = parent.add_textbox(
-            left + _width * idx + left_margin, top - height, _width, height)
+        txt = parent.add_textbox(left + _width * idx + left_margin, top - height, _width, height)
         add_text_to_shape(txt, '{}'.format(column), **styles)
     # Cell width
     for index, row in enumerate(rows):
         _data = data[data[spec['row']] == row].dropna()
         _data = pd.merge(
-            pd.DataFrame({spec['column']: list(columns)}), _data,
-            left_on=spec['column'], right_on=spec['column'], how='left').reset_index(drop=True)
+            pd.DataFrame({spec['column']: list(columns)}),
+            _data,
+            left_on=spec['column'],
+            right_on=spec['column'],
+            how='left',
+        ).reset_index(drop=True)
 
         for _idx, _row in _data.iterrows():
             style = copy.deepcopy(styles)
             # Setting callable padding args
-            _vars = {'handler': None, 'row': None,
-                     'column': None, 'value': None}
-            args = {'handler': handler, 'row': row,
-                    'column': _row[spec['column']],
-                    'value': _row[spec['value']]}
+            _vars = {'handler': None, 'row': None, 'column': None, 'value': None}
+            args = {
+                'handler': handler,
+                'row': row,
+                'column': _row[spec['column']],
+                'value': _row[spec['value']],
+            }
             # Setting padding if callable.
             _pad = copy.deepcopy(padding)
             for key, val in _pad.items():
@@ -901,8 +974,7 @@ def heatgrid(shape, spec, data):
             # Adding cells
             xaxis = left + (_width * _idx) + left_margin + left_pad
             yaxis = top + (height * index) + (top_pad) * index
-            _rect = rect(parent, xaxis, yaxis, _width - left_pad - right_pad,
-                         height - top_pad)
+            _rect = rect(parent, xaxis, yaxis, _width - left_pad - right_pad, height - top_pad)
             # Adding color gradient to cell if gradient is True
             if style.get('gradient'):
                 grad_txt = scale_data(_row[spec['value']], _min, _max)
@@ -918,8 +990,8 @@ def heatgrid(shape, spec, data):
             # Adding text to cells if required.
             if spec.get('text'):
                 _txt = parent.add_textbox(
-                    xaxis, yaxis, _width - left_pad - right_pad,
-                    height - top_pad - bottom_pad)
+                    xaxis, yaxis, _width - left_pad - right_pad, height - top_pad - bottom_pad
+                )
                 if isinstance(spec['text'], dict) and 'function' in spec['text']:
                     cell_txt = compile_function(spec, 'text', _row, handler)
                 else:
@@ -929,8 +1001,8 @@ def heatgrid(shape, spec, data):
                 add_text_to_shape(_txt, cell_txt, **style)
         # Adding row's text in left side
         txt = parent.add_textbox(
-            left, top + (height * index) + top_pad * index,
-            _width + left_margin, height)
+            left, top + (height * index) + top_pad * index, _width + left_margin, height
+        )
         add_text_to_shape(txt, row, **styles)
 
 
@@ -946,8 +1018,11 @@ def css(shape, spec, data):
         setprop = style.get(prop)
         if setprop:
             if not isinstance(style[prop], (dict,)):
-                style[prop] = {'function': '{}'.format(style[prop]) if not isinstance(
-                    style[prop], str) else style[prop]}
+                style[prop] = {
+                    'function': '{}'.format(style[prop])
+                    if not isinstance(style[prop], str)
+                    else style[prop]
+                }
             setprop = compile_function(style, prop, data, handler)
             setprop = setprop * pxl_to_inch
         else:

@@ -49,8 +49,7 @@ class TestInstall(unittest.TestCase):
             for filename in files:
                 if '.git' not in root:
                     actual.add(os.path.join(root, filename))
-        expected = {os.path.abspath(os.path.join(folder, filename))
-                    for filename in expected_files}
+        expected = {os.path.abspath(os.path.join(folder, filename)) for filename in expected_files}
         self.assertEqual(actual, expected)
 
         conf = +PathConfig(Path(self.appdir('apps.yaml')))
@@ -80,13 +79,21 @@ class TestInstall(unittest.TestCase):
             self.check_uninstall(subappname)
 
     def test_zip(self):
-        self.check_zip('zip', files={
-            'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
+        self.check_zip(
+            'zip', files={'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'}
+        )
 
     def test_zip_url_contentdir(self):
-        self.check_zip('zip-contentdir', contentdir=False, files={
-            'common-root/dir1/dir1.txt', 'common-root/dir1/file.txt',
-            'common-root/dir2/dir2.txt', 'common-root/dir2/file.txt'})
+        self.check_zip(
+            'zip-contentdir',
+            contentdir=False,
+            files={
+                'common-root/dir1/dir1.txt',
+                'common-root/dir1/file.txt',
+                'common-root/dir2/dir2.txt',
+                'common-root/dir2/file.txt',
+            },
+        )
 
     def test_zip_flat(self):
         # This ZIP file has members directly under the root. Test such cases
@@ -96,8 +103,9 @@ class TestInstall(unittest.TestCase):
 
     def test_url_in_cmd(self):
         install(['url-cmd', self.zip_url], AttrDict())
-        self.check_files('url-cmd', {
-            'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
+        self.check_files(
+            'url-cmd', {'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'}
+        )
         self.check_uninstall('url-cmd')
 
     def test_run(self):
@@ -189,7 +197,7 @@ class TestInstall(unittest.TestCase):
             result.add('bower_components/gramex-bower-package/bower-setup.txt')
             result.add('bower_components/gramex-bower-package/.bower.json')
         if which('pip'):
-            import dicttoxml            # type:ignore # noqa
+            import dicttoxml  # type:ignore # noqa
         self.check_files('setup', result)
         self.check_uninstall('setup')
 

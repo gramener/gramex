@@ -128,10 +128,8 @@ def _rgb(color):
     .. deprecated:: 0.1
         Use :func:`rgba` instead
     """
-    warnings.warn('Use color.rgba instead of color._rgb',
-                  FutureWarning, stacklevel=2)
-    return (int(color[-6:-4], BASE_16), int(color[-4:-2], BASE_16),
-            int(color[-2:], BASE_16))
+    warnings.warn('Use color.rgba instead of color._rgb', FutureWarning, stacklevel=2)
+    return (int(color[-6:-4], BASE_16), int(color[-4:-2], BASE_16), int(color[-2:], BASE_16))
 
 
 def gradient(value, grad, opacity=1, sort=True):
@@ -197,8 +195,7 @@ def gradient(value, grad, opacity=1, sort=True):
 
     # If value is iterable, apply gradient to each value (recursively)
     if np.ndim(value) > BASE_0:
-        return [gradient(val, grad, opacity=opacity, sort=False)
-                for val in value]
+        return [gradient(val, grad, opacity=opacity, sort=False) for val in value]
 
     value = float(value) if not np.isnan(value) else BASE_0
     if value <= grad[BASE_0][BASE_0]:
@@ -211,30 +208,41 @@ def gradient(value, grad, opacity=1, sort=True):
     for i, (start, color1) in enumerate(grad):
         if value <= start:
             break
-    dist1 = (value - grad[i - BASE_1][BASE_0]) / (
-        grad[i][BASE_0] - grad[i - BASE_1][BASE_0])
+    dist1 = (value - grad[i - BASE_1][BASE_0]) / (grad[i][BASE_0] - grad[i - BASE_1][BASE_0])
 
     sec_dist = 1.0
     dist2 = sec_dist - dist1
     color1 = rgba(grad[i - BASE_1][BASE_1])
     color2 = rgba(grad[i][BASE_1])
-    return name(color1[BASE_0] * dist2 + color2[BASE_0] * dist1,
-                color1[BASE_1] * dist2 + color2[BASE_1] * dist1,
-                color1[BASE_2] * dist2 + color2[BASE_2] * dist1,
-                opacity)
+    return name(
+        color1[BASE_0] * dist2 + color2[BASE_0] * dist1,
+        color1[BASE_1] * dist2 + color2[BASE_1] * dist1,
+        color1[BASE_2] * dist2 + color2[BASE_2] * dist1,
+        opacity,
+    )
 
 
 _DISTINCTS = [
-    "#1f77b4", "#aec7e8",
-    "#ff7f0e", "#ffbb78",
-    "#2ca02c", "#98df8a",
-    "#d62728", "#ff9896",
-    "#9467bd", "#c5b0d5",
-    "#8c564b", "#c49c94",
-    "#e377c2", "#f7b6d2",
-    "#7f7f7f", "#c7c7c7",
-    "#bcbd22", "#dbdb8d",
-    "#17becf", "#9edae5"
+    "#1f77b4",
+    "#aec7e8",
+    "#ff7f0e",
+    "#ffbb78",
+    "#2ca02c",
+    "#98df8a",
+    "#d62728",
+    "#ff9896",
+    "#9467bd",
+    "#c5b0d5",
+    "#8c564b",
+    "#c49c94",
+    "#e377c2",
+    "#f7b6d2",
+    "#7f7f7f",
+    "#c7c7c7",
+    "#bcbd22",
+    "#dbdb8d",
+    "#17becf",
+    "#9edae5",
 ]
 
 
@@ -306,7 +314,7 @@ def contrast(color, white='#ffffff', black='#000000'):
     red_opac = 0.299
     blue_opac = 0.114
     green_opac = 0.582
-    cut_off = .5
+    cut_off = 0.5
 
     luminosity = red_opac * red + green_opac * green + blue_opac * blue
     return black if luminosity > cut_off else white
@@ -442,23 +450,31 @@ def rgba(color):
     result = []
     if color.startswith('#'):
         if len(color) == BASE_9:
-            result = [int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
-                      int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
-                      int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255),
-                      int(color[BASE_7:BASE_9], BASE_16) / float(BASE_255)]
+            result = [
+                int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
+                int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
+                int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255),
+                int(color[BASE_7:BASE_9], BASE_16) / float(BASE_255),
+            ]
         elif len(color) == BASE_7:
-            result = [int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
-                      int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
-                      int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255)]
+            result = [
+                int(color[BASE_1:BASE_3], BASE_16) / float(BASE_255),
+                int(color[BASE_3:BASE_5], BASE_16) / float(BASE_255),
+                int(color[BASE_5:BASE_7], BASE_16) / float(BASE_255),
+            ]
         elif len(color) == BASE_5:
-            result = [int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
-                      int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
-                      int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15),
-                      int(color[BASE_4:BASE_5], BASE_16) / float(BASE_15)]
+            result = [
+                int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
+                int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
+                int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15),
+                int(color[BASE_4:BASE_5], BASE_16) / float(BASE_15),
+            ]
         elif len(color) == BASE_4:
-            result = [int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
-                      int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
-                      int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15)]
+            result = [
+                int(color[BASE_1:BASE_2], BASE_16) / float(BASE_15),
+                int(color[BASE_2:BASE_3], BASE_16) / float(BASE_15),
+                int(color[BASE_3:BASE_4], BASE_16) / float(BASE_15),
+            ]
         else:
             result = []
 
@@ -483,7 +499,8 @@ def rgba(color):
             else:
                 result.append(float(val))
         result[BASE_0], result[BASE_1], result[BASE_2] = colorsys.hsv_to_rgb(
-            result[BASE_0], result[BASE_1], result[BASE_2])
+            result[BASE_0], result[BASE_1], result[BASE_2]
+        )
 
     elif color in _COLORNAMES:
         result = [val / float(BASE_255) for val in _COLORNAMES[color]]
@@ -495,8 +512,8 @@ def rgba(color):
         raise ValueError(f'{color}: invalid color')
 
     return tuple(
-        float(BASE_0) if val < BASE_0 else float(
-            BASE_1) if val > BASE_1 else val for val in result)
+        float(BASE_0) if val < BASE_0 else float(BASE_1) if val > BASE_1 else val for val in result
+    )
 
 
 def hsla(color):
@@ -530,8 +547,7 @@ def hsla(color):
         (0.0, 1.0, 1.0, 0.2)
     """
     result = rgba(color)
-    return colorsys.rgb_to_hsv(
-        result[BASE_0], result[BASE_1], result[BASE_2]) + (result[BASE_3], )
+    return colorsys.rgb_to_hsv(result[BASE_0], result[BASE_1], result[BASE_2]) + (result[BASE_3],)
 
 
 def name(red, green, blue, alpha=1):
@@ -556,17 +572,19 @@ def name(red, green, blue, alpha=1):
         >>> name(-1, 2, 0)      # Values are truncated to 0-1
         '#0f0'
     """
-    red = int(round(
-        BASE_255 * (BASE_0 if red < BASE_0 else BASE_1 if red > BASE_1 else red),
-        BASE_0))
+    red = int(
+        round(BASE_255 * (BASE_0 if red < BASE_0 else BASE_1 if red > BASE_1 else red), BASE_0)
+    )
 
-    green = int(round(
-        BASE_255 * (BASE_0 if green < BASE_0 else BASE_1 if green > BASE_1 else green),
-        BASE_0))
+    green = int(
+        round(
+            BASE_255 * (BASE_0 if green < BASE_0 else BASE_1 if green > BASE_1 else green), BASE_0
+        )
+    )
 
-    blue = int(round(
-        BASE_255 * (BASE_0 if blue < BASE_0 else BASE_1 if blue > BASE_1 else blue),
-        BASE_0))
+    blue = int(
+        round(BASE_255 * (BASE_0 if blue < BASE_0 else BASE_1 if blue > BASE_1 else blue), BASE_0)
+    )
 
     alpha = BASE_0 if alpha < BASE_0 else BASE_1 if alpha > BASE_1 else alpha
     if alpha == BASE_1:
@@ -580,18 +598,25 @@ def _add_gradients(target, data):
     mid_val = 0.5
     min_val = -1.0
     for grad, colors in data['sequential'].items():
-        target[grad] = [[float(BASE_0), colors[BASE_0]],
-                        [mid_val, colors[BASE_1]],
-                        [float(BASE_1), colors[BASE_2]]]
+        target[grad] = [
+            [float(BASE_0), colors[BASE_0]],
+            [mid_val, colors[BASE_1]],
+            [float(BASE_1), colors[BASE_2]],
+        ]
     for grad, colors in data['divergent'].items():
-        target[grad] = [[min_val, colors[BASE_0]],
-                        [float(BASE_0), colors[BASE_1]],
-                        [float(BASE_1), colors[BASE_2]]]
+        target[grad] = [
+            [min_val, colors[BASE_0]],
+            [float(BASE_0), colors[BASE_1]],
+            [float(BASE_1), colors[BASE_2]],
+        ]
     for grad, colors in data['office'].items():
         target[grad] = _MSO(*colors)
 
 
-_DATA = json.load(open(os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), 'colors.json'), encoding='utf-8'))
+_DATA = json.load(
+    open(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), 'colors.json'), encoding='utf-8'
+    )
+)
 _COLORNAMES = _DATA['names']
 _add_gradients(globals(), _DATA)

@@ -44,8 +44,7 @@ class TestTransformers(TestGramex):
     def tearDownClass(cls):
         apps = ["mlhandler-huggingface-sentiment", "mlhanlder-huggingface-ner"]
         paths = [
-            op.join(gramex.config.variables["GRAMEXDATA"], "apps", "mlhandler", p)
-            for p in apps
+            op.join(gramex.config.variables["GRAMEXDATA"], "apps", "mlhandler", p) for p in apps
         ]
         for path in paths:
             if op.isdir(path):
@@ -56,9 +55,7 @@ class TestTransformers(TestGramex):
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
-    @skipUnless(
-        os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests"
-    )
+    @skipUnless(os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests")
     def test_train_sentiment(self):
         """Train with some vague sentences."""
         df = pd.read_json("https://bit.ly/3NesHFs")
@@ -73,9 +70,7 @@ class TestTransformers(TestGramex):
 
     def test_default_ner(self):
         """Ensure that the default model predicts something."""
-        labels = self.get(
-            "/ner?text=Narendra Modi is the PM of India.", timeout=300
-        ).json()
+        labels = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300).json()
         ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
         self.assertIn(("Narendra Modi", "PER"), ents[0])
         self.assertIn(("India", "LOC"), ents[0])
@@ -89,9 +84,7 @@ class TestTransformers(TestGramex):
         self.assertIn(("India", "LOC"), ents[0])
         self.assertIn(("Joe Biden", "PER"), ents[1])
 
-    @skipUnless(
-        os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests"
-    )
+    @skipUnless(os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests")
     def test_train_ner(self):
         df = pd.read_json("https://bit.ly/3wZYsf5")
         resp = self.get(
@@ -130,9 +123,7 @@ class TestStatsmodels(TestGramex):
         # Create the model
         data = infl_load().data
         index = pd.to_datetime(
-            data[["year", "quarter"]].apply(
-                lambda x: "%dQ%d" % (x.year, x.quarter), axis=1
-            )
+            data[["year", "quarter"]].apply(lambda x: "%dQ%d" % (x.year, x.quarter), axis=1)
         )
         data.drop(["year", "quarter"], axis=1, inplace=True)
         data["index"] = index
@@ -159,9 +150,7 @@ class TestStatsmodels(TestGramex):
             headers={"Content-Type": "application/json"},
         )
         self.assertEqual(resp.status_code, OK)
-        self.assertLessEqual(
-            mean_absolute_error(np.array(resp.json()), data["R"]), 0.01
-        )
+        self.assertLessEqual(mean_absolute_error(np.array(resp.json()), data["R"]), 0.01)
 
 
 class TestSklearn(TestGramex):
@@ -169,9 +158,7 @@ class TestSklearn(TestGramex):
 
     @classmethod
     def setUpClass(cls):
-        cls.df = pd.read_csv(
-            op.join(folder, "..", "testlib", "iris.csv"), encoding="utf8"
-        )
+        cls.df = pd.read_csv(op.join(folder, "..", "testlib", "iris.csv"), encoding="utf8")
         cls.root = op.join(gramex.config.variables["GRAMEXDATA"], "apps", "mlhandler")
         cls.model_path = op.join(cls.root, "mlhandler-config", "model.pkl")
         paths = [
@@ -232,9 +219,7 @@ class TestSklearn(TestGramex):
         df_train = self.df[self.df["species"] != "virginica"]
         df_append = self.df[self.df["species"] == "virginica"]
 
-        resp = self.get(
-            "/mlincr?class=LogisticRegression&target_col=species", method="put"
-        )
+        resp = self.get("/mlincr?class=LogisticRegression&target_col=species", method="put")
         self.assertEqual(resp.status_code, OK)
 
         resp = self.get(
@@ -278,9 +263,7 @@ class TestSklearn(TestGramex):
         # Assert that a model doesn't have to exist
         model_path = op.join(self.root, "mlhandler-blank", "model.pkl")
         self.assertFalse(op.exists(model_path))
-        r = self.get(
-            "/mlblank?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8"
-        )
+        r = self.get("/mlblank?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8")
         self.assertEqual(r.status_code, NOT_FOUND)
         # Post options in any order, randomly
         r = self.get("/mlblank?target_col=species", method="put")
@@ -312,9 +295,7 @@ class TestSklearn(TestGramex):
                 "index_col": None,
             },
         )
-        self.assertDictEqual(
-            params["params"], {"class": "LogisticRegression", "params": {}}
-        )
+        self.assertDictEqual(params["params"], {"class": "LogisticRegression", "params": {}})
 
     def test_change_model(self):
         # back up the original model
@@ -363,9 +344,7 @@ class TestSklearn(TestGramex):
         # Check if model has been trained on iris, and exists at the right path.
         clf = joblib.load(self.model_path)
         self.assertIsInstance(clf, LogisticRegression)
-        score = clf.score(
-            self.df[[c for c in self.df if c != "species"]], self.df["species"]
-        )
+        score = clf.score(self.df[[c for c in self.df if c != "species"]], self.df["species"])
         self.assertGreaterEqual(score, self.ACC_TOL)
 
     def test_delete(self):
@@ -436,9 +415,7 @@ class TestSklearn(TestGramex):
             pipe = joblib.load(self.model_path)
             self.assertEqual(pipe.coef_.shape, (3, 1))
         finally:
-            self.get(
-                "/mlhandler?delete=opts&_opts=include&_opts=exclude", method="delete"
-            )
+            self.get("/mlhandler?delete=opts&_opts=include&_opts=exclude", method="delete")
             joblib.dump(clf, self.model_path)
 
     def test_get_bulk_predictions(self, target_col="species"):
@@ -478,9 +455,7 @@ class TestSklearn(TestGramex):
         self.assertDictEqual(LogisticRegression().get_params(), params)
 
     def test_get_predictions(self, root="mlhandler", target_col="species"):
-        resp = self.get(
-            f"/{root}?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8"
-        )
+        resp = self.get(f"/{root}?sepal_length=5.9&sepal_width=3&petal_length=5.1&petal_width=1.8")
         self.assertEqual(
             resp.json(),
             [
@@ -493,9 +468,7 @@ class TestSklearn(TestGramex):
                 }
             ],
         )
-        resp = self.get(
-            f"/{root}?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8"
-        )
+        resp = self.get(f"/{root}?sepal_width=3&petal_length=5.1&sepal_length=5.9&petal_width=1.8")
         self.assertEqual(
             resp.json(),
             [
@@ -512,9 +485,7 @@ class TestSklearn(TestGramex):
         samples = []
         target = []
         for row in self.df.sample(n=5).to_dict(orient="records"):
-            samples.extend(
-                [(col, value) for col, value in row.items() if col != "species"]
-            )
+            samples.extend([(col, value) for col, value in row.items() if col != "species"])
             target.append(row["species"])
         params = "&".join([f"{k}={v}" for k, v in samples])
         resp = self.get(req + params)
@@ -583,9 +554,7 @@ class TestSklearn(TestGramex):
             self.assertFalse(op.exists(self.model_path))
             # recreate the model
             X, y = make_classification()  # NOQA: N806
-            xtrain, xtest, ytrain, ytest = train_test_split(
-                X, y, stratify=y, test_size=0.25
-            )
+            xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
             df = pd.DataFrame(xtrain)
             df["target"] = ytrain
             r = self.get("/mlhandler?class=GaussianNB", method="put")
@@ -611,9 +580,7 @@ class TestSklearn(TestGramex):
             self.assertFalse(op.exists(self.model_path))
             # recreate the model
             X, y = make_classification()  # NOQA: N806
-            xtrain, xtest, ytrain, ytest = train_test_split(
-                X, y, stratify=y, test_size=0.25
-            )
+            xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
             df = pd.DataFrame(xtrain)
             df["target"] = ytrain
             r = self.get(
@@ -630,9 +597,7 @@ class TestSklearn(TestGramex):
     def test_retrain(self):
         # Make some data
         x, y = make_classification()
-        xtrain, xtest, ytrain, ytest = train_test_split(
-            x, y, stratify=y, test_size=0.25
-        )
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, stratify=y, test_size=0.25)
         df = pd.DataFrame(xtrain)
         df["target"] = ytrain
         test_df = pd.DataFrame(xtest)
@@ -673,9 +638,7 @@ class TestSklearn(TestGramex):
             joblib.dump(clf, self.model_path)
 
     def test_single_line_train_fetch_model(self):
-        resp = self.get(
-            "/mlblank?class=DecisionTreeClassifier&target_col=species", method="put"
-        )
+        resp = self.get("/mlblank?class=DecisionTreeClassifier&target_col=species", method="put")
         self.assertEqual(resp.status_code, OK)
         # train
         line = StringIO()
@@ -711,9 +674,7 @@ class TestSklearn(TestGramex):
         # backup the original model
         clf = joblib.load(self.model_path)
         X, y = make_classification()  # NOQA: N806
-        xtrain, xtest, ytrain, ytest = train_test_split(
-            X, y, stratify=y, test_size=0.25
-        )
+        xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
         df = pd.DataFrame(xtrain)
         df["target"] = ytrain
         try:
@@ -731,9 +692,7 @@ class TestSklearn(TestGramex):
             # Find an atomic way to reset configurations.
 
     def test_datatransform(self):
-        with open(
-            op.join(op.dirname(__file__), "circles.csv"), "r", encoding="utf8"
-        ) as fin:
+        with open(op.join(op.dirname(__file__), "circles.csv"), "r", encoding="utf8") as fin:
             resp = self.get(
                 "/mltransform?_action=score",
                 method="post",
@@ -796,7 +755,6 @@ class TestSklearn(TestGramex):
 
 
 class TestPredictor(TestGramex):
-
     @classmethod
     def setUpClass(cls):
         df = pd.read_csv(os.path.join(folder, '..', 'testlib', 'iris.csv'))
@@ -834,6 +792,7 @@ class TestPredictor(TestGramex):
         df = gramex.cache.open(path)
         cols = df.columns.tolist()
         import random
+
         random.shuffle(cols)
         xdf = df[cols]
 

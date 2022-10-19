@@ -12,9 +12,7 @@ class TestInit(TestGramex):
                     init_new=AttrDict(
                         pattern='/init/new',
                         handler='FunctionHandler',
-                        kwargs=AttrDict(
-                            function='json.dumps({"key": "val1"})'
-                        )
+                        kwargs=AttrDict(function='json.dumps({"key": "val1"})'),
                     )
                 )
             )
@@ -26,9 +24,7 @@ class TestInit(TestGramex):
                     init_new=AttrDict(
                         pattern='/init/new',
                         handler='FunctionHandler',
-                        kwargs=AttrDict(
-                            function='json.dumps({"key": "val2"})'
-                        )
+                        kwargs=AttrDict(function='json.dumps({"key": "val2"})'),
                     )
                 )
             )
@@ -41,8 +37,7 @@ class TestInit(TestGramex):
                 app=AttrDict(
                     url=AttrDict(
                         init_reload=AttrDict(
-                            pattern='/init/reload',
-                            handler='utils.CounterHandler'
+                            pattern='/init/reload', handler='utils.CounterHandler'
                         )
                     )
                 )

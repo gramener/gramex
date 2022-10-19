@@ -21,8 +21,8 @@ observer = Observer()
 observer.start()
 atexit.register(observer.stop)
 
-handlers = {}               # (handler, watch) -> (folder, name)
-watches = AttrDict()        # watches[folder] = ObservedWatch
+handlers = {}  # (handler, watch) -> (folder, name)
+watches = AttrDict()  # watches[folder] = ObservedWatch
 
 
 class FileEventHandler(FileSystemEventHandler):
@@ -30,6 +30,7 @@ class FileEventHandler(FileSystemEventHandler):
     Each FileEventHandler is associated with a set of events from a config.
     It maps a set of paths to these events.
     '''
+
     def __init__(self, patterns, **events):
         super(FileEventHandler, self).__init__()
         self.patterns = patterns
@@ -77,8 +78,8 @@ def watch(name, paths, **events):
     # Create a series of schedules and handlers
     unwatch(name)
 
-    patterns = set()        # List of absolute path patterns
-    folders = set()         # List of folders matching these paths
+    patterns = set()  # List of absolute path patterns
+    folders = set()  # List of folders matching these paths
     for path in paths:
         # paths can be pathlib.Path or str. Convert to str before proceeding
         path = os.path.abspath(str(path))

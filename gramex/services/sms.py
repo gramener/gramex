@@ -35,14 +35,17 @@ class AmazonSNS(Notifier):
         ...     sender='gramex')
     '''
 
-    def __init__(self, aws_access_key_id, aws_secret_access_key,
-                 smstype='Transactional', **kwargs):
+    def __init__(
+        self, aws_access_key_id, aws_secret_access_key, smstype='Transactional', **kwargs
+    ):
         import boto3
+
         self.client = boto3.client(
             'sns',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
-            **kwargs)
+            **kwargs,
+        )
         self.smstype = smstype
 
     def send(self, to, subject, sender):
@@ -57,8 +60,8 @@ class AmazonSNS(Notifier):
                 'AWS.SNS.SMS.SMSType': {
                     'DataType': 'String',
                     'StringValue': self.smstype,
-                }
-            }
+                },
+            },
         )
         app_log.info(f'SMS sent. SNS MessageId: {result["MessageId"]}')
         return result
@@ -80,6 +83,7 @@ class Exotel(Notifier):
         ...     subject='This is the content of the message',
         ...     sender='gramex')
     '''
+
     def __init__(self, sid, token, key=None, domain=None, priority='high'):
         self.sid = sid
         self.token = token
@@ -97,12 +101,15 @@ class Exotel(Notifier):
         return result['SMSMessage']
 
     def send(self, to, subject, sender=None):
-        r = requests.post(self.send_url, {
-            'From': sender or self.sid,
-            'To': to,
-            'Body': subject,
-            'Priority': self.priority,
-        })
+        r = requests.post(
+            self.send_url,
+            {
+                'From': sender or self.sid,
+                'To': to,
+                'Body': subject,
+                'Priority': self.priority,
+            },
+        )
         return self._handle_response(r)
 
     def status(self, result):

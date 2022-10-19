@@ -2,13 +2,14 @@ import os
 import requests
 import shutil
 import unittest
+
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
 # F401: we import here since other modules use this
-from lxml import etree      # noqa: F401    # nosec B410
+from lxml import etree  # noqa: F401    # nosec B410
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
-from pandas.testing import assert_frame_equal as afe   # noqa: F401 - other modules use this
+from pandas.testing import assert_frame_equal as afe  # noqa: F401 - other modules use this
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -42,8 +43,20 @@ class TestGramex(unittest.TestCase):
         req = session or requests
         return getattr(req, method)(server.base_url + url, timeout=timeout, **kwargs)
 
-    def check(self, url, data=None, path=None, code=200, text=None, no_text=None,
-              request_headers=None, headers=None, session=None, method='get', timeout=10):
+    def check(
+        self,
+        url,
+        data=None,
+        path=None,
+        code=200,
+        text=None,
+        no_text=None,
+        request_headers=None,
+        headers=None,
+        session=None,
+        method='get',
+        timeout=10,
+    ):
         '''
         check(url) checks if the url returns the correct response. Parameters:
 
@@ -65,8 +78,14 @@ class TestGramex(unittest.TestCase):
 
         If any of the checks do not match, raises an assertion error.
         '''
-        r = self.get(url, session=session, data=data, method=method, timeout=timeout,
-                     headers=request_headers)
+        r = self.get(
+            url,
+            session=session,
+            data=data,
+            method=method,
+            timeout=timeout,
+            headers=request_headers,
+        )
         eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))
@@ -103,6 +122,7 @@ class TestGramex(unittest.TestCase):
         import re
         import lxml.html
         from lxml.cssselect import CSSSelector
+
         tree = lxml.html.fromstring(html)
 
         for selector in selectors:
@@ -130,7 +150,7 @@ class TestGramex(unittest.TestCase):
 
                 # Try substring search. Else try regexp search
                 regex = re.compile(v)
-                match = lambda x: x in actual or regex.search(x)        # noqa
+                match = lambda x: x in actual or regex.search(x)  # noqa
 
                 # First or specified selector should match v
                 if how == 'is' or isinstance(how, int):

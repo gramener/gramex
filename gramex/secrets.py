@@ -26,4 +26,4 @@ def commandline():
                 if fnmatch(key, pattern):
                     result[key] = val
     if result:
-        print(yaml.dump(result, default_flow_style=False, sort_keys=False).strip())     # noqa
+        print(yaml.dump(result, default_flow_style=False, sort_keys=False).strip())  # noqa

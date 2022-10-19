@@ -21,37 +21,37 @@ url:
       auth: $ADMIN_AUTH
       # Admin panel configuration
       components:
-        'users':
+        "users":
           title: Users
           desc: Add, rename, and manage users and roles
           color: primary
           icon: far fa-user
-        'schedule':
+        "schedule":
           title: Schedule
           desc: Preview and run scheduled commands
           color: dark
           icon: far fa-clock
-        'alert':
+        "alert":
           title: Alert
           desc: Manage alert notifications
           color: warning
           icon: far fa-envelope
-        'shell':
+        "shell":
           title: Shell
           desc: Run Python commands within Gramex
           color: danger
           icon: fas fa-terminal
-        'info':
+        "info":
           title: Info
           desc: Server OS and environment information
           color: info
           icon: fas fa-info
-        'config':
+        "config":
           title: Config
           desc: View Gramex configuration (gramex.yaml)
           color: secondary
           icon: fas fa-wrench
-        'logs':
+        "logs":
           title: Logs
           desc: Track usage and errors in Gramex
           color: success
@@ -108,7 +108,7 @@ url:
       function: gramexadmin.system_information
       auth: $ADMIN_AUTH
       headers:
-        Content-Type: application/json      # Display as JSON
+        Content-Type: application/json # Display as JSON
 
   apps/admin2/home-static-$*:
     pattern: /$YAMLURL/(.+)

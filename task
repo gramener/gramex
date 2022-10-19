@@ -20,15 +20,6 @@ lint () {
   # Python security check with bandit
   command -v bandit 2>/dev/null 2>&1 || pip install bandit
   bandit . --recursive --quiet
-
-  # Install linters. Then test all apps
-  npm install
-  npx editorconfig-checker
-
-  # Avoid htmllint-cli in package.json (npm audit issues). Install globally
-  command -v htmllint 2>/dev/null 2>&1 || npm install -g htmllint-cli
-  # Run HTML checks
-  find . -name '*.html' ! -path '*/node_modules/*' ! -path '*/mkdocs/*' ! -path '*/htmlcov/*' -print0 | xargs -0 htmllint
 }
 
 testsetup () {

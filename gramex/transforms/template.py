@@ -49,6 +49,7 @@ def scss(content, handler):
     ```
     '''
     from gramex.apps.ui import sass2
+
     # Ignore the content provided. sass2 needs the file actually located at handler.path.
     result = yield sass2(handler, handler.path)
     return result.decode('utf-8')
@@ -73,6 +74,7 @@ def ts(content, handler):
     ```
     '''
     from gramex.apps.ui import ts
+
     # Ignore the content provided. ts needs the file actually located at handler.path.
     result = yield ts(handler, handler.path)
     return result.decode('utf-8')
@@ -93,6 +95,7 @@ def vue(content, handler):
     ```
     '''
     from gramex.apps.ui import vue
+
     # Ignore the content provided. vue needs the file actually located at handler.path.
     result = yield vue(handler, handler.path)
     return result.decode('utf-8')

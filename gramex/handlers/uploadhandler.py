@@ -37,17 +37,16 @@ class FileUpload(object):
             os.makedirs(self.path)
 
         # store default: sqlite .meta.db
-        store_kwargs = kwargs.get('store', {
-            'type': 'sqlite',
-            'path': os.path.join(self.path, '.meta.db')
-        })
+        store_kwargs = kwargs.get(
+            'store', {'type': 'sqlite', 'path': os.path.join(self.path, '.meta.db')}
+        )
         if self.path not in self.stores:
             self.stores[self.path] = get_store(**store_kwargs)
         self.store = self.stores[self.path]
         old_store_path = os.path.abspath(os.path.join(self.path, '.meta.h5'))
         store_path = os.path.abspath(getattr(self.store, 'path', None))
         # migration: if type is not hdf5 but .meta.h5 exists, update store and remove
-        if (os.path.exists(old_store_path) and store_path != old_store_path):
+        if os.path.exists(old_store_path) and store_path != old_store_path:
             self._migrate_h5(old_store_path)
 
         if 'file' not in keys:
@@ -65,6 +64,7 @@ class FileUpload(object):
             os.remove(old_store_path)
         except Exception:
             import sys
+
             app_log.exception('FATAL: Cannot migrate: {}'.format(old_store_path))
             sys.exit(1)
 
@@ -75,10 +75,14 @@ class FileUpload(object):
 
     def addfiles(self, handler):
         filemetas = []
-        uploads = [upload for key in self.keys.get('file', [])
-                   for upload in handler.request.files.get(key, [])]
-        filenames = [name for key in self.keys.get('save', [])
-                     for name in handler.args.get(key, [])]
+        uploads = [
+            upload
+            for key in self.keys.get('file', [])
+            for upload in handler.request.files.get(key, [])
+        ]
+        filenames = [
+            name for key in self.keys.get('save', []) for name in handler.args.get(key, [])
+        ]
         if_exists = getattr(handler, 'if_exists', 'unique')
         for upload, filename in zip_longest(uploads, filenames, fillvalue=None):
             filemeta = self.save_file(upload, filename, if_exists)
@@ -101,7 +105,8 @@ class FileUpload(object):
         # Security check: don't allow files to be written outside path:
         if not os.path.realpath(filepath).startswith(os.path.realpath(self.path)):
             raise HTTPError(
-                FORBIDDEN, f'FileUpload: filename {filename} is outside path: {self.path}')
+                FORBIDDEN, f'FileUpload: filename {filename} is outside path: {self.path}'
+            )
         if os.path.exists(filepath):
             if if_exists == 'error':
                 raise HTTPError(FORBIDDEN, f'FileUpload: file exists: {filename}')
@@ -119,8 +124,9 @@ class FileUpload(object):
                 shutil.copyfile(filepath, backup)
                 filemeta['backup'] = os.path.relpath(backup, self.path).replace(os.path.sep, '/')
             elif if_exists != 'overwrite':
-                raise HTTPError(INTERNAL_SERVER_ERROR,
-                                f'FileUpload: if_exists: {if_exists} invalid')
+                raise HTTPError(
+                    INTERNAL_SERVER_ERROR, f'FileUpload: if_exists: {if_exists} invalid'
+                )
         # Create the directory to write in, if reuqired
         folder = os.path.dirname(filepath)
         if not os.path.exists(folder):
@@ -165,6 +171,7 @@ class UploadHandler(BaseHandler):
             query: next                     #   ... redirect to ?next=
             url: /$YAMLURL/                 #   ... else to this directory
     '''
+
     @classmethod
     def setup(cls, path, keys=None, if_exists='unique', transform=None, methods=[], **kwargs):
         super(UploadHandler, cls).setup(**kwargs)
@@ -182,12 +189,17 @@ class UploadHandler(BaseHandler):
         cls.transform = []
         if transform is not None:
             if isinstance(transform, dict) and 'function' in transform:
-                cls.transform.append(build_transform(
-                    transform, vars={'content': None, 'handler': None},
-                    filename=f'url:{cls.name}'))
+                cls.transform.append(
+                    build_transform(
+                        transform,
+                        vars={'content': None, 'handler': None},
+                        filename=f'url:{cls.name}',
+                    )
+                )
             else:
                 app_log.error(
-                    f'UploadHandler {cls.name}: no function: in transform: {transform!r}')
+                    f'UploadHandler {cls.name}: no function: in transform: {transform!r}'
+                )
 
     @tornado.gen.coroutine
     def fileinfo(self, *args, **kwargs):
@@ -201,8 +213,11 @@ class UploadHandler(BaseHandler):
         upload = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)
         delete = yield gramex.service.threadpool.submit(self.uploader.deletefiles, self)
         self.set_header('Content-Type', 'application/json')
-        self.write(json.dumps({'upload': upload, 'delete': delete},
-                              ensure_ascii=True, separators=(',', ':')))
+        self.write(
+            json.dumps(
+                {'upload': upload, 'delete': delete}, ensure_ascii=True, separators=(',', ':')
+            )
+        )
         if self.redirects:
             self.redirect_next()
 
@@ -213,5 +228,6 @@ class UploadHandler(BaseHandler):
                     content = value
                 elif value is not None:
                     app_log.error(
-                        f'UploadHandler {self.name}: transform returned {value!r}, not dict')
+                        f'UploadHandler {self.name}: transform returned {value!r}, not dict'
+                    )
         return content

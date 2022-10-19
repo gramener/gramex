@@ -39,6 +39,7 @@ def start_gramex():
     try:
         import asyncio
         from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+
         asyncio.set_event_loop_policy(AnyThreadEventLoopPolicy())
     except ImportError:
         pass

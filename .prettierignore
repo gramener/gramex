@@ -1,0 +1,13 @@
+# These are templates that prettier cannot format
+
+gramex/apps/init/default/gramex.template.yaml
+gramex/apps/init/minimal/gramex.template.yaml
+gramex/apps/ui/bootstrap-theme.scss
+pkg/conda/template.meta.yaml
+tests/sass/vars.scss
+
+# These YAML test cases have deliberate errors -- for testing
+
+testlib/test_config/config.error.yaml
+testlib/test_config/config.random.yaml
+tests/sass/import.sass

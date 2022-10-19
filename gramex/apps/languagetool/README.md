@@ -1,11 +1,8 @@
-LanguageTool App for Gramex
-===========================
+# LanguageTool App for Gramex
 
 Use [LanguageTool](https://languagetool.org) as a Gramex app.
 
-
-LanguageTool
-------------
+## LanguageTool
 
 LanguageTool is an Open Source proofreading software for English, French, German,
 Polish, Russian, and [more than 20 other languages](https://languagetool.org/languages/).

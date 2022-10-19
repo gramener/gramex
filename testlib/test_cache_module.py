@@ -33,14 +33,17 @@ class TestReloadModule(unittest.TestCase):
     def test_reload_module(self):
         # When loaded, the counter is not incremented
         from testlib.test_cache.common import val
+
         eq_(val[0], 0)
 
         # On first load, the counter is incremented once
         import testlib.test_cache.mymodule
+
         eq_(val[0], 1)
 
         # On second load, it stays cached
-        import testlib.test_cache.mymodule      # noqa
+        import testlib.test_cache.mymodule  # noqa
+
         eq_(val[0], 1)
 
         # The first time, we get the reloaded date. The module may be reloaded
@@ -58,6 +61,7 @@ class TestReloadModule(unittest.TestCase):
 
         # Regular import does not reload
         import testlib.test_cache.mymodule
+
         eq_(val[0], count)
 
         # ... but reload_module DOES reload, and the counter increments
@@ -109,13 +113,13 @@ class TestOpener(unittest.TestCase):
         with io.open(path, encoding='utf-8') as handle:
             text = handle.read()
         result = o(path)
-        eq_(result.args, (text, ))
+        eq_(result.args, (text,))
         eq_(result.kwargs, {})
 
         with io.open(path, mode='rb') as handle:
             text = handle.read()
         result = o(path, mode='rb', encoding=None, errors=None)
-        eq_(result.args, (text, ))
+        eq_(result.args, (text,))
         eq_(result.kwargs, {})
 
         result = o(path, num=1, s='a', none=None)
@@ -168,8 +172,9 @@ class TestOpen(unittest.TestCase):
         expected = pd.read_csv(path, encoding='utf-8')
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True,
-                                                 encoding='utf-8')
+            result, reloaded = gramex.cache.open(
+                path, 'csv', _reload_status=True, encoding='utf-8'
+            )
             eq_(reloaded, reload)
             afe(result, expected)
 
@@ -179,30 +184,46 @@ class TestOpen(unittest.TestCase):
     def test_xlsx(self):
         path = os.path.join(tests_dir, 'sales.xlsx')
         # Excel files are loaded via pd.read_excel by default
-        afe(gramex.cache.open(path, sheet_name='sales'),
-            pd.read_excel(path, sheet_name='sales', engine='openpyxl'))
+        afe(
+            gramex.cache.open(path, sheet_name='sales'),
+            pd.read_excel(path, sheet_name='sales', engine='openpyxl'),
+        )
         # Load range. sales!A1:E25 is the same as the sheet "sales"
-        afe(gramex.cache.open(path, sheet_name='sales', range='A1:E25'),
-            pd.read_excel(path, sheet_name='sales', engine='openpyxl'))
+        afe(
+            gramex.cache.open(path, sheet_name='sales', range='A1:E25'),
+            pd.read_excel(path, sheet_name='sales', engine='openpyxl'),
+        )
         # sheet_name defaults to 0
         afe(gramex.cache.open(path, range='A1:E25'), pd.read_excel(path, engine='openpyxl'))
         # sheet_name can be an int, not just a str
-        afe(gramex.cache.open(path, sheet_name=1, range='A1:$B$34'),
-            pd.read_excel(path, sheet_name=1, engine='openpyxl'))
+        afe(
+            gramex.cache.open(path, sheet_name=1, range='A1:$B$34'),
+            pd.read_excel(path, sheet_name=1, engine='openpyxl'),
+        )
         # header can be any int or list of int, passed directly to pd.read_excel
-        afe(gramex.cache.open(path, sheet_name='sales', header=[0, 1], range='A$1:$E25'),
-            pd.read_excel(path, sheet_name='sales', header=[0, 1], engine='openpyxl'))
+        afe(
+            gramex.cache.open(path, sheet_name='sales', header=[0, 1], range='A$1:$E25'),
+            pd.read_excel(path, sheet_name='sales', header=[0, 1], engine='openpyxl'),
+        )
         # header=None doesn't add a header
-        afe(gramex.cache.open(path, sheet_name='sales', header=None, range='A$1:$E25'),
-            pd.read_excel(path, sheet_name='sales', header=None, engine='openpyxl'))
+        afe(
+            gramex.cache.open(path, sheet_name='sales', header=None, range='A$1:$E25'),
+            pd.read_excel(path, sheet_name='sales', header=None, engine='openpyxl'),
+        )
         # Load table. "SalesTable" is the same as table!A1B11
-        afe(gramex.cache.open(path, sheet_name='table', table='SalesTable'),
-            gramex.cache.open(path, sheet_name='table', range='A1:$B$11'))
-        afe(gramex.cache.open(path, sheet_name='table', table='CensusTable'),
-            gramex.cache.open(path, sheet_name='table', range='$D1:F$23'))
+        afe(
+            gramex.cache.open(path, sheet_name='table', table='SalesTable'),
+            gramex.cache.open(path, sheet_name='table', range='A1:$B$11'),
+        )
+        afe(
+            gramex.cache.open(path, sheet_name='table', table='CensusTable'),
+            gramex.cache.open(path, sheet_name='table', range='$D1:F$23'),
+        )
         # Load named range. The "sales" named range is the same as the sheet "sales"
-        afe(gramex.cache.open(path, sheet_name='sales', name='sales'),
-            gramex.cache.open(path, sheet_name='sales'))
+        afe(
+            gramex.cache.open(path, sheet_name='sales', name='sales'),
+            gramex.cache.open(path, sheet_name='sales'),
+        )
         # Test failure conditions, edge cases, etc.
 
     def test_open_json(self):
@@ -211,8 +232,9 @@ class TestOpen(unittest.TestCase):
             expected = json.load(handle, object_pairs_hook=OrderedDict)
 
         def check(reload):
-            result, reloaded = gramex.cache.open(path, 'json', _reload_status=True,
-                                                 object_pairs_hook=OrderedDict)
+            result, reloaded = gramex.cache.open(
+                path, 'json', _reload_status=True, object_pairs_hook=OrderedDict
+            )
             eq_(reloaded, reload)
             ok_(isinstance(result, OrderedDict))
             eq_(result, expected)
@@ -237,11 +259,12 @@ class TestOpen(unittest.TestCase):
         with io.open(path, encoding='utf-8') as handle:
             # B506:yaml_load is safe to use here since we're loading from a known safe file.
             # Specifically, we're testing whether Loader= is passed to gramex.cache.open.
-            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)     # nosec B506
+            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)  # nosec B506
 
         def check(reload):
             result, reloaded = gramex.cache.open(
-                path, 'yaml', _reload_status=True, Loader=AttrDictYAMLLoader)
+                path, 'yaml', _reload_status=True, Loader=AttrDictYAMLLoader
+            )
             eq_(reloaded, reload)
             ok_(isinstance(result, AttrDict))
             eq_(result, expected)
@@ -254,7 +277,8 @@ class TestOpen(unittest.TestCase):
 
         def check(reload):
             result, reloaded = gramex.cache.open(
-                path, 'template', _reload_status=True, autoescape=None)
+                path, 'template', _reload_status=True, autoescape=None
+            )
             eq_(reloaded, reload)
             ok_(isinstance(result, Template))
             first_line = result.generate(name='高').decode('utf-8').split('\n')[0]
@@ -294,6 +318,7 @@ class TestOpen(unittest.TestCase):
             eq_(result, expected)
 
         from PIL import Image
+
         path = os.path.join(cache_folder, 'data.png')
         expected = img_size(path)
 
@@ -365,12 +390,20 @@ class TestOpen(unittest.TestCase):
             header=0,
             parse_dates={'date': [0, 1, 2]},
             dtype={'a': int, 'b': float, 'c': int},
-            **kwargs)
-        cache_key = (path, None, hashfn(None), frozenset([
-            ('header', 0),                              # hashable values hashed as-is
-            ('parse_dates', '{"date":[0,1,2]}'),        # converts to compact json if possible
-            ('dtype', None),                            # gives up with None otherwise
-        ]))
+            **kwargs
+        )
+        cache_key = (
+            path,
+            None,
+            hashfn(None),
+            frozenset(
+                [
+                    ('header', 0),  # hashable values hashed as-is
+                    ('parse_dates', '{"date":[0,1,2]}'),  # converts to compact json if possible
+                    ('dtype', None),  # gives up with None otherwise
+                ]
+            ),
+        )
         self.assertIn(cache_key, cache)
 
     def test_change_cache(self):
@@ -433,7 +466,7 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(cache_folder, 'data.csv')
 
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
-        eq_(data, len(pd.read_csv(path)))                   # noqa - ignore encoding
+        eq_(data, len(pd.read_csv(path)))  # noqa - ignore encoding
         cache_key = (path, 'csv', hashfn(len), frozenset([]))
         self.assertIn(cache_key, cache)
 
@@ -441,13 +474,13 @@ class TestOpen(unittest.TestCase):
             return d['a'].sum()
 
         data = gramex.cache.open(path, 'csv', transform=transform2, _cache=cache)
-        eq_(data, pd.read_csv(path)['a'].sum())             # noqa - ignore encoding
+        eq_(data, pd.read_csv(path)['a'].sum())  # noqa - ignore encoding
         cache_key = (path, 'csv', hashfn(transform2), frozenset([]))
         self.assertIn(cache_key, cache)
 
         # Check that non-callable transforms are ignored but used as cache key
         data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
-        afe(data, pd.read_csv(path))         # noqa - ignore encoding
+        afe(data, pd.read_csv(path))  # noqa - ignore encoding
         cache_key = (path, 'csv', hashfn('ignore'), frozenset([]))
         self.assertIn(cache_key, cache)
 
@@ -541,8 +574,9 @@ class TestMySQLCacheQuery(TestSqliteCacheQuery):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_cache',
-                                          t1=cls.data, t2=cls.data)
+        cls.url = dbutils.mysql_create_db(
+            variables.MYSQL_SERVER, 'test_cache', t1=cls.data, t2=cls.data
+        )
         cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     @classmethod
@@ -555,13 +589,15 @@ class TestPostgresCacheQuery(TestSqliteCacheQuery):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = dbutils.postgres_create_db(variables.POSTGRES_SERVER, 'test_cache',
-                                             **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data})
+        cls.url = dbutils.postgres_create_db(
+            variables.POSTGRES_SERVER,
+            'test_cache',
+            **{'t1': cls.data, 't2': cls.data, 'sc.t3': cls.data}
+        )
         cls.engine = sa.create_engine(cls.url, encoding='utf-8')
 
     def test_schema(self):
-        afe(
-            gramex.cache.query('SELECT * FROM sc.t3', engine=self.engine), self.data)
+        afe(gramex.cache.query('SELECT * FROM sc.t3', engine=self.engine), self.data)
 
     @classmethod
     def tearDownClass(cls):

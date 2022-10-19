@@ -52,22 +52,22 @@ gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
 '''
 
-paths = AttrDict()              # Paths where configurations are stored
-conf = AttrDict()               # Final merged configurations
-config_layers = ChainConfig()   # Loads all configurations. init() updates it
-appconfig = AttrDict()          # Final app configuration
+paths = AttrDict()  # Paths where configurations are stored
+conf = AttrDict()  # Final merged configurations
+config_layers = ChainConfig()  # Loads all configurations. init() updates it
+appconfig = AttrDict()  # Final app configuration
 
-paths['source'] = Path(__file__).absolute().parent      # Where gramex source code is
-paths['base'] = Path('.')                               # Where gramex is run from
+paths['source'] = Path(__file__).absolute().parent  # Where gramex source code is
+paths['base'] = Path('.')  # Where gramex is run from
 
-callbacks = {}                  # Services callbacks
+callbacks = {}  # Services callbacks
 
 # Populate __version__ from release.json
 with (paths['source'] / 'release.json').open() as _release_file:
     release = json.load(_release_file, object_pairs_hook=AttrDict)
     __version__ = release.info.version
 
-_sys_path = list(sys.path)      # Preserve original sys.path
+_sys_path = list(sys.path)  # Preserve original sys.path
 
 
 # List of URLs to warn about in case of duplicates
@@ -79,7 +79,9 @@ PathConfig.duplicate_warn = [
     'email.*',
     'alert.*',
     'sms.*',
-    'log.loggers.*', 'log.handlers.*', 'log.formatters.*',
+    'log.loggers.*',
+    'log.handlers.*',
+    'log.formatters.*',
 ]
 
 
@@ -120,6 +122,7 @@ def commandline(args: List[str] = None):
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
     log_config.loggers.gramex.level = logging.INFO
     from . import services
+
     services.log(log_config)
 
     # kwargs has all optional command line args as a dict of values / lists.
@@ -143,10 +146,17 @@ def commandline(args: List[str] = None):
         base_command = args.pop(0).lower()
         method = 'install' if base_command == 'update' else base_command
         if method in {
-            'install', 'uninstall', 'setup', 'run', 'service', 'init',
-            'mail', 'license',
+            'install',
+            'uninstall',
+            'setup',
+            'run',
+            'service',
+            'init',
+            'mail',
+            'license',
         }:
             import gramex.install
+
             if 'help' in kwargs:
                 return console(msg=gramex.install.show_usage(method))
             return getattr(gramex.install, method)(args=args, kwargs=kwargs)
@@ -244,8 +254,7 @@ def init(force_reload: bool = False, **kwargs) -> None:
     # Add base path locations where config files are found to sys.path.
     # This allows variables: to import files from folder where configs are defined.
     sys.path[:] = _sys_path + [
-        str(path.absolute()) for path in paths.values()
-        if isinstance(path, Path)
+        str(path.absolute()) for path in paths.values() if isinstance(path, Path)
     ]
 
     # Reset variables
@@ -274,7 +283,8 @@ def init(force_reload: bool = False, **kwargs) -> None:
     sys.path[:] = _sys_path + [str(path.absolute().parent) for path in config_files]
 
     from . import services
-    globals()['service'] = services.info    # gramex.service = gramex.services.info
+
+    globals()['service'] = services.info  # gramex.service = gramex.services.info
 
     # Override final configurations
     appconfig.clear()
@@ -286,6 +296,7 @@ def init(force_reload: bool = False, **kwargs) -> None:
     # Set up a watch on config files (including imported files)
     if appconfig.app.get('watch', True):
         from services import watcher
+
         watcher.watch('gramex-reconfig', paths=config_files, on_modified=lambda event: init())
 
     # Run all valid services. (The "+" before config_chain merges the chain)
@@ -311,6 +322,7 @@ def init(force_reload: bool = False, **kwargs) -> None:
 def shutdown():
     '''Shut down the running Gramex instance.'''
     from . import services
+
     ioloop = services.info.main_ioloop
     if ioloop_running(ioloop):
         app_log.info('Shutting down Gramex...')
@@ -336,7 +348,7 @@ def gramex_update(url: str):
 
     query = services.info.eventlog.query
     update = query('SELECT * FROM events WHERE event="update" ORDER BY time DESC LIMIT 1')
-    delay = 24 * 60 * 60            # Wait for one day before updates
+    delay = 24 * 60 * 60  # Wait for one day before updates
     if update and time.time() < update[0]['time'] + delay:
         return app_log.debug('Gramex update ran recently. Deferring check.')
 
@@ -345,9 +357,7 @@ def gramex_update(url: str):
         'uname': platform.uname(),
     }
     if update:
-        events = query(
-            'SELECT * FROM events WHERE time > ? ORDER BY time',
-            (update[0]['time'], ))
+        events = query('SELECT * FROM events WHERE time > ? ORDER BY time', (update[0]['time'],))
     else:
         events = query('SELECT * FROM events')
     logs = [dict(log, **meta) for log in events]
@@ -378,6 +388,7 @@ def log(*args, **kwargs):
         the logs into the server.
     '''
     from . import services
+
     # gramexlog() positional arguments may have a handler and app (in any order)
     # The app defaults to the first gramexlog:
     handler, app = None, services.info.gramexlog.get('defaultapp', None)
@@ -404,4 +415,4 @@ def log(*args, **kwargs):
 
 def console(msg):
     '''Write message to console. An alias for print().'''
-    print(msg)              # noqa
+    print(msg)  # noqa

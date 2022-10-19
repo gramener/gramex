@@ -68,24 +68,24 @@ web server.
 - `cookie=`: optional `cookie` to pass to `url`. The `Cookie: ` HTTP header can also be used
 - `scale=`: 2 doubles the resolution, .5 halves it
 - PDF options:
-    - `format=`: `A3`, `A4` (default), `A5`, `Legal`, `Letter`, `Tabloid`
-    - `orientation=`: `landscape` for landscape, `portrait` is default
-    - `width=`: viewport width in pixels. (Default: 1200px). Only for Chrome
-    - `height=`: viewport height in pixels. (Default: 768px). Only for Chrome
-    - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome
+  - `format=`: `A3`, `A4` (default), `A5`, `Legal`, `Letter`, `Tabloid`
+  - `orientation=`: `landscape` for landscape, `portrait` is default
+  - `width=`: viewport width in pixels. (Default: 1200px). Only for Chrome
+  - `height=`: viewport height in pixels. (Default: 768px). Only for Chrome
+  - `media=`: `print` or `screen`. Defaults to `screen`. Only for Chrome
 - PPTX options (only on Chrome):
-    - `format=`: `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3` (default)
-    - `dpi=`: optional image resolution (dots per inch). Defaults to 96 px per inch
-    - `width=`: viewport width in pixels. (Default: 1200px)
-    - `height=`: optional height to clip output to. Leave it blank for full page height
-    - `selector=`: CSS selector to take a screenshot of
-    - `title=`: optional slide title
-    - `x=`: optional x-position (left margin) in px. Centers by default
-    - `y=`: optional y-position (top margin) in px. Centers by default
+  - `format=`: `A3`, `A4`, `Letter`, `16x9`, `16x10`, `4x3` (default)
+  - `dpi=`: optional image resolution (dots per inch). Defaults to 96 px per inch
+  - `width=`: viewport width in pixels. (Default: 1200px)
+  - `height=`: optional height to clip output to. Leave it blank for full page height
+  - `selector=`: CSS selector to take a screenshot of
+  - `title=`: optional slide title
+  - `x=`: optional x-position (left margin) in px. Centers by default
+  - `y=`: optional y-position (top margin) in px. Centers by default
 - Raster (PNG/JPG/GIF) options:
-    - `width=`: viewport width in pixels. (Default: 1200px)
-    - `height=`: optional height to clip output to. Leave it blank for full page height
-    - `selector=`: CSS selector to take a screenshot of
+  - `width=`: viewport width in pixels. (Default: 1200px)
+  - `height=`: optional height to clip output to. Leave it blank for full page height
+  - `selector=`: CSS selector to take a screenshot of
 - HTTP headers from the request are passed to the `url` directly (only on Chrome) --
   except request-specific headers like `Content-Length`, `Content-MD5`, `Host`.
 

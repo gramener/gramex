@@ -58,9 +58,20 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
 
     These headers can be over-ridden by the ``headers:`` section.
     '''
+
     @classmethod
-    def setup(cls, url, request_headers={}, default={}, prepare=None, modify=None,
-              headers={}, connect_timeout=20, request_timeout=20, **kwargs):
+    def setup(
+        cls,
+        url,
+        request_headers={},
+        default={},
+        prepare=None,
+        modify=None,
+        headers={},
+        connect_timeout=20,
+        request_timeout=20,
+        **kwargs,
+    ):
         super(ProxyHandler, cls).setup(**kwargs)
         WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
@@ -70,8 +81,10 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         for key, fn in (('prepare', prepare), ('modify', modify)):
             if fn:
                 cls.info[key] = build_transform(
-                    {'function': fn}, filename=f'url:{cls.name}.{key}',
-                    vars={'handler': None, 'request': None, 'response': None})
+                    {'function': fn},
+                    filename=f'url:{cls.name}.{key}',
+                    vars={'handler': None, 'request': None, 'response': None},
+                )
         cls.post = cls.put = cls.delete = cls.patch = cls.get
         if not kwargs.get('cors'):
             cls.options = cls.get
@@ -110,8 +123,11 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         # TODO: use a named capture for path_args? This is not the right method
         parts = urlsplit(self.url.format(*path_args))
         params = {
-            key: ([str(v).format(handler=self) for v in val] if isinstance(val, list)
-                  else str(val).format(handler=self))
+            key: (
+                [str(v).format(handler=self) for v in val]
+                if isinstance(val, list)
+                else str(val).format(handler=self)
+            )
             for key, val in self.default.items()
         }
         params.update(parse_qs(parts.query))

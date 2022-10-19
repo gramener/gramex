@@ -7,9 +7,9 @@
 module.exports = {
   data() {
     return {
-      greeting: "Component: a"
+      greeting: "Component: a",
     };
-  }
+  },
 };
 </script>
 

@@ -1,18 +1,18 @@
 variables:
-    ROOT: {default: child}
-    THIS: "child"
-    CHILD_DEFAULT: {default: child}
-    YAMLURL_VAR: $YAMLURL
-    FUNCTION:
-        function: str
-        args: ['child']
-    DEFAULT_FUNCTION:
-        default:
-            function: str
-            args: ['child']
-    FUNCTION_VAR:
-        function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
-    DERIVED: $THIS/derived
+  ROOT: { default: child }
+  THIS: "child"
+  CHILD_DEFAULT: { default: child }
+  YAMLURL_VAR: $YAMLURL
+  FUNCTION:
+    function: str
+    args: ["child"]
+  DEFAULT_FUNCTION:
+    default:
+      function: str
+      args: ["child"]
+  FUNCTION_VAR:
+    function: gramex.config.variables['ROOT'] + gramex.config.variables['THIS']
+  DERIVED: $THIS/derived
 
 child_DOT: "{.}"
 child_YAMLPATH: $YAMLPATH

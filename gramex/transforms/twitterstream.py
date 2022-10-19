@@ -11,7 +11,12 @@ from urllib.parse import urlencode
 from gramex.config import app_log
 from gramex.transforms import flattener, build_transform
 from gramex.http import (
-    RATE_LIMITED, TOO_MANY_REQUESTS, CLIENT_TIMEOUT, INTERNAL_SERVER_ERROR, GATEWAY_TIMEOUT)
+    RATE_LIMITED,
+    TOO_MANY_REQUESTS,
+    CLIENT_TIMEOUT,
+    INTERNAL_SERVER_ERROR,
+    GATEWAY_TIMEOUT,
+)
 
 
 class TwitterStream(object):
@@ -37,12 +42,19 @@ class TwitterStream(object):
 
     This function runs forever, so run it in a separate thread.
     '''
+
     def __init__(self, **kwargs):
         self.params = kwargs
         self.url = 'https://stream.twitter.com/1.1/statuses/filter.json'
         self.valid_params = {
-            'follow', 'track', 'locations', 'delimited', 'stall_warnings',
-            'filter_level', 'language'}
+            'follow',
+            'track',
+            'locations',
+            'delimited',
+            'stall_warnings',
+            'filter_level',
+            'language',
+        }
         self.enabled = True
         self.delay = 0
 
@@ -52,7 +64,8 @@ class TwitterStream(object):
             self.process_bytes = self.stream.write
         elif 'function' in kwargs:
             self.process_json = build_transform(
-                kwargs, vars={'message': {}}, filename='TwitterStream:function')
+                kwargs, vars={'message': {}}, filename='TwitterStream:function'
+            )
         elif kwargs.get('driver') == 'sqlalchemy':
             engine = gramex.data.create_engine(kwargs['url'], **kwargs.get('parameters', {}))
             table = gramex.data.get_table(kwargs['table'])
@@ -69,8 +82,11 @@ class TwitterStream(object):
         while True:
             # Set .enabled to False to temporarily disable streamer
             if self.enabled:
-                params = {key: val.encode('utf-8') for key, val in self.params.items()
-                          if key in self.valid_params}
+                params = {
+                    key: val.encode('utf-8')
+                    for key, val in self.params.items()
+                    if key in self.valid_params
+                }
                 if 'follow' not in params and 'track' not in params and 'locations' not in params:
                     self.enabled = False
                     self.delay = 5
@@ -85,18 +101,24 @@ class TwitterStream(object):
             client_key=self.params['key'],
             client_secret=self.params['secret'],
             resource_owner_key=self.params['access_key'],
-            resource_owner_secret=self.params['access_secret'])
+            resource_owner_secret=self.params['access_secret'],
+        )
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'Gramex',
         }
         url, headers, data = oauth.sign(
-            self.url, 'POST', body=urlencode(tweet_params), headers=headers)
+            self.url, 'POST', body=urlencode(tweet_params), headers=headers
+        )
         self.req = tornado.httpclient.HTTPRequest(
-            method='POST', url=url, body=data, headers=headers,
-            request_timeout=864000,      # Keep request alive for 10 days
+            method='POST',
+            url=url,
+            body=data,
+            headers=headers,
+            request_timeout=864000,  # Keep request alive for 10 days
             streaming_callback=self._stream,
-            header_callback=self.header_callback)
+            header_callback=self.header_callback,
+        )
 
         try:
             self.headers = None
@@ -107,16 +129,20 @@ class TwitterStream(object):
             # For rate limiting, start with 1 minute and double each attempt
             if e.code in {RATE_LIMITED, TOO_MANY_REQUESTS}:
                 self.delay = self.delay * 2 if self.delay else 60
-                app_log.error(f'TwitterStream HTTP {e.code} (rate limited): {e.response}. '
-                              f'Retry: {self.delay}s')
+                app_log.error(
+                    f'TwitterStream HTTP {e.code} (rate limited): {e.response}. '
+                    f'Retry: {self.delay}s'
+                )
             # For Tornado timeout errors, reconnect immediately
             elif e.code == CLIENT_TIMEOUT:
                 self.delay = 0
-                app_log.error(f'TwitterStream HTTP {e.code} (timeout): {e.response}. '
-                              f'Retry: {self.delay}s')
+                app_log.error(
+                    f'TwitterStream HTTP {e.code} (timeout): {e.response}. '
+                    f'Retry: {self.delay}s'
+                )
             # For server errors, start with 5 seconds and double until 320 seconds
             elif INTERNAL_SERVER_ERROR <= e.code <= GATEWAY_TIMEOUT:
-                self.delay = min(320, self.delay * 2 if self.delay else 1)      # noqa: 320 seconds
+                self.delay = min(320, self.delay * 2 if self.delay else 1)  # noqa: 320 seconds
                 app_log.error(f'TwitterStream HTTP {e.code}: {e.response}. Retry: {self.delay}s')
             # For client errors (e.g. wrong params), disable connection
             else:
@@ -125,7 +151,7 @@ class TwitterStream(object):
         except Exception as e:
             # Other errors are possible, such as IOError.
             # Increase the delay in reconnects by 250ms each attempt, up to 16 seconds.
-            self.delay = min(16, self.delay + 0.25)         # noqa: 16 seconds, 0.25 seconds
+            self.delay = min(16, self.delay + 0.25)  # noqa: 16 seconds, 0.25 seconds
             app_log.error(f'TwitterStream exception {e}. Retry: {self.delay}s')
 
     def header_callback(self, line):
@@ -147,7 +173,7 @@ class TwitterStream(object):
             if index < 0:
                 break
             data = bytes(buf[:index])
-            del buf[:index + 2]
+            del buf[: index + 2]
             # Ignore stall warnings
             if len(data) == 0:
                 continue

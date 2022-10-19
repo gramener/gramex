@@ -10,7 +10,6 @@ from gramex.ml_api import AbstractModel
 
 
 class StatsModel(AbstractModel):
-
     @classmethod
     def from_disk(cls, path, **kwargs):
         model = cache.open(path, joblib.load)
@@ -35,9 +34,7 @@ class StatsModel(AbstractModel):
         if not self.stl_kwargs:
             return endog
         stl_components = self.stl_kwargs.get("components", [])
-        if stl_components and (
-            not set(stl_components) < {"seasonal", "trend", "resid"}
-        ):
+        if stl_components and (not set(stl_components) < {"seasonal", "trend", "resid"}):
             app_log.warning(f"Invalid STL components {stl_components}. Ignoring STL.")
             return endog
         kwargs = self.stl_kwargs.get("kwargs", {})
@@ -51,8 +48,7 @@ class StatsModel(AbstractModel):
         return pd.Series(result, index=endog.index)
 
     def fit(
-        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None,
-        **kwargs
+        self, X, y=None, model_path=None, name=None, index_col=None, target_col=None, **kwargs
     ):
         """Only a dataframe is accepted. Index and target columns are both expected to be in it."""
         params = self.params.copy()
@@ -74,9 +70,7 @@ class StatsModel(AbstractModel):
         self.res.save(model_path)
         return self.res.summary().as_html()
 
-    def predict(
-        self, data, index_col=None, start=None, end=None, target_col=None, **kwargs
-    ):
+    def predict(self, data, index_col=None, start=None, end=None, target_col=None, **kwargs):
         data = self._timestamp_data(data, index_col)
         start = data.index.min() if start is None else start
         end = data.index.max() if end is None else end

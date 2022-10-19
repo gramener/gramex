@@ -1,5 +1,5 @@
 # B403:import_public we only pickle Gramex internal objects
-import pickle   # nosec B403
+import pickle  # nosec B403
 from redis import StrictRedis
 
 
@@ -19,7 +19,7 @@ def get_redis(path: str, **kwargs):
     return StrictRedis(host=host, port=port, db=db, **redis_kwargs)
 
 
-class RedisCache():
+class RedisCache:
     '''
     LRU Cache that stores data in a Redis database. Typical usage::
 
@@ -40,6 +40,7 @@ class RedisCache():
     Both Keys and Values are stored as pickle dump.
     This is an approximate LRU implementation. Read more here.(https://redis.io/topics/lru-cache)
     '''
+
     def __init__(self, path=None, maxsize=None, *args, **kwargs):
         self.store = get_redis(path, decode_responses=False)
         self.size = 0
@@ -53,7 +54,7 @@ class RedisCache():
         key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
         result = self.store.get(key)
         # B301:pickle key is set by developers and safe to pickle
-        return None if result is None else pickle.loads(result)     # nosec B301
+        return None if result is None else pickle.loads(result)  # nosec B301
 
     def __setitem__(self, key, value, expire=None):
         key = pickle.dumps(key, pickle.HIGHEST_PROTOCOL)
@@ -70,7 +71,7 @@ class RedisCache():
         for key in self.store.scan_iter():
             try:
                 # B301:pickle key is set by developers and safe to pickle
-                yield pickle.loads(key)     # nosec B301
+                yield pickle.loads(key)  # nosec B301
             except pickle.UnpicklingError:
                 # If redis already has keys created by other apps, yield them as-is
                 yield key
