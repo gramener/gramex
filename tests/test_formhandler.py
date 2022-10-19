@@ -716,6 +716,24 @@ class TestFormHandler(TestGramex):
             )
             eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [])
 
+    def test_edit_download(self):
+        target = os.path.join(folder, 'formhandler-edits.db')
+        dbutils.sqlite_create_db(target, sales=self.sales)
+        tempfiles[target] = target
+
+        args = {
+            'देश': ['China', 'China', 'China'],
+            'city': ['Beijing', 'Shanghai', 'Hong Kong'],
+            'product': ['芯片', 'Eggs', 'Biscuit'],
+            'sales': [10, 20, 30],
+            'growth': [0.05, 0.1, 0.2],
+        }
+        r = self.check('/formhandler/edits-xlsx-download', data=args, method='post')
+        data, handler_name, meta, *rest = r.text.split('\n')
+        eq_(data, "{'data': AttrDict([('filters', []), ('ignored', []), ('inserted', [])])}")
+        eq_(handler_name, 'formhandler/edits-xlsx-download')
+        eq_(meta, "{'filters': [], 'ignored': [], 'inserted': []}")
+
     def test_chart(self):
         r = self.get(
             '/formhandler/chart',

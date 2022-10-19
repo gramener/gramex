@@ -1007,6 +1007,25 @@ url:
       xsrf_cookies: false
       redirect: { url: /redirected }
 
+  formhandler/edits-xlsx-download:
+    pattern: /formhandler/edits-xlsx-download
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler-edits.db
+      table: sales
+      id: [city, product]
+      xsrf_cookies: false
+      default:
+        _format: myformat
+      formats:
+        myformat:
+          format: template
+          template: $YAMLPATH/formhandler-edit.html
+          x: 1
+          y: 2
+          headers:
+            Content-Type: text/html
+
   formhandler/edits-multidata:
     pattern: /formhandler/edits-multidata
     handler: FormHandler
