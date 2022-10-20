@@ -70,10 +70,13 @@ class TestXSRF(TestGramex):
         # Mangle case below to ensure Gramex handles it case-insensitively
         r = requests.post(url, headers={'X-Requested-With': 'xMlHtTpReQuESt'})
         eq_(r.status_code, OK)
-        r = requests.post(url, headers={'Sec-Fetch-Site': 'xxx'})
+        # fetch() sends a Sec-Fetch-Mode: cors
+        r = requests.post(url, headers={'Sec-Fetch-Mode': 'cors'})
         eq_(r.status_code, OK)
-        r = requests.post(url, headers={'Origin': 'xxx'})
-        eq_(r.status_code, OK)
+        # <form> sends a Sec-Fetch-Mode of navigate in modern (desktop) browsers.
+        # Older browsers do not send it.
+        r = requests.post(url, headers={'Sec-Fetch-Mode': 'navigate'})
+        eq_(r.status_code, FORBIDDEN)
 
 
 class TestSetupErrors(TestGramex):
