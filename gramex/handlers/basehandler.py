@@ -546,26 +546,21 @@ class BaseMixin(object):
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
 
-    def is_browser_request(self):
-        '''Returns True if the request is (likely) from a browser. Else False.
+    def xsrf_check_required(self):
+        '''Returns True if the request is (likely) from a browser and needs XSRF check.
 
         This is used to handle XSRF. If the request is NOT from a browser (e.g. server, AJAX),
         no AJAX checks are required. If any of the following are true, it's not a browser request.
 
         1. `X-Requested-With: XMLHttpRequest`. XMLHttpRequest sends this
-        2. `Sec-Fetch-*: *`. [Fetch sends these][H-Fetch]
-        3. `Origin: *`. All browsers send this except for same-origin GET/POST [Ref][H-Origin]
+        2. `Sec-Fetch-Mode: cors`. [Fetch sends these][H-Fetch]
 
         [H-Fetch]: https://developer.mozilla.org/en-US/docs/Glossary/Fetch_metadata_request_header
-        [H-Origin]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin
+        [H-Origin]: https://developer.mozilla.org/en-US/docs/Web/API/Request/mode
         '''
         return not (
             self.request.headers.get('X-Requested-With', '').lower() == 'xmlhttprequest'
-            or self.request.headers.get('Sec-Fetch-Site', '')
-            or self.request.headers.get('Sec-Fetch-Mode', '')
-            or self.request.headers.get('Sec-Fetch-User', '')
-            or self.request.headers.get('Sec-Fetch-Dest', '')
-            or self.request.headers.get('Origin', '')
+            or self.request.headers.get('Sec-Fetch-Mode', '').lower() == 'cors'
         )
 
     def xsrf_ajax(self):
@@ -573,7 +568,7 @@ class BaseMixin(object):
 
         Internally, it uses Tornado's check_xsrf_cookie().
         '''
-        if self.is_browser_request():
+        if self.xsrf_check_required():
             return super(BaseHandler, self).check_xsrf_cookie()
 
     def noop(self):
@@ -1013,7 +1008,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             return
         if not self.current_user:
             # Redirect browser GET/HEAD requests to login URL (if it's a string)
-            if self.is_browser_request() and self.request.method in ('GET', 'HEAD'):
+            if self.xsrf_check_required() and self.request.method in ('GET', 'HEAD'):
                 auth = getattr(self, '_auth', {})
                 url = auth.get('login_url', self.gramex_root + self.get_login_url())
                 # If login_url: false, don't redirect to a login URL. Only redirect if it's a URL
