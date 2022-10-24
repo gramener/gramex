@@ -31,6 +31,22 @@ if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
 
 
+def cdn_redirect(handler, folder_map={}):
+    '''Redirect /ui/... to cdn.jsdelivr.net/npm/...
+
+    Before Gramex 1.84, specific npm libraries were included in Gramex. Now, we encourage projects
+    to specify their own npm dependencies. This redirection makes apps backward compatible.
+
+    By default, it redirects temporarily (HTTP 302). Use `/ui/...?v=...` for permanent redirection.
+    '''
+    path = handler.path_args[0]
+    for prefix, sub in folder_map.items():
+        if path.startswith(prefix):
+            path = sub + path[len(prefix) :]
+            break
+    handler.redirect(f'https://cdn.jsdelivr.net/npm/{path}', permanent=handler.get_arg('v', None))
+
+
 def _get_cache_key(state):
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     # B303:md5 is safe here - it's not for cryptographic use
@@ -235,9 +251,10 @@ def jscompiler(
     ext = os.path.splitext(path)[-1]
     cache_key = _get_cache_key([path])
     target_dir = _join(cache_dir, f'{ext}-{cache_key}')
+    target = os.path.join(target_dir, os.path.basename(path[: -len(ext)] + target_ext))
 
     # Recompile if output target is missing, or path has been updated
-    if not os.path.exists(target_dir) or os.stat(path).st_mtime > os.stat(target_dir).st_mtime:
+    if not os.path.exists(target) or os.stat(path).st_mtime > os.stat(target).st_mtime:
         cwd, filename = os.path.split(path)
         subs = {'exe': exe, 'filename': filename, 'targetDir': target_dir}
         cmd = [string.Template(x).substitute(subs) for x in cmd.split()]
@@ -248,7 +265,6 @@ def jscompiler(
         if proc.returncode:
             raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}\n{proc.stdout}')
 
-    target = os.path.join(target_dir, os.path.basename(path[: -len(ext)] + target_ext))
     return _sourcemap(handler, target, 'text/javascript')
 
 
