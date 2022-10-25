@@ -543,7 +543,8 @@ def insert(
                 ids = [r.inserted_primary_key]
             else:
                 ids = []
-            # Add non-empty IDs as a dict with associated keys
+            # Add non-empty IDs as a dict with associated keys.
+            # If there are no auto-generated primary keys in the table, no need to return anything.
             id_cols = [col.name for col in sa_table.primary_key]
             for row in ids:
                 if row:
@@ -687,23 +688,41 @@ def download(
     - `format='pptx'` passes `data` as a dict of datasets to pptgen
     - `format='vega'` passes `data` as a dict of datasets to Vega
 
+    When `data` is NEITHER a DataFrame or a dict of DataFrames:
+
+    - `format='json'` renders as JSON if possible
+    - `format='template'` renders the template if possible
+    - all other formats raise a `ValueError`
+
     You need to set the MIME types on the handler yourself. Recommended MIME
     types are in gramex.yaml under handler.FormHandler.
     '''
+    multiple_datasets = True
+    error_no_dataframe = None
+
+    # Check if data is a DataFrame or a dict of DataFrames (multiple_datasets).
+    # Ensure that data becomes a dict of DataFrames
     if isinstance(data, dict):
         for key, val in data.items():
             if not isinstance(val, pd.DataFrame):
-                raise ValueError(f'download: {key} type is {type(val)}, not a DataFrame')
+                error_no_dataframe = f'download(): {key} type is {type(val)}, not a DataFrame'
         if not len(data):
-            raise ValueError('download() data requires at least 1 DataFrame')
-        multiple = True
+            error_no_dataframe = 'download(): got empty dict. Need a DataFrame'
     elif not isinstance(data, pd.DataFrame):
-        raise ValueError(f'download: type is {type(data)}, not a DataFrame')
+        error_no_dataframe = f'download(): type is {type(data)}, not a DataFrame'
     else:
         data = {'data': data}
-        multiple = False
+        multiple_datasets = False
+
+    # These formats require a DataFrame or a dict of DataFrames. Other formats (json, template)
+    # accept anything.
+    if error_no_dataframe and format in {
+            'csv', 'html', 'xlsx', 'xls', 'pptx', 'ppt', 'seaborn', 'sns',
+            'vega', 'vega-lite', 'vegam'}:
+        raise ValueError(error_no_dataframe)
 
     def kw(**conf):
+        '''Set provided conf as defaults for kwargs'''
         return merge(kwargs, conf, mode='setdefault')
 
     if format == 'csv':
@@ -714,7 +733,7 @@ def download(
         for index, (key, val) in enumerate(data.items()):
             if index > 0:
                 out.write('\n')
-            if multiple:
+            if multiple_datasets:
                 out.write(key + '\n')
             val.to_csv(out, **kwargs)
         result = out.getvalue()
@@ -722,13 +741,13 @@ def download(
         return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
     elif format == 'template':
         return gramex.cache.open(template, 'template').generate(
-            data=data if multiple else data['data'], **kwargs
+            data=data if multiple_datasets else data['data'], **kwargs
         )
     elif format == 'html':
         out = io.StringIO()
         kw(index=False)
         for key, val in data.items():
-            if multiple:
+            if multiple_datasets:
                 out.write(f'<h1>{key}</h1>')
             val.to_html(out, **kwargs)
         return out.getvalue().encode('utf-8')
@@ -742,7 +761,7 @@ def download(
         return out.getvalue()
     elif format in {'pptx', 'ppt'}:
         from gramex.pptgen import pptgen  # noqa
-
+        kw()
         out = io.BytesIO()
         pptgen(target=out, data=data, **kwargs)
         return out.getvalue()
@@ -799,10 +818,17 @@ def download(
         conf = conf.encode('utf-8').replace(b'"__DATA__"', out)
         script = gramex.cache.open(_VEGA_SCRIPT, 'bin')
         return script.replace(b'/*{conf}*/', conf)
+    # If it's none of these formats, default to JSON.
+    # If there are no DataFrames, handle arbitrary JSON
+    elif error_no_dataframe:
+        from gramex.config import CustomJSONEncoder
+        kw(cls=CustomJSONEncoder)
+        return json.dumps(data, **kwargs)
+    # If there ARE DataFrames, render each
     else:
         out = io.BytesIO()
         kwargs = kw(orient='records', force_ascii=True)
-        if multiple:
+        if multiple_datasets:
             out.write(b'{')
             for index, (key, val) in enumerate(data.items()):
                 if index > 0:

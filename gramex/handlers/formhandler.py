@@ -178,6 +178,11 @@ class FormHandler(BaseHandler):
         if hasattr(self, 'modify_all'):
             result = self.modify_all(data=result, key=None, handler=self)
 
+        # Note: Don't redirect GET. They should only be used to get data, not for side-effects.
+        # Allowing redirect has no purpose except for side-effects.
+        self.render_result(opt, meta, result, redirect=False)
+
+    def render_result(self, opt, meta, result, redirect=True):
         format_options = self.set_format(opt.fmt, meta)
         format_options['args'] = opt.args
         params = {k: v[0] for k, v in opt.args.items() if len(v) > 0}
@@ -197,6 +202,8 @@ class FormHandler(BaseHandler):
             self.write(gramex.data.download(result, **format_options))
         elif result:
             self.write(result)
+        if redirect and self.redirects:
+            self.redirect_next()
 
     @tornado.gen.coroutine
     def update(self, method, *path_args, **path_kwargs):
@@ -229,14 +236,9 @@ class FormHandler(BaseHandler):
         # modify the result for multiple datasets
         if hasattr(self, 'modify_all'):
             meta['modify'] = self.modify_all(data=result, key=None, handler=self)
-        if opt.meta_header:
-            self.set_meta_headers(meta)
-        if self.redirects:
-            self.redirect_next()
-        else:
-            self.set_format(opt.fmt, meta)
-            self.set_header('Cache-Control', 'no-cache, no-store')
-            self.write(json.dumps(meta, indent=2, cls=CustomJSONEncoder))
+
+        self.set_header('Cache-Control', 'no-cache, no-store')
+        self.render_result(opt, meta, {'data': meta}, redirect=True)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):

@@ -5,6 +5,7 @@ import shutil
 import unittest
 import gramex.data
 import gramex.cache
+import gramex.config
 import numpy as np
 import pandas as pd
 import pymongo.errors
@@ -725,6 +726,13 @@ class TestDownload(unittest.TestCase):
 
         afe(from_json('dummy'), self.dummy, check_like=True)
         afe(from_json('sales'), self.sales, check_like=True)
+
+    def test_download_json_non_dataframe(self):
+        data = {'a': {'b': [{'c': 1}, 'd'], 'e': 2}, 'f': self.dummy}
+        out = gramex.data.download(data, format='json')
+        eq_(out, json.dumps(data, cls=gramex.config.CustomJSONEncoder))
+        out = gramex.data.download(data, format='json', indent=2)
+        eq_(out, json.dumps(data, indent=2, cls=gramex.config.CustomJSONEncoder))
 
     def test_download_excel(self):
         out = gramex.data.download(self.dummy, format='xlsx')
