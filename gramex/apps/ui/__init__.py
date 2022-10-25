@@ -37,7 +37,12 @@ def cdn_redirect(handler, folder_map={}):
     Before Gramex 1.84, specific npm libraries were included in Gramex. Now, we encourage projects
     to specify their own npm dependencies. This redirection makes apps backward compatible.
 
-    By default, it redirects temporarily (HTTP 302). Use `/ui/...?v=...` for permanent redirection.
+    By default, the path `/d3/dist/d3.min.js` is redirected to
+    <https://cdn.jsdelivr.net/npm/d3/dist/d3.min.js>. But `folder_map` (specified in
+    `gramex/apps/ui/gramex.yaml`) provides a mapping of folder names used earlier in Gramex to
+    specific libraries, e.g. `{'d3v5': 'd3@5'}`.
+
+    It redirects temporarily (HTTP 302). Add `?v=...` to URL for permanent redirection (HTTP 301).
     '''
     path = handler.path_args[0]
     for prefix, sub in folder_map.items():
@@ -48,6 +53,7 @@ def cdn_redirect(handler, folder_map={}):
 
 
 def _get_cache_key(state):
+    '''Return short string capturing state of object. Used to create unique filenames for state'''
     cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
     # B303:md5 is safe here - it's not for cryptographic use
     return md5(cache_key).hexdigest()[:5]  # nosec B303
