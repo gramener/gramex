@@ -3,13 +3,16 @@
 url:
   apps/ui/static-$*:
     pattern: /$YAMLURL/(.*)
-    handler: FileHandler
+    handler: FunctionHandler
     kwargs:
-      path: $YAMLPATH/node_modules/
-      index: true
+      function: >
+        gramex.apps.ui.cdn_redirect(handler, folder_map={
+          'd3v5': 'd3@5',
+          'bootstrap5': 'bootstrap@5',
+          'daterangepickerv3': 'daterangepicker@3',
+          'url-search-params': '@ungap/url-search-params',
+        })
       auth: false
-      headers:
-        Cache-Control: public, max-age=86400
 
   apps/ui/theme-$*:
     pattern: /$YAMLURL/theme/(.*)

@@ -1,8 +1,22 @@
 from . import TestGramex
+from gramex.http import MOVED_PERMANENTLY, FOUND
 from nose.tools import ok_
 
 
 class TestUI(TestGramex):
+    def test_ui_lib(self):
+        cdn = 'https://cdn.jsdelivr.net/npm'
+
+        def check(source, url, code=FOUND):
+            self.check(source, allow_redirects=False, code=code, headers={'Location': url})
+
+        check('/ui/d3/dist/d3.min.js', f'{cdn}/d3/dist/d3.min.js')
+        check('/ui/d3?v=1', f'{cdn}/d3', code=MOVED_PERMANENTLY)
+        check('/ui/d3v5', f'{cdn}/d3@5')
+        check('/ui/bootstrap5', f'{cdn}/bootstrap@5')
+        check('/ui/daterangepickerv3', f'{cdn}/daterangepicker@3')
+        check('/ui/url-search-params', f'{cdn}/@ungap/url-search-params')
+
     def test_ui_sass(self):
         text = self.check('/uitest/sass', headers={'Content-Type': 'text/css'}).text
         ok_('.color_arg{color:#000}' in text)

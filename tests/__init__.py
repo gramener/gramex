@@ -55,6 +55,7 @@ class TestGramex(unittest.TestCase):
         headers=None,
         session=None,
         method='get',
+        allow_redirects=True,
         timeout=10,
     ):
         '''
@@ -85,6 +86,7 @@ class TestGramex(unittest.TestCase):
             method=method,
             timeout=timeout,
             headers=request_headers,
+            allow_redirects=allow_redirects,
         )
         eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
