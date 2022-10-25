@@ -697,9 +697,11 @@ def download(
     You need to set the MIME types on the handler yourself. Recommended MIME
     types are in gramex.yaml under handler.FormHandler.
     '''
-    multiple = True
+    multiple_datasets = True
     error_no_dataframe = None
 
+    # Check if data is a DataFrame or a dict of DataFrames (multiple_datasets).
+    # Ensure that data becomes a dict of DataFrames
     if isinstance(data, dict):
         for key, val in data.items():
             if not isinstance(val, pd.DataFrame):
@@ -710,15 +712,17 @@ def download(
         error_no_dataframe = f'download(): type is {type(data)}, not a DataFrame'
     else:
         data = {'data': data}
-        multiple = False
+        multiple_datasets = False
 
-    # These formats require a DataFrame or a dict of DataFrames
+    # These formats require a DataFrame or a dict of DataFrames. Other formats (json, template)
+    # accept anything.
     if error_no_dataframe and format in {
             'csv', 'html', 'xlsx', 'xls', 'pptx', 'ppt', 'seaborn', 'sns',
             'vega', 'vega-lite', 'vegam'}:
         raise ValueError(error_no_dataframe)
 
     def kw(**conf):
+        '''Set provided conf as defaults for kwargs'''
         return merge(kwargs, conf, mode='setdefault')
 
     if format == 'csv':
@@ -729,7 +733,7 @@ def download(
         for index, (key, val) in enumerate(data.items()):
             if index > 0:
                 out.write('\n')
-            if multiple:
+            if multiple_datasets:
                 out.write(key + '\n')
             val.to_csv(out, **kwargs)
         result = out.getvalue()
@@ -737,13 +741,13 @@ def download(
         return result.encode('utf-8-sig') if result.strip() else result.encode('utf-8')
     elif format == 'template':
         return gramex.cache.open(template, 'template').generate(
-            data=data if multiple else data['data'], **kwargs
+            data=data if multiple_datasets else data['data'], **kwargs
         )
     elif format == 'html':
         out = io.StringIO()
         kw(index=False)
         for key, val in data.items():
-            if multiple:
+            if multiple_datasets:
                 out.write(f'<h1>{key}</h1>')
             val.to_html(out, **kwargs)
         return out.getvalue().encode('utf-8')
@@ -824,7 +828,7 @@ def download(
     else:
         out = io.BytesIO()
         kwargs = kw(orient='records', force_ascii=True)
-        if multiple:
+        if multiple_datasets:
             out.write(b'{')
             for index, (key, val) in enumerate(data.items()):
                 if index > 0:
