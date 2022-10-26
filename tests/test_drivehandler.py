@@ -44,6 +44,9 @@ class TestDriveHandler(TestGramex):
             headers['X-Gramex-User'] = create_signed_value(secret, 'user', json.dumps(user))
         r = requests.post(self.url, files=files, data=data, headers=headers)
         eq_(r.status_code, code, '%s: code %d != %d' % (self.url, r.status_code, code))
+        if code is OK:
+            paths_exist = json.loads(r.headers['Paths-Exist'])
+            eq_(paths_exist, {f.get('name', os.path.basename(f['file'])): True for f in fileinfo})
         data = gramex.data.filter(self.con, table='drive')
         data = data.sort_values('id').tail(len(files))
         if not check:
@@ -120,6 +123,7 @@ class TestDriveHandler(TestGramex):
             data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']},
         )
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"x.csv": true, "y.csv": true}')
         data = gramex.data.filter(self.con, table='drive').sort_values('id').tail(2)
         # If there are insufficient tags, they become NULL
         eq_(data.tag.tolist(), ['t1', None])
@@ -155,6 +159,8 @@ class TestDriveHandler(TestGramex):
         indices = (0, 3, 6)
         for index in indices:
             r = requests.delete(self.url, params={'id': [data.id.iloc[index]]})
+            file = data.file.iloc[index].encode('unicode-escape').decode()
+            eq_(r.headers['Paths-Exist'], '{"%s": false}' % file)
         data2 = gramex.data.filter(self.con, table='drive')
         eq_(len(data2), len(data) - len(indices))
         for index in indices:
@@ -185,6 +191,7 @@ class TestDriveHandler(TestGramex):
         }
         r = requests.put(self.url, params=params)
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"a.x": true}')
         data2 = gramex.data.filter(self.con, table='drive')
         new = data2[data2.id == data.id.iloc[0]].iloc[0]
         old = data[data.id == data.id.iloc[0]].iloc[0]
@@ -208,6 +215,7 @@ class TestDriveHandler(TestGramex):
             headers={'X-Gramex-User': create_signed_value(secret, 'user', json.dumps(user))},
         )
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"a.x": true}')
         data2 = gramex.data.filter(self.con, table='drive')
         new = data2[data2.id == data.id.iloc[1]].iloc[0]
         old = data[data.id == data.id.iloc[1]].iloc[0]
@@ -225,6 +233,7 @@ class TestDriveHandler(TestGramex):
         params['id'] = -1
         data = gramex.data.filter(self.con, table='drive')
         r = requests.put(self.url, params=params, files=files)
+        eq_(r.headers['Paths-Exist'], '{}')
         data2 = gramex.data.filter(self.con, table='drive')
         afe(data, data2)
 
