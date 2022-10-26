@@ -13,9 +13,16 @@ class TestUI(TestGramex):
         check('/ui/d3/dist/d3.min.js', f'{cdn}/d3/dist/d3.min.js')
         check('/ui/d3?v=1', f'{cdn}/d3', code=MOVED_PERMANENTLY)
         check('/ui/d3v5', f'{cdn}/d3@5')
+        check('/ui/bootstrap', f'{cdn}/bootstrap@4')
+        check('/ui/bootstrap?v=1', f'{cdn}/bootstrap@4', code=MOVED_PERMANENTLY)
+        check(
+            '/ui/bootstrap/dist/css/bootstrap.min.css?v=1',
+            f'{cdn}/bootstrap@4/dist/css/bootstrap.min.css',
+            code=MOVED_PERMANENTLY
+        )
         check('/ui/bootstrap5', f'{cdn}/bootstrap@5')
         check('/ui/daterangepickerv3', f'{cdn}/daterangepicker@3')
-        check('/ui/url-search-params', f'{cdn}/@ungap/url-search-params')
+        check('/ui/url-search-params', f'{cdn}/@ungap/url-search-params@0.1')
 
     def test_ui_sass(self):
         text = self.check('/uitest/sass', headers={'Content-Type': 'text/css'}).text
