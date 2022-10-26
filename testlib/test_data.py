@@ -948,6 +948,7 @@ class TestAlter(unittest.TestCase):
             table='new',
             columns={
                 'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+                'when': {'type': 'timestamp', 'default': {'function': 'func.now()'}},
                 'email': {'type': 'varchar(99)', 'nullable': True, 'default': 'none'},
                 'age': {'type': 'float', 'nullable': False, 'default': age},
             },
@@ -970,8 +971,9 @@ class TestAlter(unittest.TestCase):
         eq_(result['age'].iloc[0], age)
         # new: test types
         gramex.data.insert(url, table='new', args={'age': [3.0, 4.0]})
+        result = gramex.data.filter(url, table='new')
         afe(
-            gramex.data.filter(url, table='new'),
+            result.drop(columns=['when']),
             pd.DataFrame(
                 [
                     {'id': 1, 'email': 'none', 'age': 3.0},
@@ -979,6 +981,11 @@ class TestAlter(unittest.TestCase):
                 ]
             ),
         )
+        # The `when` column should be plus-or-minus 3 seconds from now
+        before = pd.to_datetime('now') - pd.tseries.offsets.Second(3)
+        after = pd.to_datetime('now') + pd.tseries.offsets.Second(3)
+        ok_((result['when'] >= before).all())
+        ok_((result['when'] <= after).all())
 
     def test_mysql(self):
         url = dbutils.mysql_create_db(server.mysql, 'test_alter', sales=self.sales)

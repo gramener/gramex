@@ -13,6 +13,7 @@ from packaging import version
 from tornado.escape import json_encode
 from typing import Callable, List, Union
 from gramex.config import merge, app_log
+from gramex.transforms import build_transform
 from orderedattrdict import AttrDict
 from urllib.parse import urlparse
 
@@ -1038,6 +1039,7 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
     Examples:
         >>> gramex.data.alter(url, table, columns={
         ...     'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+        ...     'when': {'type': 'timestamp', 'default': {'function': 'func.now()'}},
         ...     'email': {'nullable': True, 'default': 'none'},
         ...     'age': {'type': 'float', 'nullable': False, 'default': 18},
         ... })
@@ -1048,31 +1050,36 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
         columns: column names, with values as SQL types or type objects
         **kwargs: passed to `sqlalchemy.create_engine()`.
 
-    `columns` can be SQL type strings (e.g. `"REAL"` or `"VARCHAR(10)"`) or a dict with keys:
-
-    - `type` (str), e.g. `"VARCHAR(10)"`
-    - `default` (str/int/float/bool), e.g. `"none@example.org"`
-    - `nullable` (bool), e.g. `False`
-    - `primary_key` (bool), e.g. `True` -- used only when creating new tables
-    - `autoincrement` (bool), e.g. `True` -- used only when creating new tables
-
     Returns:
         SQLAlchemy engine
 
-    If the table exists, new columns (if any) are added. Existing columns are unchanged.
+    If the table exists, new columns (if any) are added. Existing columns are **NOT changed**.
 
     If the table does not exist, the table is created with the specified columns.
 
-    `columns` is a dict like `{key: type, key: type, ...}`.
+    `columns` can be a dict with values as SQL types (e.g. `"INTEGER"` or `"VARCHAR(10)"`):
 
-    - `key` is the column name
-    - `type` can be a SQL type valid for that database e.g.: `REAL`, `TEXT`, `VARCHAR(10)`, etc.
-    - `type` can also by a dict like `{"type": "VARCHAR(10)", "default": "NA"}`, with these keys:
-        - `type` (str): SQL type, e.g. `"VARCHAR(10)"`
-        - `default` (str/int/float/bool): default value, e.g. `"none@example.org"`
-        - `nullable` (bool): whether column can have null values, e.g. `False`
-        - `primary_key` (bool): whether column is a primary key, e.g. `True`
-        - `autoincrement` (bool): whether column automatically increments, e.g. `True`
+        >>> gramex.data.alter(url, table, columns={'id': 'INTEGER', 'name': 'VARCHAR(10)'})
+
+    ... or a dict like `{column_name: type, column_name: type, ...}`:
+
+        >>> gramex.data.alter(url, table, columns={
+        ...     'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+        ...     'when': {'type': 'timestamp', 'default': {'function': 'func.now()'}},
+        ...     'email': {'nullable': True, 'default': 'none'},
+        ...     'age': {'type': 'float', 'nullable': False, 'default': 18},
+        ... })
+
+    If the `columns` values are a dict, these keys are allowed:
+
+    - `type` (str): SQL type, e.g. `"VARCHAR(10)"`
+    - `default` (str/int/float/bool/function/dict):
+        - A scalar like `"none@example.org"` for fixed default values
+        - A SQLAlchemy function like `sqlalchemy.func.now()`
+        - A dict like `{function: func.now()}` containing a SQLAlchemy functions
+    - `nullable` (bool): whether column can have null values, e.g. `False`
+    - `primary_key` (bool): whether column is a primary key, e.g. `True`
+    - `autoincrement` (bool): whether column automatically increments, e.g. `True`
 
     `primary_key` and `autoincrement` are used **only** when creating new tables. They do not
     change existing primary keys or autoincrements. This is because
@@ -1102,7 +1109,20 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
                 row['type'] = eval(col_type.upper(), vars(sa.types))  # nosec B307
             row['type_'] = row.pop('type')
             if 'default' in row:
-                row['server_default'] = str(row.pop('default'))
+                from inspect import isclass
+                default = row.pop('default')
+                # default: can be a string like `'sa.func.now()'` or `'func.now()'`
+                if isinstance(default, dict):
+                    libs = {'sa': sa, 'sqlalchemy': sa, 'func': sa.func}
+                    row['server_default'] = build_transform(default, vars={
+                        key: None for key in libs
+                    }, iter=False)(**libs)
+                # default can be an SQLAlchemy function, e.g. sa.func.now()
+                elif isclass(default) and issubclass(default, sa.func.Function):
+                    row['server_default'] = default
+                # default can also be a static value, e.g. `0`
+                else:
+                    row['server_default'] = str(default)
             cols.append(sa.Column(**row))
         sa.Table(table, _METADATA_CACHE[engine], *cols, extend_existing=True).create(engine)
     else:
@@ -1122,7 +1142,11 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
                         # repr() converts int, float properly,
                         #   str into 'str' with single quotes (which is the MySQL standard)
                         #   TODO: datetime and other types will fail
-                        constraints += ['DEFAULT', repr(row['default'])]
+                        if isinstance(row['default'], dict) or callable(row['default']):
+                            app_log.warning(
+                                f'alter(): col {name} cannot change default on existing table')
+                        else:
+                            constraints += ['DEFAULT', repr(row['default'])]
                     # This syntax works on DB2, MySQL, Oracle, PostgreSQL, SQLite
                     conn.execute(
                         f'ALTER TABLE {quote(table)} '
