@@ -1024,11 +1024,6 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
         columns: column names, with values as SQL types or type objects
         **kwargs: passed to `sqlalchemy.create_engine()`.
 
-    - `type` (str), e.g. `"VARCHAR(10)"`
-    - `nullable` (bool), e.g. `False`
-    - `primary_key` (bool), e.g. `True` -- used only when creating new tables
-    - `autoincrement` (bool), e.g. `True` -- used only when creating new tables
-
     Returns:
         SQLAlchemy engine
 
@@ -1036,12 +1031,20 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
 
     If the table does not exist, the table is created with the specified columns.
 
-    `columns` can be SQL type strings (e.g. `"REAL"` or `"VARCHAR(10)"`) or a
-    dict like `{column_name: type, column_name: type, ...}`.
+    `columns` can be a dict with values as SQL types (e.g. `"INTEGER"` or `"VARCHAR(10)"`):
 
-    `type` can be a SQL type valid for that database e.g.: `REAL`, `TEXT`, `VARCHAR(10)`, etc.
+        >>> gramex.data.alter(url, table, columns={'id': 'INTEGER', 'name': 'VARCHAR(10)'})
 
-    `type` can also by a dict like `{"type": "VARCHAR(10)", "default": "NA"}`, with these keys:
+    ... or a dict like `{column_name: type, column_name: type, ...}`:
+
+        >>> gramex.data.alter(url, table, columns={
+        ...     'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+        ...     'when': {'type': 'timestamp', 'default': {'function': 'func.now()'}},
+        ...     'email': {'nullable': True, 'default': 'none'},
+        ...     'age': {'type': 'float', 'nullable': False, 'default': 18},
+        ... })
+
+    If the `columns` values are a dict, these keys are allowed:
 
     - `type` (str): SQL type, e.g. `"VARCHAR(10)"`
     - `default` (str/int/float/bool/function/dict):
@@ -1082,13 +1085,16 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
             if 'default' in row:
                 from inspect import isclass
                 default = row.pop('default')
+                # default: can be a string like `'sa.func.now()'` or `'func.now()'`
                 if isinstance(default, dict):
                     libs = {'sa': sa, 'sqlalchemy': sa, 'func': sa.func}
                     row['server_default'] = build_transform(default, vars={
                         key: None for key in libs
                     }, iter=False)(**libs)
+                # default can be an SQLAlchemy function, e.g. sa.func.now()
                 elif isclass(default) and issubclass(default, sa.func.Function):
                     row['server_default'] = default
+                # default can also be a static value, e.g. `0`
                 else:
                     row['server_default'] = str(default)
             cols.append(sa.Column(**row))
