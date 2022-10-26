@@ -132,32 +132,37 @@ class DriveHandler(FormHandler):
             for s in self.user_fields:
                 self.args[f'user_{s.replace(".", "_")}'][i] = objectpath(user, s)
         self.check_filelimits()
+        self.files = self.args
         yield super().post(*path_args, **path_kwargs)
 
-    def after_update(self, **kwargs):
-        if self.request.method != 'POST':
-            return
-        uploads = self.request.files.get('file', [])
-        for upload, path in zip(uploads, self.args['path']):
-            with open(os.path.join(self.path, path), 'wb') as handle:
-                handle.write(upload['body'])
+    def pre_modify(self, **kwargs):
+        '''Called by FormHandler after updating the database, before modify. Save files here.
+
+        This allows the DriveHandler modify: action to access the files.
+        '''
+        # If POST or PUT, save all files
+        if self.request.method in {'POST', 'PUT'}:
+            uploads = self.request.files.get('file', [])
+            for upload, path in zip(uploads, self.files['path']):
+                with open(os.path.join(self.path, path), 'wb') as handle:
+                    handle.write(upload['body'])
+        elif self.request.method == 'DELETE':
+            for relpath in self.files['path']:
+                path = os.path.join(self.path, relpath)
+                if os.path.exists(path):
+                    os.remove(path)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):
         '''Deletes files from metadata DB and from file system'''
         conf = self.datasets.data
         files = gramex.data.filter(conf.url, table=conf.table, args=self.args)
-        result = yield super().delete(*path_args, **path_kwargs)
-        for index, row in files.iterrows():
-            path = os.path.join(self.path, row['path'])
-            if os.path.exists(path):
-                os.remove(path)
-        return result
+        self.files = files.to_dict(orient='list')
+        yield super().delete(*path_args, **path_kwargs)
 
     @tornado.gen.coroutine
     def put(self, *path_args, **path_kwargs):
         '''Update attributes and files'''
-        # PUT can update only 1 ID at a time. Use only the first upload, if any
         uploads = self.request.files.get('file', [])[:1]
         id = self.args.get('id', [-1])
         # User cannot change the path, size, date or user attributes
@@ -172,14 +177,11 @@ class DriveHandler(FormHandler):
             self.args.setdefault('date', []).append(int(time.time()))
             for s in self.user_fields:
                 self.args.setdefault(f'user_{s.replace(".", "_")}', []).append(objectpath(user, s))
-        conf = self.datasets.data
+        conf = self.datasets['data']
         files = gramex.data.filter(conf.url, table=conf.table, args={'id': id})
-        result = yield super().put(*path_args, **path_kwargs)
-        if len(uploads) and len(files):
-            path = os.path.join(self.path, files['path'].iloc[0])
-            with open(path, 'wb') as handle:
-                handle.write(uploads[0]['body'])
-        return result
+        self.files = files.to_dict(orient='list')
+        self.files.update(self.args)
+        yield super().put(*path_args, **path_kwargs)
 
     @classmethod
     def _ensure_type(cls, field, values):
