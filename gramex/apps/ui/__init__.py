@@ -46,7 +46,7 @@ def cdn_redirect(handler, folder_map={}):
     '''
     path = handler.path_args[0]
     for prefix, sub in folder_map.items():
-        if path.startswith(prefix):
+        if path == prefix or path.startswith(prefix + '/'):
             path = sub + path[len(prefix) :]
             break
     handler.redirect(f'https://cdn.jsdelivr.net/npm/{path}', permanent=handler.get_arg('v', None))
