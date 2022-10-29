@@ -9,7 +9,7 @@ from gramex.transforms import build_transform
 from gramex.config import app_log, ioloop_running
 
 
-class Task(object):
+class Task:
     '''Run a task. Then schedule it at the next occurrance.'''
 
     def __init__(
@@ -88,7 +88,7 @@ class Task(object):
             self.function = run_function
 
         # Run on schedule if any of the schedule periods are specified
-        periods = 'minutes hours dates months weekdays years'.split()
+        periods = ['minutes', 'hours', 'dates', 'months', 'weekdays', 'years']
         if any(key in schedule for key in periods):
             # Convert all period values into strings (e.g. 30 => '30'), and ignore any spaces
             cron_str = (str(schedule.get(key, '*')).replace(' ', '') for key in periods)

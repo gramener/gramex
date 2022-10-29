@@ -173,7 +173,7 @@ log:
       level: INFO
       keys: [time, ip, user.id, status, duration, method, uri, error]
       <<: *ROTATE_WEEKLY
-    # text is a legacy logger. Not recommended post v1.23
+    # text is a legacy logger. Not recommended post v1.23. DO NOT DELETE: backward compatibility
     text:
       class: logging.StreamHandler
       formatter: text
@@ -206,7 +206,8 @@ log:
       "()": colorlog.ColoredFormatter
       format: "%(log_color)s%(levelname)-8s%(reset)s%(asctime)s %(bold_yellow)s%(name)s:%(module)s%(reset)s %(green)s%(port)s%(reset)s %(message)s"
       datefmt: "%d-%b %H:%M:%S"
-    # Legacy formats. Not recommended post v1.23. Use TimedRotatingCSVHandler instead
+    # Legacy formats. Not recommended post v1.23. Use TimedRotatingCSVHandler instead.
+    # DO NOT DELETE: backward compatibility + test cases
     file:
       format: '%(levelname)1.1s,%(asctime)s,%(name)s:%(module)s,%(lineno)d,"%(message)s"'
       datefmt: "%Y-%m-%d %H:%M:%S"

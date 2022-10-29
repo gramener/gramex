@@ -35,14 +35,14 @@ class TestWatcher(TestGramex):
             if os.path.exists(path):
                 os.unlink(path)
 
-            with self.wait_for('created', url='/' + name, text='created'):
-                with io.open(path, 'w', encoding='utf-8') as handle:
-                    handle.write('created')
-
-            with self.wait_for('modified', url='/' + name, text='modified'):
-                with io.open(path, 'a', encoding='utf-8') as handle:
-                    handle.write('modified')
-
+            with self.wait_for('created', url='/' + name, text='created'), io.open(
+                path, 'w', encoding='utf-8'
+            ) as handle:
+                handle.write('created')
+            with self.wait_for('modified', url='/' + name, text='modified'), io.open(
+                path, 'a', encoding='utf-8'
+            ) as handle:
+                handle.write('modified')
             with self.wait_for('deleted', url='/' + name, code=404):
                 os.unlink(path)
 

@@ -11,10 +11,10 @@ from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
 
 # Expose joblob.load via gramex.ml
-load = joblib.load  # noqa
+load = joblib.load
 
 
-class Classifier(object):
+class Classifier:
     '''
     :arg data DataFrame: data to train / re-train the model with
     :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
@@ -340,9 +340,8 @@ def translate(*q, **kwargs):
     key = kwargs.pop('key', None)
     cache = kwargs.pop('cache', None)
     api = kwargs.pop('api', 'google')
-    if cache is not None:
-        if not isinstance(cache, dict):
-            raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
+    if cache is not None and not isinstance(cache, dict):
+        raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
 
     # Store data in cache with fixed columns: source, target, q, t
     result = pd.DataFrame(columns=['source', 'target', 'q', 't'])

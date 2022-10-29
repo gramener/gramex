@@ -173,7 +173,7 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _filterrows(cls, data, **kwargs):
-        for method in 'dropna drop_duplicates'.split():
+        for method in ('dropna', 'drop_duplicates'):
             action = kwargs.get(method, cls.store.load(method, True))
             if action:
                 subset = action if isinstance(action, list) else None
@@ -189,9 +189,7 @@ class MLHandler(FormHandler):
         orgdata = self.store.load_data()
         for col in np.intersect1d(data.columns, orgdata.columns):
             data[col] = data[col].astype(orgdata[col].dtype)
-        data = self._filtercols(data, **kwargs)
-        data = self._filterrows(data, **kwargs)
-        return data
+        return self._filtercols(data, **kwargs)
 
     def _predict(self, data=None, score_col=''):
         self._check_model_path()

@@ -1,3 +1,4 @@
+import contextlib
 import os
 import six
 import json
@@ -34,7 +35,7 @@ session_store_cache = {}
 Morsel._reserved.setdefault('samesite', 'SameSite')
 
 
-class BaseMixin(object):
+class BaseMixin:
     '''Common utilities for all handlers. This is usde by [gramex.handlers.BaseHandler][] and
     [gramex.handlers.BaseWebSocketHandler][].
     '''
@@ -197,7 +198,7 @@ class BaseMixin(object):
             origin = self.request.headers.get('Origin', '')
             raise HTTPError(
                 BAD_REQUEST,
-                f'url:{self.name}: CORS origin {origin} ' f'not in {self._cors["origins"]}',
+                f'url:{self.name}: CORS origin {origin} not in {self._cors["origins"]}',
             )
 
         # Check if method is in cors.methods
@@ -208,13 +209,13 @@ class BaseMixin(object):
         else:
             raise HTTPError(
                 BAD_REQUEST,
-                f'url:{self.name}: CORS method {method} ' f'not in {self._cors["methods"]}',
+                f'url:{self.name}: CORS method {method} not in {self._cors["methods"]}',
             )
 
         # Check if headers is in cors.headers
         headers = self.request.headers.get('Access-Control-Request-Headers', '')
         headers = self.get_list(headers, 'headers', '', caps=False)
-        allowed_headers = set([h.lower() for h in self._cors['headers']])
+        allowed_headers = {h.lower() for h in self._cors['headers']}
         diff = set()
         if '*' not in allowed_headers:
             for header in headers:
@@ -223,7 +224,7 @@ class BaseMixin(object):
         if diff:
             raise HTTPError(
                 BAD_REQUEST,
-                f'url:{self.name}: CORS headers {diff} ' f'not in {self._cors["headers"]}',
+                f'url:{self.name}: CORS headers {diff} not in {self._cors["headers"]}',
             )
 
         # If it succeeds, set relevant headers
@@ -299,12 +300,12 @@ class BaseMixin(object):
                 keys.append(key)
             elif isinstance(val, dict):
                 # If the session has expired, remove it
-                if val.get('_t', 0) < now:
-                    keys.append(key)
+                expired = val.get('_t', 0) < now
                 # If the session is inactive, remove it after a week.
                 # If we remove immediately, then we may lose WIP sessions.
                 # For example, people who opened a login page where _next_url was set
-                elif '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week:
+                inactive = '_i' in val and '_l' in val and val['_i'] + val['_l'] < now - week
+                if expired or inactive:
                     keys.append(key)
             else:
                 app_log.warning(f'Store key: {key} has value type {type(val)} (not dict)')
@@ -678,10 +679,8 @@ class BaseMixin(object):
         if self.request.protocol == 'https':
             kwargs['secure'] = True
         # Websockets cannot set cookies. They raise a RuntimeError. Ignore those.
-        try:
+        with contextlib.suppress(RuntimeError):
             self.set_secure_cookie(self._session_cookie_id, session_id, **kwargs)
-        except RuntimeError:
-            pass
         # Warn if app.session.domain is x.com but request comes from y.com.
         host = self.request.host_name
         if (
@@ -690,7 +689,7 @@ class BaseMixin(object):
             and not kwargs['domain'].endswith('.local')
         ):
             app_log.warning(
-                f'{self.name}: session.domain={kwargs["domain"]} ' f'but cookie sent to {host}'
+                f'{self.name}: session.domain={kwargs["domain"]} but cookie sent to {host}'
             )
         return session_id
 

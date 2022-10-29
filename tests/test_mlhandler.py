@@ -257,7 +257,7 @@ class TestSklearn(TestGramex):
         )
         new_score = resp.json()["score"]
         # Score should improve by at least 30%
-        self.assertGreaterEqual(new_score - org_score, 0.29)  # NOQA: E912
+        self.assertGreaterEqual(new_score - org_score, 0.29)
 
     def test_blank_slate(self):
         # Assert that a model doesn't have to exist
@@ -322,7 +322,7 @@ class TestSklearn(TestGramex):
             self.assertEqual(model.criterion, "entropy")
             self.assertEqual(model.splitter, "random")
             resp = self.get("/mlhandler?_action=score", method="post")
-            self.assertGreaterEqual(resp.json()["score"], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(resp.json()["score"], 0.8)
         finally:
             # restore the backup
             joblib.dump(clf, self.model_path)
@@ -384,7 +384,7 @@ class TestSklearn(TestGramex):
                 files={"file": ("iris.csv", buff.read())},
                 method="post",
             )
-            self.assertGreaterEqual(resp.json()["score"], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(resp.json()["score"], 0.8)
 
             r = self.get("/mlhandler?_cache").json()
             # Check that the data still has all columns
@@ -489,9 +489,7 @@ class TestSklearn(TestGramex):
             target.append(row["species"])
         params = "&".join([f"{k}={v}" for k, v in samples])
         resp = self.get(req + params)
-        self.assertGreaterEqual(
-            accuracy_score([c[target_col] for c in resp.json()], target), 0.8
-        )  # NOQA: E912
+        self.assertGreaterEqual(accuracy_score([c[target_col] for c in resp.json()], target), 0.8)
 
     def test_get_predictions_post_file(self):
         df = self.df.drop_duplicates()
@@ -566,7 +564,7 @@ class TestSklearn(TestGramex):
                 headers={"Content-Type": "application/json"},
             )
             self.assertEqual(r.status_code, OK)
-            self.assertGreaterEqual(r.json()["score"], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(r.json()["score"], 0.8)
             clf = joblib.load(self.model_path)
             self.assertIsInstance(clf, GaussianNB)
         finally:
@@ -590,7 +588,7 @@ class TestSklearn(TestGramex):
                 headers={"Content-Type": "application/json"},
             )
             self.assertEqual(r.status_code, OK)
-            self.assertGreaterEqual(r.json()["score"], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(r.json()["score"], 0.8)
         finally:
             joblib.dump(clf, self.model_path)
 
@@ -625,7 +623,7 @@ class TestSklearn(TestGramex):
                 data=test_df.to_json(orient="records"),
                 headers={"Content-Type": "application/json"},
             )
-            self.assertGreaterEqual(resp.json()["score"], 0.6)  # NOQA: E912
+            self.assertGreaterEqual(resp.json()["score"], 0.6)
         finally:
             # revert to the original cache
             self.get("/mlhandler?delete=cache", method="delete")
@@ -684,7 +682,7 @@ class TestSklearn(TestGramex):
                 data=df.to_json(orient="records"),
                 headers={"Content-Type": "application/json"},
             )
-            self.assertGreaterEqual(resp.json()["score"], 0.8)  # NOQA: E912
+            self.assertGreaterEqual(resp.json()["score"], 0.8)
         finally:
             joblib.dump(clf, self.model_path)
             # TODO: The target_col has to be reset to species for a correct teardown.
@@ -717,7 +715,7 @@ class TestSklearn(TestGramex):
         r = self.get("/mldecompose?_action=train", method="post")
         attributes = r.json()
         sv1, sv2 = attributes["singular_values_"]
-        self.assertEqual(round(sv1), 20)  # NOQA: E912
+        self.assertEqual(round(sv1), 20)
         self.assertEqual(round(sv2), 5)
         # Check if test data is transformed
         r = self.get(
@@ -732,7 +730,7 @@ class TestSklearn(TestGramex):
         # Check that the fitted attributes are available from GET ?_params too
         params = self.get("/mldecompose?_params").json()
         sv1, sv2 = params["attrs"]["singular_values_"]
-        self.assertEqual(round(sv1), 20)  # NOQA: E912
+        self.assertEqual(round(sv1), 20)
         self.assertEqual(round(sv2), 5)
 
     def test_pipeline_features(self):

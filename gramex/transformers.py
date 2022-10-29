@@ -102,7 +102,7 @@ def load_pretrained(klass, path, default, **kwargs):
         try:
             app_log.info(f"Attempting to load {klass.__name__} from {path}")
             model = cache.open(path, klass.from_pretrained, **kwargs)
-        except:  # NOQA: E722
+        except Exception:
             app_log.info(f"Falling back to default {klass.__name__}: {default}.")
             model = cache.open(default, klass.from_pretrained, **kwargs)
     else:
@@ -115,7 +115,7 @@ def load_pretrained(klass, path, default, **kwargs):
     return model
 
 
-class BaseTransformer(object):
+class BaseTransformer:
     def __init__(self, model=None, tokenizer=None, **kwargs):
         if model is None:
             model = self.DEFAULT_MODEL
@@ -186,7 +186,7 @@ class NER(BaseTransformer):
 
     @property
     def labels(self):
-        return set([k.split("-")[-1] for k in self.model.config.label2id])
+        return {k.split("-")[-1] for k in self.model.config.label2id}
 
     def predict(self, text, **kwargs):
         text = text.tolist()

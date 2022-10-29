@@ -1,3 +1,4 @@
+import contextlib
 import os
 import re
 import shutil
@@ -136,8 +137,5 @@ class TestUploadHandler(TestGramex):
     def tearDownClass(cls):
         FileUpload(cls.path).store.close()
         if os.path.exists(cls.path):
-            try:
+            with contextlib.suppress(OSError):
                 shutil.rmtree(cls.path, onerror=_ensure_remove)
-            except OSError:
-                # .meta.db may be in use. Ignore it.
-                pass

@@ -1,6 +1,7 @@
 '''
 Defines command line services to install, setup and run apps.
 '''
+import contextlib
 import io
 import os
 import sys
@@ -169,7 +170,7 @@ try:
     WindowsError
 except NameError:
     # On non-Windows systems, _ensure_remove just raises the exception
-    def _ensure_remove(remove, path, exc_info):  # noqa -- redefine function
+    def _ensure_remove(remove, path, exc_info):
         raise exc_info[1]
 
 else:
@@ -192,10 +193,8 @@ else:
                 delays = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
                 for delay in delays:
                     time.sleep(delay)
-                    try:
+                    with contextlib.suppress(WindowsError):
                         return os.remove(path)
-                    except WindowsError:
-                        pass
             # npm creates windows shortcuts that shutil.rmtree cannot delete.
             # os.listdir/scandir fails with a PATH_NOT_FOUND.
             # Delete these using win32com and try again.
@@ -214,7 +213,7 @@ else:
 
 
 def _try_remove(target, retries=100, delay=0.05, func=shutil.rmtree, **kwargs):
-    for count in range(retries):
+    for _index in range(retries):
         try:
             func(target, **kwargs)
         except TryAgainError:
@@ -284,9 +283,8 @@ def run_install(config):
         if os.path.exists(target):
             url = os.path.abspath(url).lower().rstrip(os.sep)
             target = os.path.abspath(target).lower().rstrip(os.sep)
-            if url != target:
-                if not safe_rmtree(target):
-                    return
+            if url != target and not safe_rmtree(target):
+                return
         if url != target:
             shutil.copytree(url, target)
             app_log.info(f'Copied {url} into {target}')
@@ -456,8 +454,7 @@ def flatten_config(config, base=None):
     for key, value in config.items():
         keystr = key if base is None else base + '.' + key
         if hasattr(value, 'items'):
-            for sub in flatten_config(value, keystr):
-                yield sub
+            yield from flatten_config(value, keystr)
         else:
             yield keystr, value
 
@@ -552,7 +549,7 @@ def run(args, kwargs):
         gramex.paths['base'] = Path('.')
         # If we run with updated parameters, save for next run under the .run config
         run_config = app_config.setdefault('run', {})
-        for key, val in kwargs.items():
+        for key in kwargs.keys():
             if key not in app_keys:
                 run_config[key] = app_config.pop(key)
         save_user_config(appname, app_config)
@@ -646,10 +643,8 @@ def init(args, kwargs):
     data['appname'] = appname
 
     # Create a git repo. But if git fails, do not stop. Continue with the rest.
-    try:
+    with contextlib.suppress(OSError):
         _run_console('git init')
-    except OSError:
-        pass
     # Install Git LFS if available. Set git_lfs=None if it fails, so .gitignore ignores assets/**
     data['git_lfs'] = which('git-lfs')
     if data['git_lfs']:

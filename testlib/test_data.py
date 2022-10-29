@@ -441,7 +441,7 @@ class TestFilter(unittest.TestCase):
 
     def test_mysql(self):
         url = dbutils.mysql_create_db(
-            server.mysql, 'test_filter', **{'sales': self.sales, 'dates': self.dates}
+            server.mysql, 'test_filter', sales=self.sales, dates=self.dates
         )
         self.check_filter_db('mysql', url, na_position='first')
         self.check_filter_dates('mysql', url)
@@ -457,9 +457,7 @@ class TestFilter(unittest.TestCase):
         self.check_filter_dates('postgres', url)
 
     def test_sqlite(self):
-        url = dbutils.sqlite_create_db(
-            'test_filter.db', **{'sales': self.sales, 'dates': self.dates}
-        )
+        url = dbutils.sqlite_create_db('test_filter.db', sales=self.sales, dates=self.dates)
         self.check_filter_db('sqlite', url, na_position='first')
         self.check_filter_dates('sqlite', url)
 
@@ -467,7 +465,7 @@ class TestFilter(unittest.TestCase):
         url = f'mongodb://{server.mongodb}'
         db = 'test_filter'
         try:
-            dbutils.mongodb_create_db(url, db, **{'sales': self.sales, 'empty': pd.DataFrame()})
+            dbutils.mongodb_create_db(url, db, sales=self.sales, empty=pd.DataFrame())
         except pymongo.errors.ServerSelectionTimeoutError:
             raise SkipTest(f'MongoDB not set up at {server.mongodb}')
         self.db.add('mongodb')
@@ -759,7 +757,7 @@ class TestDownload(unittest.TestCase):
         raise SkipTest('TODO')
 
 
-class FilterColsMixin(object):
+class FilterColsMixin:
 
     sales = gramex.cache.open(sales_file, 'xlsx')
     census = gramex.cache.open(sales_file, 'xlsx', sheet_name='census')

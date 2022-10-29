@@ -91,8 +91,8 @@ class DriveHandler(FormHandler):
         cls.datasets['data']['modify'] = download_plugin
 
     def check_filelimits(self):
-        allow = set(ext.lower() for ext in self.allow)
-        ignore = set(ext.lower() for ext in self.ignore)
+        allow = {ext.lower() for ext in self.allow}
+        ignore = {ext.lower() for ext in self.ignore}
         for name, ext, size in zip(self.args['file'], self.args['ext'], self.args['size']):
             if self.max_file_size and size > self.max_file_size:
                 raise HTTPError(REQUEST_ENTITY_TOO_LARGE, f'{name}: {size} > {self.max_file_size}')

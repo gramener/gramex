@@ -48,7 +48,7 @@ def get_cachefile(store):
         return CacheFile
 
 
-class CacheFile(object):
+class CacheFile:
     def __init__(self, key, store, handler, expire=None, statuses=None):
         self.key = key
         self.store = store

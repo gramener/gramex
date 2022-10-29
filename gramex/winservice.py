@@ -76,7 +76,7 @@ class GramexService(win32serviceutil.ServiceFramework):
             (self._svc_name_, f'\n{err}Path: {cwd}. Python: {exe}. Gramex: {gramexpath}'),
         )
         # See https://github.com/tornadoweb/tornado/issues/2608
-        if sys.version_info.minor >= 8:
+        if sys.version_info >= (3, 8):
             import asyncio
 
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())

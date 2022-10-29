@@ -1,5 +1,6 @@
 '''Caching utilities'''
 import atexit
+import contextlib
 import copy
 import inspect
 import io
@@ -24,17 +25,22 @@ from queue import Queue
 from threading import Thread
 from tornado.concurrent import Future
 from types import ModuleType
-from typing import List, Tuple, Union, Dict, Callable, BinaryIO
+from typing import List, Tuple, Union, Optional, Dict, Callable, BinaryIO
 from urllib.parse import urlparse
 
 
 MILLISECOND = 0.001  # in seconds
-_opener_defaults = dict(
-    mode='r', buffering=-1, encoding='utf-8', errors='strict', newline=None, closefd=True
-)
-_markdown_defaults = dict(
-    output_format='html5',
-    extensions=[
+_opener_defaults = {
+    'mode': 'r',
+    'buffering': -1,
+    'encoding': 'utf-8',
+    'errors': 'strict',
+    'newline': None,
+    'closefd': True,
+}
+_markdown_defaults = {
+    'output_format': 'html5',
+    'extensions': [
         'markdown.extensions.codehilite',
         'markdown.extensions.extra',
         'markdown.extensions.toc',
@@ -42,7 +48,7 @@ _markdown_defaults = dict(
         'markdown.extensions.sane_lists',
         'markdown.extensions.smarty',
     ],
-)
+}
 # A set of temporary files to delete on program exit
 _TEMP_FILES = set()
 _ID_CACHE = set()
@@ -161,8 +167,7 @@ def open(
             data = callback(path, **kwargs)
         elif callback_is_str:
             method = None
-            if callback in open_callback:
-                method = open_callback[callback]
+            method = open_callback.get(callback)
             if method is not None:
                 data = method(path, **kwargs)
             elif original_callback is None:
@@ -193,7 +198,7 @@ def open(
     return (result, reloaded) if _reload_status else result
 
 
-def stat(path: str) -> Tuple[Union[float, None], Union[int, None]]:
+def stat(path: str) -> Tuple[Optional[float], Optional[int]]:
     '''Returns file status. Used to check if a file has changed.
 
     If the `stat(file)` has changed, the file has been updated and needs to be reloaded.
@@ -412,7 +417,7 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
         return handle.name
 
 
-class Subprocess(object):
+class Subprocess:
     '''
     tornado.process.Subprocess does not work on Windows.
     https://github.com/tornadoweb/tornado/issues/1585
@@ -476,8 +481,8 @@ class Subprocess(object):
     def __init__(
         self,
         args: List[str],
-        stream_stdout: List[Union[Callable, str]] = [],
-        stream_stderr: List[Union[Callable, str]] = [],
+        stream_stdout: List[Union[Callable, str]] = (),
+        stream_stderr: List[Union[Callable, str]] = (),
         buffer_size: Union[str, int] = 0,
         **kwargs: dict,
     ):
@@ -717,7 +722,7 @@ def get_store(type, **kwargs):
         raise NotImplementedError(f'Store type: {type} not implemented')
 
 
-class KeyStore(object):
+class KeyStore:
     '''
     Base class for persistent dictionaries. (But KeyStore is not persistent.)
 
@@ -781,11 +786,9 @@ class KeyStore(object):
     def purge(self):
         '''Delete empty keys and flush'''
         for key in self.purge_keys(self.store):
-            try:
+            # If the key was already removed from store, ignore
+            with contextlib.suppress(KeyError):
                 del self.store[key]
-            except KeyError:
-                # If the key was already removed from store, ignore
-                pass
         self.flush()
 
     def close(self):
@@ -1012,7 +1015,7 @@ class JSONStore(KeyStore):
 
     def _read_json(self):
         try:
-            with io.open(self.path) as handle:  # noqa: no encoding for json
+            with io.open(self.path) as handle:
                 return json.load(handle, cls=CustomJSONDecoder)
         except (IOError, ValueError):
             return {}
@@ -1021,7 +1024,7 @@ class JSONStore(KeyStore):
         json_value = json.dumps(
             data, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
         )
-        with io.open(self.path, 'w') as handle:  # noqa: no encoding for json
+        with io.open(self.path, 'w') as handle:
             handle.write(json_value)
 
     def dump(self, key, value):
@@ -1035,7 +1038,7 @@ class JSONStore(KeyStore):
 
     def flush(self, purge=False):
         super(JSONStore, self).flush()
-        if getattr(self, 'changed') or purge:
+        if getattr(self, 'changed', False) or purge:
             app_log.debug(f"{'Purging' if purge else 'Flushing'} {self.path}")
             # Don't dump contents. That can overwrite other instances' updates.
             # Instead: read, apply updates, and save.
@@ -1229,32 +1232,32 @@ def hashed(val):
 _OPEN_CACHE = {}
 # If _OPEN_CACHE is a Redis/Disk/... cache that can't store the object, use fallback memory cache
 _FALLBACK_MEMORY_CACHE = {}
-open_callback = dict(
-    bin=opener(None, read=True, mode='rb', encoding=None, errors=None),
-    txt=opener(None, read=True),
-    text=opener(None, read=True),
-    csv=pd.read_csv,
-    excel=read_excel,
-    xls=pd.read_excel,
-    xlsx=read_excel,
-    hdf=pd.read_hdf,
-    h5=pd.read_hdf,
-    html=pd.read_html,
-    json=opener(json.load),
-    jsondata=pd.read_json,
-    sas=pd.read_sas,
-    stata=pd.read_stata,
-    table=pd.read_table,
-    parquet=pd.read_parquet,
-    feather=pd.read_feather,
-    md=_markdown,
-    markdown=_markdown,
-    tmpl=_template,
-    template=_template,
-    config=PathConfig,
-    yml=_yaml,
-    yaml=_yaml,
-)
+open_callback = {
+    'bin': opener(None, read=True, mode='rb', encoding=None, errors=None),
+    'txt': opener(None, read=True),
+    'text': opener(None, read=True),
+    'csv': pd.read_csv,
+    'excel': read_excel,
+    'xls': pd.read_excel,
+    'xlsx': read_excel,
+    'hdf': pd.read_hdf,
+    'h5': pd.read_hdf,
+    'html': pd.read_html,
+    'json': opener(json.load),
+    'jsondata': pd.read_json,
+    'sas': pd.read_sas,
+    'stata': pd.read_stata,
+    'table': pd.read_table,
+    'parquet': pd.read_parquet,
+    'feather': pd.read_feather,
+    'md': _markdown,
+    'markdown': _markdown,
+    'tmpl': _template,
+    'template': _template,
+    'config': PathConfig,
+    'yml': _yaml,
+    'yaml': _yaml,
+}
 
 
 def _relpath(path):
@@ -1288,15 +1291,15 @@ def set_cache(cache, old_cache):
     return cache
 
 
-_SAVE_CALLBACKS = dict(
-    json='to_json',
-    csv='to_csv',
-    xlsx='to_excel',
-    hdf='to_hdf',
-    html='to_html',
-    stata='to_stata',
+_SAVE_CALLBACKS = {
+    'json': 'to_json',
+    'csv': 'to_csv',
+    'xlsx': 'to_excel',
+    'hdf': 'to_hdf',
+    'html': 'to_html',
+    'stata': 'to_stata',
     # Other configurations not supported
-)
+}
 
 
 # gramex.cache.query() stores its cache here

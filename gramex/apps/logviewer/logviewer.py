@@ -29,7 +29,7 @@ DB_CONFIG = {
 extra_columns = []
 for key in conf.get('schedule', []):
     if 'kwargs' in conf.schedule[key] and 'custom_dims' in conf.schedule[key].kwargs:
-        extra_columns = [dimension for dimension in conf.schedule[key].kwargs.custom_dims]
+        extra_columns = list(conf.schedule[key].kwargs.custom_dims)
 
 DB_CONFIG['dimensions'].extend(extra_columns)
 
@@ -87,8 +87,7 @@ def prepare_logs(df, session_threshold=15, cutoff_buffer=0, custom_dims={}):
         df[key] = fn(df)
 
     # add new_session
-    df = add_session(df, duration=session_threshold, cutoff_buffer=cutoff_buffer)
-    return df
+    return add_session(df, duration=session_threshold, cutoff_buffer=cutoff_buffer)
 
 
 def summarize(
@@ -136,7 +135,7 @@ def summarize(
         log_filter = gramex.data.filter(**db, table=table(levels[-1]), args={})
         max_date = log_filter.sort_values('time', ascending=False)['time'].iloc[0]
         max_date = pd.to_datetime(max_date)
-    except Exception:  # noqa
+    except Exception:
         max_date = None
     else:
         app_log.info(f'logviewer.summarize: processing since {max_date}')
@@ -240,8 +239,7 @@ def prepare_where(query, args, columns):
     if not wheres:
         return wheres
     prepend = 'WHERE ' if ' WHERE ' not in query else 'AND '
-    wheres = prepend + wheres
-    return wheres
+    return prepend + wheres
 
 
 def query(handler, args):
@@ -251,8 +249,7 @@ def query(handler, args):
     case = handler.path_kwargs.get('query')
     query = queries.get(case)
     wheres = prepare_where(query, args, DB_CONFIG['table_columns'])
-    stmt = query.format(table=table, where=wheres)
-    return stmt
+    return query.format(table=table, where=wheres)
 
 
 def apply_transform(data, spec):

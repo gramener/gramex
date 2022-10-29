@@ -11,7 +11,7 @@ from gramex.config import app_log
 from typing import List, Union
 
 
-class SMTPMailer(object):
+class SMTPMailer:
     '''Creates an object capable of sending HTML emails.
 
     Examples:
@@ -212,7 +212,8 @@ def message(
                 content = doc['body']
             else:
                 filename = doc
-                content = open(filename, 'rb').read()
+                with open(filename, 'rb') as handle:
+                    content = handle.read()
                 content_type = guess_type(filename, strict=False)[0]
             if content_type is None:
                 content_type = 'application/octet-stream'
@@ -244,7 +245,7 @@ def _merge(value):
     return ', '.join(value) if isinstance(value, list) else value
 
 
-class SMTPStub(object):
+class SMTPStub:
     # A minimal test stub for smtplib.SMTP with features used in this module
     stubs = []
 

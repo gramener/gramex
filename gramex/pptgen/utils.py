@@ -64,7 +64,7 @@ def stack_elements(replica, shape, stack=False, margin=None):
     grp_sp = shape.element
     # Adding a 15% default margin between original and new object.
     default_margin = 0.15
-    margin = default_margin if not margin else margin
+    margin = margin if margin else default_margin
     for index in range(replica):
         # Adding a cloned object to shape
         extend_shape = copy.deepcopy(grp_sp)
@@ -172,16 +172,14 @@ def manage_slides(prs, config):
     slide_numbers = config.pop('only', None)
     if slide_numbers:
         if isinstance(slide_numbers, int):
-            slide_numbers = set([int(slide_numbers) - 1])
+            slide_numbers = {int(slide_numbers) - 1}
         elif isinstance(slide_numbers, list):
-            slide_numbers = set([int(i) - 1 for i in slide_numbers])
+            slide_numbers = {int(i) - 1 for i in slide_numbers}
         else:
             raise ValueError('Slide numbers must be a list of integers or a single slide number.')
         slides = set(range(len(prs.slides)))
-        remove_status = 0
-        for slide_num in sorted(slides - slide_numbers):
+        for remove_status, slide_num in enumerate(sorted(slides - slide_numbers)):
             delete_slide(prs, slide_num - remove_status)
-            remove_status += 1
     return prs
 
 
@@ -379,8 +377,7 @@ def fill_color(**kwargs):
         s = f'<a:sysClr {ns} val="{sysclr}"/>'
     elif scrgbclr:
         s = f'<a:scrgbClr {ns} r="%.0f" g="%.0f" b="%.0f"/>' % tuple(scrgbclr)
-    color = objectify.fromstring(s)
-    return color
+    return objectify.fromstring(s)
 
 
 def xmlns(*prefixes):
@@ -559,7 +556,7 @@ def squarified(x, y, w, h, data):
     return np.nan_to_num(result)
 
 
-class SubTreemap(object):
+class SubTreemap:
     '''
     Yield a hierarchical treemap at multiple levels.
 
@@ -629,11 +626,9 @@ class SubTreemap(object):
             # For each box, dive into the next level
             filter2 = dict(filter)
             filter2.update({key: v2[key]})
-            for output in self.draw(
+            yield from self.draw(
                 w2 - 2 * pad, h2 - 2 * pad, x=x2 + pad, y=y2 + pad, filter=filter2, level=level + 1
-            ):
-                yield output
-
+            )
             # Once we've finished yielding smaller boxes, yield the parent box
             yield x2, y2, w2, h2, (level, v2)
 

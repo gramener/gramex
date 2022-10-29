@@ -57,7 +57,7 @@ class BuildTransform(unittest.TestCase):
     '''Test build_transform CODE output'''
 
     dummy = os.path.join(folder, 'dummy.py')
-    files = set([dummy])
+    files = {dummy}
 
     def check_transform(
         self, transform, yaml_code, vars=None, kwargs=None, cache=True, iter=True, doc=None
@@ -747,7 +747,7 @@ class Flattener(unittest.TestCase):
             'none-invalid': None,
             'float-invalid': 1.0,
             'dict-invalid': {},
-            'tuple-invalid': tuple(),
+            'tuple-invalid': (),
             'set-invalid': set(),
             'list-invalid': [],
         }

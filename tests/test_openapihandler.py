@@ -8,10 +8,7 @@ class TestOpenAPIHandler(TestGramex):
 
     def has_param(self, params, **kwargs):
         items = kwargs.items()
-        for param in params:
-            if items <= param.items():
-                return True
-        return False
+        return any(items <= param.items() for param in params)
 
     def test_openapi(self):
         # OpenAPI spec is a JSON response

@@ -97,13 +97,11 @@ def walk(node):
     '''
     if hasattr(node, 'items'):
         for key, value in list(node.items()):
-            for item in walk(value):
-                yield item
+            yield from walk(value)
             yield key, value, node
     elif isinstance(node, list):
         for index, value in enumerate(node):
-            for item in walk(value):
-                yield item
+            yield from walk(value)
             yield index, value, node
 
 
@@ -154,7 +152,7 @@ class ChainConfig(AttrDict):
     def __pos__(self):
         '''+config returns layers merged in order, removing null keys'''
         conf = AttrDict()
-        for name, config in self.items():
+        for _name, config in self.items():
             if hasattr(config, '__pos__'):
                 config.__pos__()
             merge(old=conf, new=config, mode='overwrite')
@@ -388,7 +386,7 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
     # Evaluate conditionals. "x if cond: y" becomes "x: y" if cond evals to True
     remove, replace = [], []
     frozen_vars = dict(variables)
-    for key, value, node in walk(result):
+    for key, _value, node in walk(result):
         if isinstance(key, str) and ' if ' in key:
             # Evaluate conditional
             base, expr = key.split(' if ', 2)

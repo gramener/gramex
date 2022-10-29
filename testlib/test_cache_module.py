@@ -330,11 +330,11 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(cache_folder, 'data.csv')
         data = pd.read_csv(path, encoding='utf-8')
         config = {
-            'csv': dict(index=False, ignore_keyword=1),
-            'xlsx': dict(index=False, sheet_name='Sheet1', ignore_keyword=1),
-            'html': dict(index=False, escape=False, ignore_keyword=1),
-            'hdf': dict(index=False, key='data', format='fixed', ignore_keyword=1),
-            'json': dict(orient='records', ignore_keyword=1),
+            'csv': {'index': False, 'ignore_keyword': 1},
+            'xlsx': {'index': False, 'sheet_name': 'Sheet1', 'ignore_keyword': 1},
+            'html': {'index': False, 'escape': False, 'ignore_keyword': 1},
+            'hdf': {'index': False, 'key': 'data', 'format': 'fixed', 'ignore_keyword': 1},
+            'json': {'orient': 'records', 'ignore_keyword': 1},
             # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
         }
         for ext, kwargs in config.items():
@@ -466,7 +466,7 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(cache_folder, 'data.csv')
 
         data = gramex.cache.open(path, 'csv', transform=len, _cache=cache)
-        eq_(data, len(pd.read_csv(path)))  # noqa - ignore encoding
+        eq_(data, len(pd.read_csv(path)))
         cache_key = (path, 'csv', hashfn(len), frozenset([]))
         self.assertIn(cache_key, cache)
 
@@ -474,13 +474,13 @@ class TestOpen(unittest.TestCase):
             return d['a'].sum()
 
         data = gramex.cache.open(path, 'csv', transform=transform2, _cache=cache)
-        eq_(data, pd.read_csv(path)['a'].sum())  # noqa - ignore encoding
+        eq_(data, pd.read_csv(path)['a'].sum())
         cache_key = (path, 'csv', hashfn(transform2), frozenset([]))
         self.assertIn(cache_key, cache)
 
         # Check that non-callable transforms are ignored but used as cache key
         data = gramex.cache.open(path, 'csv', transform='ignore', _cache=cache)
-        afe(data, pd.read_csv(path))  # noqa - ignore encoding
+        afe(data, pd.read_csv(path))
         cache_key = (path, 'csv', hashfn('ignore'), frozenset([]))
         self.assertIn(cache_key, cache)
 
@@ -530,7 +530,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
 
     def test_query_cache(self):
         sql = 'SELECT * FROM t1 LIMIT 2'
-        kwargs = dict(sql=sql, engine=self.engine, state=['t1'], _reload_status=True)
+        kwargs = {'sql': sql, 'engine': self.engine, 'state': ['t1'], '_reload_status': True}
         c0 = len(gramex.cache._QUERY_CACHE)
         eq_(gramex.cache.query(**kwargs)[1], True)
         c1 = len(gramex.cache._QUERY_CACHE)
@@ -547,7 +547,7 @@ class TestSqliteCacheQuery(unittest.TestCase):
         for state in self.states:
             msg = 'failed at state=%s, url=%s' % (state, self.url)
             sql = 'SELECT * FROM t1'
-            kwargs = dict(sql=sql, engine=self.engine, state=state, _reload_status=True)
+            kwargs = {'sql': sql, 'engine': self.engine, 'state': state, '_reload_status': True}
             eq_(gramex.cache.query(**kwargs)[1], True, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)
             eq_(gramex.cache.query(**kwargs)[1], False, msg)

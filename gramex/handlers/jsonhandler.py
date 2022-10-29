@@ -52,7 +52,7 @@ class JSONHandler(BaseHandler):
                 if _loaded.get(path, 0) <= os.stat(path).st_mtime:
                     # Don't use encoding when reading JSON. We're using ensure_ascii=True
                     # Besides, when handling Py2 & Py3, just ignoring encoding works best
-                    with open(path, mode='r') as handle:  # noqa
+                    with open(path, mode='r') as handle:
                         try:
                             _jsonstores[path] = json.load(handle)
                             _loaded[path] = time.time()
@@ -158,7 +158,7 @@ class JSONHandler(BaseHandler):
                 os.makedirs(folder)
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
-            with open(self.path, mode='w') as handle:  # noqa
+            with open(self.path, mode='w') as handle:
                 json.dump(_jsonstores.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
         super(JSONHandler, self).on_finish()

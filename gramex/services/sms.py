@@ -3,7 +3,7 @@ from gramex.http import OK
 from gramex.config import app_log
 
 
-class Notifier(object):
+class Notifier:
     def send(self, to, subject, sender):
         '''
         Send an SMS to the ``to`` mobile with ``subject`` as the contents. ``sender`` optional.

@@ -12,7 +12,8 @@ def abs_path():
 
 def fontwidth(string, font='sans-serif'):
     """Function: Returns the px width of a string assuming a base size of 16px."""
-    _fontwidth = json.load(open(os.path.join(abs_path(), 'fonts.json'), encoding='utf-8'))
+    with open(os.path.join(abs_path(), 'fonts.json'), encoding='utf-8') as handle:
+        _fontwidth = json.load(handle)
     codes_len = 127
     default_width = 32
     default_width_idx = 120

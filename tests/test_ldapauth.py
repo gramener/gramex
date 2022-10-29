@@ -15,9 +15,12 @@ class TestLDAPAuth(TestGramex):
         tree = lxml.html.fromstring(r.text)
 
         # Create form submission data
-        data = {'user': user, 'password': password}
-        # TODO: set this as a cookie
-        data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+        # TODO: set _xsrf as a cookie
+        data = {
+            'user': user,
+            'password': password,
+            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+        }
 
         # Submitting the correct password redirects
         return self.session.post(url, timeout=10, data=data)

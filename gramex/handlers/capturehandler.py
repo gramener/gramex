@@ -32,7 +32,7 @@ _IGNORE_HEADERS = {
 DEFAULT_TIMEOUT = 10
 
 
-class Capture(object):
+class Capture:
     default_port = 9900  # Default port to run CaptureJS at
     check_interval = 0.05  # Frequency (seconds) to check if self.started
     # Set engine configurations for PhantomJS and Puppeteer
@@ -176,7 +176,7 @@ class Capture(object):
         server = response.headers.get('Server', '')
         parts = server.split('/', 2)
         script = self.engine.script
-        if not len(parts) == 2 or parts[0] != self.engine.name or parts[1] < self.engine.version:
+        if len(parts) != 2 or parts[0] != self.engine.name or parts[1] < self.engine.version:
             raise RuntimeError(f'Server: {server} at {self.url} is not {script}')
 
     @tornado.gen.coroutine
@@ -286,20 +286,19 @@ class CaptureHandler(BaseHandler):
     def setup(cls, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT, **kwargs):
         super(CaptureHandler, cls).setup(**kwargs)
         # Create a new Capture only if the config has changed.
-        config = dict(engine=engine, port=port, url=url, cmd=cmd, timeout=timeout)
+        config = {'engine': engine, 'port': port, 'url': url, 'cmd': cmd, 'timeout': timeout}
         config_str = json.dumps(config, separators=[',', ':'], sort_keys=True)
         if config_str not in cls.captures:
-            cls.captures[config_str] = cls.capture = Capture(**config)
-        else:
-            cls.capture = cls.captures[config_str]
+            cls.captures[config_str] = Capture(**config)
+        cls.capture = cls.captures[config_str]
         # TODO: if the old config is no longer used, close it
         cls.ext = {
-            'pdf': dict(mime='application/pdf'),
-            'png': dict(mime='image/png'),
-            'jpg': dict(mime='image/jpeg'),
-            'jpeg': dict(mime='image/jpeg'),
-            'gif': dict(mime='image/gif'),
-            'pptx': dict(mime=_PPTX_MIME),
+            'pdf': {'mime': 'application/pdf'},
+            'png': {'mime': 'image/png'},
+            'jpg': {'mime': 'image/jpeg'},
+            'jpeg': {'mime': 'image/jpeg'},
+            'gif': {'mime': 'image/gif'},
+            'pptx': {'mime': _PPTX_MIME},
         }
 
     @tornado.gen.coroutine

@@ -104,7 +104,7 @@ def app(conf: dict) -> None:
         try:
             info.app.listen(**conf.listen)
         except socket.error as e:
-            port_used_codes = dict(windows=10048, linux=98)
+            port_used_codes = {'windows': 10048, 'linux': 98}
             if e.errno not in port_used_codes.values():
                 raise
             logging.error(
@@ -224,7 +224,7 @@ def alert(conf: dict) -> None:
     from . import scheduler
 
     _stop_all_tasks(info.alert)
-    schedule_keys = 'minutes hours dates months weekdays years startup utc'.split()
+    schedule_keys = ['minutes', 'hours', 'dates', 'months', 'weekdays', 'years', 'startup', 'utc']
 
     for name, alert in conf.items():
         _key = cache_key('alert', alert)
@@ -354,12 +354,11 @@ def watch(conf: dict) -> None:
         if not isinstance(config['paths'], (list, set, tuple)):
             config['paths'] = [config['paths']]
         for event in events:
-            if event in config:
+            if event in config and not callable(config[event]):
+                config[event] = locate(config[event], modules=['gramex.transforms'])
                 if not callable(config[event]):
-                    config[event] = locate(config[event], modules=['gramex.transforms'])
-                    if not callable(config[event]):
-                        app_log.error(f'watch:{name}.{event} is not callable')
-                        config[event] = lambda event: None
+                    app_log.error(f'watch:{name}.{event} is not callable')
+                    config[event] = lambda event: None
         _cache[_key] = config
         watcher.watch(name, **_cache[_key])
 
@@ -515,7 +514,7 @@ def gramexlog(conf: dict) -> None:
     flush = conf.pop('flush', 5)
     ioloop = info.main_ioloop or tornado.ioloop.IOLoop.current()
     # Set the defaultapp to the first config key under gramexlog:
-    if len(conf):
+    if conf:
         info.gramexlog.defaultapp = next(iter(conf.keys()))
     for app, app_conf in conf.items():
         app_config = info.gramexlog.apps[app] = AttrDict()
@@ -579,9 +578,9 @@ class GramexApp(tornado.web.Application):
             handler.log_request()
         # Log the request with the handler name at the end.
         status = handler.get_status()
-        if status < 400:  # noqa: < 400 is any successful request
+        if status < 400:
             log_method = gramex.cache.app_log.info
-        elif status < 500:  # noqa: 400-499 is a user error
+        elif status < 500:
             log_method = gramex.cache.app_log.warning
         else:  # 500+ is a server error
             log_method = gramex.cache.app_log.error
@@ -937,7 +936,7 @@ def _get_cache_key(conf, name):
         else:
             app_log.warning(f'url:{name}: ignoring invalid cache key: {key}')
     # If none of the keys are valid, use the default request key
-    if not len(key_getters):
+    if not key_getters:
         key_getters = [default_key]
 
     method = 'def cache_key(handler):\n'

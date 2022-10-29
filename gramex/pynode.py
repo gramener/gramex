@@ -14,7 +14,7 @@ from gramex.config import app_log
 _info = {}
 
 
-class Node(object):
+class Node:
     '''
     Usage::
 

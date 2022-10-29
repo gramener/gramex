@@ -18,7 +18,7 @@ class TestUI(TestGramex):
         check(
             '/ui/bootstrap/dist/css/bootstrap.min.css?v=1',
             f'{cdn}/bootstrap@4/dist/css/bootstrap.min.css',
-            code=MOVED_PERMANENTLY
+            code=MOVED_PERMANENTLY,
         )
         check('/ui/bootstrap5', f'{cdn}/bootstrap@5')
         check('/ui/daterangepickerv3', f'{cdn}/daterangepicker@3')

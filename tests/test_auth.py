@@ -104,8 +104,11 @@ class AuthBase(TestGramex):
         tree = self.check_css(r.text, ('h1', 'Auth'))
 
         # Create form submission data
-        data = {'user': user, 'password': password}
-        data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+        data = {
+            'user': user,
+            'password': password,
+            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+        }
         data.update(post_args)
 
         # Submitting the correct password redirects
@@ -151,7 +154,7 @@ class AuthBase(TestGramex):
             eq_(urljoin(server.base_url, r.headers['Location']), urljoin(server.base_url, url))
 
 
-class LoginMixin(object):
+class LoginMixin:
     def test_login(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         old_sid = self.session.cookies['sid2']
@@ -196,7 +199,7 @@ class LoginMixin(object):
         )
 
 
-class LoginFailureMixin(object):
+class LoginFailureMixin:
     def check_delay(self, start, min=None, max=None):
         t = time.time()
         # Give a 0.1s buffer in case of timing delays
@@ -571,7 +574,7 @@ class TestRules(AuthBase):
         eq_(session['user']['email'], 'gamma@null.com')
 
         upass = {'γ': 'gamma'}
-        for user in 'alpha beta γ'.split():
+        for user in ['alpha', 'beta', 'γ']:
             self.login_ok(user, upass.get(user, user), check_next='/')
             session = self.session.get(server.base_url + '/auth/session').json()
             # Check that no users have attributes defined in an unreachable rule
@@ -587,7 +590,7 @@ class TestRulesFile(TestRules):
         super(TestRulesFile, self).test_default()
         upass = {'γ': 'gamma'}
         expires_duration = 3.14
-        for user in 'alpha beta γ'.split():
+        for user in ['alpha', 'beta', 'γ']:
             self.login_ok(user, upass.get(user, user), check_next='/')
             session = self.session.get(server.base_url + '/auth/session').json()
             eq_(session['user']['cookie_expires'], expires_duration)
@@ -680,10 +683,10 @@ class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     def create_database(url):
         writer = pd.ExcelWriter(url)
         dummy = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})
-        dummy.to_excel(writer, 'Sheet1', index=False)  # noqa - encoding not required
+        dummy.to_excel(writer, 'Sheet1', index=False)
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_excel(writer, 'auth', index=False)  # noqa - encoding not required
+        data.to_excel(writer, 'auth', index=False)
         writer.save()
         tempfiles['dbexcel'] = url
 

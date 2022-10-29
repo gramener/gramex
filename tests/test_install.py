@@ -15,7 +15,7 @@ from . import server
 folder = os.path.dirname(os.path.abspath(__file__))
 
 
-class MockGramex(object):
+class MockGramex:
     def __init__(self, target, instance=gramex, method='init'):
         self.instance = instance
         self.method = method

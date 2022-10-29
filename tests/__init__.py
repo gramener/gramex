@@ -1,3 +1,4 @@
+import contextlib
 import os
 import requests
 import shutil
@@ -179,7 +180,5 @@ def remove_if_possible(target):
     '''
     if not os.path.exists(target):
         return
-    try:
+    with contextlib.suppress(PermissionError):
         os.remove(target)
-    except PermissionError:
-        pass
