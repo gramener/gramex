@@ -3,8 +3,7 @@ coverage              # For code coverage in .travis.yml
 
 boto3                 # For Amazon SNS service testing
 cssselect             # For HTML testing (test_admin.py)
-# In .travis.yml, we specify ElasticSearch 7.x. So use same version here
-elasticsearch>=7.0.0,<8.0.0   # OPT: Test gramexlog: features
+elasticsearch7        # OPT: Test gramexlog: features
 pdfminer.six          # For CaptureHandler testing
 psycopg2 >= 2.7.1     # For PostgreSQL connections
 pymongo               # For MongoDB tests
