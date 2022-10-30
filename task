@@ -28,10 +28,6 @@ testsetup () {
   # conda is required to detect R HOME for gramex.ml.r
   # pywin32 is required for install.py and winservice
   $(which conda) install -y pywin32 conda
-  # rpy2 and r-markdown are to test gramex.ml.r
-  # conda-forge has recent versions of rpy2. Old versions won't work with Pandas 1.x
-  # See https://github.com/rpy2/rpy2/issues/680
-  $(which conda) install -y -c conda-forge rpy2 r-markdown
   # Yarn is used for tests.test_install. Install it if required
   command -v yarn >/dev/null 2>&1 || npm install -g yarn
 }
