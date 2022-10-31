@@ -28,8 +28,6 @@ testsetup () {
   # conda is required to detect R HOME for gramex.ml.r
   # pywin32 is required for install.py and winservice
   $(which conda) install -y pywin32 conda
-  # Yarn is used for tests.test_install. Install it if required
-  command -v yarn >/dev/null 2>&1 || npm install -g yarn
 }
 
 test () {
