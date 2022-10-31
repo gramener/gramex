@@ -22,14 +22,6 @@ lint () {
   bandit . --recursive --quiet
 }
 
-testsetup () {
-  # Install all test requirements
-  pip install -r tests/requirements.txt
-  # conda is required to detect R HOME for gramex.ml.r
-  # pywin32 is required for install.py and winservice
-  $(which conda) install -y pywin32 conda
-}
-
 test () {
   nosetests
   (cd tests/filemanager; npm install; npm test)
