@@ -935,6 +935,7 @@ def filtercols(
     queryfile: str = None,
     transform: Callable = None,
     transform_kwargs: dict = {},
+    separator: str = ',',
     **kwargs: dict,
 ) -> pd.DataFrame:
     '''Filter data and extract unique values of each column using URL query parameters.
@@ -963,6 +964,9 @@ def filtercols(
             DataFrame. Applied to both file and SQLAlchemy urls.
         transform_kwargs: optional keyword arguments to be passed to the
             transform function -- apart from data
+        separator: string that separates columns in a hierarchy. Defaults to `,`.
+            For example, `?_c=a,b` treats columns `a` and `b` as a tuple / hierarchy and
+            filters them *together*.
         **kwargs: Additional parameters are passed to
             [gramex.cache.open][] or `sqlalchemy.create_engine`
 
@@ -1029,16 +1033,20 @@ def filtercols(
         limit = min(int(v) for v in limit)
     except ValueError:
         raise ValueError(f'_limit not integer: {limit!r}')
+    # Get unique values for each column
     for col in args.get('_c', []):
+        # If ?_c=a,b then treat columns a and b as a pair
+        cols = col.split(separator)
         # col_args takes _sort, _c and all filters from args
         col_args = {}
         for key, value in args.items():
+            # Apply only _sort as a control. Ignore _by, _limit, _offset, etc.
             if key in ['_sort']:
                 col_args[key] = value
-            # Ignore any filters on the column we are currently processing
-            if not key.startswith('_') and key != col:
+            # Apply filters. But ignore filters on the columns we're currently processing
+            if not key.startswith('_') and key not in cols:
                 col_args[key] = value
-        col_args['_by'] = [col]
+        col_args['_by'] = cols
         col_args['_c'] = []
         col_args['_limit'] = [limit]
         result[col] = gramex.data.filter(url, args=col_args, **kwargs)
@@ -1532,7 +1540,7 @@ def _filter_frame(
                 if not agg_cols:
                     # If no aggregation columns exist, just show groupby columns.
                     data = data.groupby(by).agg('size').reset_index()
-                    data = data.iloc[:, [0]]
+                    data = data.iloc[:, : len(by)]
                 else:
                     data = data.groupby(by).agg(agg_dict)
                     data.columns = agg_cols

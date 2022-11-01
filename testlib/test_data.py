@@ -979,9 +979,9 @@ class TestAlter(unittest.TestCase):
                 ]
             ),
         )
-        # The `when` column should be plus-or-minus 3 seconds from now
-        before = pd.to_datetime('now') - pd.tseries.offsets.Second(3)
-        after = pd.to_datetime('now') + pd.tseries.offsets.Second(3)
+        # `when` column should be plus-or-minus 24 hours from now, to handle time zones
+        before = pd.to_datetime('now') - pd.tseries.offsets.Hour(24)
+        after = pd.to_datetime('now') + pd.tseries.offsets.Hour(24)
         ok_((result['when'] >= before).all())
         ok_((result['when'] <= after).all())
 

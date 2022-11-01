@@ -4,37 +4,39 @@ import pandas as pd
 from . import TestGramex, folder, afe
 
 
+def eqframe(result, expected, **kwargs):
+    '''Same as assert_frame_equal or afe, but does not compare index'''
+    actual = pd.DataFrame(result)
+    expected.index = actual.index
+    afe(actual, expected, **kwargs)
+
+
+def unique_of(data: pd.DataFrame, cols):
+    return data.groupby(cols).size().reset_index().drop(0, 1)
+
+
 class TestFilterHandler(TestGramex):
     sales_file = os.path.join(folder, 'sales.xlsx')
     sales = gramex.cache.open(sales_file, 'xlsx')
     census = gramex.cache.open(sales_file, 'xlsx', sheet_name='census')
 
     def test_filters(self):
-        def eqframe(result, expected, **kwargs):
-            '''Same as assert_frame_equal or afe, but does not compare index'''
-            actual = pd.DataFrame(result)
-            expected.index = actual.index
-            afe(actual, expected, **kwargs)
-
-        def unique_of(data, cols):
-            return data.groupby(cols).size().reset_index().drop(0, 1)
-
         self.check('/filters/sales?_c=city')
 
         result = self.get('/filters/sales', params={'_c': ['city']}).json()
         expected = unique_of(self.sales, 'city')
-        eqframe(result['city'], expected, check_like=True)
+        eqframe(result['city'], expected)
 
         result = self.get('/filters/sales', params={'_c': ['city', 'product']}).json()
         for col in ['city', 'product']:
             expected_col = unique_of(self.sales, col)
-            eqframe(result[col], expected_col, check_like=True)
+            eqframe(result[col], expected_col)
 
         limit = 10
         _args = {'_c': ['city'], '_limit': [limit]}
         result = self.get('/filters/sales', params=_args).json()
         expected = unique_of(self.sales, 'city').head(limit)
-        eqframe(result['city'], expected, check_like=True)
+        eqframe(result['city'], expected)
 
         _args = {'_c': ['city'], '_sort': ['city']}
         result = self.get('/filters/sales', params=_args).json()
@@ -43,8 +45,8 @@ class TestFilterHandler(TestGramex):
 
         _args = {'_c': ['city'], '_sort': ['city', '-sales']}
         result = self.get('/filters/sales', params=_args).json()
-        expected = self.sales.sort_values(['city', 'sales'], ascending=[True, False])
-        expected = unique_of(self.sales, 'city')
+        expected = unique_of(expected, 'city')
+        expected = expected.sort_values(['city'])  # sales is ignored. It sorts AFTER grouping
         eqframe(result['city'], expected)
 
         _args = {'_c': ['District'], 'State': ['KERALA']}
@@ -60,10 +62,9 @@ class TestFilterHandler(TestGramex):
             '_limit': [10],
         }
         result = self.get('/filters/census', params=_args).json()
-        filtered = self.census.sort_values(['State', 'District'])
-        filtered = filtered[filtered['State'] == 'KERALA']
-        for col in ['District', 'DistrictCaps']:
-            eqframe(result[col], unique_of(filtered, col).head(10))
+        filtered = self.census[self.census['State'] == 'KERALA']
+        for col, sort_cols in [('District', ['District']), ('DistrictCaps', [])]:
+            eqframe(result[col], unique_of(filtered, col).sort_values(sort_cols).head(10))
 
         for col in ['city', 'product']:
             _args = {'_c': [col], 'देश': ['भारत']}
@@ -71,3 +72,52 @@ class TestFilterHandler(TestGramex):
             expected = self.sales[self.sales['देश'] == 'भारत']
             expected = unique_of(expected, col)
             eqframe(result[col], expected)
+
+    def test_multifilters(self):
+        _args = {'_c': ['देश,city']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city'])
+        eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['देश,city,product']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city', 'product'])
+        eqframe(result['देश,city,product'], expected)
+
+        _args = {'_c': ['देश,city', 'product']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city'])
+        eqframe(result['देश,city'], expected)
+        expected = unique_of(self.sales, ['product'])
+        eqframe(result['product'], expected)
+
+        limit = 10
+        _args = {'_c': ['देश,city'], '_limit': limit}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city']).head(limit)
+        eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['देश,city'], '_sort': ['देश', '-city']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city']).sort_values(
+            ['देश', 'city'], ascending=[True, False]
+        )
+        eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['देश,city'], '_sort': ['देश', '-sales']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['देश', 'city'])
+        expected = expected.sort_values(['देश'])
+        eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['देश,city'], 'sales>': ['500']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = self.sales[self.sales['sales'] > 500]
+        expected = unique_of(expected, ['देश', 'city'])
+        eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['देश,city'], 'sales>': ['500'], 'growth>': ['0'], '_sort': ['city']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = self.sales[(self.sales['sales'] > 500) & (self.sales['growth'] > 0)]
+        expected = unique_of(expected, ['देश', 'city']).sort_values(['city'])
+        eqframe(result['देश,city'], expected)
