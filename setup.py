@@ -94,6 +94,6 @@ setup(
     zip_safe=False,
     entry_points={'console_scripts': release['console']},
     # NOTE: tests_require is deprecated. Also, setup.py can't install nose plugins like coverage.
-    # Use `run testsetup` to install rest requirements from tests/requirements.txt.
+    # Use `pip install -r test/requirements.txt` to install test requirements
     **release['info']
 )
