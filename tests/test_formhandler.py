@@ -819,7 +819,13 @@ class TestFormHandler(TestGramex):
             url = '/formhandler/dates?date>=%s' % dt
             r = self.get(url, params={'_format': 'json', '_meta': 'y'})
             # Check ISO output
-            pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
+            # Pandas 1.4+ (or Docker/Linux) converts this to 2022-01-01T00:00:00.000.
+            # Pandas 1.3- (or Windows) converts this to 2022-01-01T00:00:00.000Z (note the Z)
+            # Handle either cases.
+            test_df = pd.DataFrame({'date': [pd.Timestamp('2022-01-01')]})
+            result = json.loads(test_df.to_json(orient='records', date_format='iso'))[0]['date']
+            suffix = result.replace('2022-01-01T00:00:00.000', '')
+            pd.to_datetime(pd.DataFrame(r.json())['date'], format=f'%Y-%m-%dT%H:%M:%S.%f{suffix}')
             actual = pd.read_excel(
                 BytesIO(self.get(url, params={'_format': 'xlsx'}).content), engine='openpyxl'
             )
