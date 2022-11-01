@@ -6,6 +6,7 @@
     "@vue/cli-service": "^5.0.8",
     "bootstrap": "^4.6.2",
     "bootstrap5": "npm:bootstrap@^5.2.2",
+    "comicgen": "^1.9.4",
     "sass": "^1.55.0",
     "typescript": "^4.8.4",
     "vue-template-compiler": "^2.7.13"

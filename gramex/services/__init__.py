@@ -505,9 +505,9 @@ def gramexlog(conf: dict) -> None:
     from gramex.transforms import build_log_info
 
     try:
-        from elasticsearch import Elasticsearch, helpers
+        from elasticsearch7 import Elasticsearch, helpers
     except ImportError:
-        app_log.error('gramexlog: elasticsearch missing. pip install elasticsearch')
+        app_log.error('gramexlog: elasticsearch7 missing. pip install elasticsearch7')
         return
 
     # We call push() every 'flush' seconds on the main IOLoop. Defaults to every 5 seconds
