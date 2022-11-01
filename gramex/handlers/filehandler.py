@@ -156,7 +156,7 @@ class FileHandler(BaseHandler):
         Convert value to a set. If value is already a list, set, tuple, return as is.
         Ensure that the values are non-empty strings.
         '''
-        result = set(value) if isinstance(value, (list, tuple, set)) else set([value])
+        result = set(value) if isinstance(value, (list, tuple, set)) else {value}
         for pattern in result:
             if not pattern:
                 app_log.warning(f'{cls.name}: Ignoring empty pattern "{pattern!r}"')

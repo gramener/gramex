@@ -263,7 +263,7 @@ def filter(
                 if isinstance(table, str):
                     state = table if ' ' in table else [table]
                 elif isinstance(table, (list, tuple)):
-                    state = [t for t in table]
+                    state = list(table)
                 elif table is not None:
                     raise ValueError(f'table: must be string or list of strings, not {table!r}')
             all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
@@ -491,7 +491,7 @@ def insert(
     elif engine == 'file':
         try:
             data = gramex.cache.open(url, ext, transform=None, **kwargs)
-        except (OSError, IOError):
+        except OSError:
             data = rows
         else:
             rows = _pop_columns(rows, data.columns, meta['ignored'])
@@ -718,8 +718,18 @@ def download(
     # These formats require a DataFrame or a dict of DataFrames. Other formats (json, template)
     # accept anything.
     if error_no_dataframe and format in {
-            'csv', 'html', 'xlsx', 'xls', 'pptx', 'ppt', 'seaborn', 'sns',
-            'vega', 'vega-lite', 'vegam'}:
+        'csv',
+        'html',
+        'xlsx',
+        'xls',
+        'pptx',
+        'ppt',
+        'seaborn',
+        'sns',
+        'vega',
+        'vega-lite',
+        'vegam',
+    }:
         raise ValueError(error_no_dataframe)
 
     def kw(**conf):
@@ -761,7 +771,8 @@ def download(
                 val.to_excel(writer, sheet_name=key, **kwargs)
         return out.getvalue()
     elif format in {'pptx', 'ppt'}:
-        from gramex.pptgen import pptgen  # noqa
+        from gramex.pptgen import pptgen
+
         kw()
         out = io.BytesIO()
         pptgen(target=out, data=data, **kwargs)
@@ -823,6 +834,7 @@ def download(
     # If there are no DataFrames, handle arbitrary JSON
     elif error_no_dataframe:
         from gramex.config import CustomJSONEncoder
+
         kw(cls=CustomJSONEncoder)
         return json.dumps(data, **kwargs)
     # If there ARE DataFrames, render each
@@ -1110,13 +1122,14 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
             row['type_'] = row.pop('type')
             if 'default' in row:
                 from inspect import isclass
+
                 default = row.pop('default')
                 # default: can be a string like `'sa.func.now()'` or `'func.now()'`
                 if isinstance(default, dict):
                     libs = {'sa': sa, 'sqlalchemy': sa, 'func': sa.func}
-                    row['server_default'] = build_transform(default, vars={
-                        key: None for key in libs
-                    }, iter=False)(**libs)
+                    row['server_default'] = build_transform(
+                        default, vars={key: None for key in libs}, iter=False
+                    )(**libs)
                 # default can be an SQLAlchemy function, e.g. sa.func.now()
                 elif isclass(default) and issubclass(default, sa.func.Function):
                     row['server_default'] = default
@@ -1128,30 +1141,30 @@ def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engi
     else:
         quote = engine.dialect.identifier_preparer.quote_identifier
         # If the table's already in the DB, add new columns. We can't change column types
-        with engine.connect() as conn:
-            with conn.begin():
-                for name, row in columns.items():
-                    if name in db_table.columns:
-                        continue
-                    row = {'type': row} if isinstance(row, str) else row
-                    col_type = row.get('type', 'text')
-                    constraints = []
-                    if 'nullable' in row:
-                        constraints.append('' if row['nullable'] else 'NOT NULL')
-                    if 'default' in row:
-                        # repr() converts int, float properly,
-                        #   str into 'str' with single quotes (which is the MySQL standard)
-                        #   TODO: datetime and other types will fail
-                        if isinstance(row['default'], dict) or callable(row['default']):
-                            app_log.warning(
-                                f'alter(): col {name} cannot change default on existing table')
-                        else:
-                            constraints += ['DEFAULT', repr(row['default'])]
-                    # This syntax works on DB2, MySQL, Oracle, PostgreSQL, SQLite
-                    conn.execute(
-                        f'ALTER TABLE {quote(table)} '
-                        f'ADD COLUMN {quote(name)} {col_type} {" ".join(constraints)}'
-                    )
+        with engine.connect() as conn, conn.begin():
+            for name, row in columns.items():
+                if name in db_table.columns:
+                    continue
+                row = {'type': row} if isinstance(row, str) else row
+                col_type = row.get('type', 'text')
+                constraints = []
+                if 'nullable' in row:
+                    constraints.append('' if row['nullable'] else 'NOT NULL')
+                if 'default' in row:
+                    # repr() converts int, float properly,
+                    #   str into 'str' with single quotes (which is the MySQL standard)
+                    #   TODO: datetime and other types will fail
+                    if isinstance(row['default'], dict) or callable(row['default']):
+                        app_log.warning(
+                            f'alter(): col {name} cannot change default on existing table'
+                        )
+                    else:
+                        constraints += ['DEFAULT', repr(row['default'])]
+                # This syntax works on DB2, MySQL, Oracle, PostgreSQL, SQLite
+                conn.execute(
+                    f'ALTER TABLE {quote(table)} '
+                    f'ADD COLUMN {quote(name)} {col_type} {" ".join(constraints)}'
+                )
         # Refresh table metadata after altering
         get_table(engine, table, extend_existing=True)
     return engine
@@ -1499,7 +1512,7 @@ def _filter_frame(
             if col_list is None:
                 col_list = [
                     col + _agg_sep + 'sum'
-                    for col in data.columns  # noqa
+                    for col in data.columns
                     if pd.api.types.is_numeric_dtype(data[col])
                 ]
             agg_cols = []
@@ -1620,7 +1633,7 @@ def _filter_db(
             if col_list is None:
                 col_list = [
                     col + _agg_sep + 'sum'
-                    for col, column in cols.items()  # noqa
+                    for col, column in cols.items()
                     if column.type.python_type.__name__ in _numeric_types
                 ]
             agg_cols = AttrDict([(col, cols[col]) for col in by])  # {label: ColumnElement}
@@ -1682,7 +1695,7 @@ def _mongodb_query(args, table, id=[], **kwargs):
     for key, vals in args.items():
         if len(id) and key not in id:
             continue
-        col_names = [k for k in row.keys()]
+        col_names = list(row)
         col, agg, op = _filter_col(key, col_names)
         if not col:
             continue
@@ -1706,7 +1719,7 @@ def _mongodb_query(args, table, id=[], **kwargs):
             add({"$not": {"$regex": '|'.join(vals), "$options": 'i'}})
         elif op == '~':
             add({"$regex": '|'.join(vals), "$options": 'i'})
-        elif col and op in _mongodb_op_map.keys():
+        elif col and op in _mongodb_op_map:
             add({_mongodb_op_map[op]: convert(val)} for val in vals)
         # TODO: Handle agg
         # TODO: add meta['ignored']
@@ -1808,8 +1821,7 @@ def _filter_mongodb(
     row = table.find_one(query)
     if not row:
         return pd.DataFrame()
-    cols = [k for k in row.keys()]
-
+    cols = list(row)
     query = dict(query) if query else _mongodb_query(args, table)
 
     show_cols = _filter_select_columns(controls, cols, meta)
@@ -2020,17 +2032,16 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
     rows[field_columns] = rows[field_columns].astype(float)
     from influxdb_client.client.write_api import ASYNCHRONOUS, WriteOptions
 
-    with _influxdb_client(url, **kwargs) as db:
-        with db.write_api(
-            write_options=WriteOptions(ASYNCHRONOUS, batch_size=50_000, flush_interval=10_000)
-        ) as client:
-            client.write(
-                bucket=bucket,
-                org=db.org,
-                record=rows,
-                data_frame_measurement_name=measurement,
-                data_frame_tag_columns=tags,
-            )
+    with _influxdb_client(url, **kwargs) as db, db.write_api(
+        write_options=WriteOptions(ASYNCHRONOUS, batch_size=50000, flush_interval=10000)
+    ) as client:
+        client.write(
+            bucket=bucket,
+            org=db.org,
+            record=rows,
+            data_frame_measurement_name=measurement,
+            data_frame_tag_columns=tags,
+        )
     meta["inserted"] = [{"id": ix} for ix, _ in rows.iterrows()]
     return len(rows)
 
@@ -2056,7 +2067,7 @@ def _filter_servicenow(url, controls, args, meta, table=None, columns=None, quer
         table_columns.setdefault(col, {}).update(
             colinfo if isinstance(colinfo, dict) else {'type': colinfo}
         )
-    for col, colinfo in table_columns.items():
+    for colinfo in table_columns.values():
         colinfo['_convert'] = _convertor(locate(colinfo['type'], modules=['datetime']))
     col_names = table_columns.keys()
 

@@ -335,9 +335,8 @@ def argparse(handler):
     args = params.get('args', [])
     typemap = {'list': list, 'str': str, 'None': None, 'int': int, 'bool': bool}
     # Convert first parameter to relevant type, if required
-    if len(args) > 0:
-        if args[0] in typemap:
-            args[0] = typemap[args[0]]
+    if len(args) > 0 and args[0] in typemap:
+        args[0] = typemap[args[0]]
     # Convert type: to a Python class
     kwargs = params.get('kwargs', {})
     for val in kwargs.values():
@@ -382,7 +381,7 @@ def write_stream():
     Used by test_cache.TestSubprocess
     '''
     delay = 0.02
-    for n in range(0, 3):
+    for n in range(3):
         sys.stdout.write('o%d\n' % n)
         sys.stdout.flush()
         time.sleep(delay)
@@ -431,8 +430,7 @@ def numpytypes(handler):
         'string_',
         'unicode_',
     }
-    result = {t: getattr(np, t)(1) for t in supported_types}
-    return result
+    return {t: getattr(np, t)(1) for t in supported_types}
 
 
 def proxy_prepare(request, handler):
@@ -539,13 +537,13 @@ def pynode_run(handler):
 def test_function(
     li1: List[int],
     lf1: List[float],
-    li2: Annotated[List[int], 'List of ints'],  # noqa
-    lf2: Annotated[List[float], 'List of floats'],  # noqa
+    li2: Annotated[List[int], 'List of ints'],
+    lf2: Annotated[List[float], 'List of floats'],
     li3: List[int] = [0],
     lf3: List[float] = [0.0],
     l1=[],
-    i1: Annotated[int, 'First value'] = 0,  # noqa
-    i2: Annotated[int, 'Second value'] = 0,  # noqa
+    i1: Annotated[int, 'First value'] = 0,
+    i2: Annotated[int, 'Second value'] = 0,
     s1: str = 'Total',
     n1: int = 0,
     n2: np.int64 = 0,

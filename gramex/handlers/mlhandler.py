@@ -173,7 +173,7 @@ class MLHandler(FormHandler):
 
     @classmethod
     def _filterrows(cls, data, **kwargs):
-        for method in 'dropna drop_duplicates'.split():
+        for method in ('dropna', 'drop_duplicates'):
             action = kwargs.get(method, cls.store.load(method, True))
             if action:
                 subset = action if isinstance(action, list) else None

@@ -6,7 +6,7 @@ import json
 import os
 
 
-def read_gitignore(path, exclude=set()):
+def read_gitignore(path, exclude=()):
     '''
     Read .gitignore paths as an iterable of patterns, unless it is in the exclude set
     '''
@@ -17,7 +17,7 @@ def read_gitignore(path, exclude=set()):
                 yield line
 
 
-def recursive_include(root, path, ignores=[], allows=[]):
+def recursive_include(root, path, ignores=(), allows=()):
     '''Go to root dir and yield all files under path that are in allows, not in ignores'''
     # Change to root directory
     cwd = os.getcwd()
@@ -88,7 +88,7 @@ setup(
     include_package_data=True,
     # Pick up dependencies from gramex/release.json
     # To ensure that pip install works, only include packages that work via pip (not conda)
-    install_requires=[req for req in release['lib']],
+    install_requires=list(release['lib']),
     # Gramex cannot be installed from a ZIP file. setup() reads from gramex/release.json and
     # README.md. So Gramex must be unzipped first, and THEN installed.
     zip_safe=False,

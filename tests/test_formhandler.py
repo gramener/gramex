@@ -1,3 +1,4 @@
+import contextlib
 import re
 import os
 import json
@@ -34,10 +35,8 @@ class TestFormHandler(TestGramex):
 
     @classmethod
     def tearDownClass(cls):
-        try:
+        with contextlib.suppress(OSError):
             dbutils.sqlite_drop_db('formhandler.db')
-        except OSError:
-            pass
 
     def check_filter(self, url, df=None, na_position='last', key=None):
         # Modelled on testlib.test_data.TestFilter.check_filter

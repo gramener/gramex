@@ -436,7 +436,7 @@ class TestTimedRotatingCSVHandler(unittest.TestCase):
         test2.addHandler(csv1)
         test2.addHandler(csv2)
 
-        test1.info({'a': 'a', 'b': 1, 'c': -0.1})  # noqa: 0.1 is not magic
+        test1.info({'a': 'a', 'b': 1, 'c': -0.1})
         test2.info({'a': 'na', 'b': 'na', 'c': 'na'})
         test1.warn({'a': True, 'b': False, 'c': None})
         test2.warn({'b': '\n\na,bt\n'})

@@ -580,8 +580,7 @@ def treemap(shape, spec, data):
             rectstyle = {'fill': rect_color, 'stroke': stroke}
             rect_css(shp, **rectstyle)
             font_size = min(h, w * font_aspect / fontwidth.fontwidth('{}'.format(text)), np.Inf)
-            text_style = {}
-            text_style['color'] = _color.contrast(rect_color)
+            text_style = {'color': _color.contrast(rect_color)}
             text_style.update(spec.get('style', {}))
             text_style['font-size'] = font_size / pixel_inch
             # Adding text inside rectangles
@@ -674,13 +673,12 @@ def calendarmap(shape, spec, data):
         )
         rectstyle = {'fill': fill, 'stroke': stroke(val) if callable(stroke) else stroke}
         rect_css(shp, **rectstyle)
-        text_style = {}
-        text_style['color'] = (
-            style.get('color')(val)
+        text_style = {
+            'color': style.get('color')(val)
             if callable(style.get('color'))
-            else spec.get('color', _color.contrast(fill))
-        )
-        text_style['font-size'] = font_size(val) if callable(font_size) else font_size
+            else spec.get('color', _color.contrast(fill)),
+            'font-size': font_size(val) if callable(font_size) else font_size,
+        }
         for k in ['bold', 'italic', 'underline', 'font-family']:
             text_style[k] = style.get(k)
         add_text_to_shape(shp, '%02d' % d.day, **text_style)
@@ -820,7 +818,7 @@ def bullet(shape, spec, data):
             fill = style.get(metric, {})
             stroke = fill.get('stroke')
             fill = fill.get('fill', matplotlib.colors.to_hex(gradient(percentage[metric])))
-            rect_css(_rect, **{'fill': fill, 'stroke': stroke or fill})
+            rect_css(_rect, fill=fill, stroke=stroke or fill)
 
     getmax = {key: spec.get(key, np.nan) for key in ['data', 'target', 'good', 'average', 'poor']}
     max_data_val = percentage[max(getmax.items(), key=operator.itemgetter(1))[0]]
@@ -835,7 +833,7 @@ def bullet(shape, spec, data):
         fill = style.get('data', {})
         stroke = fill.get('stroke')
         fill = fill.get('fill', matplotlib.colors.to_hex(gradient(1.0)))
-        rect_css(data_rect, **{'fill': fill, 'stroke': stroke or fill})
+        rect_css(data_rect, fill=fill, stroke=stroke or fill)
 
     if data_text and not np.isnan(scaled):
         if callable(data_text):
@@ -869,7 +867,7 @@ def bullet(shape, spec, data):
         fill = style.get('target', {})
         stroke = fill.get('stroke')
         fill_target_rect = fill.get('fill', matplotlib.colors.to_hex(gradient(1.0)))
-        rect_css(target_line, **{'fill': fill_target_rect, 'stroke': stroke or fill_target_rect})
+        rect_css(target_line, fill=fill_target_rect, stroke=stroke or fill_target_rect)
         if target_text:
             if callable(target_text):
                 _target_text = '{}'.format(target_text(spec['target']))
@@ -932,7 +930,7 @@ def heatgrid(shape, spec, data):
     for key in ['gradient', 'color', 'fill', 'font-size', 'font-family', 'stroke']:
         if isinstance(styles.get(key), (dict,)) and 'function' in styles[key]:
             prop = compile_function(styles, key, data, handler)
-            styles[key] = prop(**{'data': data, 'handler': handler}) if callable(prop) else prop
+            styles[key] = prop(data=data, handler=handler) if callable(prop) else prop
     # Calculating cell's width based on config
     _width = (width - left_margin) / float(len(columns)) / pixel_inch
     _width = spec.get('cell-width', _width) * pixel_inch

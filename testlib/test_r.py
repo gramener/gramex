@@ -14,7 +14,7 @@ def test_init():
         # R_HOME is set to a non-existent directory
         os.environ['R_HOME'] = os.path.join(folder, 'R')
         with assert_raises(Exception):
-            import rpy2.robjects  # NOQA: F401
+            import rpy2.robjects
     # But Gramex uses Conda PATH
     r('1 + 2')
     import rpy2.rinterface
@@ -95,8 +95,8 @@ def test_plots():
     )
     path = r(path='scriptplot.R')
     img = Image.open(path[0])
-    eq_(img.size, (512, 512))  # noqa: E912 Size matches
+    eq_(img.size, (512, 512))
     freq = {color: count for count, color in img.convert('RGB').getcolors()}
-    ok_(freq[255, 255, 255] < 50000)  # noqa: E912 Not filled with white
-    ok_(freq[235, 235, 235] > 100000)  # noqa: E912 Mostly light grey
-    ok_(freq[89, 89, 89] > 20000)  # noqa: E912 and some dark grey
+    ok_(freq[255, 255, 255] < 50000)
+    ok_(freq[235, 235, 235] > 100000)
+    ok_(freq[89, 89, 89] > 20000)

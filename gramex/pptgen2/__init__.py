@@ -70,7 +70,7 @@ def pptgen(
             commands.flatten_group_transforms(shape)
     # copy-slide: can copy any set of slides multiple times. To track of which source slide maps to
     # which target slide, we use `slide_map`. slide_map[target_slide_index] = source_slide_index
-    slide_map = [index for index in range(len(slides))]
+    slide_map = list(range(len(slides)))
 
     # Loop through each rule (copying them to protect from modification)
     for rule in copy.deepcopy(rules):
@@ -284,7 +284,7 @@ def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> l
     if not isinstance(only, list):
         raise TypeError(f'pptgen(only=) takes slide number or list, not {type(only)}')
     all_slides = set(range(1, 1 + len(prs.slides)))
-    for slide_num in reversed(sorted(all_slides - set(only))):
+    for slide_num in sorted(all_slides - set(only), reverse=True):
         rid = prs.slides._sldIdLst[slide_num - 1].rId
         prs.part.drop_rel(rid)
         del prs.slides._sldIdLst[slide_num - 1]
@@ -485,10 +485,9 @@ def commandline(args=None):
 
     if 'url' in conf:
         for key, spec in conf.url.items():
-            if spec.handler == 'PPTXHandler':
-                if not urls or any(url in key for url in urls):
-                    rules = spec.kwargs
-                    break
+            if spec.handler == 'PPTXHandler' and (not urls or any(url in key for url in urls)):
+                rules = spec.kwargs
+                break
         else:
             return app_log.error(f'No PPTXHandler matched in file: {config_file}')
     elif any(key in conf for key in ('source', 'target', 'data', 'rules')):

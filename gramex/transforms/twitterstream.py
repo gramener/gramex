@@ -19,7 +19,7 @@ from gramex.http import (
 )
 
 
-class TwitterStream(object):
+class TwitterStream:
     '''
     Starts a Twitter Streaming client. Sample usage::
 
@@ -115,7 +115,7 @@ class TwitterStream(object):
             url=url,
             body=data,
             headers=headers,
-            request_timeout=864000,  # Keep request alive for 10 days
+            request_timeout=10 * 24 * 60 * 60,  # Keep request alive for 10 days
             streaming_callback=self._stream,
             header_callback=self.header_callback,
         )
@@ -142,7 +142,7 @@ class TwitterStream(object):
                 )
             # For server errors, start with 5 seconds and double until 320 seconds
             elif INTERNAL_SERVER_ERROR <= e.code <= GATEWAY_TIMEOUT:
-                self.delay = min(320, self.delay * 2 if self.delay else 1)  # noqa: 320 seconds
+                self.delay = min(320, self.delay * 2 if self.delay else 1)
                 app_log.error(f'TwitterStream HTTP {e.code}: {e.response}. Retry: {self.delay}s')
             # For client errors (e.g. wrong params), disable connection
             else:
@@ -151,7 +151,7 @@ class TwitterStream(object):
         except Exception as e:
             # Other errors are possible, such as IOError.
             # Increase the delay in reconnects by 250ms each attempt, up to 16 seconds.
-            self.delay = min(16, self.delay + 0.25)  # noqa: 16 seconds, 0.25 seconds
+            self.delay = min(16, self.delay + 0.25)
             app_log.error(f'TwitterStream exception {e}. Retry: {self.delay}s')
 
     def header_callback(self, line):
@@ -204,7 +204,7 @@ class TwitterStream(object):
         app_log.info(repr(message))
 
 
-class StreamWriter(object):
+class StreamWriter:
     def __init__(self, path, flush=False):
         self.path = path
         self.stream = self.stream_path = self.flush_on_write = None
@@ -246,7 +246,7 @@ class StreamWriter(object):
             folder = os.path.dirname(os.path.abspath(path))
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            self.stream = open(path, 'ab')
+            self.stream = open(path, 'ab')  # noqa: SIM115
             app_log.debug(f'StreamWriter writing to {path}')
 
         # Schedule the next call after a minute

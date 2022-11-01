@@ -486,8 +486,8 @@ class TestPPTGen(TestCase):
             pics = [shape for shape in group.shapes if shape.name == 'Picture']
             eq_(len(pics), len(repeat))
             for pic in pics[1:]:
-                pic.width == pics[0].width
-                pic.height == pics[0].height
+                eq_(pic.width, pics[0].width)
+                eq_(pic.height, pics[0].height)
 
     def test_fill_stroke(self, slides=3):
         colors = (
@@ -646,7 +646,23 @@ class TestPPTGen(TestCase):
         shape = self.get_shape(prs.slides[0].shapes, 'TextBox 1')
         eq_(
             shape.text.split(),
-            'P0R0 P0R1 P0R2 P0R3 P0R4 P1R0 P1R1 P1R2 P2R0 P2R1 P2R2 P2R3 P3R0 P3R1 P3R2'.split(),
+            [
+                'P0R0',
+                'P0R1',
+                'P0R2',
+                'P0R3',
+                'P0R4',
+                'P1R0',
+                'P1R1',
+                'P1R2',
+                'P2R0',
+                'P2R1',
+                'P2R2',
+                'P2R3',
+                'P3R0',
+                'P3R1',
+                'P3R2',
+            ],
         )
         paras = shape.text_frame.paragraphs
         # Para 0 has the right attributes and text
@@ -660,7 +676,7 @@ class TestPPTGen(TestCase):
         for attr in ('line_spacing', 'space_after', 'space_before'):
             eq_(getattr(paras[0], attr), None)
         # Para 1 has the right attributes and text
-        eq_(paras[1].text.split(), 'P1R0 P1R1 P1R2'.split())
+        eq_(paras[1].text.split(), ['P1R0', 'P1R1', 'P1R2'])
         eq_(paras[1].alignment, PP_ALIGN.LEFT)
         eq_(paras[1].font.bold, True)
         eq_(paras[1].font.color.rgb, (255, 0, 0))

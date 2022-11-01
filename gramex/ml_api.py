@@ -83,10 +83,8 @@ def search_modelclass(mclass: str) -> Any:
     for wrapper, modules in SEARCH_MODULES.items():
         klass = locate(mclass, modules)
         if klass:
-            break
-    if klass is None:
-        raise ImportError(f"{mclass} not found.")
-    return klass, wrapper
+            return klass, wrapper
+    raise ImportError(f"{mclass} not found.")
 
 
 def coerce_model_params(mclass: str, params: dict) -> dict:

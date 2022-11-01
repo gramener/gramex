@@ -138,8 +138,8 @@ class TestCaptureHandler(TestGramex):
         self.assertIn(
             [round(x) for x in page.attrs['MediaBox']],
             (
-                [0, 0, 1190, 842],  # noqa: Chrome uses 1190 x 842 for A3
-                [0, 0, 1191, 842],  # noqa: PhantomJS uses 1191 x 842 for A3
+                [0, 0, 1190, 842],
+                [0, 0, 1191, 842],
             ),
         )
 

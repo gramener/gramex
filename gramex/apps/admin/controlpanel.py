@@ -45,9 +45,7 @@ def is_admin(handler, admin_user=None, admin_role=None):
             if isinstance(value, (list,)) and user.get(key, None) in value:
                 return True
     # TODO: REVIEW: make this choice based on YAML Variable $DEBUG(=True) instead
-    if handler.request.remote_ip in ('127.0.0.1', '::1'):
-        return True
-    return False
+    return handler.request.remote_ip in ('127.0.0.1', '::1')
 
 
 def user_sessions(handler):

@@ -79,7 +79,7 @@ class ModelHandler(BaseHandler):
         '''
         try:
             model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-        except EnvironmentError:  # noqa
+        except EnvironmentError:
             model = gramex.ml.Classifier(**self.request_body)
         if self.get_data_flag():
             file_kwargs = self.listify(model.input + [model.output] + ['id'])
@@ -112,10 +112,10 @@ class ModelHandler(BaseHandler):
         # load model object - if it doesn't exist, send a response asking to create the model
         try:
             model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-        except EnvironmentError:  # noqa
+        except EnvironmentError:
             # Log error
             self.write({'Error': 'Please Send PUT Request, model does not exist'})
-            raise EnvironmentError  # noqa
+            raise EnvironmentError
         if self.get_data_flag():
             file_kwargs = self.listify(model.input + [model.output])
             gramex.data.insert(model.url, args=file_kwargs)
@@ -134,9 +134,9 @@ class ModelHandler(BaseHandler):
             file_kwargs = self.listify(['id'])
             try:
                 model = gramex.cache.open(self.pickle_file_path, gramex.ml.load)
-            except EnvironmentError:  # noqa
+            except EnvironmentError:
                 self.write({'Error': 'Please Send PUT Request, model does not exist'})
-                raise EnvironmentError  # noqa
+                raise EnvironmentError
             gramex.data.delete(model.url, args=file_kwargs, id=file_kwargs['id'])
             return
         if os.path.exists(self.pickle_file_path):

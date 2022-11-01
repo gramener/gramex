@@ -12,9 +12,9 @@ def json_changes(path):
     size = os.stat(path).st_size if os.path.exists(path) else 0
     result = []
     yield result
-    handle = open(path, 'rb')
-    handle.seek(size)
-    result += [json.loads(line) for line in handle.readlines()]
+    with open(path, 'rb') as handle:
+        handle.seek(size)
+        result += [json.loads(line) for line in handle.readlines()]
 
 
 class TestUpdate(TestGramex):

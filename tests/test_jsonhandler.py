@@ -155,7 +155,7 @@ class TestJSONHandler(TestGramex):
         self.assertEqual(store['json/get'], conf.url['json/get'].kwargs.data)
         # Ensure that the JSON file in the path is stored in jsonhander.store
         path = conf.url['json/path'].kwargs.path
-        with io.open(path, 'r') as handle:  # noqa
+        with io.open(path, 'r') as handle:
             data = json.load(handle)
         self.assertEqual(store[path], data)
 

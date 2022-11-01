@@ -203,12 +203,10 @@ def pptgen(source, target=None, **config):
             for shape in copy_slide.shapes:
                 copy_slide_elem(shape, dest)
             add_new_slide(dest, src)
-    removed_status = 0
-    for sld_idx in set(slides_to_remove):
+    for removed_status, sld_idx in enumerate(set(slides_to_remove)):
         delete_slide(prs, (sld_idx - removed_status))
         for slide_num in manage_slide_order:
             manage_slide_order[slide_num] = [(i - 1) for i in manage_slide_order[slide_num]]
-        removed_status += 1
     if target is None:
         return prs
     else:

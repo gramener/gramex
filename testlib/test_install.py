@@ -1,3 +1,4 @@
+import contextlib
 import io
 import os
 import re
@@ -63,9 +64,5 @@ class TestInit(unittest.TestCase):
     # Run teardown for each init test
     def tearDown(self):
         os.chdir(self.cwd)
-        try:
+        with contextlib.suppress(OSError):
             shutil.rmtree(self.app_dir, onerror=_ensure_remove)
-        except OSError:
-            # Ideally, we should clean up the app_dir
-            # But on Windows, npm / git may prevent this for some time. Ignore this
-            pass

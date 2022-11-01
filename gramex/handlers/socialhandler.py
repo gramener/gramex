@@ -52,7 +52,7 @@ class SocialHandler(BaseHandler):
 
     def run_transforms(self, content):
         result = json.loads(content.decode('utf-8'))
-        for name, transform in self.transform.items():
+        for transform in self.transform.values():
             for value in transform['function'](result):
                 result = value
             for header, header_value in transform.get('headers', {}).items():
@@ -203,7 +203,7 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
             yield self.authorize_redirect(callback_uri=self.xredirect_uri)
 
     def _oauth_consumer_token(self):
-        return dict(key=self.kwargs['key'], secret=self.kwargs['secret'])
+        return {'key': self.kwargs['key'], 'secret': self.kwargs['secret']}
 
 
 class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):

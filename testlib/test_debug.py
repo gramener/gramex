@@ -26,19 +26,19 @@ class TestPrint(unittest.TestCase):
 
     def test_kwarg(self):
         stream = StringIO()
-        gramex.debug.print(val=[10, 20, 30], stream=stream)  # noqa
+        gramex.debug.print(val=[10, 20, 30], stream=stream)
         line = line_no() - 1
         val = stream.getvalue().replace('.pyc', '.py')
         eq_(val, '\n' + testfile + '(%d).test_kwarg:\n .. val = [10, 20, 30]\n\n' % line)
 
     def test_multi(self):
         stream = StringIO()
-        gramex.debug.print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)  # noqa
+        gramex.debug.print(a=True, b=1, lst=[1, 2], string='abc', stream=stream)
         line = line_no() - 1
         val = stream.getvalue().replace('.pyc', '.py')
         ok_(val.startswith('\n'))
         ok_(val.endswith('\n'))
-        lines = {line for line in stream.getvalue().splitlines()}
+        lines = set(stream.getvalue().splitlines())
         self.assertIn('{}({:d}).test_multi:'.format(testfile, line), lines)
         self.assertIn(" .. a = True", lines)
         self.assertIn(" .. b = 1", lines)
@@ -56,9 +56,8 @@ class TestDebug(unittest.TestCase):
         ok_(re.search(r'start.*test_debug.py:test_timer', args[0]))
         ok_(re.search(r'middle.*test_debug.py:test_timer', args[1]))
 
-        with LogCapture() as logs:
-            with Timer('msg'):
-                pass
+        with LogCapture() as logs, Timer('msg'):
+            pass
         args = [rec.msg for rec in logs.records if 'test_debug.py:test_timer' in rec.msg]
         eq_(len(args), 1)
         ok_(re.search(r'msg.*test_debug.py:test_timer', args[0]))

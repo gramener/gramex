@@ -52,7 +52,4 @@ class WebSocketHandler(BaseWebSocketHandler):
         if isinstance(origins, (str, bytes)):
             origins = [origins]
         domain = urlparse(origin).netloc
-        for allowed_origin in origins:
-            if domain.endswith(allowed_origin):
-                return True
-        return False
+        return any(domain.endswith(allowed_origin) for allowed_origin in origins)

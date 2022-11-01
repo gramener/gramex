@@ -16,8 +16,7 @@ import unittest
 class TestLogViewer(TestGramex):
     @staticmethod
     def get_keywith(config, key):
-        item = next((v for k, v in config.items() if k.startswith(key)), None)
-        return item
+        return next((v for k, v in config.items() if k.startswith(key)), None)
 
     @classmethod
     def setUpClass(cls):

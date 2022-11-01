@@ -89,7 +89,7 @@ def screenshots(kwargs, host, args):
         # Get ID for all entries without a thumbnail
         pending = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args=args)
         width, height = 300, 300  # TODO: Change dimensions later
-        for index, row in pending.iterrows():
+        for _index, row in pending.iterrows():
             id = row[var.FORMS_ID]
             url = f'{host}/form/{id}'
             # TODO: Use delay='renderComplete'

@@ -12,8 +12,7 @@ from gramex.transforms import handler
 
 @handler
 def yielder(*i):
-    for item in i:
-        yield item
+    yield from i
 
 
 @handler
@@ -33,8 +32,7 @@ def multilist(items: List[int], start: float) -> float:
 
 @handler
 def strtotal(*items: str) -> str:
-    s = ''.join([i for i in items])
-    return s
+    return ''.join(list(items))
 
 
 @handler

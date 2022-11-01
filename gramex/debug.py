@@ -25,7 +25,7 @@ def _caller():
     return f'[{parent[1]}:{parent[3]}:{parent[2]}]'
 
 
-class Timer(object):
+class Timer:
     '''
     Find how long a code blocks takes to execute. Wrap any code block like this::
 

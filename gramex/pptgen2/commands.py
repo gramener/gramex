@@ -153,7 +153,7 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     elif isinstance(val, (list, tuple)):
         val = val[:3]
         if any(isinstance(v, float) for v in val) and all(0 <= v <= 1 for v in val):
-            fill.fore_color.rgb = RGBColor(*(int(v * 256 if v < 1 else 255) for v in val))  # noqa
+            fill.fore_color.rgb = RGBColor(*(int(v * 256 if v < 1 else 255) for v in val))
         else:
             fill.fore_color.rgb = RGBColor(*val)
     elif isinstance(val, str):
@@ -398,9 +398,9 @@ def baseline(run, val, data):
         val = (
             0.3
             if val.startswith('sup')
-            else -0.25  # noqa
+            else -0.25
             if val.startswith('sub')
-            else ST_Percentage._convert_from_percent_literal(val)  # noqa
+            else ST_Percentage._convert_from_percent_literal(val)
         )
     run.font._rPr.set('baseline', ST_Percentage.convert_to_xml(val))
 

@@ -56,30 +56,29 @@ def module_names(node, vars):
         if not hasattr(node, '_fields'):
             return
         for child in ast.iter_child_nodes(node):
-            if isinstance(child, ast.Name):
-                if len(context) and context[-1]:
-                    module = [child.id]
-                    for p in context[::-1]:
-                        if p is not None:
-                            module.append(p)
-                        else:
+            if isinstance(child, ast.Name) and len(context) and context[-1]:
+                module = [child.id]
+                for p in context[::-1]:
+                    if p is not None:
+                        module.append(p)
+                    else:
+                        break
+                if len(module) and module[0] not in vars:
+                    module.pop()
+                    while len(module):
+                        module_name = '.'.join(module)
+                        try:
+                            importlib.import_module(module_name)
+                            modules.add(module_name)
                             break
-                    if len(module) and module[0] not in vars:
-                        module.pop()
-                        while len(module):
-                            module_name = '.'.join(module)
-                            try:
-                                importlib.import_module(module_name)
-                                modules.add(module_name)
-                                break
-                            except ImportError:
-                                module.pop()
-                            # Anything other than an ImportError means we've identified the module.
-                            # E.g. A SyntaxError means the file is right, it just has an error.
-                            # Add these modules as well.
-                            else:
-                                modules.add(module_name)
-                                break
+                        except ImportError:
+                            module.pop()
+                        # Anything other than an ImportError means we've identified the module.
+                        # E.g. A SyntaxError means the file is right, it just has an error.
+                        # Add these modules as well.
+                        else:
+                            modules.add(module_name)
+                            break
             context.append(child.attr if isinstance(child, ast.Attribute) else None)
             visit(child)
             context.pop()
@@ -425,7 +424,7 @@ def build_pipeline(
                 return result if isinstance(result, GeneratorType) else [result]
             else:
                 return result
-        except:  # noqa: E722 - trap all exceptions for storelocation logging
+        except Exception:
             # On any exception, capture the error and traceback to log it
             import sys
             import traceback
@@ -496,7 +495,7 @@ def condition(*args):
             # B307:eval is safe here since `cond` is written by app developer
             if eval(Template(cond).substitute(var_defaults)):  # nosec B307
                 return val
-        elif bool(cond):
+        elif cond:
             return val
 
     # If none of the conditions matched, we'll be here.

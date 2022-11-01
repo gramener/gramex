@@ -8,7 +8,7 @@ threadpool = concurrent.futures.ThreadPoolExecutor(8)
 
 def async_fetch(name, path, method='post', url='/api/twitter/', **kwargs):
     future = threadpool.submit(getattr(requests, method), server.base_url + url + path, **kwargs)
-    setattr(future, 'name', name)
+    setattr(future, 'name', name)  # noqa: B010 future.name doesn't exist, so create it
     return future
 
 

@@ -10,11 +10,11 @@ class PPTXHandler(BaseHandler):
         kwargs = dict(self.kwargs)
         version = kwargs.pop('version', None)
         if version == 2:
-            from gramex.pptgen2 import pptgen  # noqa
+            from gramex.pptgen2 import pptgen
 
             kwargs['mode'] = 'expr'
         else:
-            from gramex.pptgen import pptgen  # noqa
+            from gramex.pptgen import pptgen
 
         target = io.BytesIO()
         pptgen(target=target, handler=self, **kwargs)

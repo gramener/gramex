@@ -100,9 +100,9 @@ class TestPPTGen(TestCase):
             },
         )
         ok_('custom_function1' in pptgen.COMMANDS_LIST)
-        pptgen.COMMANDS_LIST['custom_function1'](**{'shape': 1, 'spec': {}, 'data': {}})
+        pptgen.COMMANDS_LIST['custom_function1'](shape=1, spec={}, data={})
         with assert_raises(TypeError):
-            pptgen.COMMANDS_LIST['custom_function1'](**{'shape': 1, 'spec': {}, 'dummy': True})
+            pptgen.COMMANDS_LIST['custom_function1'](shape=1, spec={}, dummy=True)
         # Registering second command
         pptgen.pptgen(
             source=self.input,
@@ -110,9 +110,9 @@ class TestPPTGen(TestCase):
             register={'custom_function2': 'lambda x: x(shape, spec, data)'},
         )
         ok_('custom_function2' in pptgen.COMMANDS_LIST)
-        pptgen.COMMANDS_LIST['custom_function2'](**{'shape': 1, 'spec': {}, 'data': {}})
+        pptgen.COMMANDS_LIST['custom_function2'](shape=1, spec={}, data={})
         with assert_raises(TypeError):
-            pptgen.COMMANDS_LIST['custom_function2'](**{'shape': 1, 'spec': {}, 'dummy': True})
+            pptgen.COMMANDS_LIST['custom_function2'](shape=1, spec={}, dummy=True)
 
     def test_data_format(self):
         # Testing data section. Data argument must be a `dict` like object

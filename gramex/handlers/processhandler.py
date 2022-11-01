@@ -148,6 +148,6 @@ class ProcessHandler(BaseHandler):
 
     def on_finish(self):
         '''Close all open handles after the request has finished'''
-        for target, handle in self.handles.items():
+        for handle in self.handles.values():
             handle.close()
         super(ProcessHandler, self).on_finish()

@@ -153,7 +153,7 @@ class OpenAPIHandler(BaseHandler):
                 if callable(function):
                     fnspec = self.function_spec(function)
                     fnspec['summary'] = summary
-                    default_methods = 'GET POST PUT DELETE PATCH OPTIONS'.split()
+                    default_methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
                     for method in getattr(cls, '_http_methods', default_methods):
                         info[method.lower()] = fnspec
             elif issubclass(cls, gramex.handlers.FormHandler):

@@ -9,9 +9,12 @@ class TestPyNode(TestGramex):
         # On Windows, if we install a lib, we need to restart node for require() to work.
         # For this, we need to kill the terminal that runs nosetests!
         # So, allow any test with lib= to fail -- by skipping. It should be fine next time.
-        if 'lib' in data and isinstance(r['error'], dict):
-            if r['error'].get('message', '').startswith('Cannot find module'):
-                raise SkipTest(f'node_modules not installed: {data["lib"]}')
+        if (
+            'lib' in data
+            and isinstance(r['error'], dict)
+            and r['error'].get('message', '').startswith('Cannot find module')
+        ):
+            raise SkipTest(f'node_modules not installed: {data["lib"]}')
         eq_(r['error'], None)
         eq_(r['result'], result)
 

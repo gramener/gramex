@@ -77,7 +77,7 @@ BASE_255 = 255
 BASE_256 = 256
 
 
-class _MSO(object):
+class _MSO:
     """
     Microsoft office themes. Refer to colors in any of these ways:
 
@@ -613,10 +613,10 @@ def _add_gradients(target, data):
         target[grad] = _MSO(*colors)
 
 
-_DATA = json.load(
-    open(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), 'colors.json'), encoding='utf-8'
-    )
-)
+with open(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), 'colors.json'), encoding='utf-8'
+) as handle:
+    _DATA = json.load(handle)
+
 _COLORNAMES = _DATA['names']
 _add_gradients(globals(), _DATA)

@@ -7,11 +7,11 @@ def get_redis(path: str, **kwargs):
     host, port, db, redis_kwargs = 'localhost', 6379, 0, {}
     if isinstance(path, str):
         parts = path.split(':')
-        if len(parts):
+        if parts:
             host = parts.pop(0)
-        if len(parts):
+        if parts:
             port = int(parts.pop(0))
-        if len(parts):
+        if parts:
             db = int(parts.pop(0))
         redis_kwargs = dict(part.split('=', 1) for part in parts)
     for key, val in kwargs.items():

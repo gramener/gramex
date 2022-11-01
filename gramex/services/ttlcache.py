@@ -12,10 +12,10 @@ import time
 from cachetools import Cache
 
 # CHANGE: MAXTTL is the default TTL = 10 years
-MAXTTL = 86400 * 365 * 10  # noqa: ignore well known magic constants
+MAXTTL = 60 * 60 * 24 * 365 * 10
 
 
-class _Link(object):
+class _Link:
 
     __slots__ = ('key', 'expire', 'next', 'prev')
 
@@ -33,7 +33,7 @@ class _Link(object):
         next.prev = prev
 
 
-class _Timer(object):
+class _Timer:
     def __init__(self, timer):
         self.__timer = timer
         self.__nesting = 0
@@ -219,14 +219,14 @@ class TTLCache(Cache):
 
     if hasattr(collections.OrderedDict, 'move_to_end'):
 
-        def __getlink(self, key):  # noqa: ignore N802: function name should be in lowercase
+        def __getlink(self, key):
             value = self.__links[key]
             self.__links.move_to_end(key)
             return value
 
     else:
 
-        def __getlink(self, key):  # noqa: ignore N802: function name should be in lowercase
+        def __getlink(self, key):
             value = self.__links.pop(key)
             self.__links[key] = value
             return value

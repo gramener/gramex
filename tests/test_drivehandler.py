@@ -83,37 +83,39 @@ class TestDriveHandler(TestGramex):
         for col in cols:
             ok_(col in data.columns, col)
 
-        self.check_upload(dict(file='userdata.csv'))
+        self.check_upload({'file': 'userdata.csv'})
         # If upload filehame has a path, only the basename is considered
         # Extension is stored in lowercase even if filename is in uppercase
-        self.check_upload(dict(file='dir/image.JPG'))
+        self.check_upload({'file': 'dir/image.JPG'})
 
         # If filename is repeated, it's extended randomly
-        data = self.check_upload(dict(file='userdata.csv'))
+        data = self.check_upload({'file': 'userdata.csv'})
         path = data.path.iloc[0]
         ok_(path != 'userdata.csv')
         ok_(path.startswith('userdata'))
         ok_(path.endswith('.csv'))
 
         # If filename has weird characters, it's hyphenated
-        data = self.check_upload(dict(file='userdata.csv', name='β x.csv'))
+        data = self.check_upload({'file': 'userdata.csv', 'name': 'β x.csv'})
         eq_(data.path.iloc[0], 'b-x.csv')
 
         # If content-type is available, it's used. Else it's guessed
-        data = self.check_upload(dict(file='userdata.csv', mime='text/plain'))
+        data = self.check_upload({'file': 'userdata.csv', 'mime': 'text/plain'})
         eq_(data.mime.iloc[0], 'text/plain')
-        data = self.check_upload(dict(file='userdata.csv'))
+        data = self.check_upload({'file': 'userdata.csv'})
         eq_(data.mime.iloc[0], guess_type('userdata.csv')[0])
 
         # Large files fail
-        self.check_upload(dict(file='gramex.yaml'), code=REQUEST_ENTITY_TOO_LARGE, check=False)
+        self.check_upload({'file': 'gramex.yaml'}, code=REQUEST_ENTITY_TOO_LARGE, check=False)
         # .yaml disallowed because of allow
-        self.check_upload(dict(file='gramextest.yaml'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
+        self.check_upload({'file': 'gramextest.yaml'}, code=UNSUPPORTED_MEDIA_TYPE, check=False)
         # .py disallowed because of exclude (though allow allows it)
-        self.check_upload(dict(file='server.py'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
+        self.check_upload({'file': 'server.py'}, code=UNSUPPORTED_MEDIA_TYPE, check=False)
 
         # Multi-uploads are supported, with tags
-        self.check_upload(dict(file='userdata.csv', tag='t1'), dict(file='actors.csv', tag='t2'))
+        self.check_upload(
+            {'file': 'userdata.csv', 'tag': 't1'}, {'file': 'actors.csv', 'tag': 't2'}
+        )
         r = requests.post(
             self.url,
             files=(
@@ -133,7 +135,7 @@ class TestDriveHandler(TestGramex):
         ok_('rand' not in data.columns)
 
         # ?id=..&_download downloads the file
-        data = self.check_upload(dict(file='dir/index.html'))
+        data = self.check_upload({'file': 'dir/index.html'})
         r = requests.get(self.url, params={'_download': '', 'id': data.id.iloc[0]})
         eq_(r.headers['Content-Disposition'], 'attachment; filename="index.html"')
         # TODO: FormHandler returns Content-Type using _format, so don't check for Content-Type
@@ -149,7 +151,7 @@ class TestDriveHandler(TestGramex):
 
         # User attributes are captured on all files
         user = {'id': 'X', 'role': 'Y'}
-        data = self.check_upload(dict(file='userdata.csv'), dict(file='actors.csv'), user=user)
+        data = self.check_upload({'file': 'userdata.csv'}, {'file': 'actors.csv'}, user=user)
         for index in range(2):
             eq_(data.user_id.iloc[index], 'X')
             eq_(data.user_role.iloc[index], 'Y')
