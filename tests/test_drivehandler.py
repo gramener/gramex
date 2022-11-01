@@ -20,11 +20,6 @@ from nose.tools import eq_, ok_
 from . import server, TestGramex, afe
 
 
-def _read(path, mode='r'):
-    with open(path, mode) as handle:
-        return handle.read()
-
-
 class TestDriveHandler(TestGramex):
     @classmethod
     def setUpClass(cls):
@@ -36,7 +31,7 @@ class TestDriveHandler(TestGramex):
     def check_upload(self, *fileinfo, user={}, code=OK, check=True):
         files, data = [], {'tag': [], 'cat': []}
         for f in fileinfo:
-            info = (f.get('name', f['file']), _read(f['file'], 'rb'))
+            info = (f.get('name', f['file']), open(f['file'], 'rb'))
             if 'mime' in f:
                 info += (f['mime'],)
             files.append(('file', info))
@@ -124,8 +119,8 @@ class TestDriveHandler(TestGramex):
         r = requests.post(
             self.url,
             files=(
-                ('file', ('x.csv', _read('userdata.csv', 'rb'))),
-                ('file', ('y.csv', _read('userdata.csv', 'rb'))),
+                ('file', ('x.csv', open('userdata.csv', 'rb'))),
+                ('file', ('y.csv', open('userdata.csv', 'rb'))),
             ),
             data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']},
         )
@@ -209,9 +204,9 @@ class TestDriveHandler(TestGramex):
         # ... but with file upload updates size, date and user attributes
         params['id'] = data.id.iloc[1]
         files = (
-            ('file', ('dir/text.txt', _read('dir/text.txt', 'rb'))),
+            ('file', ('dir/text.txt', open('dir/text.txt', 'rb'))),
             # Even if multiple files are PUT, only the 1st is considered
-            ('file', ('userdata', _read('userdata.csv', 'rb'))),
+            ('file', ('userdata', open('userdata.csv', 'rb'))),
         )
         secret = gramex.service.app.settings['cookie_secret']
         user = {'id': 'AB', 'role': 'CD'}

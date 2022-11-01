@@ -12,7 +12,7 @@ import time
 from cachetools import Cache
 
 # CHANGE: MAXTTL is the default TTL = 10 years
-MAXTTL = 86400 * 365 * 10
+MAXTTL = 60 * 60 * 24 * 365 * 10
 
 
 class _Link:

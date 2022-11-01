@@ -4,15 +4,12 @@ import json
 import numpy as np
 from io import open
 
-
-def abs_path():
-    """Retutn absolute path."""
-    return os.path.dirname(os.path.abspath(__file__))
+abs_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def fontwidth(string, font='sans-serif'):
     """Function: Returns the px width of a string assuming a base size of 16px."""
-    with open(os.path.join(abs_path(), 'fonts.json'), encoding='utf-8') as handle:
+    with open(os.path.join(abs_path, 'fonts.json'), encoding='utf-8') as handle:
         _fontwidth = json.load(handle)
     codes_len = 127
     default_width = 32

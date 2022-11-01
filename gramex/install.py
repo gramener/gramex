@@ -549,7 +549,7 @@ def run(args, kwargs):
         gramex.paths['base'] = Path('.')
         # If we run with updated parameters, save for next run under the .run config
         run_config = app_config.setdefault('run', {})
-        for key in kwargs.keys():
+        for key in kwargs:
             if key not in app_keys:
                 run_config[key] = app_config.pop(key)
         save_user_config(appname, app_config)

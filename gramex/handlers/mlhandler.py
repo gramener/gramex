@@ -189,7 +189,9 @@ class MLHandler(FormHandler):
         orgdata = self.store.load_data()
         for col in np.intersect1d(data.columns, orgdata.columns):
             data[col] = data[col].astype(orgdata[col].dtype)
-        return self._filtercols(data, **kwargs)
+        data = self._filtercols(data, **kwargs)
+        data = self._filterrows(data, **kwargs)
+        return data
 
     def _predict(self, data=None, score_col=''):
         self._check_model_path()

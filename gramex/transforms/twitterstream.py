@@ -115,7 +115,7 @@ class TwitterStream:
             url=url,
             body=data,
             headers=headers,
-            request_timeout=864000,  # Keep request alive for 10 days
+            request_timeout=10 * 24 * 60 * 60,  # Keep request alive for 10 days
             streaming_callback=self._stream,
             header_callback=self.header_callback,
         )

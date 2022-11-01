@@ -207,7 +207,6 @@ def pptgen(source, target=None, **config):
         delete_slide(prs, (sld_idx - removed_status))
         for slide_num in manage_slide_order:
             manage_slide_order[slide_num] = [(i - 1) for i in manage_slide_order[slide_num]]
-        removed_status += 1
     if target is None:
         return prs
     else:
