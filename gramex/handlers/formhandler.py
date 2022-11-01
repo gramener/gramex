@@ -240,7 +240,7 @@ class FormHandler(BaseHandler):
             meta['modify'] = self.modify_all(data=result, key=None, handler=self)
 
         self.set_header('Cache-Control', 'no-cache, no-store')
-        self.render_result(opt, meta, {'data': meta}, redirect=True)
+        self.render_result(opt, meta, {'data': meta} if self.single else meta, redirect=True)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):
