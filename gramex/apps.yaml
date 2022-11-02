@@ -4,7 +4,7 @@ forms:
   target: $GRAMEXPATH/apps/forms/
 guide:
   target: $GRAMEXDATA/apps/guide/
-  url: https://github.com/gramexrecipes/gramex-guide/archive/v1.84.0.zip
+  url: https://github.com/gramexrecipes/gramex-guide/archive/v1.85.0.zip
 gramex-update:
   target: $GRAMEXPATH/apps/update/
 logviewer:
