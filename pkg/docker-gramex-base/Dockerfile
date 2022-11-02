@@ -50,6 +50,7 @@ RUN \
     # Gramex Enterprise is not released every time Gramex is released. Versions may be missing.
     # So instead of ==$VERSION, we use <=$VERSION.
     pip install "gramex<=$VERSION" "gramexenterprise<=$VERSION" && \
+    pip cache purge && \
     # Accept the Gramex Enterprise license
     gramex license accept && \
     # Create an /app directory where app can be mounted

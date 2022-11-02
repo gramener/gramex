@@ -18,4 +18,6 @@ RUN \
     # Activate conda env to run Gramex
     source ~/.profile && \
     # Set up all Gramex apps
-    gramex setup --all
+    gramex setup --all && \
+    # Clean up npm cache
+    npm cache clean --force
