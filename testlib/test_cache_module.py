@@ -330,11 +330,13 @@ class TestOpen(unittest.TestCase):
         path = os.path.join(cache_folder, 'data.csv')
         data = pd.read_csv(path, encoding='utf-8')
         config = {
-            'csv': {'index': False, 'ignore_keyword': 1},
-            'xlsx': {'index': False, 'sheet_name': 'Sheet1', 'ignore_keyword': 1},
             'html': {'index': False, 'escape': False, 'ignore_keyword': 1},
             'hdf': {'index': False, 'key': 'data', 'format': 'fixed', 'ignore_keyword': 1},
             'json': {'orient': 'records', 'ignore_keyword': 1},
+            # In Pandas 1.5, .to_csv() and .to_xlsx() accept **kwargs, but raise for invalid ones.
+            # TODO: Fix gramex.cache.save or gramex.config.used_kwargs to ignore invalid keywords.
+            'csv': {'index': False, 'ignore_keyword': 1},
+            'xlsx': {'index': False, 'sheet_name': 'Sheet1', 'ignore_keyword': 1},
             # 'stata': dict(index=False),   # cannot test since it doesn't support unicode
         }
         for ext, kwargs in config.items():
