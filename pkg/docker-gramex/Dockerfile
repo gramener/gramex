@@ -3,6 +3,8 @@ ARG VERSION
 
 # Build on top of Gramex base
 FROM gramener/gramex-base:$VERSION
+ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
 RUN \
     # Install nodejs and npm.
@@ -16,4 +18,4 @@ RUN \
     # Activate conda env to run Gramex
     source ~/.profile && \
     # Set up all Gramex apps
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser gramex setup --all
+    gramex setup --all

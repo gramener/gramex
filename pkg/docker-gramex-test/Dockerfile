@@ -21,7 +21,3 @@ RUN \
     gramex setup --all && \
     # Install test dependencies
     pip install -r tests/requirements.txt
-
-# RUN source ~/.profile && \
-#     cd /app/gramex/ && \
-#     nosetests
