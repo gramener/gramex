@@ -3,7 +3,6 @@
 gramex/apps/init/default/gramex.template.yaml
 gramex/apps/init/minimal/gramex.template.yaml
 gramex/apps/ui/bootstrap-theme.scss
-pkg/conda/template.meta.yaml
 tests/sass/vars.scss
 
 # These YAML test cases have deliberate errors -- for testing

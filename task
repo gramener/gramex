@@ -66,14 +66,6 @@ security () {
   snyk test --dev --all-projects --skip-unresolved > reports/snyk.txt || true
 }
 
-conda () {
-  # conda install conda-build
-  conda build purge
-  pip install orderedattrdict tornado==5.1.1
-  python pkg/conda/conda-setup.py
-  conda build -c conda-forge pkg/conda/
-}
-
 # Usage: VERSION=1.xx.0 bash task pushdocker
 builddocker () {
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
