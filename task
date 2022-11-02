@@ -75,16 +75,13 @@ conda () {
 }
 
 # Usage: VERSION=1.xx.0 bash task pushdocker
-pushdocker () {
+builddocker () {
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex/setup.sh
-  # Run security checks
-  docker pull aquasec/trivy:latest
-  docker run --rm aquasec/trivy:latest \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v /mnt/c/temp/trivycache:/root/.cache/
-    --security-checks vuln \
-    image gramener/gramex:$VERSION > reports/trivy.txt
+  VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh
+}
+
+pushdocker () {
   docker login                # log in as sanand0 / pratapvardhan
   docker push gramener/gramex-base:$VERSION
   docker push gramener/gramex-base:latest
