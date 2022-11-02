@@ -23,6 +23,7 @@ import gramex
 from gramex.handlers import Capture
 from . import TestGramex, server
 
+_timeout = 15
 _captures = {}
 paths = {'phantomjs': which('phantomjs'), 'node': which('node')}
 
@@ -215,7 +216,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     @classmethod
     def setupClass(cls):
-        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=15)
+        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=_timeout)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
     @staticmethod
@@ -339,14 +340,17 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         ok_(user['role'] in text)
 
     def err(self, code, **params):
-        return self.fetch(self.src, code=code, params=params)
+        return self.fetch(self.src, code=code, params=params, timeout=_timeout)
 
     def test_errors(self):
         # nonexistent URLs should capture the 404 page and return a screenshot
         self.err(code=200, url='/nonexistent')
-        self.err(code=500, url='http://nonexistent')
+        # Invalid capture formats report HTTP 400
         self.err(code=400, url=self.url, ext='nonexistent')
+        # Invalid selectors report HTTP 500
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
+        # Invalid domains report HTTP 500
+        self.err(code=500, url='http://nonexistent')
 
     def test_pdf_header_footer(self):
         result = self.fetch(

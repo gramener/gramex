@@ -16,8 +16,9 @@ mkdocs                # For documentation
 mkdocstrings          # For documentation
 mkdocstrings[python]  # For documentation
 
-markdown              # Markdown is part of gramex/release.json, but re-install since
-                      # importlib_metadata version conflicts with makdocs
+# Markdown is part of gramex/release.json, but see if we need need to
+# re-install since importlib_metadata version conflicts with mkdocs
+# markdown
 
 transformers          # For MLHandler
 datasets              # For MLHandler

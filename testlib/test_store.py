@@ -6,10 +6,10 @@ import unittest
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 import gramex.cache
-from gramex.cache import JSONStore, SQLiteStore, HDF5Store, RedisStore
+from gramex.cache import JSONStore, SQLiteStore, RedisStore
 
 # It must be possible to import from basehandler for backward-compatibility
-from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore  # noqa
+from gramex.handlers.basehandler import JSONStore, SQLiteStore, RedisStore  # noqa
 from gramex.handlers.basehandler import BaseMixin
 from gramex.config import variables
 from . import tests_dir
@@ -136,16 +136,6 @@ class TestSQLiteStore(TestJSONStore):
 
     def load(self):
         return {self.store._escape(key): val for key, val in self.store.store.items()}
-
-
-class TestHDF5Store(TestJSONStore):
-    store_class = HDF5Store
-    store_file = 'data.h5'
-
-    def load(self):
-        return {
-            key.replace('\t', '/'): json.loads(val[()]) for key, val in self.store.store.items()
-        }
 
 
 class TestRedisStore(TestJSONStore):

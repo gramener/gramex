@@ -1851,7 +1851,7 @@ def _filter_mongodb(
     if len(data) > 0:
         import bson
 
-        for col, val in data.iloc[0].iteritems():
+        for col, val in data.iloc[0].items():
             if type(val) in {bson.objectid.ObjectId}:
                 data[col] = data[col].map(str)
 

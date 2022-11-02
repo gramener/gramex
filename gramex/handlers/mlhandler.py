@@ -139,7 +139,7 @@ class MLHandler(FormHandler):
         return pd.concat(dfs, axis=0)
 
     def _parse_application_json(self):
-        return pd.read_json(self.request.body)
+        return pd.read_json(self.request.body.decode('utf-8'))
 
     def _parse_data(self, _cache=True, append=False):
         header = self.request.headers.get('Content-Type', '').split(';')[0]

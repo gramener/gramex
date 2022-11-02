@@ -172,7 +172,7 @@ class AuthHandler(BaseHandler):
                 user.update(
                     {
                         key: val
-                        for key, val in users.iloc[0].iteritems()
+                        for key, val in users.iloc[0].items()
                         if not gramex.data.pd.isnull(val)
                     }
                 )

@@ -178,8 +178,11 @@ else:
     def _ensure_remove(func, path, exc_info):
         '''onerror callback for rmtree that tries hard to delete files'''
         if issubclass(exc_info[0], WindowsError):
-            import winerror
-
+            winerror = AttrDict(
+                ERROR_PATH_NOT_FOUND=3,
+                ERROR_ACCESS_DENIED=5,
+                ERROR_SHARING_VIOLATION=32,
+            )
             # Delete read-only files
             # https://bugs.python.org/issue19643
             # https://bugs.python.org/msg218021

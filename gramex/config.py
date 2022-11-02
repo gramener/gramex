@@ -835,6 +835,11 @@ def used_kwargs(method, kwargs, ignore_keywords=False):
     If the method uses ``**kwargs`` (keywords), it uses all keys. To ignore this
     and return only named arguments, use ``ignore_keywords=True``.
     '''
+    # In Pandas 1.5, DataFrame.to_csv and DataFrame.to_excel are wrapped with @deprecate_kwargs.
+    # We dive deeper to detect the actual keywords. __wrapped__ is provided by functools.wraps
+    # https://docs.python.org/3/library/functools.html
+    while hasattr(method, '__wrapped__'):
+        method = method.__wrapped__
     argspec = inspect.getfullargspec(method)
     # If method uses **kwargs, return all kwargs (unless you ignore **kwargs)
     if argspec.varkw and not ignore_keywords:

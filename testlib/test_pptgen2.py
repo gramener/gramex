@@ -899,7 +899,7 @@ class TestPPTGen(TestCase):
         for row_offset, shape_name in ((1, 'Table 1'), (0, 'Table 2')):
             table = self.get_shape(prs.slides[0].shapes, shape_name).table
             for i, (index, row) in enumerate(data.iterrows()):
-                for j, (column, val) in enumerate(row.iteritems()):
+                for j, (column, val) in enumerate(row.items()):
                     cell = table.rows[i + row_offset].cells[j]
                     eq_(cell.text, '{}'.format(val))
         # Test table header
