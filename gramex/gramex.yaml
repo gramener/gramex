@@ -269,17 +269,21 @@ app:
     # Login parameters
     login_url: /login/ # URL used to log in
 
+  # Configure how sessions work. See https://gramener.com/gramex/guide/auth/#session-data
   session:
-    cookie: sid # Name of the session ID cookie
-    type: json # Type of store to use: hdf5, json or memory
-    flush:
-      5 # Write store to disk periodically (in seconds)
-      # For type:json, use 5 seconds. It does not save to disk automatically
-      # For type:hdf5 or sqlite, 60 seconds or so is fine
-    purge: 3600 # Purge every hour
-    path: $GRAMEXDATA/session.json # Path to the store (ignored for memory)
-    expiry: 31 # Session cookies expiry in days
-    httponly: true # Only HTTP access, no JS access
+    # Save in a cookie called sid:
+    cookie: sid
+    # Save in a JSON store
+    type: json
+    path: $GRAMEXDATA/session.json
+    # Flush every 5 seconds
+    flush: 5
+    # Clear expired sessions every hour
+    purge: 3600
+    # Cookies expire after 31 days
+    expiry: 31
+    # Browsers cannot use JS to access session cookie. Only HTTP access allowed, for security
+    httponly: true
 
 # The storelocations: section defines where Gramex stores its data.
 storelocations:

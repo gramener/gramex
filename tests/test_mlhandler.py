@@ -51,13 +51,13 @@ class TestTransformers(TestGramex):
                 shutil.rmtree(path)
 
     def test_default_sentiment(self):
-        """Ensure that the default model predicts something."""
+        # Ensure that the default model predicts something
         resp = self.get("/sentiment?text=This is bad.&text=This is good.", timeout=60)
         self.assertEqual(resp.json(), ["NEGATIVE", "POSITIVE"])
 
     @skipUnless(os.environ.get("GRAMEX_ML_TESTS"), "Set GRAMEX_ML_TESTS=1 to run slow ML tests")
     def test_train_sentiment(self):
-        """Train with some vague sentences."""
+        # Train with some vague sentences
         df = pd.read_json("https://bit.ly/3NesHFs")
         resp = self.get(
             "/sentiment?_action=train&target_col=label",
@@ -69,7 +69,7 @@ class TestTransformers(TestGramex):
         self.assertGreaterEqual(resp.json()["score"], 0.9)
 
     def test_default_ner(self):
-        """Ensure that the default model predicts something."""
+        # Ensure that the default model predicts something
         labels = self.get("/ner?text=Narendra Modi is the PM of India.", timeout=300).json()
         ents = [[(r["word"], r["entity_group"]) for r in label] for label in labels]
         self.assertIn(("Narendra Modi", "PER"), ents[0])
@@ -661,7 +661,7 @@ class TestSklearn(TestGramex):
         self.assertIsInstance(model["DecisionTreeClassifier"], DecisionTreeClassifier)
 
     def test_template(self):
-        """Check if viewing the template works fine."""
+        # Check if viewing the template works fine
         r = self.get("/mlhandler")
         self.assertEqual(r.status_code, OK)
         # Try getting predictions
@@ -772,7 +772,7 @@ class TestPredictor(TestGramex):
             shutil.rmtree(titanic)
 
     def test_default(self):
-        """An empty GET request returns all predictions."""
+        # An empty GET request returns all predictions
         y_true = gramex.cache.open(
             op.join(folder, "..", "testlib", "iris.csv"),
             usecols=["species"],
@@ -820,7 +820,7 @@ class TestPredictor(TestGramex):
         self.assertEqual(set(y_pred), {'versicolor', 'virginica'})
 
     def test_from_mlhandler(self):
-        """Check that a model created through MLHandler works."""
+        # Check that a model created through MLHandler works
         # Get results from the MLHandler
         df = gramex.cache.open('titanic.csv', rel=True)
         resp = self.get(
