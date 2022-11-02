@@ -52,7 +52,11 @@ class TestInstall(unittest.TestCase):
                     add_path = os.path.join(root, filename)
                     if not any(fnmatch(add_path, pattern) for pattern in ignore):
                         actual.add(add_path)
-        expected = {os.path.abspath(os.path.join(folder, filename)) for filename in expected_files}
+        expected = {
+            os.path.abspath(os.path.join(folder, filename))
+            for filename in expected_files
+            if not any(fnmatch(filename, pattern) for pattern in ignore)
+        }
         self.assertEqual(actual, expected)
 
         conf = +PathConfig(Path(self.appdir('apps.yaml')))

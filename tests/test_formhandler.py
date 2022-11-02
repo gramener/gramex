@@ -649,7 +649,7 @@ class TestFormHandler(TestGramex):
                     }
                 ),
                 headers={'Count-Data': '2'},
-                **kwargs
+                **kwargs,
             )
             eq_(
                 self.get(kwargs['url'], params={'product': 'खुश'}).json(),
@@ -676,7 +676,7 @@ class TestFormHandler(TestGramex):
                     }
                 ),
                 headers={'Count-Data': '1'},
-                **kwargs
+                **kwargs,
             )
             eq_(
                 self.get(kwargs['url'], params={'city': 'HYD', 'product': 'खुश'}).json(),
@@ -700,7 +700,7 @@ class TestFormHandler(TestGramex):
                     }
                 ),
                 headers={'Count-Data': '1'},
-                **kwargs
+                **kwargs,
             )
             self.check(
                 method='delete',
@@ -711,7 +711,7 @@ class TestFormHandler(TestGramex):
                     }
                 ),
                 headers={'Count-Data': '1'},
-                **kwargs
+                **kwargs,
             )
             eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [])
 
