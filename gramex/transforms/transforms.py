@@ -745,6 +745,47 @@ def handler(func):
     return wrapper
 
 
+# Define direct keys. These can be used as-is
+_transform_direct_vars = {
+    'name': 'handler.name',
+    'class': 'handler.__class__.__name__',
+    'time': 'round(time.time() * 1000, 0)',
+    'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
+    'method': 'handler.request.method',
+    'uri': 'handler.request.uri',
+    'ip': 'handler.request.remote_ip',
+    'status': 'handler.get_status()',
+    'duration': 'round(handler.request.request_time() * 1000, 0)',
+    'port': 'conf.app.listen.port',
+    # TODO: 'size': 'handler.get_content_size()' is not available in RequestHandler
+    'user': '(handler.current_user or {}).get("id", "")',
+    'session': 'handler.session.get("id", "")',
+    'error': 'getattr(handler, "_exception", "")',
+}
+
+# Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
+_transform_obj_vars = {
+    'args': 'handler.get_argument("{val}", "")',
+    'request': 'getattr(handler.request, "{val}", "")',
+    'headers': 'handler.request.headers.get("{val}", "")',
+    'cookies': (
+        'handler.request.cookies["{val}"].value ' + 'if "{val}" in handler.request.cookies else ""'
+    ),
+    'user': '(handler.current_user or {{}}).get("{val}", "")',
+    'env': 'os.environ.get("{val}", "")',
+}
+
+
+def handler_expr(expr):
+    if expr in _transform_direct_vars:
+        return _transform_direct_vars[expr]
+    if '.' in expr:
+        prefix, value = expr.split('.', 2)
+        if prefix in _transform_obj_vars:
+            return _transform_obj_vars[prefix].format(val=value)
+    raise ValueError(f'Unknown expression {expr}')
+
+
 def build_log_info(keys: List, *vars: List):
     '''Utility to create logging values.
 
@@ -781,49 +822,15 @@ def build_log_info(keys: List, *vars: List):
     '''
     from gramex import conf
 
-    # Define direct keys. These can be used as-is
-    direct_vars = {
-        'name': 'handler.name',
-        'class': 'handler.__class__.__name__',
-        'time': 'round(time.time() * 1000, 0)',
-        'datetime': 'datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")',
-        'method': 'handler.request.method',
-        'uri': 'handler.request.uri',
-        'ip': 'handler.request.remote_ip',
-        'status': 'handler.get_status()',
-        'duration': 'round(handler.request.request_time() * 1000, 0)',
-        'port': 'conf.app.listen.port',
-        # TODO: 'size': 'handler.get_content_size()' is not available in RequestHandler
-        'user': '(handler.current_user or {}).get("id", "")',
-        'session': 'handler.session.get("id", "")',
-        'error': 'getattr(handler, "_exception", "")',
-    }
-    # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc
-    object_vars = {
-        'args': 'handler.get_argument("{val}", "")',
-        'request': 'getattr(handler.request, "{val}", "")',
-        'headers': 'handler.request.headers.get("{val}", "")',
-        'cookies': (
-            'handler.request.cookies["{val}"].value '
-            + 'if "{val}" in handler.request.cookies else ""'
-        ),
-        'user': '(handler.current_user or {{}}).get("{val}", "")',
-        'env': 'os.environ.get("{val}", "")',
-    }
     vals = []
     for key in keys:
         if key in vars:
-            vals.append('"{}": {},'.format(key, key))
+            vals.append(f'"{key}": {key},')
             continue
-        if key in direct_vars:
-            vals.append('"{}": {},'.format(key, direct_vars[key]))
-            continue
-        if '.' in key:
-            prefix, value = key.split('.', 2)
-            if prefix in object_vars:
-                vals.append('"{}": {},'.format(key, object_vars[prefix].format(val=value)))
-                continue
-        app_log.error(f'Skipping unknown key {key}')
+        try:
+            vals.append(f'"{key}": {handler_expr(key)},')
+        except ValueError:
+            app_log.error(f'Skipping unknown key {key}')
     code = compile(
         'def fn(handler, %s):\n\treturn {%s}' % (', '.join(vars), ' '.join(vals)),
         filename='log',

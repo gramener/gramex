@@ -170,6 +170,35 @@ url:
       headers:
         Content-Type: application/json
 
+  ratelimit/a:
+    pattern: /ratelimit/a
+    handler: FunctionHandler
+    kwargs:
+      function: 1 / float(handler.get_arg('n', 1))
+      ratelimit: &RATELIMIT_POOL1
+        pool: pool1
+        keys: [env.HOME, daily, user]
+        limit: 3
+
+  ratelimit/b:
+    pattern: /ratelimit/b
+    handler: FunctionHandler
+    kwargs:
+      function: 1 / float(handler.get_arg('n', 1))
+      ratelimit:
+        <<: *RATELIMIT_POOL1
+
+  ratelimit/reset:
+    pattern: /ratelimit/reset
+    handler: FunctionHandler
+    kwargs:
+      function: >
+        gramex.handlers.BaseHandler.reset_ratelimit(
+          'pool1',
+          [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d'), handler.get_arg('user', '')],
+          0,
+        )
+
   # TestFunctionHandler
   func/args:
     pattern: /func/args

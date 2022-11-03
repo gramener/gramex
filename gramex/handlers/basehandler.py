@@ -9,7 +9,7 @@ import traceback
 import tornado.gen
 import gramex
 import gramex.cache
-from typing import Union
+from typing import Union, Optional, List, Any
 from binascii import b2a_base64
 from fnmatch import fnmatch
 from http.cookies import Morsel
@@ -19,16 +19,16 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform, build_log_info
+from gramex.transforms import build_transform, build_log_info, handler_expr
 from gramex.transforms.template import CacheLoader
-from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED
+from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED, TOO_MANY_REQUESTS
 from gramex.cache import get_store
 
 # We don't use these, but these stores used to be defined here. Programs may import these
 from gramex.cache import KeyStore, JSONStore, HDF5Store, SQLiteStore, RedisStore  # noqa
 
 server_header = f'Gramex/{__version__}'
-session_store_cache = {}
+_store_cache = {}
 
 # Python 3.8+ supports SameSite cookie attribute. Monkey-patch it for Python 3.7
 # https://stackoverflow.com/a/50813092/100904
@@ -52,6 +52,8 @@ class BaseMixin:
         error=None,
         xsrf_cookies=None,
         cors: Union[None, bool, dict] = None,
+        ratelimit: Optional[dict] = None,
+        # If you add any explicit kwargs here, add them to special_keys too.
         **kwargs,
     ):
         '''
@@ -69,6 +71,7 @@ class BaseMixin:
         # Note: call setup_session before setup_auth to ensure that
         # override_user is run before authorize
         cls.setup_session(conf.app.get('session'))
+        cls.setup_ratelimit(ratelimit, conf.app.get('ratelimit'))
         cls.setup_auth(auth)
         cls.setup_error(error)
         cls.setup_xsrf(xsrf_cookies)
@@ -80,7 +83,7 @@ class BaseMixin:
         if conf.app.settings.get('debug', False):
             cls.log_exception = cls.debug_exception
 
-    # A list of special keys for BaseHandler. Can be extended by other classes.
+    # A list of special keys handled by BaseHandler. Can be extended by other classes.
     special_keys = [
         'transform',
         'redirect',
@@ -92,6 +95,7 @@ class BaseMixin:
         'xsrf_cookies',
         'cors',
         'headers',
+        'ratelimit',
     ]
 
     @classmethod
@@ -108,9 +112,22 @@ class BaseMixin:
 
     @classmethod
     def get_list(cls, val: Union[list, tuple, str], key: str = '', eg: str = '', caps=True) -> set:
-        '''
-        Convert val="GET, PUT" into {"GET", "PUT"}.
-        If val is not a string or list/tuple, raise ValueError("url.{key} invalid. e.g. {eg}")
+        '''Split comma-separated values into a set.
+
+        Examples:
+            >>> get_list('GET, PUT') == {'GET', 'PUT'}
+            >>> get_list(['GET', ' ,get '], caps=True) == {'GET'}
+            >>> get_list([' GET ,  PUT', ' ,POST, ']) == {'GET', 'PUT', 'POST'}
+
+        Parameters:
+            val: Input to split. If val is not str/list/tuple, raise
+                ValueError("url.{key} invalid. e.g. {eg}")
+            key: `url:` key to display in error message
+            eg: Example values to display in error message
+            caps: True to convert values to uppercase
+
+        Returns:
+            Unique comma-separated values
         '''
         if isinstance(val, (list, tuple)):
             val = ' '.join(val)
@@ -312,20 +329,24 @@ class BaseMixin:
         return keys
 
     @classmethod
+    def _get_store(cls, conf):
+        key = store_type, store_path = conf.get('type'), conf.get('path')
+        if key not in _store_cache:
+            _store_cache[key] = get_store(
+                type=store_type,
+                path=store_path,
+                flush=conf.get('flush'),
+                purge=conf.get('purge'),
+                purge_keys=cls._purge_keys,
+            )
+        return _store_cache[key]
+
+    @classmethod
     def setup_session(cls, session_conf):
         '''handler.session returns the session object. It is saved on finish.'''
         if session_conf is None:
             return
-        key = store_type, store_path = session_conf.get('type'), session_conf.get('path')
-        if key not in session_store_cache:
-            session_store_cache[key] = get_store(
-                type=store_type,
-                path=store_path,
-                flush=session_conf.get('flush'),
-                purge=session_conf.get('purge'),
-                purge_keys=cls._purge_keys,
-            )
-        cls._session_store = session_store_cache[key]
+        cls._session_store = cls._get_store(session_conf)
         cls.session = property(cls.get_session)
         cls._session_expiry = session_conf.get('expiry')
         cls._session_cookie_id = session_conf.get('cookie', 'sid')
@@ -343,6 +364,112 @@ class BaseMixin:
         cls._on_finish_methods.append(cls.set_last_visited)
         # Ensure that session is saved AFTER we set last visited
         cls._on_finish_methods.append(cls.save_session)
+
+    @classmethod
+    def setup_ratelimit(cls, ratelimit: Union[dict, None], ratelimit_app_conf: Union[dict, None]):
+        '''Initialize rate limiting checks'''
+        if ratelimit is None:
+            return
+        if ratelimit_app_conf is None:
+            raise ValueError(f"url:{cls.name}.ratelimit: no app.ratelimit defined")
+        if 'keys' not in ratelimit:
+            raise ValueError(f'url:{cls.name}.ratelimit.keys: missing')
+        if 'limit' not in ratelimit:
+            raise ValueError(f'url:{cls.name}.ratelimit.limit: missing')
+
+        # All ratelimit related info is stored in self._ratelimit
+        cls._ratelimit = AttrDict(key_fn=[])
+
+        # Default the pool name to `pattern:`
+        cls._ratelimit.pool = ratelimit.get('pool', cls.conf.pattern)
+
+        # Convert keys: into list
+        keys_spec = ratelimit['keys']
+        # keys: daily, user => keys: [daily, user]
+        if isinstance(keys_spec, str):
+            keys_spec = cls.get_list(keys_spec, key=cls.name, eg='daily, user', caps=False)
+        # keys: {function: ...} => keys: [{function: ...}]
+        elif isinstance(keys_spec, dict):
+            keys_spec = [keys_spec]
+        # keys: must be a list
+        elif not isinstance(keys_spec, (list, tuple)):
+            raise ValueError(f'url:{cls.name}.ratelimit.keys: needs dict list, not {keys_spec}')
+
+        # Pre-compile keys: into self._ratelimit.keys = [key_fn, key_fn, ...]
+        #   key_fn['function'](self) will return nth key
+        #   key_fn['expiry'](self) will return nth expiry (in seconds)
+        predefined_keys = ratelimit_app_conf.get('keys', {})
+        for index, key_spec in enumerate(keys_spec):
+            if isinstance(key_spec, str):
+                # Look up string keys like daily to predefined_keys.
+                if key_spec in predefined_keys:
+                    key_spec = predefined_keys[key_spec]
+                # Or construct functions for `user.id`, etc
+                else:
+                    try:
+                        key_spec = {'function': handler_expr(key_spec)}
+                    except ValueError:
+                        raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} is unknown')
+            # {function: ...} MUST be defined for a key. {expiry: ... } is optional
+            if not isinstance(key_spec, dict) or 'function' not in key_spec:
+                raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} has no function:')
+            # Compile key/expiry functions into cls._ratelimit.keys[index]['function' / 'expiry']
+            key_fn = {}
+            for fn in ('function', 'expiry'):
+                if fn in key_spec:
+                    key_fn[fn] = build_transform(
+                        {'function': key_spec[fn]},
+                        vars={'handler': None},
+                        filename=f'url:{cls.name}.ratelimit.keys[{index}].{fn}',
+                        iter=False,
+                    )
+            cls._ratelimit.key_fn.append(key_fn)
+
+        # Ensure limit: is a number or a {function: ...}
+        limit_spec = ratelimit['limit']
+        if isinstance(limit_spec, (int, float)):
+            limit_spec = {'function': limit_spec}
+        elif not isinstance(ratelimit['limit'], dict) or 'function' not in ratelimit['limit']:
+            example = "{'function': number}"
+            raise ValueError(f'url:{cls.name}.ratelimit.limit: needs {example}, not {limit_spec}')
+
+        # Pre-compile limit: into self._ratelimit.limit_fn
+        cls._ratelimit.limit_fn = build_transform(
+            limit_spec,
+            vars={'handler': None},
+            filename=f'url:{cls.name}.ratelimit.limit',
+            iter=False,
+        )
+
+        cls._ratelimit.store = cls._get_store(ratelimit_app_conf)
+        cls._on_init_methods.append(cls.check_ratelimit)
+        cls._on_finish_methods.append(cls.update_ratelimit)
+
+    @classmethod
+    def reset_ratelimit(cls, pool: str, keys: List[Any], value: int = 0) -> bool:
+        '''Reset the rate limit usage for a specific pool.
+
+        Examples:
+
+            >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'])
+            >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'], 10)
+
+        Parameters:
+
+            pool: Rate limit pool to use. This is the url's `pattern:` unless you specified a
+                `kwargs.ratelimit.pool:`
+            keys: specific instance to reset. If your `ratelimit.keys` is `[daily, user.id]`,
+                keys might look like `['2022-01-01', 'x@example.org']` to clear for that day/user
+            value: sets the usage counter to this number (default: `0`)
+        '''
+        store = cls._get_store(conf.app.get('ratelimit'))
+        key = json.dumps([pool] + keys)
+        val = store.load(key, None)
+        if val is not None and 'n' in val:
+            val['n'] = value
+            store.dump(key, val)
+        else:
+            return False
 
     @classmethod
     def setup_redirect(cls, redirect):
@@ -655,6 +782,9 @@ class BaseMixin:
                 return
             except Exception:
                 app_log.exception(f'url:{self.name}.error.{status_code} raised an exception')
+        # HTTP 429 error code reports ratelimits
+        if status_code == TOO_MANY_REQUESTS and hasattr(self, '_ratelimit'):
+            self.set_ratelimit_headers()
         # If error was not written, use the default error
         self._write_error(status_code, **kwargs)
 
@@ -889,10 +1019,13 @@ class BaseMixin:
                 self.session['user'] = row['user']
 
     def set_last_visited(self):
-        '''
-        This method is called by :py:func:`BaseHandler.prepare` when any user
-        accesses a page. It updates the last visited time in the ``_l`` session
-        key. It does this only if the ``_i`` key exists.
+        '''Update session last visited time if we track inactive expiry.
+
+        - `session._l` is the last time the user accessed a page.
+        - `session._i` is the seconds of inactivity after which the session expires.
+        - If `session._i` is set (we track inactive expiry), we set ``session._l` to now.
+
+        Called by [prepare][BaseHandler.prepare] when any user accesses a page.
         '''
         # For efficiency reasons, don't call get_session every time. Check
         # session only if there's a valid sid cookie (with possibly long expiry)
@@ -900,6 +1033,49 @@ class BaseMixin:
             session = self.get_session()
             if '_i' in session:
                 session['_l'] = time.time()
+
+    def check_ratelimit(self):
+        '''Raise HTTP 429 if usage exceeds rate limit. Set X-Ratelimit-* HTTP headers'''
+        ratelimit = self._ratelimit
+        # Get the rate limit key, limit and expiry
+        ratelimit.key = json.dumps(
+            [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
+        )
+        ratelimit.limit = ratelimit.limit_fn(self)
+        expiries = [key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn]
+        # If no expiry is specified, store for 100 years
+        ratelimit.expiry = min(expiries + [3155760000])
+
+        # Ensure usage does not hit limit
+        ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
+        if ratelimit.usage >= ratelimit.limit:
+            raise HTTPError(TOO_MANY_REQUESTS, f'{ratelimit.key} hit rate limit {ratelimit.limit}')
+        self.set_ratelimit_headers()
+
+    def update_ratelimit(self):
+        '''If request succeeds, increase rate limit usage count by 1'''
+        ratelimit = self._ratelimit
+        # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
+        # If response is a HTTP error, don't count towards rate limit
+        if 'key' not in ratelimit or self.get_status() >= 400:
+            return
+        # Increment the rate limit by 1
+        usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
+        usage_obj['n'] += 1
+        usage_obj['_t'] = time.time() + ratelimit.expiry
+        ratelimit.store.dump(ratelimit.key, usage_obj)
+
+    def set_ratelimit_headers(self):
+        ratelimit = self._ratelimit
+        # ratelimit.usage goes 0, 1, 2, ...
+        # If limit is 3, remaining goes 3, 2, 1, ... -- use (limit - usage - 1)
+        # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
+        remaining = max(ratelimit.limit - ratelimit.usage - 1, 0)
+        self.set_header('X-Ratelimit-Limit', str(ratelimit.limit))
+        self.set_header('X-Ratelimit-Remaining', str(remaining))
+        self.set_header('X-RateLimit-Reset', str(ratelimit.expiry))
+        if ratelimit.usage >= ratelimit.limit:
+            self.set_header('Retry-After', str(ratelimit.expiry))
 
 
 class BaseHandler(RequestHandler, BaseMixin):
