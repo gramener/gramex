@@ -119,6 +119,3 @@ cover
 
 # For Linux FUSE file system
 .fuse_hidden*
-
-# License copied to conda build_dir
-pkg/conda/LICENSE
