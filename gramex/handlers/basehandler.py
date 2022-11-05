@@ -111,8 +111,14 @@ class BaseMixin:
         return kwargs
 
     @classmethod
-    def get_list(cls, val: Union[list, tuple, str], key: str = '', eg: str = '', caps=True) -> set:
+    def get_list(
+        cls, val: Union[list, tuple, str], key: str = '', eg: str = '', caps: bool = True
+    ) -> set:
         '''Split comma-separated values into a set.
+
+        Process kwargs that can be a comma-separated string or a list,
+        like BaseMixin's `methods:`, `cors.origins`, `cors.methods`, `cors.headers`,
+        `ratelimit.keys`, etc.
 
         Examples:
             >>> get_list('GET, PUT') == {'GET', 'PUT'}
@@ -120,8 +126,7 @@ class BaseMixin:
             >>> get_list([' GET ,  PUT', ' ,POST, ']) == {'GET', 'PUT', 'POST'}
 
         Parameters:
-            val: Input to split. If val is not str/list/tuple, raise
-                ValueError("url.{key} invalid. e.g. {eg}")
+            val: Input to split. If val is not str/list/tuple, raise `ValueError`
             key: `url:` key to display in error message
             eg: Example values to display in error message
             caps: True to convert values to uppercase
