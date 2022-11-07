@@ -2004,9 +2004,7 @@ def _influxdb_client(
 
 
 def _timestamp_df(df, index_col="_time"):
-    from tzlocal import get_localzone
-
-    now = datetime.now(get_localzone())
+    now = datetime.now()
     if index_col not in df:
         df[index_col] = [now] * len(df)
     else:

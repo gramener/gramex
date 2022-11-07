@@ -71,7 +71,6 @@
     "sqlitedict>=1.5.0": "SRV: SQLiteStore",
     "tables": "REQ: HDF5 reading / writing",
     "tornado>=5.1.1": "REQ: Web server",
-    "tzlocal": "TODO: Why is this required?",
     "watchdog>=0.8": "REQ: Monitor file changes",
     "xlrd": "REQ: gramex.data.download()"
   },
