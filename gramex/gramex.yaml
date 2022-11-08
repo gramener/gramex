@@ -276,14 +276,39 @@ app:
     # Save in a JSON store
     type: json
     path: $GRAMEXDATA/session.json
-    # Flush every 5 seconds
+    # Flush every 5 seconds. Clear expired sessions every hour
     flush: 5
-    # Clear expired sessions every hour
     purge: 3600
     # Cookies expire after 31 days
     expiry: 31
     # Browsers cannot use JS to access session cookie. Only HTTP access allowed, for security
     httponly: true
+
+  # Configure how rate limiting works.
+  ratelimit:
+    # Save in a JSON store
+    type: json
+    path: $GRAMEXDATA/ratelimit.json
+    # Flush every 30 seconds. Clear expired sessions every hour
+    flush: 30
+    purge: 3600
+    # These can be used in keys as pre-defined functions
+    keys:
+      hourly:
+        function: "pd.Timestamp.utcnow().strftime('%Y-%m-%d %H')"
+        expiry: "int((pd.Timestamp.utcnow().ceil(freq='H') - pd.Timestamp.utcnow()).total_seconds())"
+      daily:
+        function: "pd.Timestamp.utcnow().strftime('%Y-%m-%d')"
+        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=1) - pd.Timestamp.utcnow()).total_seconds())"
+      weekly:
+        function: "pd.Timestamp.utcnow().strftime('%Y %U')"
+        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=7) - pd.Timestamp.utcnow()).total_seconds())"
+      monthly:
+        function: "pd.Timestamp.utcnow().strftime('%Y-%m')"
+        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.offsets.MonthBegin() - pd.Timestamp.utcnow()).total_seconds())"
+      yearly:
+        function: "pd.Timestamp.utcnow().strftime('%Y')"
+        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.offsets.YearBegin() - pd.Timestamp.utcnow()).total_seconds())"
 
 # The storelocations: section defines where Gramex stores its data.
 storelocations:
