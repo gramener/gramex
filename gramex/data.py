@@ -2004,14 +2004,12 @@ def _influxdb_client(
 
 
 def _timestamp_df(df, index_col="_time"):
-    from tzlocal import get_localzone
-
-    now = datetime.now(get_localzone())
+    """Add timestamp index by parsing `index_col` (default to now)."""
+    now = datetime.now().astimezone()
     if index_col not in df:
         df[index_col] = [now] * len(df)
     else:
-        df[index_col] = pd.to_datetime(df[index_col], errors="coerce")
-        df[index_col].fillna(value=now, inplace=True)
+        df[index_col] = pd.to_datetime(df[index_col], errors="coerce").fillna(now)
     return df.set_index(index_col)
 
 
