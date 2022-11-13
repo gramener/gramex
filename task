@@ -7,9 +7,13 @@ clean () {
   # Remove unnecessary / temporary files
   rm -rf build/ dist/ .eggs/
   rm -rf tests/uploads/ tests/htmlcov/ tests/.cache-url
-  rm -rf gramex-1.*
   rm -f .coverage
   find . \( -name '*.egg-info' -o -name '*.egg' -o -name '*.pyc' -o -name '*.pyo' -o -name '__pycache__' \) -exec rm -fr {} +
+}
+
+reformat () {
+  git ls-files | grep -E '\.py$' | xargs black --skip-string-normalization --line-length=99
+  git ls-files | grep -E '\.(js|jsx|vue|ts|css|scss|sass|yaml|md)$' | xargs npx prettier --write
 }
 
 lint () {
