@@ -45,7 +45,8 @@ pushdocs () {
 
 pushpypi () {
   clean
-  python setup.py sdist
+  pip install --upgrade build twine
+  python -m build .
   # Note: if this fails, add '-p PASSWORD'
   twine upload -u gramener dist/*
 }
