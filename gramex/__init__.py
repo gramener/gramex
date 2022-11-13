@@ -52,6 +52,8 @@ gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
 '''
 
+__version__ = '1.85.0'
+
 paths = AttrDict()  # Paths where configurations are stored
 conf = AttrDict()  # Final merged configurations
 config_layers = ChainConfig()  # Loads all configurations. init() updates it
@@ -61,12 +63,6 @@ paths['source'] = Path(__file__).absolute().parent  # Where gramex source code i
 paths['base'] = Path('.')  # Where gramex is run from
 
 callbacks = {}  # Services callbacks
-
-# Populate __version__ from release.json
-with (paths['source'] / 'release.json').open() as _release_file:
-    release = json.load(_release_file, object_pairs_hook=AttrDict)
-    __version__ = release.info.version
-
 _sys_path = list(sys.path)  # Preserve original sys.path
 
 

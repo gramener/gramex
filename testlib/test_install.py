@@ -9,7 +9,7 @@ from nose.tools import ok_
 from . import folder
 from gramex import variables
 from gramex.install import init, _ensure_remove
-from shutilwhich import which
+from shutil import which
 
 
 class TestInit(unittest.TestCase):

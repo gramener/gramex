@@ -1,5 +1,5 @@
 # ignore todo files
-TODO
+TODO.*
 *.todo
 
 # ignore mkdocs generated files

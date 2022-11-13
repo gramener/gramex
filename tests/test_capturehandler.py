@@ -17,7 +17,7 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.high_level import extract_text_to_fp
-from shutilwhich import which
+from shutil import which
 from tornado.web import create_signed_value
 import gramex
 from gramex.handlers import Capture

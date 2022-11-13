@@ -17,7 +17,6 @@ class TestSetup(unittest.TestCase):
         self.exists('deploy.yaml')
         self.exists('apps.yaml')
         self.exists('favicon.ico')
-        self.exists('release.json')
 
         # Ensure that handler HTML files are there by checking for all files
         self.exists('handlers/filehandler.template.html')
@@ -27,7 +26,6 @@ class TestSetup(unittest.TestCase):
         # Ensure that all JSON files in pptgen/ are included
         self.exists('pptgen/fonts.json')
         self.exists('pptgen/colors.json')
-        self.exists('pptgen/release.json')
 
         # Ensure that all YAML files in pptgen2/ are included
         self.exists('pptgen2/config.yaml')

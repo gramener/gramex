@@ -13,7 +13,7 @@ import string
 import shutil
 import datetime
 import requests
-from shutilwhich import which
+from shutil import which
 from pathlib import Path
 
 # B404:import_subprocess only developers can access this, not users
