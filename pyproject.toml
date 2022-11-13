@@ -8,69 +8,68 @@ version = "1.85.0"
 description = "Gramex: Low Code Data Solutions Platform"
 # People with 2+ contributions on https://github.com/gramener/gramex/graphs/contributors
 authors = [
-  {name = "Anand S", email = "s.anand@gramener.com"},
-  {name = "Pratap Vardhan", email = "pratapapvr@gmail.com"},
-  {name = "Jaidev Deshpande", email = "jaidev.deshpande@gramener.com"},
-  {name = "Bhanu Kamapantula", email = "talk2kish@gmail.com"},
-  {name = "Radheya Kale", email = "radheya.kale@gramener.com"},
-  {name = "Karmanya Aggarwal", email = "karmanyaaggarwal@gmail.com"},
-  {name = "Sundeep Reddy Mallu", email = "sundeep.mally@gramener.com"},
-  {name = "Sandeep Bhat", email = "sandeep.bhat@gramener.com"},
+    {name = "Anand S", email = "s.anand@gramener.com"},
+    {name = "Pratap Vardhan", email = "pratapapvr@gmail.com"},
+    {name = "Jaidev Deshpande", email = "jaidev.deshpande@gramener.com"},
+    {name = "Bhanu Kamapantula", email = "talk2kish@gmail.com"},
+    {name = "Radheya Kale", email = "radheya.kale@gramener.com"},
+    {name = "Karmanya Aggarwal", email = "karmanyaaggarwal@gmail.com"},
+    {name = "Sundeep Reddy Mallu", email = "sundeep.mally@gramener.com"},
+    {name = "Sandeep Bhat", email = "sandeep.bhat@gramener.com"},
 ]
 license = {text = "MIT"}
 keywords = ["gramex", "data", "low code", "framework", "machine learning"]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Natural Language :: English",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 requires-python = ">=3.7"
 readme = "README.md"
 dependencies = [
-  # It's OK to specify minimum versions, i.e. >=.
-  # But avoid <= or == without a strong reason. Makes it hard to mix with other libraries.
-  "astor",  # for gramex.transforms.build_transform
-  "cachetools>=3.0.0",  # for services.cache for memory cache
-  "colorlog>=2.7.0",  # for Coloured log files
-  "cron-descriptor",  # for gramex.apps.admin2.gramexadmin admin/schedule to pretty-print
-  "crontab>=0.21",  # for services.schedule to parse crontab entries
-  "diskcache>=2.8.3",  # for urlcache.DiskCache
-  "h5py",  # for MLHandler saves .h5 files. TODO: Migrate away from .h5
-  "joblib",  # for gramex.ml
-  "lxml",  # for gramex.pptgen2
-  "markdown",  # OPT: for transforms, gramex.services.create_alert()
-  "matplotlib",  # OPT: for gramex.data.download() charts, scale.colors, pptgen2
-  "numpy",  # for ml, topcause, pptgen
-  "oauthlib>=1.1.2",  # for socialhandler, twitterstream
-  "openpyxl",  # for gramex.cache.open .XLSX reading
-  "orderedattrdict>=1.6.0",  # for OrderedDict with attr access for configs
-  "packaging",  # for gramex.init() to parse gramex versions
-  "pandas",  # for all data processing
-  "pillow",  # for pptgen2
-  "psutil",  # for gramexadmin to monitor process
-  "python-dateutil",  # for gramex.config.CustomJSONEncoder, gramex.data._convertor
-  # See https://github.com/scanny/python-pptx/issues/754
-  "python-pptx>=0.6.6,<=0.6.19",  # for pptgen2
-  "python-slugify",  # for Pre-defined slugs at gramex.config.slug
-  "pyyaml>=5.1",  # for Parse YAML files for config
-  "redis>=2.10.0",  # for RedisStore
-  "requests",  # for all HTTP requests
-  "scikit-learn",  # For MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
-  "seaborn",  # OPT: gramex.data.download()
-  "six",  # for Python 3 compatibility. TODO: Avoid this
-  "sqlalchemy",  # for gramex.data.filter()
-  "sqlitedict>=1.5.0",  # for SQLiteStore
-  "tables",  # for HDF5 reading / writing. TODO: Where do we need this?
-  "tornado>=5.1.1",  # for Web server
-  "typing_extensions",  # for future-proof typing
-  "tzlocal",  # for gramex.data influxdb. TODO: Use dateutil.tz.tzlocal()
-  "watchdog",  # for Monitor file changes
+    # It's OK to specify minimum versions, i.e. >=.
+    # But avoid <= or == without a strong reason. Makes it hard to mix with other libraries.
+    "astor",  # for gramex.transforms.build_transform
+    "cachetools>=3.0.0",  # for services.cache for memory cache
+    "colorlog>=2.7.0",  # for Coloured log files
+    "cron-descriptor",  # for gramex.apps.admin2.gramexadmin admin/schedule to pretty-print
+    "crontab>=0.21",  # for services.schedule to parse crontab entries
+    "diskcache>=2.8.3",  # for urlcache.DiskCache
+    "h5py",  # for MLHandler saves .h5 files. TODO: Migrate away from .h5
+    "joblib",  # for gramex.ml
+    "lxml",  # for gramex.pptgen2
+    "markdown",  # OPT: for transforms, gramex.services.create_alert()
+    "matplotlib",  # for gramex.data.download() charts, scale.colors, pptgen2
+    "numpy",  # for ml, topcause, pptgen
+    "oauthlib>=1.1.2",  # for socialhandler, twitterstream
+    "openpyxl",  # for gramex.cache.open .XLSX reading
+    "orderedattrdict>=1.6.0",  # for OrderedDict with attr access for configs
+    "packaging",  # for gramex.init() to parse gramex versions
+    "pandas",  # for all data processing
+    "pillow",  # for pptgen2
+    "psutil",  # for gramexadmin to monitor process
+    "python-dateutil",  # for gramex.config.CustomJSONEncoder, gramex.data._convertor
+    # See https://github.com/scanny/python-pptx/issues/754
+    "python-pptx>=0.6.6,<=0.6.19",  # for pptgen2
+    "python-slugify",  # for pre-defined slugs at gramex.config.slug
+    "pyyaml>=5.1",  # for parsing YAML files for config
+    "redis>=2.10.0",  # for RedisStore
+    "requests",  # for all HTTP requests
+    "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
+    "seaborn",  # OPT: gramex.data.download()
+    "six",  # for gramex.yaml backward compatibility
+    "sqlalchemy",  # for gramex.data.filter()
+    "sqlitedict>=1.5.0",  # for SQLiteStore
+    "tables",  # for HDF5 reading / writing. TODO: Where do we need this?
+    "tornado>=5.1.1",  # for Web server
+    "typing_extensions",  # for future-proof typing
+    "watchdog",  # for Monitor file changes
 ]
 
 [project.urls]
