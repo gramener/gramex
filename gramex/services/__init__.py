@@ -883,6 +883,8 @@ def _sort_url_patterns(entry):
 
 def _url_normalize(pattern):
     '''Remove double slashes, ../, ./ etc in the URL path. Remove URL fragment'''
+    # TODO: posixpath.normpath allows double initial slashes and may have other problems.
+    # Switch to urljoin? https://stackoverflow.com/a/2131301/100904
     url = urlsplit(pattern)
     path = posixpath.normpath(url.path)
     if url.path.endswith('/') and not path.endswith('/'):

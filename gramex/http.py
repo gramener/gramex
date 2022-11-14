@@ -1,7 +1,8 @@
 '''
 Standard (and some non-standard) HTTP codes.
-We don't use six.moves.http_client because it doesn't contain codes like:
-CLIENT_TIMEOUT, RATE_LIMITED, TOO_MANY_REQUESTS. Here, we add them all.
+We don't use Python's http since it doesn't have CLIENT_TIMEOUT.
+Nor six.moves.http_client because it doesn't have CLIENT_TIMEOUT, RATE_LIMITED, TOO_MANY_REQUESTS.
+Here, we add them all.
 '''
 
 # status codes

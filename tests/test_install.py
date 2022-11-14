@@ -5,7 +5,7 @@ import unittest
 import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
-from shutilwhich import which
+from shutil import which
 from orderedattrdict import AttrDict
 from urllib.parse import urljoin
 import gramex

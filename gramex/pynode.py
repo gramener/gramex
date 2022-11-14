@@ -4,7 +4,7 @@ Python Node.js bridge
 import os
 import re
 import json
-from shutilwhich import which
+from shutil import which
 from tornado.gen import coroutine, sleep
 from tornado.websocket import websocket_connect, WebSocketClosedError
 from gramex.config import variables

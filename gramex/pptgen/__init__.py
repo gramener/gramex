@@ -1,9 +1,7 @@
 '''PPTGen module.'''
-import io
 import os
 import sys
 import copy
-import json
 import collections
 from pptx import Presentation
 from pptx.shapes.shapetree import SlideShapes
@@ -17,12 +15,6 @@ from gramex.transforms import build_transform
 from . import commands
 from .utils import stack_shapes, delete_slide, generate_slide, manage_slides
 from .utils import is_slide_allowed, is_group, add_new_slide, copy_slide_elem
-
-
-_folder = os.path.dirname(os.path.abspath(__file__))
-with io.open(os.path.join(_folder, 'release.json'), encoding='utf-8') as _release_file:
-    _release = json.load(_release_file)
-    __version__ = _release['version']
 
 COMMANDS_LIST = commands.cmdlist
 

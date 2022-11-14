@@ -204,7 +204,7 @@ def system_information(handler):
         app_log.warning('conda required for conda stats')
         error['conda', 'version'] = 'conda not installed'
 
-    from shutilwhich import which
+    from shutil import which
 
     value['node', 'path'] = which('node')
     value['git', 'path'] = which('git')

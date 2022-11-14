@@ -11,11 +11,6 @@ import logging
 import functools
 from trace import Trace
 from textwrap import indent
-
-try:
-    import line_profiler
-except ImportError:
-    line_profiler = None
 from gramex.config import app_log
 
 
@@ -117,37 +112,35 @@ def trace(trace=True, exclude=None, **kwargs):
     return decorator
 
 
-if line_profiler is None:
+def lineprofile(func):
+    '''
+    A decorator that prints the time taken for each line of a function every
+    time it is called. This example prints each line's performance::
 
-    def lineprofile(func):
+        >>> from gramex.debug import lineprofile
+        >>> @lineprofile
+        >>> def calc():
+        >>>     ...
+    '''
+    try:
+        import line_profiler
+    except ImportError:
         app_log.warning('@lineprofile requires line_profiler module')
         return func
 
-else:
+    profile = line_profiler.LineProfiler(func)
 
-    def lineprofile(func):
-        '''
-        A decorator that prints the time taken for each line of a function every
-        time it is called. This example prints each line's performance::
+    @functools.wraps(func)
+    def wrapper(*args, **kwds):
+        profile.enable_by_count()
+        try:
+            result = func(*args, **kwds)
+        finally:
+            profile.disable_by_count()
+        profile.print_stats(stripzeros=True)
+        return result
 
-            >>> from gramex.debug import lineprofile
-            >>> @lineprofile
-            >>> def calc():
-            >>>     ...
-        '''
-        profile = line_profiler.LineProfiler(func)
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwds):
-            profile.enable_by_count()
-            try:
-                result = func(*args, **kwds)
-            finally:
-                profile.disable_by_count()
-            profile.print_stats(stripzeros=True)
-            return result
-
-        return wrapper
+    return wrapper
 
 
 # Windows
