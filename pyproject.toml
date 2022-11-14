@@ -104,7 +104,7 @@ full = [
     # "conda",  # not required except for rpy2 or reporting conda version
     # "rpy2",  # deprecated
 ]
-influxdb = ["influxdb_client"]
+influxdb = ["influxdb_client[ciso]"]
 mongodb = [
     "pymongo",
     "bson",
