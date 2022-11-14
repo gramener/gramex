@@ -19,7 +19,7 @@ reformat () {
 lint () {
   # Python lint with flake8
   command -v flake8 2>/dev/null 2>&1 || pip install flake8 pep8-naming flake8-blind-except flake8-print flake8-debugger
-  flake8 gramex testlib tests
+  flake8 gramex testlib tests pytest
 
   # Python security check with bandit
   command -v bandit 2>/dev/null 2>&1 || pip install bandit
@@ -35,7 +35,7 @@ stats () {
   # Count number of lines of code
   PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
   JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1`
-  TESTLOC=`find tests testlib -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
+  TESTLOC=`find tests testlib pytest -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
   printf "Python: $PYLOC\nJavaScript: $JSLOC\nTests: $TESTLOC\n"
 }
 

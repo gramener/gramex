@@ -1,6 +1,7 @@
 import os
 import gramex.cache
 import pandas as pd
+from nose.tools import eq_
 from . import TestGramex, folder, afe
 
 
@@ -72,6 +73,33 @@ class TestFilterHandler(TestGramex):
             expected = self.sales[self.sales['देश'] == 'भारत']
             expected = unique_of(expected, col)
             eqframe(result[col], expected)
+
+    def test_ranges(self):
+        sales, growth = self.sales.sales, self.sales.growth
+        result = self.get('/filters/sales', params={'_c': ['sales|Range']}).json()
+        expected = {'sales|Range': [{'sales|min': sales.min(), 'sales|max': sales.max()}]}
+        eq_(result, expected)
+
+        result = self.get('/filters/sales', params={'_c': ['sales|Min']}).json()
+        expected = {'sales|Min': [{'sales|Min': sales.min()}]}
+        eq_(result, expected)
+
+        result = self.get('/filters/sales', params={'_c': ['sales,growth|Max']}).json()
+        expected = {'sales,growth|Max': [{'sales|Max': sales.max(), 'growth|Max': growth.max()}]}
+        eq_(result, expected)
+
+        result = self.get('/filters/sales', params={'_c': ['sales,growth|Range']}).json()
+        expected = {
+            'sales,growth|Range': [
+                {
+                    'sales|min': sales.min(),
+                    'sales|max': sales.max(),
+                    'growth|min': growth.min(),
+                    'growth|max': growth.max(),
+                }
+            ]
+        }
+        eq_(result, expected)
 
     def test_multifilters(self):
         _args = {'_c': ['देश,city']}
