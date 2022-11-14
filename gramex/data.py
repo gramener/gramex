@@ -983,7 +983,7 @@ def filtercols(
     ... then calling the handler with `?_c=state&_c=district` returns all unique values
     in columns of `dataframe` where columns are state and district.
 
-    Column filter supports like this:
+    Column filter is supported like this:
 
     - `?_c=y&x` returns df with unique values of y where x is not null
     - `?_c=y&x=val` returns df with unique values of y where x == val
@@ -1005,6 +1005,12 @@ def filtercols(
 
     If a column name matches one of the above, you cannot filter by that column.
     Avoid column names beginning with _.
+
+    You can handle hierarchies by passing `?_c=Country,City` with a comma. This returns all unique
+    *combinations* of `Country` and `City`.
+
+    To get the min/max or a column, use aggregations, e.g. `?_c=age|min&_c=age|max`.
+    You can use `?_c=age|range` as a shortcut that returns min and max of a column.
 
     To get additional information about the filtering, use:
 
@@ -1035,8 +1041,10 @@ def filtercols(
         raise ValueError(f'_limit not integer: {limit!r}')
     # Get unique values for each column
     for col in args.get('_c', []):
+        # If ?_c=sales|RANGE, get the range
+        name, agg = col.rsplit(_agg_sep, 1) if _agg_sep in col else (col, None)
         # If ?_c=a,b then treat columns a and b as a pair
-        cols = col.split(separator)
+        cols = name.split(separator)
         # col_args takes _sort, _c and all filters from args
         col_args = {}
         for key, value in args.items():
@@ -1046,9 +1054,16 @@ def filtercols(
             # Apply filters. But ignore filters on the columns we're currently processing
             if not key.startswith('_') and key not in cols:
                 col_args[key] = value
-        col_args['_by'] = cols
-        col_args['_c'] = []
-        col_args['_limit'] = [limit]
+        if agg:
+            # Convert ?_c=col|RANGE to ?_c=col|MIN&_c=col|MAX
+            aggs = ['min', 'max'] if agg.lower() == 'range' else [agg]
+            # Group by all values, just return the aggregations
+            col_args['_by'] = ['']
+            col_args['_c'] = [f'{c}{_agg_sep}{a}' for c in cols for a in aggs]
+        else:
+            col_args['_by'] = cols
+            col_args['_c'] = []
+            col_args['_limit'] = [limit]
         result[col] = gramex.data.filter(url, args=col_args, **kwargs)
     return result
 
