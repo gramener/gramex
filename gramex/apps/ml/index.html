@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+{% set base = '.' %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{{ handler.kwargs.mlhandler.get('title', "MLHandler") }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body>
+    {% import gramex %}
+    {% set cfg = gramex.conf.url[handler.kwargs.mlhandler.key] %}
+    {% set data = gramex.data.filter(**cfg.kwargs.data)%}
+    {% set model_kwargs = cfg.kwargs.model %}
+    {% set columns = set(data.columns.tolist()) - set(model_kwargs.exclude) - {model_kwargs.target_col} %}
+
+    <!-- TODO: Filter bars -->
+    <div class="container-fluid py-4 px-3">
+      <form id="predictform">
+        {% set row = data[columns].iloc[0] %}
+        {% for colname, value in row.items() %}
+        <label for="{{ colname }}">{{ colname }}</label>
+        <input type="text" name="{{ colname }}" value="{{ value }}"><br>
+        {% end %}
+        <input type="submit" value="Predict">
+      </form>
+      <h3>{{ model_kwargs.target_col }}:</h3>
+      <p id="prediction">{{ data.iloc[0][model_kwargs.target_col] }}</p>
+
+      <hr>
+      <p>MLHandler is running at <a id="handlerURL" target="_blank" href="{{ cfg.pattern }}">{{ cfg.pattern }}</a></p>
+    </div><!-- .container-fluid -->
+  </body>
+
+  <script src="https://cdn.jsdelivr.net/combine/npm/jquery,npm/lodash,npm/g1"></script>
+  <script>
+    let target_col = "{{ model_kwargs.target_col }}"
+    function updatehref() {
+      let feats = new URLSearchParams(new FormData(document.getElementById('predictform')))
+      let url = new URL(window.location.origin + "{{ cfg.pattern }}")
+      url.search = "?" + feats.toString()
+      document.querySelector('#handlerURL').setAttribute('href', url.toString())
+      return url.toString()
+    }
+    window.onload = updatehref
+    document.querySelector('#predictform')
+      .addEventListener('submit', function(evt) {
+        evt.preventDefault()
+        url = updatehref()
+        fetch(url)
+          .then((resp) => {
+            if (resp.ok) { return resp.json() }
+          }).then((pred) => {
+            document.querySelector('#prediction').innerText = pred[0][target_col]
+          })
+      })
+  </script>
+
+</html>

@@ -1,0 +1,8 @@
+url:
+  home-$*:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+      template: true
+      mlhandler: $MLAPP_KWARGS
