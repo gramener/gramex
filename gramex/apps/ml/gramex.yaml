@@ -6,3 +6,10 @@ url:
       path: $YAMLPATH/index.html
       template: true
       mlhandler: $MLAPP_KWARGS
+  requests-$*:
+    pattern: /$YAMLURL/req
+    handler: FunctionHandler
+    kwargs:
+      function: mlapp.prep_requests
+      headers:
+        Content-Type: application/json

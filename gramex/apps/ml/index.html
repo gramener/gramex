@@ -7,6 +7,22 @@
     <title>{{ handler.kwargs.mlhandler.get('title', "MLHandler") }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
+  <style>
+    .urlArea {
+      font-family: monospace;
+      font-size: 16px;
+      border-style: solid;
+      padding: 1%;
+      border-radius: 10px;
+      border-color: #a6aba7
+    }
+    .inline {
+      display: inline-block;
+    }
+    img {
+      width: 1em;
+    }
+  </style>
 
   <body>
     {% import gramex %}
@@ -29,7 +45,22 @@
       <p id="prediction">{{ data.iloc[0][model_kwargs.target_col] }}</p>
 
       <hr>
-      <p>MLHandler is running at <a id="handlerURL" target="_blank" href="{{ cfg.pattern }}">{{ cfg.pattern }}</a></p>
+      <p>MLHandler is running at </p>
+      <p class="urlArea">
+        <a class="inline" id="handlerURL" target="_blank" href="{{ cfg.pattern }}">{{ cfg.pattern }}</a>
+        <button class="inline">Copy</button>
+      </p>
+      <hr>
+      <p>Usage in curl</p>
+      <div class="urlArea">
+        <p class="inline" id="curlcode"></p>
+        <button class="inline">Copy</button>
+      </div>
+      <p>Usage in Python</p>
+      <div class="urlArea">
+        <p class="inline" id="pythoncode"></p>
+        <button class="inline">Copy</button>
+      </div>
     </div><!-- .container-fluid -->
   </body>
 
@@ -40,8 +71,20 @@
       let feats = new URLSearchParams(new FormData(document.getElementById('predictform')))
       let url = new URL(window.location.origin + "{{ cfg.pattern }}")
       url.search = "?" + feats.toString()
-      document.querySelector('#handlerURL').setAttribute('href', url.toString())
-      return url.toString()
+      url = url.toString()
+      document.querySelector('#handlerURL').setAttribute('href', url)
+      document.querySelector('#handlerURL').innerText = url
+
+      // Update curl and Python codes
+      fetch('req?url=' + encodeURIComponent(url))
+        .then((resp) => {if (resp.ok) {return resp.json()}})
+        .then((urls) => {
+          document.querySelector('#curlcode').innerText = urls.curl
+          document.querySelector('#curlcode').setAttribute('href', urls.curl)
+          document.querySelector('#pythoncode').innerText = urls.python
+          document.querySelector('#pythoncode').setAttribute('href', urls.python)
+        })
+      return url
     }
     window.onload = updatehref
     document.querySelector('#predictform')
@@ -55,6 +98,12 @@
             document.querySelector('#prediction').innerText = pred[0][target_col]
           })
       })
+    document.querySelectorAll('button.inline').forEach(el => {
+      el.addEventListener('click', function(evt) {
+        let text = evt.target.previousElementSibling.getAttribute('href')
+        navigator.clipboard.writeText(text)
+      })
+    })
   </script>
 
 </html>
