@@ -59,7 +59,7 @@ class OpenAPIHandler(BaseHandler):
                 conf['schema']['type'] = 'array'
                 conf['schema']['items'] = {'type': cls.types.get(typ, 'string')}
             else:
-                conf['schema']['type'] = (cls.types.get(typ, 'string'),)
+                conf['schema']['type'] = cls.types.get(typ, 'string')
         spec['responses'] = config.responses
         return spec
 
@@ -149,7 +149,7 @@ class OpenAPIHandler(BaseHandler):
                 if not hasattr(cls, 'info') or 'function' not in cls.info:
                     continue
                 function = cls.info['function']
-                function = getattr(function, '__func__', function)
+                function = getattr(function, '__func__', None) or function
                 if callable(function):
                     fnspec = self.function_spec(function)
                     fnspec['summary'] = summary
