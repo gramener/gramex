@@ -1,7 +1,5 @@
 from fnmatch import fnmatch
-import io
 import os
-import csv
 import json
 import logging
 import tornado.escape
@@ -410,19 +408,3 @@ class SimpleAuth(AuthHandler):
             self.log_user_event(event='fail')
             self.set_status(UNAUTHORIZED)
             self.render_template(self.template, error={'code': 'auth', 'error': 'Cannot log in'})
-
-
-def csv_encode(values, *args, **kwargs):
-    '''
-    Encode an array of unicode values into a comma-separated string. All
-    csv.writer parameters are valid.
-    '''
-    buf = io.StringIO()
-    writer = csv.writer(buf, *args, **kwargs)
-    writer.writerow(
-        [
-            v if isinstance(v, str) else v.decode('utf-8') if isinstance(v, bytes) else repr(v)
-            for v in values
-        ]
-    )
-    return buf.getvalue().strip()

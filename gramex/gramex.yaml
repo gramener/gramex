@@ -143,6 +143,7 @@ log:
     user:
       class: gramex.config.TimedRotatingCSVHandler
       filename: $GRAMEXDATA/logs/user.csv
+      # NOTE: Use any key supported by gramex.transforms.build_log_info()
       keys: [datetime, event, session, user, ip, headers.User-Agent]
       level: INFO
       <<: *ROTATE_WEEKLY
@@ -150,6 +151,8 @@ log:
     alert:
       class: gramex.config.TimedRotatingCSVHandler
       filename: $GRAMEXDATA/logs/alert.csv
+      # NOTE: Keys here are not from gramex.transforms.build_log_info().
+      # Only the keys below are allowed.
       keys: [datetime, alert, service, from, to, cc, bcc, subject, attachments]
       level: INFO
       <<: *ROTATE_WEEKLY
@@ -171,6 +174,7 @@ log:
       class: gramex.config.TimedRotatingCSVHandler
       filename: $GRAMEXDATA/logs/requests.csv
       level: INFO
+      # NOTE: Use any key supported by gramex.transforms.build_log_info()
       keys: [time, ip, user.id, status, duration, method, uri, error]
       <<: *ROTATE_WEEKLY
     # text is a legacy logger. Not recommended post v1.23. DO NOT DELETE: backward compatibility
