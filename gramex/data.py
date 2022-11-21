@@ -936,6 +936,7 @@ def filtercols(
     transform: Callable = None,
     transform_kwargs: dict = {},
     separator: str = ',',
+    in_memory: bool = False,
     **kwargs: dict,
 ) -> pd.DataFrame:
     '''Filter data and extract unique values of each column using URL query parameters.
@@ -967,6 +968,8 @@ def filtercols(
         separator: string that separates columns in a hierarchy. Defaults to `,`.
             For example, `?_c=a,b` treats columns `a` and `b` as a tuple / hierarchy and
             filters them *together*.
+        in_memory: fetch all unique values and compute filters in-memory. Faster,
+            but takes more memory.
         **kwargs: Additional parameters are passed to
             [gramex.cache.open][] or `sqlalchemy.create_engine`
 
@@ -1039,6 +1042,34 @@ def filtercols(
         limit = min(int(v) for v in limit)
     except ValueError:
         raise ValueError(f'_limit not integer: {limit!r}')
+    if in_memory:
+        # Fetch unique values of relevant columns into url.
+        # THEN run the rest of the filtering.
+        if engine == 'sqlalchemy' and 'table' in kwargs:
+            engine = alter(url, columns=None, **kwargs)
+            table = get_table(engine, kwargs['table'])
+            # filter_cols = all required columns that exist in the table
+            filter_cols = set()
+            for col in args.get('_c', []):
+                name, agg = col.rsplit(_agg_sep, 1) if _agg_sep in col else (col, None)
+                for c in name.split(separator):
+                    if c in table.columns:
+                        filter_cols.add(c)
+            query = (
+                sa.select([table])
+                .with_only_columns(*[table.columns[c] for c in filter_cols])
+                .distinct()
+            )
+            url = pd.read_sql(query, engine)
+        elif engine != 'dataframe':
+            app_log.warning(f'gramex.data.filtercols(in_memory=True) not supported for {url}')
+
+        # elif engine == 'sqlalchemy'` if url is a sqlalchemy compatible URL
+        # - `'plugin'` if it is `<valid-plugin-name>://...`
+        # - `protocol` if url is of the form `protocol://...`
+        # - `'dir'` if it is not a URL but a valid directory
+        # - `'file'` if it is not a URL but a valid file
+        # - `None` otherwise
     # Get unique values for each column
     for col in args.get('_c', []):
         # If ?_c=sales|RANGE, get the range
