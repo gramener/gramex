@@ -96,7 +96,7 @@ def walk(node):
         RuntimeError: maximum recursion depth exceeded
     '''
     if hasattr(node, 'items'):
-        for key, value in list(node.items()):
+        for key, value in node.items():
             yield from walk(value)
             yield key, value, node
     elif isinstance(node, list):

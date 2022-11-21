@@ -537,10 +537,9 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
     ]
 
     def assign(field, target, catch_errors=False):
-        field = repr(field)
         if catch_errors:
-            body.append(f'\ttry: r[{field}] = {target}\n')
-            body.append(f'\texcept (KeyError, TypeError, IndexError): r[{field}] = default\n')
+            body.append(f'\ttry: r[{field!r}] = {target}\n')
+            body.append(f'\texcept (KeyError, TypeError, IndexError): r[{field!r}] = default\n')
         else:
             body.append(f'\tr[{field}] = {target}\n')
 
