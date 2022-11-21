@@ -840,15 +840,19 @@ class FilterColsMixin:
         for key, val in result.items():
             eqframe(val, self.unique_of(expected, key))
 
-    def test_filtercols_with_filter(self):
+    def check_filtercols_with_filter(self, in_memory=False):
         # ?Product=p1&_c=City filters by Product=p1 and returns cities
         cols = ['District']
         args = {'_c': cols, 'State': ['KERALA']}
-        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        result = gramex.data.filtercols(args=args, in_memory=in_memory, **self.urls['census'])
         self.check_keys(result, cols)
         expected = self.census[self.census['State'] == 'KERALA']
         for key, val in result.items():
             eqframe(val, self.unique_of(expected, key))
+
+    def test_filtercols_with_filter(self):
+        self.check_filtercols_with_filter()
+        self.check_filtercols_with_filter(in_memory=True)
 
     def test_filtercols_multicols_with_filter(self):
         # ?Product=p1&_c=City&_c=Product filters by Product=p1 and returns
