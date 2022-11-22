@@ -100,7 +100,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': '',
-                    'schema': {'type': ['string'], 'default': []},
+                    'schema': {'type': 'string', 'default': []},
                 },
                 params['l1'],
             )
@@ -108,7 +108,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': 'First value',
-                    'schema': {'type': ['integer'], 'default': 0},
+                    'schema': {'type': 'integer', 'default': 0},
                 },
                 params['i1'],
             )
@@ -116,7 +116,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': 'Second value',
-                    'schema': {'type': ['integer'], 'default': 0},
+                    'schema': {'type': 'integer', 'default': 0},
                 },
                 params['i2'],
             )
@@ -124,7 +124,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': '',
-                    'schema': {'type': ['string'], 'default': 'Total'},
+                    'schema': {'type': 'string', 'default': 'Total'},
                 },
                 params['s1'],
             )
@@ -132,7 +132,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': '',
-                    'schema': {'type': ['integer'], 'default': 0},
+                    'schema': {'type': 'integer', 'default': 0},
                 },
                 params['n1'],
             )
@@ -140,7 +140,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': '',
-                    'schema': {'type': ['string'], 'default': 0},
+                    'schema': {'type': 'string', 'default': 0},
                 },
                 params['n2'],
             )
@@ -148,7 +148,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'header',
                     'description': '',
-                    'schema': {'type': ['string'], 'default': ''},
+                    'schema': {'type': 'string', 'default': ''},
                 },
                 params['h'],
             )
@@ -156,7 +156,7 @@ class TestOpenAPIHandler(TestGramex):
                 {
                     'in': 'query',
                     'description': '',
-                    'schema': {'type': ['integer'], 'default': 200},
+                    'schema': {'type': 'integer', 'default': 200},
                 },
                 params['code'],
             )
