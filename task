@@ -32,6 +32,9 @@ test () {
 }
 
 stats () {
+  # Get complexity of each part of Gramex and Gramex Enterprise. Save in reports/
+  python pkg/usage/gramexsize.py . ../gramexenterprise/ > reports/gramexsize.csv
+
   # Count number of lines of code
   PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
   JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1`
@@ -64,6 +67,7 @@ update () {
 }
 
 security () {
+  # Run all security tests
   bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
   freshclam
   clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=mkdocs --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
