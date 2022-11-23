@@ -276,6 +276,11 @@ def url(conf: dict) -> None:
         if 'handler' not in spec:
             app_log.error(f'url:{name}: no service: or handler: specified')
             continue
+        # handler: gramex.handlers.FunctionHandler is valid.
+        # But on Windows, PyDoc locates it as the module gramex.handlers.functionhandler.py.
+        # So explicitly strip out `gramex.handlers.` prefix if provided.
+        if spec.handler.startswith('gramex.handlers.'):
+            spec.handler = spec.handler.replace('gramex.handlers.', '')
         app_log.debug(f'url:{name} ({spec.handler}) {spec.get("priority", "")}')
         handler_class = locate(str(spec.handler), modules=['gramex.handlers'])
         if handler_class is None:
