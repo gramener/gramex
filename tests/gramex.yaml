@@ -193,7 +193,7 @@ url:
     handler: FunctionHandler
     kwargs:
       function: >
-        gramex.handlers.BaseHandler.reset_ratelimit(
+        handler.reset_ratelimit(
           'pool1',
           [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d'), handler.get_arg('user', '')],
           0,
