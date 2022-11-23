@@ -763,7 +763,7 @@ class FilterColsMixin:
     census = gramex.cache.open(sales_file, 'xlsx', sheet_name='census')
 
     def unique_of(self, data, cols):
-        return data.groupby(cols).size().reset_index().drop(0, 1)
+        return data.groupby(cols).size().reset_index().drop(0, axis=1)
 
     def check_keys(self, result, keys):
         eq_(set(result.keys()), set(keys))
@@ -788,15 +788,19 @@ class FilterColsMixin:
         for key, val in result.items():
             eqframe(val, self.unique_of(self.census, key).head(limit))
 
-    def test_filtercols_multicols(self):
+    def check_filtercols_multicols(self, in_memory=False):
         # ?_c=city&_c=product returns distinct values for both City and Product
         # like {'City': ['c1', 'c1', ...], 'Product': ['p1', 'p2', ...]}
         cols = ['city', 'product']
         args = {'_c': cols}
-        result = gramex.data.filtercols(args=args, **self.urls['sales'])
+        result = gramex.data.filtercols(args=args, in_memory=in_memory, **self.urls['sales'])
         self.check_keys(result, cols)
         for key, val in result.items():
             eqframe(val, self.unique_of(self.sales, key))
+
+    def test_filtercols_multicols(self):
+        self.check_filtercols_multicols()
+        self.check_filtercols_multicols(in_memory=True)
 
     def test_filtercols_sort_asc(self):
         # ?_c=City&_sort=City returns cities with data sorted by City sorted alphabetically
@@ -854,18 +858,22 @@ class FilterColsMixin:
         self.check_filtercols_with_filter()
         self.check_filtercols_with_filter(in_memory=True)
 
-    def test_filtercols_multicols_with_filter(self):
+    def check_filtercols_multicols_with_filter(self, in_memory=False):
         # ?Product=p1&_c=City&_c=Product filters by Product=p1 and returns
         # cities. But it returns products too -- UNFILTERED by Product=p1. (That
         # would only return p1!)
         cols = ['District', 'DistrictCaps']
         args = {'_c': cols, '_sort': ['State', 'District'], 'State': ['KERALA'], '_limit': [10]}
-        result = gramex.data.filtercols(args=args, **self.urls['census'])
+        result = gramex.data.filtercols(args=args, in_memory=in_memory, **self.urls['census'])
         self.check_keys(result, cols)
         filtered = self.census.sort_values(['State', 'District'])
         expected = filtered[filtered['State'] == 'KERALA']
         for key, val in result.items():
             eqframe(val, self.unique_of(expected, key).head(10))
+
+    def test_filtercols_multicols_with_filter(self):
+        self.check_filtercols_multicols_with_filter()
+        self.check_filtercols_multicols_with_filter(in_memory=True)
 
     def test_filtercols_multicols_with_multifilter(self):
         raise SkipTest('TODO: FIX sort')

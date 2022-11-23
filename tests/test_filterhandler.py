@@ -13,7 +13,7 @@ def eqframe(result, expected, **kwargs):
 
 
 def unique_of(data: pd.DataFrame, cols):
-    return data.groupby(cols).size().reset_index().drop(0, 1)
+    return data.groupby(cols).size().reset_index().drop(0, axis=1)
 
 
 class TestFilterHandler(TestGramex):
@@ -106,6 +106,11 @@ class TestFilterHandler(TestGramex):
         result = self.get('/filters/sales', params=_args).json()
         expected = unique_of(self.sales, ['देश', 'city'])
         eqframe(result['देश,city'], expected)
+
+        _args = {'_c': ['city,city']}
+        result = self.get('/filters/sales', params=_args).json()
+        expected = unique_of(self.sales, ['city'])
+        eqframe(result['city,city'], expected)
 
         _args = {'_c': ['देश,city,product']}
         result = self.get('/filters/sales', params=_args).json()

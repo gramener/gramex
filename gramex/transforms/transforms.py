@@ -541,7 +541,7 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
             body.append(f'\ttry: r[{field!r}] = {target}\n')
             body.append(f'\texcept (KeyError, TypeError, IndexError): r[{field!r}] = default\n')
         else:
-            body.append(f'\tr[{field}] = {target}\n')
+            body.append(f'\tr[{field!r}] = {target}\n')
 
     for field, source in fields.items():
         if not isinstance(field, str):
