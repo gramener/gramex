@@ -46,7 +46,7 @@ Project path:      C:\site\gramener.com\viz\async-gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 20 dependencies for known issues, no vulnerable paths found.
+✔ Tested 19 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -149,25 +149,6 @@ Next steps:
 Testing C:\site\gramener.com\viz\async-gramex...
 
 Organization:      sanand0
-Package manager:   pip
-Target file:       tests\requirements.txt
-Project name:      tests
-Open source:       no
-Project path:      C:\site\gramener.com\viz\async-gramex
-Local Snyk policy: found
-Licenses:          enabled
-
-✔ Tested 69 dependencies for known issues, no vulnerable paths found.
-
-Next steps:
-- Run `snyk monitor` to be notified about new related vulnerabilities.
-- Run `snyk test` as part of your CI/test.
-
--------------------------------------------------------
-
-Testing C:\site\gramener.com\viz\async-gramex...
-
-Organization:      sanand0
 Package manager:   npm
 Target file:       tests\dir\install\package-lock.json
 Project name:      gramex-npm-install
@@ -218,7 +199,7 @@ Next steps:
 - Run `snyk test` as part of your CI/test.
 
 
-Tested 12 projects, no vulnerable paths were found.
+Tested 11 projects, no vulnerable paths were found.
 
 
 

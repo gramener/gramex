@@ -1,10 +1,15 @@
 version: v1.19.0
 ignore:
 
-  SNYK-JS-UGLIFYJS-1727251:
+  SNYK-JS-HTMLMINIFIER-3091181:
     - '*':
         reason: No fix available. Await html-minifier upgrade
         expires: 2022-12-31T00:00:00.000Z
-        created: 2022-01-01T00:00:00.000Z
+        created: 2022-11-23T00:00:00.000Z
+  SNYK-JS-UGLIFYJS-3113873:
+    - '*':
+        reason: No fix available. Await html-minifier > uglifyjs upgrade
+        expires: 2022-12-31T00:00:00.000Z
+        created: 2022-11-23T00:00:00.000Z
 
 patch: {}
