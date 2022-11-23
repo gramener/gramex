@@ -1470,7 +1470,7 @@ def _filter_groupby_columns(by, cols, meta):
     '''
     colset = set(cols)
     for col in by:
-        if col in colset:
+        if col in colset and col not in meta['by']:
             meta['by'].append(col)
         else:
             meta['ignored'].append(('_by', col))
