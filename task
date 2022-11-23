@@ -42,7 +42,6 @@ stats () {
 docs () {
   (cd mkdocs; mkdocs build)
 }
-
 pushdocs () {
   rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
 }
@@ -71,13 +70,13 @@ security () {
   snyk test --dev --all-projects --skip-unresolved > reports/snyk.txt || true
 }
 
-# Usage: VERSION=1.xx.0 bash task pushdocker
+# Usage: VERSION=1.xx.0 bash task builddocker pushdocker
 builddocker () {
+  docker pull frolvlad/alpine-glibc:alpine-3.16
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh
 }
-
 pushdocker () {
   docker login                # log in as sanand0 / pratapvardhan
   docker push gramener/gramex-base:$VERSION
