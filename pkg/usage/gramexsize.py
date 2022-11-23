@@ -81,7 +81,7 @@ def gramexsize(*dirs: str):
 
     result = pd.Series(total).reset_index()
     result.columns = ['codepath', 'yamlpath', 'complexity']
-    result.dropna(subset=['yamlpath']).to_csv(sys.stdout, index=False, lineterminator='\n')
+    result.dropna(subset=['yamlpath']).to_csv(sys.stdout, index=False)
 
 
 if __name__ == '__main__':

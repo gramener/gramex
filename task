@@ -33,13 +33,13 @@ test () {
 
 stats () {
   # Get complexity of each part of Gramex and Gramex Enterprise. Save in reports/
-  python pkg/usage/gramexsize.py . ../gramexenterprise/ > reports/gramexsize.csv
+  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > reports/gramexsize.csv
 
   # Count number of lines of code
-  PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
-  JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1`
-  TESTLOC=`find tests testlib pytest -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1`
-  printf "Python: $PYLOC\nJavaScript: $JSLOC\nTests: $TESTLOC\n"
+  PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  TESTLOC=`find tests testlib pytest -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  printf "type,loc\nPython,$PYLOC\nJavaScript,$JSLOC\nTests,$TESTLOC\n" | tee reports/loc.csv
 }
 
 docs () {

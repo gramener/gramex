@@ -23,7 +23,7 @@ gramex.cache.JSONStore.*,app.session.type=json,15
 gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
 gramex.cache.*,cache,49
 gramex.config.*,*,158
-gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,320
+gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,326
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
 gramex.install.*,TODO - Gramex app installation & management,128
 gramex.license.*,TODO - Gramex enterprise license management,9
