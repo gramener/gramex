@@ -16,7 +16,10 @@ RUN \
         # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-on-alpine
         chromium nss freetype harfbuzz ca-certificates ttf-freefont && \
     # Activate conda env to run Gramex
-    source ~/.profile && \
+    mkdir ~/.npm-global && \
+    npm config set prefix '~/.npm-global'
+ENV PATH=~/.npm-global/bin:${PATH}
+RUN source ~/.profile && \
     # Set up all Gramex apps
     gramex setup --all && \
     # Clean up npm cache
