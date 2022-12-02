@@ -224,6 +224,21 @@ class TestOpen(unittest.TestCase):
             gramex.cache.open(path, sheet_name='sales', name='sales'),
             gramex.cache.open(path, sheet_name='sales'),
         )
+        # Load single column
+        afe(
+            gramex.cache.open(path, sheet_name='sales', range='B1:B5'),
+            gramex.cache.open(path, sheet_name='sales')[['city']].head(4),
+        )
+        # Load single row
+        afe(
+            gramex.cache.open(path, sheet_name='sales', range='B1:E1', header=None),
+            pd.DataFrame(gramex.cache.open(path, sheet_name='sales').columns[1:]).T,
+        )
+        # Load cell
+        afe(
+            gramex.cache.open(path, sheet_name='sales', range='B1', header=None),
+            pd.DataFrame([['city']]),
+        )
         # Test failure conditions, edge cases, etc.
 
     def test_open_json(self):

@@ -1200,7 +1200,11 @@ def read_excel(
         # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
         range = defined_name.attr_text.split('!')[-1]
 
-    data = pd.DataFrame([[cell.value for cell in row] for row in ws[range]])
+    vals = ws[range]
+    if isinstance(vals, tuple):
+        data = pd.DataFrame([[cell.value for cell in row] for row in vals])
+    else:
+        data = pd.DataFrame([[vals.value]])
     # Header defaults to 0 if undefined. If it's not None, apply the header
     header = 0 if header is ... else header
     if header is not None:
