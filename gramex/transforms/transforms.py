@@ -626,7 +626,7 @@ def convert(hint, param, *args):
     if is_list or isinstance(param.default, (list, tuple)):
         return [method(arg) for arg in args]
     else:
-        return method(args[-1] if len(args) else param.default)
+        return method(args[-1] if args else param.default)
 
 
 class Header(str):
