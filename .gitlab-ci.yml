@@ -29,7 +29,7 @@ deploy-gramener:
         git checkout -- .;
         git pull;
         export PATH=/mnt/gramener/anaconda3/bin/:$PATH;
-        pip install -e .;
+        pip install -e . --config-settings editable_mode=strict;
         gramex setup --all;
         pip install gramexenterprise;
         gramex license accept;
@@ -46,7 +46,7 @@ deploy-uat:
         git checkout -- .;
         git pull;
         export PATH=/home/ubuntu/anaconda3/bin/:$PATH;
-        pip install -e .;
+        pip install -e . --config-settings editable_mode=strict;
         gramex setup --all;
         pip install gramexenterprise;
         gramex license accept;

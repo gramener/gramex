@@ -823,6 +823,7 @@ class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
 
 def ioloop_running(loop):
     '''Returns whether the Tornado ioloop is running on not'''
+    # TODO: Pressing Ctrl+C may cause this to raise an exception. Explore how to handle that
     return loop.asyncio_loop.is_running()
 
 

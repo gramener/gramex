@@ -20,6 +20,7 @@ mime:
   .yaml: text/yaml
   .md: text/markdown
   .markdown: text/markdown
+  .mjs: text/javascript
   .json: application/json
   .svg: image/svg+xml
   .py: text/plain
@@ -129,6 +130,9 @@ log:
     tornado.general: {}
     # Elasticsearch DEBUG logs are verbose. Restrict to INFO
     elasticsearch:
+      level: INFO
+    # Watchdog DEBUG logs are verbose. Restrict to INFO
+    watchdog:
       level: INFO
   handlers:
     none:
