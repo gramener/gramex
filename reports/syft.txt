@@ -2,9 +2,9 @@ NAME                                      VERSION        TYPE
 @achrinza/node-ipc                        9.2.6          npm   
 @ampproject/remapping                     2.2.0          npm   
 @babel/code-frame                         7.18.6         npm   
-@babel/compat-data                        7.20.1         npm   
-@babel/core                               7.20.2         npm   
-@babel/generator                          7.20.4         npm   
+@babel/compat-data                        7.20.5         npm   
+@babel/core                               7.20.5         npm   
+@babel/generator                          7.20.5         npm   
 @babel/helper-compilation-targets         7.20.0         npm   
 @babel/helper-environment-visitor         7.18.9         npm   
 @babel/helper-function-name               7.19.0         npm   
@@ -16,12 +16,12 @@ NAME                                      VERSION        TYPE
 @babel/helper-string-parser               7.19.4         npm   
 @babel/helper-validator-identifier        7.19.1         npm   
 @babel/helper-validator-option            7.18.6         npm   
-@babel/helpers                            7.20.1         npm   
+@babel/helpers                            7.20.6         npm   
 @babel/highlight                          7.18.6         npm   
-@babel/parser                             7.20.3         npm   
+@babel/parser                             7.20.5         npm   
 @babel/template                           7.18.10        npm   
-@babel/traverse                           7.20.1         npm   
-@babel/types                              7.20.2         npm   
+@babel/traverse                           7.20.5         npm   
+@babel/types                              7.20.5         npm   
 @colors/colors                            1.5.0          npm   
 @dabh/diagnostics                         2.0.3          npm   
 @hapi/hoek                                9.3.0          npm   
@@ -62,7 +62,7 @@ NAME                                      VERSION        TYPE
 @types/json-schema                        7.0.11         npm   
 @types/mime                               3.0.1          npm   
 @types/minimist                           1.2.2          npm   
-@types/node                               18.11.9        npm   
+@types/node                               18.11.10       npm   
 @types/normalize-package-data             2.4.1          npm   
 @types/parse-json                         4.0.0          npm   
 @types/qs                                 6.9.7          npm   
@@ -163,7 +163,7 @@ callsites                                 3.1.0          npm
 camel-case                                3.0.0          npm   
 camel-case                                4.1.2          npm   
 caniuse-api                               3.0.0          npm   
-caniuse-lite                              1.0.30001434   npm   
+caniuse-lite                              1.0.30001435   npm   
 capture                                   1.0.0          npm   
 case-sensitive-paths-webpack-plugin       2.4.0          npm   
 caseless                                  0.12.0         npm   
@@ -245,7 +245,7 @@ de-indent                                 1.0.2          npm
 debug                                     2.6.9          npm   
 debug                                     3.2.7          npm   
 debug                                     4.3.4          npm   
-decode-uri-component                      0.2.0          npm   
+decode-uri-component                      0.2.2          npm   
 decompress-response                       6.0.0          npm   
 deep-extend                               0.6.0          npm   
 deepmerge                                 1.5.2          npm   
@@ -282,7 +282,7 @@ emojis-list                               3.0.0          npm
 enabled                                   2.0.0          npm   
 encodeurl                                 1.0.2          npm   
 end-of-stream                             1.4.4          npm   
-enhanced-resolve                          5.11.0         npm   
+enhanced-resolve                          5.12.0         npm   
 entities                                  2.2.0          npm   
 error-ex                                  1.3.2          npm   
 error-stack-parser                        2.1.4          npm   
@@ -311,7 +311,7 @@ fast-deep-equal                           3.1.3          npm
 fast-glob                                 3.2.12         npm   
 fast-image-size                           0.1.3          npm   
 fast-json-stable-stringify                2.1.0          npm   
-fastq                                     1.13.0         npm   
+fastq                                     1.14.0         npm   
 faye-websocket                            0.11.4         npm   
 fd-slicer                                 1.1.0          npm   
 fecha                                     4.2.3          npm   
@@ -385,7 +385,7 @@ human-signals                             2.1.0          npm
 iconv-lite                                0.4.24         npm   
 icss-utils                                5.1.0          npm   
 ieee754                                   1.2.1          npm   
-ignore                                    5.2.0          npm   
+ignore                                    5.2.1          npm   
 immediate                                 3.0.6          npm   
 immutable                                 4.1.0          npm   
 import-fresh                              3.3.0          npm   
@@ -486,12 +486,12 @@ mime-types                                2.1.35         npm
 mimic-fn                                  1.2.0          npm   
 mimic-fn                                  2.1.0          npm   
 mimic-response                            3.1.0          npm   
-mini-css-extract-plugin                   2.7.0          npm   
+mini-css-extract-plugin                   2.7.1          npm   
 minimalistic-assert                       1.0.1          npm   
 minimatch                                 3.1.2          npm   
-minimatch                                 5.1.0          npm   
+minimatch                                 5.1.1          npm   
 minimist                                  1.2.7          npm   
-minipass                                  3.3.4          npm   
+minipass                                  3.3.6          npm   
 mkdirp                                    0.5.6          npm   
 mkdirp-classic                            0.5.3          npm   
 module-alias                              2.2.2          npm   
@@ -511,7 +511,7 @@ neo-async                                 2.6.2          npm
 nice-try                                  1.0.5          npm   
 no-case                                   2.3.2          npm   
 no-case                                   3.0.4          npm   
-node-abi                                  3.28.0         npm   
+node-abi                                  3.30.0         npm   
 node-addon-api                            5.0.0          npm   
 node-fetch                                2.6.7          npm   
 node-forge                                1.3.1          npm   
@@ -611,7 +611,7 @@ postcss-unique-selectors                  5.1.1          npm
 postcss-value-parser                      4.2.0          npm   
 prebuild-install                          7.1.1          npm   
 prepend-http                              2.0.0          npm   
-prettier                                  2.7.1          npm   
+prettier                                  2.8.0          npm   
 pretty-error                              4.0.0          npm   
 process-nextick-args                      2.0.1          npm   
 progress                                  2.0.3          npm   
@@ -729,7 +729,7 @@ svgo                                      2.8.0          npm
 tapable                                   2.2.1          npm   
 tar-fs                                    2.1.1          npm   
 tar-stream                                2.2.0          npm   
-terser                                    5.15.1         npm   
+terser                                    5.16.1         npm   
 terser-webpack-plugin                     5.3.6          npm   
 text-hex                                  1.0.0          npm   
 thenify                                   3.3.1          npm   

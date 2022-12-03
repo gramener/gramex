@@ -12,13 +12,22 @@ code2yaml:
   gramex.cache.reload_module: "*"
   gramex.cache.urlfetch: alert
   gramex.cache.Subprocess.*: url.*.handler=ProcessHandler|Process
-  gramex.cache.daemon: [url.*.handler=ComicHandler|Comic, import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml]
+  gramex.cache.daemon:
+    [
+      url.*.handler=ComicHandler|Comic,
+      import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml,
+    ]
   gramex.cache.get_store: [app.session, url.*.kwargs.store]
-  gramex.cache.KeyStore.*: [app.session.type=memory, url.*.kwargs.store.type=memory]
-  gramex.cache.RedisStore.*: [app.session.type=redis, url.*.kwargs.store.type=redis]
-  gramex.cache.SQLiteStore.*: [app.session.type=sqlite, url.*.kwargs.store.type=sqlite]
-  gramex.cache.HDF5Store.*: [app.session.type=hdf5, url.*.kwargs.store.type=hdf5]
-  gramex.cache.JSONStore.*: [app.session.type=json, url.*.kwargs.store.type=json]
+  gramex.cache.KeyStore.*:
+    [app.session.type=memory, url.*.kwargs.store.type=memory]
+  gramex.cache.RedisStore.*:
+    [app.session.type=redis, url.*.kwargs.store.type=redis]
+  gramex.cache.SQLiteStore.*:
+    [app.session.type=sqlite, url.*.kwargs.store.type=sqlite]
+  gramex.cache.HDF5Store.*:
+    [app.session.type=hdf5, url.*.kwargs.store.type=hdf5]
+  gramex.cache.JSONStore.*:
+    [app.session.type=json, url.*.kwargs.store.type=json]
   # TODO: gramex.cache.* may be too broad?
   gramex.cache.*: cache
   gramex.config.*: "*"
@@ -152,7 +161,8 @@ code2yaml:
   gramex.services.ttlcache.*: cache.*.type=memory
   gramex.services.urlcache.get_cachefile: cache
   gramex.services.urlcache.CacheFile.*: cache
-  gramex.services.urlcache.MemoryCacheFile.*: [cache.*.type=memory, cache.*.type=disk]
+  gramex.services.urlcache.MemoryCacheFile.*:
+    [cache.*.type=memory, cache.*.type=disk]
   gramex.services.urlcache.RedisCacheFile.*: cache.*.type=redis
   gramex.services.watcher.*: watch
   gramex.services.__init__.version: version
@@ -202,8 +212,10 @@ code2yaml:
   gramex.transforms.transforms.typelist: TODO - if any PY code uses @handler
   gramex.transforms.transforms.convert: TODO - if any PY code uses @handler
   gramex.transforms.transforms.handler: TODO - if any PY code uses @handler
-  gramex.transforms.transforms.handler_expr: [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
-  gramex.transforms.transforms.build_log_info: [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
+  gramex.transforms.transforms.handler_expr:
+    [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
+  gramex.transforms.transforms.build_log_info:
+    [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
   gramex.transforms.twitterstream.*: TODO - if any PY code uses TwitterStream
   gramexenterprise.handlers.authhandler.OAuth2.*: url.*.handler=OAuth2
   gramexenterprise.handlers.authhandler.FacebookAuth.*: url.*.handler=FacebookAuth

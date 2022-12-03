@@ -16,9 +16,8 @@ C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\nodeids: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\stepwise: OK
 C:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 C:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
-C:\site\gramener.com\viz\async-gramex\dist\gramex-1.85.0-py3-none-any.whl: OK
-C:\site\gramener.com\viz\async-gramex\dist\gramex-1.85.0.tar.gz: OK
-C:\site\gramener.com\viz\async-gramex\dump.rdb: OK
+C:\site\gramener.com\viz\async-gramex\dist\gramex-1.85.1-py3-none-any.whl: OK
+C:\site\gramener.com\viz\async-gramex\dist\gramex-1.85.1.tar.gz: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\controlpanel.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\gramex.yaml: OK
@@ -29,7 +28,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\reset_password.svg: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\script.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\webshell.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.eslintrc.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\admin.css: OK
@@ -367,14 +365,19 @@ C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-base\Dockerfile: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-base\setup.sh: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-test\Dockerfile: OK
 C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-test\setup.sh: OK
+C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.py: OK
+C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pyproject.toml: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\README.md: OK
 C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
+C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: OK
+C:\site\gramener.com\viz\async-gramex\reports\loc.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\npm-audit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: OK
+C:\site\gramener.com\viz\async-gramex\reports\syft.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\trivy.txt: OK
 C:\site\gramener.com\viz\async-gramex\setup.cfg: OK
 C:\site\gramener.com\viz\async-gramex\task: OK
@@ -626,13 +629,13 @@ C:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8643960
-Engine version: 0.103.3
-Scanned directories: 88
-Scanned files: 579
+Known viruses: 8645254
+Engine version: 0.105.1
+Scanned directories: 89
+Scanned files: 583
 Infected files: 0
-Data scanned: 14.59 MB
-Data read: 5.59 MB (ratio 2.61:1)
-Time: 49.916 sec (0 m 49 s)
-Start Date: 2022:11:23 12:34:48
-End Date:   2022:11:23 12:35:38
+Data scanned: 14.73 MB
+Data read: 5.66 MB (ratio 2.60:1)
+Time: 24.905 sec (0 m 24 s)
+Start Date: 2022:12:03 15:56:23
+End Date:   2022:12:03 15:56:48

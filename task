@@ -27,8 +27,8 @@ lint () {
 }
 
 test () {
+  pytest
   nosetests
-  (cd tests/filemanager; npm install; npm test)
 }
 
 stats () {
