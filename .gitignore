@@ -21,6 +21,7 @@ tests/watcher.txt
 *.csv
 *.xls*
 
+!reports/*.csv
 !tests/**/*.csv
 !tests/*.xlsx
 !testlib/**/*.csv

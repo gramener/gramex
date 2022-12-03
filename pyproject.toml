@@ -137,6 +137,7 @@ test = [
     "datasets",  # for gramex.transformers
     "elasticsearch7",  # for gramexlog: features
     "gramexenterprise",  # for auth testing
+    "mccabe",  # for pkg/usage/pycomplexity.py
     "nose",  # for all test cases
     "pdfminer.six",  # for test_capturehandler
     "psycopg2 >= 2.7.1",  # for PostgreSQL tests
