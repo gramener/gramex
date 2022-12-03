@@ -4,13 +4,13 @@ FROM frolvlad/alpine-glibc:alpine-3.16
 
 # Install as non-root user "gramex"
 ARG USER=gramex
-ARG HOMEDIR="/home/$USER"
+ARG HOME_DIR="/home/$USER"
 # Install conda under user home directory
-ARG CONDA_DIR="$HOMEDIR/conda"
+ARG CONDA_DIR="$HOME_DIR/conda"
 
 # Expose VERSION build args in environment. Build with `docker build --build-arg VERSION=1.x.x`
 ARG VERSION
-ENV VERSION $VERSION
+ENV VERSION="$VERSION"
 
 # Create user "gramex" that can doas (lighter than sudo) root without password
 # https://wiki.alpinelinux.org/wiki/Setting_up_a_new_user
@@ -19,13 +19,13 @@ RUN \
     # Install doas
     apk add doas && \
     # Add user. -h: Home directory. -D: Disable password. -g: GECOS field. -G: Group
-    adduser -h "$HOMEDIR" -D -g "$USER" -G wheel "$USER" && \
+    adduser -h "$HOME_DIR" -D -g "$USER" -G wheel "$USER" && \
     # Allow user to run as root
     echo "permit keepenv nopass $USER as root" >> /etc/doas.d/doas.conf
 
-# Run all future commands as $USER from their $HOMEDIR
+# Run all future commands as $USER from their $HOME_DIR
 USER $USER
-WORKDIR "$HOMEDIR"
+WORKDIR "$HOME_DIR"
 
 # Install Miniconda + Gramex, but not node.js + dependencies, as a single layer
 # Via https://github.com/Docker-Hub-frolvlad/docker-alpine-miniconda3/blob/master/Dockerfile
@@ -38,7 +38,7 @@ RUN \
     "$CONDA_DIR/bin/conda" init && \
     # Alpine uses ash (not bash) which uses .profile, not .bashrc
     mv .bashrc .profile && \
-    source $HOMEDIR/.profile && \
+    source $HOME_DIR/.profile && \
     # Update conda to the latest (hopefully secure) packages
     conda update --all --yes && \
     # Clean package downloads, metadata, etc. to avoid container scan vulnerabilities
@@ -64,5 +64,6 @@ WORKDIR /app
 EXPOSE 9988
 
 # Use CMD instead of ENTRYPOINT. Override via `docker run -it /bin/sh -l`
-ENV CONDA_DIR $CONDA_DIR
+ENV CONDA_DIR="$CONDA_DIR"
+ENV HOME_DIR="$HOME_DIR"
 CMD "$CONDA_DIR/bin/gramex"

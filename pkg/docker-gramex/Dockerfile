@@ -3,8 +3,13 @@ ARG VERSION
 
 # Build on top of Gramex base
 FROM gramener/gramex-base:$VERSION
-ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium-browser
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+# Puppeteer shouldn't download Chromium, but use the Alpine Chromium apk instead
+# https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-on-alpine
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+# Add ~/.npm-packages as the path for `npm install --global`
+# https://github.com/sindresorhus/guides/blob/main/npm-global-without-sudo.md
+ENV PATH="${PATH}:${HOME_DIR}/.npm-packages/bin"
 
 RUN \
     # Install nodejs and npm.
@@ -12,9 +17,11 @@ RUN \
         # icu-data-full is required for comicgen -> fontkit to run TextDecoder('ascii')
         #   https://build.alpinelinux.org/buildlogs/build-edge-x86/main/nodejs/nodejs-16.18.0-r1.log
         icu-data-full \
-        # Install dependencies for Chromium on Alpine.
-        # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-on-alpine
+        # Install dependencies for Chromium on Alpine
         chromium nss freetype harfbuzz ca-certificates ttf-freefont && \
+    # Allow `npm install -g` to work without sudo by installing to ~/.npm-packages
+    mkdir -p ~/.npm-packages && \
+    npm config set prefix "${HOME_DIR}/.npm-packages" && \
     # Activate conda env to run Gramex
     source ~/.profile && \
     # Set up all Gramex apps
