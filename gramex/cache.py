@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import re
 import requests
+import sqlalchemy as sa
 
 # B404:import_subprocess only developers can access this, not users
 import subprocess  # nosec B404
@@ -25,7 +26,7 @@ from queue import Queue
 from threading import Thread
 from tornado.concurrent import Future
 from types import ModuleType
-from typing import List, Tuple, Union, Optional, Dict, Callable, BinaryIO
+from typing import Any, List, Tuple, Union, Dict, Callable, BinaryIO, Literal
 from urllib.parse import urlparse
 
 
@@ -71,54 +72,59 @@ def open(
     transform: Callable = None,
     rel: bool = False,
     **kwargs: dict,
-):
+) -> Any:
     '''Reads a file, processes it via a callback, caches the result and returns it.
 
     When called again, returns the cached result unless the file has updated.
 
-    By default, it determine the file type using the extension. For example:
+    Examples:
 
-        open('data.yaml')           # Loads a YAML file
-        open('data.csv')            # Loads a CSV file
+        >>> gramex.cache.open('data.yaml')
+        >>> gramex.cache.open('data.csv')
+        >>> # Load data.json as JSON into an AttrDict
+        >>> gramex.cache.open('data.json', 'json', object_pairs_hook=AttrDict)
+        >>> # Load data.csv as CSV into a Pandas DataFrame
+        >>> gramex.cache.open('data.csv', 'csv', encoding='cp1252')
 
-    The 2nd parameter (callback) accepts a predefined string that can be one of:
+    Parameters:
 
-    - `bin`: reads binary files using io.open
-    - `text` or `txt`: reads text files using io.open
-    - `yaml`: reads files using yaml.safe_load via io.open
-    - `config`: reads files using using [gramex.config.PathConfig]
+        path: path to the file to open
+        callback: type of file, e.g. `csv`, `json`, or callback function
+        transform: function to transform the data before caching
+        rel: if True, path is relative to the calling file. Default: False
+        **kwargs: passed to the callback function
+
+    `callback=` accepts these predefined types:
+
+    - `"xlsx"`, `"xls"` or `"excel"`: reads Excel files using [gramex.cache.read_excel][].
+        This supports named tables, named ranges, and ranges (e.g. `A1:B10`).
+    - `"csv"`, `"table"`, `"html"`, `"sas"`, `"stata"`, `"parquet"`, `"feather"`, `"hdf"`, `"h5"`:
+        reads using [Pandas](https://pandas.pydata.org/pandas-docs/stable/)
+    - `"json"`: reads files using
+        [`json.load()`](https://docs.python.org/3/library/json.html#json.load)
+    - `"jsondata"`: reads files using
+        [`pd.read_json()`](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)
+    - `"yaml"`: reads files using `yaml.safe_load()`
+    - `"config"`: reads files using using [gramex.config.PathConfig][].
         Same as `yaml`, but allows `import:` and variable substitution.
-    - `json`: reads files using json.load via io.open
-    - `jsondata`: reads files using pd.read_json
-    - `template`: reads files using tornado.Template via io.open
-    - `markdown` or `md`: reads files using markdown.markdown via io.open
-    - `csv`, `excel`, `xls`, `xlsx`, `hdf`, `h5`, `html`, `sas`,
-        `stata`, `table`, `parquet`, `feather`: reads using Pandas
+    - `"template"`: reads files using [`tornado.Template()`]
+    - `"markdown"` or `md`: reads files using `markdown.markdown()`
+    - `"text"` or `txt`: reads text files using io.open
+    - `"bin"`: reads binary files using io.open
 
-    For example:
+    Returns:
+        The loaded file (e.g. as a DataFrame, template, etc.)
 
-        # Load data.yaml as YAML into an AttrDict
-        open('data.yaml', 'yaml')
+    `callback=` can be a function. For example, this returns the size of a file (cached):
 
-        # Load data.json as JSON into an AttrDict
-        open('data.json', 'json', object_pairs_hook=AttrDict)
+        def size(path):
+            return os.stat(path).st_size
+        gramex.cache.open('data.fmt', size)
 
-        # Load data.csv as CSV into a Pandas DataFrame
-        open('data.csv', 'csv', encoding='cp1252')
+    To add new callbacks, use `gramex.cache.open_callback[key] = method`:
 
-    It can also be a function that accepts the filename and any other arguments:
-
-        # Load data using a custom callback
-        open('data.fmt', my_format_reader_function, arg='value')
-
-    This is called as `my_format_reader_function('data.fmt', arg='value')` and
-    cached. Future calls do not re-load and re-calculate this data.
-
-    To support a new callback string, set `gramex.cache.open_callback[key] = method`.
-    For example:
-
-        gramex.cache.open_callback['shp'] = geopandas.read_file     # Register
-        prs = gramex.cache.open('my.shp', layer='countries')        # Open with method
+        gramex.cache.open_callback['shp'] = geopandas.read_file
+        prs = gramex.cache.open('my.shp', layer='countries')
 
     `transform=` is an optional function that processes the data returned by
     the callback. For example:
@@ -129,15 +135,24 @@ def open(
         # After loading data.xlsx into a DataFrame, returned the grouped result
         open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
-    If `transform=` is not a callable, it is ignored, but used as a cache key.
+    If `transform=` is not a function, it is used as a cache key.
+    You can use this to fetch multiple cached version of the file. For example:
+
+        >>> original = open('data.csv', 'csv', transform='v1')
+        >>> same_copy = open('data.csv', 'csv', transform='v1')
+        >>> new_copy = open('data.csv', 'csv', transform='v2')
+        >>> original.columns = ['x', 'y', 'z']
+        >>> same_copy.columns
+        ['x', 'y', 'z']
+        >>> new_copy.columns
+        ['a', 'b', 'c']
 
     `rel=True` opens the path relative to the caller function's file path. If
     `D:/app/calc.py` calls `open('data.csv', 'csv', rel=True)`, the path
     is replaced with `D:/app/data.csv`.
 
-    Any other keyword arguments are passed directly to the callback. If the
-    callback is a predefined string and uses io.open, all argument applicable to
-    io.open are passed to io.open and the rest are passed to the callback.
+    All ``kwargs`` are passed directly to the callback. If the callback is a predefined string
+    using `io.open()`, all `io.open()` arguments are passed to `io.open()`, rest to the callback.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
     # (result, reloaded) instead of just the result.
@@ -198,29 +213,93 @@ def open(
     return (result, reloaded) if _reload_status else result
 
 
-def stat(path: str) -> Tuple[Optional[float], Optional[int]]:
-    '''Returns file status. Used to check if a file has changed.
-
-    If the `stat(file)` has changed, the file has been updated and needs to be reloaded.
-    It checks the file's last modified time -- AND file size in case the modified time
-    is not refreshed.
+def read_excel(
+    io: Union[str, BinaryIO],
+    sheet_name: Union[str, int] = 0,
+    table: str = None,
+    name: str = None,
+    range: str = None,
+    header: Union[None, int, List[int]] = ...,
+    **kwargs: dict,
+) -> pd.DataFrame:
+    '''Read data from an XLSX as a DataFrame using `openpyxl`.
 
     Examples:
-        To see the status of gramex.yaml:
 
-        >>> stat('gramex.yaml')
-        (1654149106.1422858, 7675)
+        >>> gramex.cache.read_excel('data.xlsx', sheet_name='Sheet1')
+        >>> gramex.cache.read_excel('data.xlsx', sheet_name=0)
+        >>> gramex.cache.read_excel('data.xlsx', table='Table1')
+        >>> gramex.cache.read_excel('data.xlsx', name='NamedRange')
+        >>> gramex.cache.read_excel('data.xlsx', range='A1:D10', header=[0, 1])
 
     Parameters:
-        path: Absolute file path/Path relative to gramex root folder
+
+        io: path or file-like object pointing to an Excel file
+        sheet_name: sheet to load data from. Sheet names are specified as strings.
+            Integers pick zero-indexed sheet position. default: 0
+        table: Worksheet table to load from sheet, e.g. `'Table1'`
+        name: Defined name to load from sheet, e.g. `'MyNamedRange'`
+        range: Cell range to load from sheet, e.g. `'A1:C10'`
+        header: Row (0-indexed) to use for the column labels. A list of integers is combined into
+            a MultiIndex. Use None if there is no header.
+        **kwargs: If neither `table`, nor `name`, nor `range` is specified, loads entire
+            sheet via `pd.read_excel`, passing the remaining kwargs.
 
     Returns:
-        The last modified time and file size.
+        The loaded DataFrame
+
+    Note: `table` takes priority over `name` takes priority over `range`.
     '''
-    if os.path.exists(path):
-        stat = os.stat(path)
-        return (stat.st_mtime, stat.st_size)
-    return (None, None)
+    if not any((range, name, table)):
+        # Pandas defaults to xlrd, but we prefer openpyxl
+        kwargs.setdefault('engine', 'openpyxl')
+        return pd.read_excel(
+            io, sheet_name=sheet_name, header=0 if header is ... else header, **kwargs
+        )
+
+    import openpyxl
+
+    wb = openpyxl.load_workbook(io, data_only=True)
+    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
+    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
+    # Get the data range to be picked
+    if table is not None:
+        range = ws.tables[table].ref
+        # Tables themselves specify whether they have a column header. Use this as default
+        if header is ...:
+            header = list(builtin_range(ws.tables[table].headerRowCount))
+    elif name is not None:
+        # If the name is workbook-scoped, get it directly
+        defined_name = wb.defined_names.get(name)
+        # Else, if it's sheet-scoped, get it related to the sheet
+        if defined_name is None:
+            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
+        # Raise an error if we can't find it
+        if defined_name is None:
+            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
+        # Note: This only works if it's a cell range. If we create a named range inside a table,
+        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
+        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
+        range = defined_name.attr_text.split('!')[-1]
+
+    vals = ws[range]
+    if isinstance(vals, tuple):
+        data = pd.DataFrame([[cell.value for cell in row] for row in vals])
+    else:
+        data = pd.DataFrame([[vals.value]])
+    # Header defaults to 0 if undefined. If it's not None, apply the header
+    header = 0 if header is ... else header
+    if header is not None:
+        data = (
+            data.T.set_index(header)
+            .T.reset_index(  # Set header rows as column names
+                drop=True
+            )  # Drop index with "holes" where headers were
+            .rename_axis(  # Column name has header index (e.g. 0). Drop it
+                [None] * len(header) if isinstance(header, (list, tuple)) else None, axis=1
+            )
+        )
+    return data.infer_objects()  # Convert data types
 
 
 def save(
@@ -230,24 +309,17 @@ def save(
     callback: Union[str, Callable] = None,
     **kwargs: dict,
 ) -> None:
-    '''
-    Saves a Pandas DataFrame into file at url.
+    '''Saves a Pandas DataFrame into file at url.
 
     Examples:
-        To save data into `sample.csv`:
 
-        >>> type(data)
-        <class 'pandas.core.frame.DataFrame'>
-        >>> data
-           a  b
-        0  1  2
-        >>> save(data, 'sample.csv')
+        >>> gramex.cache.save(pd.DataFrame({'x': [1, 2]}), 'sample.csv')
+        >>> gramex.cache.save(pd.DataFrame({'x': [1, 2]}), 'sample.xlsx', sheet_name='data')
 
     Parameters:
         data: Pandas dataframe which has to be saved to a file.
-        url: Absolute/Relative location (relative to gramex root folder)
-            in which the file has to be saved.
-        rel: If true, opens the path relative to the caller function's file path.
+        url: path where the dataframe has to be saved.
+        rel: if True, path is relative to the calling file. Default: False
         callback: Almost the same as for [gramex.cache.open][]. It can
             be `json`, `csv`, `xlsx`, `hdf`, `html`, `stata` or
             a function that accepts the filename and any other arguments.
@@ -265,18 +337,36 @@ def save(
         raise TypeError(f'gramex.cache.save(callback="{callback}") is unknown')
 
 
-def query(sql, engine, state=None, **kwargs):
-    '''
-    Read SQL query or database table into a DataFrame. Caches results unless
-    state has changed. It always re-runs the query unless state is specified.
+def query(
+    sql: str,
+    engine: sa.engine.base.Engine,
+    state: Union[str, Callable, List[str], None] = None,
+    **kwargs: dict,
+):
+    '''Read SQL query or database table into a DataFrame, cached.
 
-    The state can be specified in 3 ways:
+    It uses `state` to determine whether to run the query again or not.
 
-    1. A string. This must be as a lightweight SQL query. If the result changes,
-       the original SQL query is re-run.
-    2. A function. This is called to determine the state of the database.
-    3. A list of tables. This list of ["db.table"] names specifies which tables
-       to watch for. This is currently experimental.
+    Examples:
+
+        >>> engine = sqlalchemy.create_engine('sqlite:///path/to/file.db')
+        >>> gramex.cache.query('SELECT * FROM table', engine, state='SELECT max(date) FROM table')
+
+    Parameters:
+
+        sql: SQL query or table name to read from the database.
+        engine: SQLAlchemy engine to read from.
+        state: An SQL query, function or list of table names to check if the data has changed.
+        kwargs: Other keyword arguments are passed directly to `pandas.read_sql`.
+
+    `state` can be a:
+
+    1. `string`, e.g. `SELECT max(date) FROM updated`. This must be as a lightweight SQL query.
+        If the result changes, the SQL query is re-run.
+    2. `function`, e.g. `lambda v: os.stat('transfer.log').st_mtime`.
+        If the result changes, the SQL query is re-run.
+    3. list of table names, e.g. `["db.table1", "db.table2"]`.
+        If any of these tables have changed, the SQL query is re-run. **EXPERIMENTAL**
     4. `None`: the default. The query is always re-run and not cached.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
@@ -304,7 +394,7 @@ def query(sql, engine, state=None, **kwargs):
     else:
         raise TypeError(f'gramex.cache.query(state=) must be a table list/query/fn, not {state!r}')
 
-    key = (str(sql), json.dumps(kwargs.get('params', {}), sort_keys=True), engine.url)
+    key = (str(sql), cache_key(kwargs.get('params', {})), engine.url)
     if key in _cache and _cache[key]['status'] == status:
         result = _cache[key]['data']
     else:
@@ -322,28 +412,85 @@ def query(sql, engine, state=None, **kwargs):
     return (result, reloaded) if _reload_status else result
 
 
+def stat(path: str) -> Union[Tuple[float, int], Tuple[None, None]]:
+    '''Returns a file's modified time and size. Used to check if a file has changed.
+
+    Examples:
+
+        >>> gramex.cache.stat('gramex.yaml')
+        (1654149106.1422858, 7675)
+        >>> gramex.cache.stat('non-existent-file')
+        (None, None)
+
+    Parameters:
+        path: Absolute file path/Path relative to gramex root folder
+
+    Returns:
+        The last modified time and file size, or `(None, None)` if the file does not exist.
+    '''
+    if os.path.exists(path):
+        stat = os.stat(path)
+        return (stat.st_mtime, stat.st_size)
+    return (None, None)
+
+
+def cache_key(*args: List[Any]) -> str:
+    '''Converts arguments into a stable string suitable for use as a cache key.
+
+    Examples:
+
+        >>> t1 = gramex.cache.cache_key(tweet1)
+        >>> data[t1] = tweet1
+        >>> t2 = gramex.cache.cache_key(tweet2)
+        >>> data[t2] = tweet2
+
+    Parameters:
+
+        args: Any number of arguments to serialized with JSON.
+
+    Returns:
+        A JSON dump of the arguments, sorted by key for stability.
+    '''
+    return json.dumps(args, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+
+
+def hashed(val: Any) -> str:
+    '''Return the hashed value of val. If not possible, return None'''
+    try:
+        hash(val)
+        return val
+    except TypeError:
+        try:
+            return cache_key(val)
+        except Exception:
+            return None
+
+
 # reload_module() stores its cache here
 _MODULE_CACHE = {}
 
 
 def reload_module(*modules: List[ModuleType]) -> None:
-    '''Reloads one or more modules if they are outdated, i.e. only if required the
-    underlying source file has changed.
+    '''Reloads one or more modules if they have changed on disk.
 
     Examples:
 
-        >>> import mymodule
-        >>> reload_module(mymodule)
-
-        Load the cached module. Reload the module if the source has changed.
+        >>> import mymodule1
+        >>> import mymodule2
+        >>> reload_module(mymodule1, mymodule2)
 
     Parameters:
 
         *modules: Pass the module which has to reload.
 
-    This is most useful during template development. If your changes are in a
-    Python module, add adding these lines to pick up new module changes when
-    the template is re-run.
+    This is useful when developing templates that import modules. Use:
+
+        {% import mymodule %}
+        {% import gramex.cache %}
+        {% gramex.cache.reload_module(mymodule) %}
+        {# ... use mymodule ... #}
+
+    If `mymodule.py` changes, the template will automatically reload it.
     '''
     for module in modules:
         name = getattr(module, '__name__', None)
@@ -369,14 +516,11 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
 
     Examples:
 
-        >>> urlfetch('https://gramener.com/gramex/guide/mlhandler/titanic?_download=titanic.csv' +
-                '&_format=csv')
-        >>> '/path/to/tmpfile.csv'
-
-        This is a synchronous function, i.e. it waits until the file is downloaded.
+        >>> gramex.cache.urlfetch('https://gramener.com/gramex/guide/mlhandler/titanic')
+        '/path/to/tmpfile.json'
 
     Parameters:
-        url: The path can be http, https or file path
+        url: A http, https or file path
         info: True if metadata of the requested file is required. If true, it
             returns a dict with (filename), r (request) url, ext (extension), content_type.
         **kwargs: Any other keyword arguments are passed to requests.get.
@@ -384,14 +528,11 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
     Returns:
         Filepath where the file is downloaded.
 
-    - If url is a file url, return as is.
-    - If url is a file url and info is true, return a dict with name (filepath),
-        ext (extension), and content_type as well as r, url set to None.
-    - If path is a URL, download the file, return the saved filename.
-    - The filename extension is based on the URL's Content-Type HTTP header.
-    - If info is true, returns a dict with name (filename), r (request)
-        url, ext (extension), content_type.
-    - Automatically delete the files on exit of the application.
+    Note:
+
+    - When Gramex exits, the files are automatically deleted.
+    - The extension is based on the URL's Content-Type HTTP header.
+    - If `url` is the path to a file, it returns the `url` itself.
     '''
     urlparts = urlparse(url)
     if urlparts.scheme not in {'http', 'https'}:  # url is a filepath
@@ -418,64 +559,67 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
 
 
 class Subprocess:
-    '''
-    tornado.process.Subprocess does not work on Windows.
-    https://github.com/tornadoweb/tornado/issues/1585
+    '''Wraps `subprocess.Popen` to run in a Tornado IOLoop.
 
-    This is a threaded alternative based on
-    http://stackoverflow.com/a/4896288/100904
+    [`tornado.process.Subprocess()`](https://www.tornadoweb.org/en/stable/process.html)
+    [fails on Windows](https://github.com/tornadoweb/tornado/issues/1585).
+    This is a threaded alternative.
 
-    Run a program async and wait for it to execute. Then get its output:
+    Examples:
 
-        stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
+        Run a program async and wait for it to execute. Then get its output:
 
-    Run a program async and send each line to the handler as it writes:
+        >>> stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
 
-        yield Subprocess(
-            ['ls', '-la'],                  # Run 'ls -la'
-            buffer_size='line',             # Buffer output line by line
-            stream_stdout=handler.write,    # Send output to handler.write(line)
-            stream_stderr=handler.write,    # Send errors to handler.write(line)
-        )
+        Run a program async and send each line to the handler as it writes:
 
-    Run a program async and appends output into a list:
+        >>> yield Subprocess(
+        ...     ['ls', '-la'],                  # Run 'ls -la'
+        ...     buffer_size='line',             # Buffer output line by line
+        ...     stream_stdout=handler.write,    # Send output to handler.write(line)
+        ...     stream_stderr=handler.write,    # Send errors to handler.write(line)
+        ... )
 
-        proc = Subprocess(
-            ['ls', '-la'],
-            buffer_size='line',
-            stream_stdout='list_out',       # Append output to self.list_out
-            stream_stderr='list_err',       # Append errors to self.list_err
-        )
-        output = proc.list_out[-10:]        # Return last 10 lines of output
-        yield proc.wait_for_exit()          # Wait until application is done
+        Run a program async and appends output into a list:
 
-    Run a program async and appends output into a queue:
+        >>> proc = Subprocess(
+        ...     ['ls', '-la'],
+        ...     buffer_size='line',
+        ...     stream_stdout='list_out',       # Append output to self.list_out
+        ...     stream_stderr='list_err',       # Append errors to self.list_err
+        ... )
+        ... output = proc.list_out[-10:]        # Return last 10 lines of output
+        ... yield proc.wait_for_exit()          # Wait until application is done
 
-        proc = Subprocess(
-            ['ls', '-la'],                  # Run 'ls -la'
-            buffer_size='line',             # Buffer output line by line
-            stream_stdout='queue_out',      # Save output in proc.out queue
-            stream_stderr='queue_err',      # Save errors in proc.err queue
-        )
-        output = proc.queue_out.get_nowait()    # Returns first line of output
-        yield proc.wait_for_exit()              # Wait until application is done
+        Run a program async and appends output into a queue:
 
-    To write to multiple streams, pass a list:
+        >>> proc = Subprocess(
+        ...     ['ls', '-la'],                  # Run 'ls -la'
+        ...     buffer_size='line',             # Buffer output line by line
+        ...     stream_stdout='queue_out',      # Save output in proc.out queue
+        ...     stream_stderr='queue_err',      # Save errors in proc.err queue
+        ... )
+        ... output = proc.queue_out.get_nowait()    # Returns first line of output
+        ... yield proc.wait_for_exit()              # Wait until application is done
 
-        proc = Subprocess(
-            args,
-            buffer_size='line',
-            stream_stdout=[handler.write, 'list_out', 'queue_out', my_callback],
-            stream_stderr=[handler.write, 'list_err', 'queue_err', my_callback],
-            **kwargs
-        )
-        yield proc.wait_for_exit()
+        To write to multiple streams, pass a list:
 
-    To check the process return code, use `.proc` which has the `Popen`
-    object:
+        >>> proc = Subprocess(
+        ...     args,
+        ...     buffer_size='line',
+        ...     stream_stdout=[handler.write, 'list_out', 'queue_out', my_callback],
+        ...     stream_stderr=[handler.write, 'list_err', 'queue_err', my_callback],
+        ...     **kwargs
+        ... )
+        ... yield proc.wait_for_exit()
 
-        if proc.proc.returncode:
-            raise Exception('Process failed with return code %d', proc.proc.returncode)
+        To check the process return code, use `.proc` which has the `Popen`
+        object:
+
+        >>> if proc.proc.returncode:
+        ...     raise Exception('Process failed with return code %d', proc.proc.returncode)
+
+    [Discussion](http://stackoverflow.com/a/4896288/100904)
     '''
 
     def __init__(
@@ -614,11 +758,54 @@ class Subprocess:
 
 
 _daemons = {}
-_regex_type = type(re.compile(''))
 
 
-def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size='line', **kwargs):
-    '''This is the same as [Subprocess], but has a few additional checks.
+def daemon(
+    args: Union[str, List[str]],
+    restart: int = 1,
+    first_line: Union[str, re.Pattern, Callable, None] = None,
+    timeout: float = 5,
+    stream: Union[bool, Callable] = True,
+    buffer_size: Union[int, Literal['line']] = 'line',
+    **kwargs,
+) -> Future:
+    '''Run a long-running process in the background, and wait till it starts properly.
+
+    This is used to run & cache servers like Node web servers, Elasticsearch, etc. in Tornado.
+
+    Examples:
+
+        ```python
+        @tornado.gen.coroutine
+        def fetch_from_server(handler):
+            server = yield gramex.cache.daemon(
+                ['python', '-m', 'http_server', '8000']
+                restart=3,
+                first_line=re.compile(r'Serving HTTP on .* port 8000'),
+                timeout=5,
+                stream=sys.stdout.write,
+                buffer_size='line',
+            )
+            return requests.get('http://localhost:8000/').text
+        ```
+
+        The first time `fetch_from_server` is called, it starts a Python web server on port 8000.
+        Subsequent calls use the same server.
+
+    Parameters:
+
+        args: command to run. Can be a list of strings or a string. See
+            [subprocess.Popen](https://docs.python.org/3/library/subprocess.html#subprocess.Popen)
+        restart: number of times to restart the process if it fails. Set to 0 to never restart.
+        first_line: wait until the first line of output matches this string, regex or function
+        timeout: number of seconds to wait first line to appear
+        stream: if True, write process output to stderr. If a function, call it with each line
+            (e.g. `sys.stdout.write`)
+        buffer_size: if 'line', flush stream on every new line. If an integer, flush stream
+            after every `buffer_size` bytes.
+
+    Returns:
+        A future that resolves to a [gramex.cache.Subprocess][] object.
 
     1. If we have already called [Subprocess] with the same arguments,
         re-use the same instance.
@@ -680,7 +867,7 @@ def daemon(args, restart=1, first_line=None, stream=True, timeout=5, buffer_size
                 if first_line not in actual:
                     raise AssertionError(f'{arg_str}: first line is "{actual}" not "{first_line}"')
 
-        elif isinstance(first_line, _regex_type):
+        elif isinstance(first_line, re.Pattern):
 
             def check(proc):
                 actual = queue.get(timeout=timeout).decode('utf-8')
@@ -743,7 +930,6 @@ class KeyStore:
     '''
 
     def __init__(self, flush=None, purge=None, purge_keys=None, **kwargs):
-        '''Initialise the KeyStore at path'''
         self.store = {}
         if callable(purge_keys):
             self.purge_keys = purge_keys
@@ -762,17 +948,17 @@ class KeyStore:
         return self.store.keys()
 
     def load(self, key, default=None):
-        '''Same as store.get(), but called "load" to indicate persistence'''
+        '''Same as `store.get(key)`, but it's called `load()` to indicate persistence'''
         key = self._escape(key)
         return self.store.get(key, {} if default is None else default)
 
     def dump(self, key, value):
-        '''Same as store[key] = value'''
+        '''Same as `store[key] = value`'''
         key = self._escape(key)
         self.store[key] = value
 
     def _escape(self, key):
-        '''Converts key into a unicode string (interpreting byte-string keys as UTF-8)'''
+        # Converts key into a unicode string (interpreting byte-string keys as UTF-8)
         return str(key, encoding='utf-8') if isinstance(key, bytes) else str(key)
 
     @staticmethod
@@ -943,10 +1129,8 @@ class HDF5Store(KeyStore):
             self.changed = True
 
     def _escape(self, key):
-        '''
-        Converts key into a unicode string (interpreting byte-string keys as UTF-8).
-        HDF5 does not accept / in key names. Replace those with tabs.
-        '''
+        # Converts key into a unicode string (interpreting byte-string keys as UTF-8).
+        # HDF5 does not accept / in key names. Replace those with tabs.
         key = str(key, encoding='utf-8') if isinstance(key, bytes) else str(key)
         return key.replace('/', '\t')
 
@@ -962,9 +1146,7 @@ class HDF5Store(KeyStore):
             self.changed = False
 
     def purge(self):
-        '''
-        Load all keys into self.store. Delete what's required. Save.
-        '''
+        # Load all keys into self.store. Delete what's required. Save.
         self.flush()
         changed = False
         items = {
@@ -1061,16 +1243,11 @@ class JSONStore(KeyStore):
 
 
 def hashfn(fn):
-    '''Returns a unique hash value for the function.'''
+    # Returns a unique hash value for the function.
     # id() returns a unique value for the lifetime of an object.
     # To ensure that ID is not re-cycled, cache object, so it's never released.
     _ID_CACHE.add(fn)
     return id(fn)
-
-
-def cache_key(*args):
-    '''Converts arguments into a string suitable for use as a cache key'''
-    return json.dumps(args, sort_keys=True, separators=(',', ':'))
 
 
 def opener(callback, read=False, **open_kwargs):
@@ -1078,20 +1255,20 @@ def opener(callback, read=False, **open_kwargs):
     Converts any function that accepts a string or handle as its parameter into
     a function that takes the first parameter from a file path.
 
-    Here are a few examples:
+    Examples:
 
-        jsonload = opener(json.load)
-        jsonload('x.json')      # opens x.json and runs json.load(handle)
-        gramex.cache.open('x.json', jsonload)   # Loads x.json, cached
+        >>> jsonload = opener(json.load)
+        >>> jsonload('x.json')      # opens x.json and runs json.load(handle)
+        >>> gramex.cache.open('x.json', jsonload)   # Loads x.json, cached
 
-        # read=True parameter passes the contents (not handle) to the function
-        template = opener(string.Template, read=True)
-        template('abc.txt').substitute(x=val)
-        gramex.cache.open('abc.txt', template).substitute(x=val)
+        >>> # read=True parameter passes the contents (not handle) to the function
+        >>> template = opener(string.Template, read=True)
+        >>> template('abc.txt').substitute(x=val)
+        >>> gramex.cache.open('abc.txt', template).substitute(x=val)
 
-        # If read=True, callback may be None. The result of .read() is passed as-is
-        text = opener(None, read=True)
-        gramex.cache.open('abc.txt', text)
+        >>> # If read=True, callback may be None. The result of .read() is passed as-is
+        >>> text = opener(None, read=True)
+        >>> gramex.cache.open('abc.txt', text)
 
     Keyword arguments applicable for `io.open` are passed to `io.open`. These
     default to `io.open(mode='r', buffering=-1, encoding='utf-8',
@@ -1141,95 +1318,6 @@ def _yaml(handle, **kwargs):
 def _template(path, **kwargs):
     root, name = os.path.split(path)
     return tornado.template.Loader(root, **kwargs).load(name)
-
-
-def read_excel(
-    io: Union[str, BinaryIO],
-    sheet_name: Union[str, int] = 0,
-    table: str = None,
-    name: str = None,
-    range: str = None,
-    header: Union[None, int, List[int]] = ...,
-    **kwargs: dict,
-) -> pd.DataFrame:
-    '''Read data from an XLSX as a DataFrame using `openpyxl`.
-
-    Parameters:
-        io: path or file-like object pointing to an Excel file
-        sheet_name: sheet to load data from. Sheet names are specified as strings.
-            Integers pick zero-indexed sheet position. default: 0
-        table: Worksheet table to load from sheet, e.g. `'Table1'`
-        name: Defined name to load from sheet, e.g. `'MyNamedRange'`
-        range: Cell range to load from sheet, e.g. `'A1:C10'`
-        header: Row (0-indexed) to use for the column labels. A list of integers is combined into
-            a MultiIndex. Use None if there is no header.
-        **kwargs: If neither `table`, nor `name`, nor `range` is specified, loads entire
-            sheet via `pd.read_excel`, passing the remaining kwargs.
-
-    `table` overrides `name` overrides `range`.
-    '''
-    if not any((range, name, table)):
-        # Pandas defaults to xlrd, but we prefer openpyxl
-        kwargs.setdefault('engine', 'openpyxl')
-        return pd.read_excel(
-            io, sheet_name=sheet_name, header=0 if header is ... else header, **kwargs
-        )
-
-    import openpyxl
-
-    wb = openpyxl.load_workbook(io, data_only=True)
-    # Pick a SINGLE sheet using sheet_name -- it can be an int or a str
-    ws = wb[wb.sheetnames[sheet_name] if isinstance(sheet_name, int) else sheet_name]
-    # Get the data range to be picked
-    if table is not None:
-        range = ws.tables[table].ref
-        # Tables themselves specify whether they have a column header. Use this as default
-        if header is ...:
-            header = list(builtin_range(ws.tables[table].headerRowCount))
-    elif name is not None:
-        # If the name is workbook-scoped, get it directly
-        defined_name = wb.defined_names.get(name)
-        # Else, if it's sheet-scoped, get it related to the sheet
-        if defined_name is None:
-            defined_name = wb.defined_names.get(name, wb.sheetnames.index(ws.title))
-        # Raise an error if we can't find it
-        if defined_name is None:
-            raise ValueError(f'{io}: missing name {name} in sheet {sheet_name}')
-        # Note: This only works if it's a cell range. If we create a named range inside a table,
-        # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
-        # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
-        range = defined_name.attr_text.split('!')[-1]
-
-    vals = ws[range]
-    if isinstance(vals, tuple):
-        data = pd.DataFrame([[cell.value for cell in row] for row in vals])
-    else:
-        data = pd.DataFrame([[vals.value]])
-    # Header defaults to 0 if undefined. If it's not None, apply the header
-    header = 0 if header is ... else header
-    if header is not None:
-        data = (
-            data.T.set_index(header)
-            .T.reset_index(  # Set header rows as column names
-                drop=True
-            )  # Drop index with "holes" where headers were
-            .rename_axis(  # Column name has header index (e.g. 0). Drop it
-                [None] * len(header) if isinstance(header, (list, tuple)) else None, axis=1
-            )
-        )
-    return data.infer_objects()  # Convert data types
-
-
-def hashed(val):
-    '''Return the hashed value of val. If not possible, return None'''
-    try:
-        hash(val)
-        return val
-    except TypeError:
-        try:
-            return json.dumps(val, sort_keys=True, separators=(',', ':'))
-        except Exception:
-            return None
 
 
 # gramex.cache.open() stores its cache here as {(path, callback): {data: ..., stat: ...}}
@@ -1282,17 +1370,6 @@ def _relpath(path):
         else:
             app_log.warning(f'gramex.cache.open/save: rel= on unknown template folder for {path}')
     return os.path.join(folder, path)
-
-
-def set_cache(cache, old_cache):
-    '''
-    Use `cache` as the new cache for all open requests.
-    Copies keys from old cache, and deletes them from the old cache.
-    '''
-    for key in list(old_cache.keys()):
-        cache[key] = old_cache[key]
-        del old_cache[key]
-    return cache
 
 
 _SAVE_CALLBACKS = {

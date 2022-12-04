@@ -1,6 +1,5 @@
 import re
 import os
-import json
 import time
 import shlex
 import atexit
@@ -16,6 +15,7 @@ from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
 from gramex.config import app_log, variables
+from gramex.cache import cache_key
 from gramex.http import OK, BAD_REQUEST, GATEWAY_TIMEOUT, BAD_GATEWAY, CLIENT_TIMEOUT
 from .basehandler import BaseHandler
 
@@ -287,7 +287,7 @@ class CaptureHandler(BaseHandler):
         super(CaptureHandler, cls).setup(**kwargs)
         # Create a new Capture only if the config has changed.
         config = {'engine': engine, 'port': port, 'url': url, 'cmd': cmd, 'timeout': timeout}
-        config_str = json.dumps(config, separators=[',', ':'], sort_keys=True)
+        config_str = cache_key(config)
         if config_str not in cls.captures:
             cls.captures[config_str] = Capture(**config)
         cls.capture = cls.captures[config_str]

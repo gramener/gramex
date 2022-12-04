@@ -6,26 +6,26 @@ site_dir: api
 
 nav:
   - index.md
-  - Startup: gramex.md
-  - Services: services.md
-  - Handlers: handlers.md
   - Caching: cache.md
   - Data manipulation: data.md
-  - Debugging: debug.md
+  - Visualization scales: scale.md
+  - TopCause: topcause.md
   - Configuration: config.md
-  - Python - Node bridge: pynode.md
   - Scheduler: scheduler.md
   - Emailer: emailer.md
   - Transformation utilities: transforms.md
+  - Debugging: debug.md
+  - Startup: gramex.md
+  - Services: services.md
+  - Handlers: handlers.md
+  - Python Node bridge: pynode.md
   - HTTP response codes: http.md
   - Install apps: install.md
   - License management: license.md
   - Machine learning: ml.md
   - Machine learning API: ml_api.md
-  - Visualization scales: scale.md
   - Secrets management: secrets.md
   - sm_api.md
-  - TopCause: topcause.md
   - Windows Services: winservice.md
 
 extra_css:
@@ -64,7 +64,7 @@ plugins:
 
             # In ToC and content, group into attributes, classes, and functions.
             # But don't display attributes, classes and functions as section headings.
-            group_by_category: true
+            group_by_category: false
             show_category_heading: false
 
             # Show `open()`, not `gramex.cache.open()`

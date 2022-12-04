@@ -32,6 +32,10 @@ mime:
   .otf: font/otf
   .woff: font/woff
   .woff2: font/woff2
+  # Sourcemap formats. The extensions are typically .(js|css|ts|cjs|mjs).map
+  #   Exceptions: underscore-min.map, rx.lite.map, axios.map
+  #   Non-maps: nltk_data/taggers/universal_tagset/ja-verbmobil.map
+  .map: application/json
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
