@@ -422,7 +422,6 @@ class TestOpen(unittest.TestCase):
         self.assertIn(cache_key, cache)
 
     def test_change_cache(self):
-        # gramex.cache.set_cache() changes the default cache
         path = os.path.join(cache_folder, 'data.csv')
         new_cache = {}
         old_cache = gramex.cache._OPEN_CACHE
@@ -431,12 +430,11 @@ class TestOpen(unittest.TestCase):
         # Ensure that the path is cached
         gramex.cache.open(path, 'csv')
         self.assertIn(cache_key, old_cache)
-        old_cache_data = dict(old_cache)
 
         # Updating the cache copies data and empties from the old one
-        gramex.cache._OPEN_CACHE = gramex.cache.set_cache(new_cache, old_cache)
-        eq_(new_cache, old_cache_data)
-        eq_(old_cache, {})
+        new_cache.update(old_cache)
+        gramex.cache._OPEN_CACHE = new_cache
+        old_cache.clear()
 
         # New requests are cached in the new cache
         result, reloaded = gramex.cache.open(path, 'csv', _reload_status=True)

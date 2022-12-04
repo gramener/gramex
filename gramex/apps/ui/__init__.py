@@ -2,7 +2,6 @@
 import io
 import re
 import os
-import json
 import gramex
 import gramex.cache
 import gramex.handlers
@@ -54,7 +53,7 @@ def cdn_redirect(handler, folder_map={}):
 
 def _get_cache_key(state):
     '''Return short string capturing state of object. Used to create unique filenames for state'''
-    cache_key = json.dumps(state, sort_keys=True, ensure_ascii=True).encode('utf-8')
+    cache_key = gramex.cache.cache_key(state).encode('utf-8')
     # B324:md5 is safe here - it's not for cryptographic use
     return md5(cache_key).hexdigest()[:5]  # nosec B324
 

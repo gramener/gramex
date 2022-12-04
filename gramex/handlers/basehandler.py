@@ -1029,9 +1029,8 @@ class BaseMixin:
         - `session._l` is the last time the user accessed a page.
         - `session._i` is the seconds of inactivity after which the session expires.
         - If `session._i` is set (we track inactive expiry), we set ``session._l` to now.
-
-        Called by [prepare][BaseHandler.prepare] when any user accesses a page.
         '''
+        # Called by BaseHandler.prepare() when any user accesses a page.
         # For efficiency reasons, don't call get_session every time. Check
         # session only if there's a valid sid cookie (with possibly long expiry)
         if self.get_secure_cookie(self._session_cookie_id, max_age_days=9999999):

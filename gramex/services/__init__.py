@@ -408,8 +408,10 @@ def cache(conf: dict) -> None:
         # if default: true, make this the default cache for gramex.cache.{open,query}
         if config.get('default'):
             for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
-                val = gramex.cache.set_cache(info.cache[name], getattr(gramex.cache, key))
-                setattr(gramex.cache, key, val)
+                old_cache = getattr(gramex.cache, key, {})
+                info.cache[name].update(old_cache)
+                setattr(gramex.cache, key, info.cache[name])
+                old_cache.clear()
 
 
 def eventlog(conf: dict) -> None:
