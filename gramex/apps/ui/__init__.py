@@ -54,8 +54,8 @@ def cdn_redirect(handler, folder_map={}):
 def _get_cache_key(state):
     '''Return short string capturing state of object. Used to create unique filenames for state'''
     cache_key = gramex.cache.cache_key(state).encode('utf-8')
-    # B324:md5 is safe here - it's not for cryptographic use
-    return md5(cache_key).hexdigest()[:5]  # nosec B324
+    # B303, B324:md5 is safe here - it's not for cryptographic use
+    return md5(cache_key).hexdigest()[:5]  # nosec B303, B324
 
 
 @coroutine

@@ -20,6 +20,12 @@ variables:
   MYSQL_SERVER: mysql
   REDIS_SERVER: redis
 
+validate:
+  image: gramener/builderrors
+  script: builderrors
+  # Until 31 Dec 2022, allow build errors to fail
+  allow_failure: true
+
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
   only: [master, release]

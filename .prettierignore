@@ -10,3 +10,6 @@ tests/sass/vars.scss
 testlib/test_config/config.error.yaml
 testlib/test_config/config.random.yaml
 tests/sass/import.sass
+
+# MKDocs uses custom blocks that prettier does not understand
+mkdocs/docs/handlers.md
