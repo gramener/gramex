@@ -93,7 +93,6 @@ include = ["gramex*"]
 full = [
     "boto3",  # for gramex.services.sns.AmazonSNS
     "datasets",  # for gramex.transformers
-    "ipdb",  # for better debugging
     "line_profiler",  # for gramex.debug.lineprofile
     "pymysql",  # for MySQL connections
     "scipy",  # for gramex.topcause
