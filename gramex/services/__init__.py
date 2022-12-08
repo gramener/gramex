@@ -165,13 +165,8 @@ def app(conf: dict) -> None:
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
-                        try:
-                            import ipdb as pdb  # noqa: T100
-                        except ImportError:
-                            import pdb  # noqa: T100
-                            import warnings
+                        import pdb  # noqa: T100
 
-                            warnings.warn('"pip install ipdb" for better debugging')
                         pdb.set_trace()  # noqa: T100
                     # If Ctrl-B is pressed, start the browser
                     if char == b'\x02':
