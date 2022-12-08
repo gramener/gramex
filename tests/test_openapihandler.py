@@ -35,7 +35,7 @@ class TestOpenAPIHandler(TestGramex):
         # /openapi/func path exists
         ok_('/openapi/func' in spec['paths'])
         path = spec['paths']['/openapi/func']
-        for request in ('get', 'post'):
+        for request in ('post', 'put'):
             ok_(request in path)
             conf = path[request]
             # Summary is based on function name
@@ -161,30 +161,34 @@ class TestOpenAPIHandler(TestGramex):
                 params['code'],
             )
 
-            self.check_response(conf['responses'])
-
-    def check_response(self, resp):
-        # 400 response has description from gramex.yaml
-        self.assertDictContainsSubset(
-            {
-                'description': 'You served a bad request',
-                'content': {'text/html': {'example': 'Bad request'}},
-            },
-            resp['400'],
-        )
-        # Rest should have default error responses
-        self.assertDictContainsSubset(
-            {'description': 'Successful Response', 'content': {'application/json': {}}},
-            resp['200'],
-        )
-        self.assertDictContainsSubset(
-            {
-                'description': 'Not authorized',
-                'content': {'text/html': {'example': 'Not authorized'}},
-            },
-            resp['401'],
-        )
+            resp = conf['responses']
+            # 400 response has description from gramex.yaml
+            self.assertDictContainsSubset(
+                {
+                    'description': 'Bad request',
+                    'content': {'text/html': {'example': 'Bad request'}},
+                },
+                resp['400'],
+            )
+            # Rest should have default error responses
+            self.assertDictContainsSubset(
+                {'description': 'Successful Response', 'content': {'application/json': {}}},
+                resp['200'],
+            )
+            self.assertDictContainsSubset(
+                {
+                    'description': 'Not authorized',
+                    'content': {'text/html': {'example': 'Not authorized'}},
+                },
+                resp['401'],
+            )
+            # 429 is added only to PUT not GET
+            if request == 'put':
+                self.assertDictContainsSubset({'description': 'Rate limited'}, resp['429'])
+            else:
+                self.assertNotIn('429', resp)
 
     def check_formhandler(self, spec):
         ok_('/openapi/form' in spec['paths'])
+        eq_(spec['paths']['/openapi/form'], self.expected['/openapi/form'])
         eq_(spec['paths']['/openapi/form'], self.expected['/openapi/form'])
