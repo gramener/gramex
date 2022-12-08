@@ -2522,12 +2522,12 @@ url:
     handler: FunctionHandler
     kwargs:
       function: utils.test_function
-      methods: GET, POST
+      methods: POST, PUT
     openapi:
-      get:
+      put:
         responses:
-          "400":
-            description: You served a bad request
+          "429":
+            description: Rate limited
 
   openapi/form:
     pattern: /openapi/form

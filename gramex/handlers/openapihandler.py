@@ -4,6 +4,7 @@ import json
 import re
 import gramex
 import gramex.cache
+from copy import deepcopy
 from typing import get_type_hints
 from textwrap import dedent
 from gramex.config import merge
@@ -60,7 +61,7 @@ class OpenAPIHandler(BaseHandler):
                 conf['schema']['items'] = {'type': cls.types.get(typ, 'string')}
             else:
                 conf['schema']['type'] = cls.types.get(typ, 'string')
-        spec['responses'] = config.responses
+        spec['responses'] = deepcopy(config.responses)
         return spec
 
     def formhandler_spec(self, cls, summary):
@@ -108,7 +109,7 @@ class OpenAPIHandler(BaseHandler):
             add(config.formhandler._limit)
             add(config.formhandler._meta)
         # TODO: If ID is present, allow GET, POST, DELETE. Else only GET
-        get_spec['responses'] = config.responses
+        get_spec['responses'] = deepcopy(config.responses)
         return spec
 
     def get(self):
@@ -140,9 +141,7 @@ class OpenAPIHandler(BaseHandler):
             pattern = config['pattern'].replace('/./', '/')
             summary = f'{url_name(pattern)}: {config["handler"]}'
             # TODO: Handle wildcards, e.g. /(.*) -> / with an arg
-            info = spec['paths'][pattern] = {
-                'get': {'summary': summary},
-            }
+            info = spec['paths'][pattern] = {}
             cls = gramex.service.url[key].handler_class
             if issubclass(cls, gramex.handlers.FunctionHandler):
                 # Ignore functions with invalid setup
@@ -155,10 +154,12 @@ class OpenAPIHandler(BaseHandler):
                     fnspec['summary'] = summary
                     default_methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
                     for method in getattr(cls, '_http_methods', default_methods):
-                        info[method.lower()] = fnspec
+                        info[method.lower()] = deepcopy(fnspec)
             elif issubclass(cls, gramex.handlers.FormHandler):
                 info.update(self.formhandler_spec(cls, summary=summary))
-            # User's spec definition overrides our spec definition
+            else:
+                info['get'] = {'summary': summary}
+
             merge(info, cls.conf.get('openapi', {}), mode='overwrite')
 
         args = self.argparse(indent={'type': int, 'default': 0})
