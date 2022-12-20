@@ -26,7 +26,8 @@ from queue import Queue
 from threading import Thread
 from tornado.concurrent import Future
 from types import ModuleType
-from typing import Any, List, Tuple, Union, Dict, Callable, BinaryIO, Literal
+from typing import Any, List, Tuple, Union, Dict, Callable, BinaryIO
+from typing_extensions import Literal
 from urllib.parse import urlparse
 
 
