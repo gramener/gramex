@@ -14,10 +14,8 @@ RUN \
     # Activate conda env to run Gramex
     source ~/.profile && \
     # Install Gramex from source
-    git clone https://github.com/gramener/gramex/ && \
-    cd gramex && \
-    pip uninstall --yes gramex && \
-    pip install -e . && \
-    gramex setup --all && \
-    # Install test dependencies
-    pip install -r tests/requirements.txt
+    git clone --depth 1 https://github.com/gramener/gramex/ && \
+    cd gramex/tests && \
+    # TODO: Set up tests so that the server runs from the INSTALLED Gramex and tests run independently
+    pytest && \
+    nosetests

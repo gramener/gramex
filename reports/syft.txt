@@ -41,7 +41,7 @@ NAME                                      VERSION        TYPE
 @polka/url                                1.0.0-next.21  npm   
 @popperjs/core                            2.11.6         npm   
 @sideway/address                          4.1.4          npm   
-@sideway/formula                          3.0.0          npm   
+@sideway/formula                          3.0.1          npm   
 @sideway/pinpoint                         2.0.0          npm   
 @soda/friendly-errors-webpack-plugin      1.8.1          npm   
 @soda/get-current-script                  1.0.2          npm   
@@ -55,14 +55,14 @@ NAME                                      VERSION        TYPE
 @types/eslint-scope                       3.7.4          npm   
 @types/estree                             0.0.51         npm   
 @types/estree                             1.0.0          npm   
-@types/express                            4.17.14        npm   
+@types/express                            4.17.15        npm   
 @types/express-serve-static-core          4.17.31        npm   
 @types/html-minifier-terser               6.1.0          npm   
 @types/http-proxy                         1.17.9         npm   
 @types/json-schema                        7.0.11         npm   
 @types/mime                               3.0.1          npm   
 @types/minimist                           1.2.2          npm   
-@types/node                               18.11.10       npm   
+@types/node                               18.11.17       npm   
 @types/normalize-package-data             2.4.1          npm   
 @types/parse-json                         4.0.0          npm   
 @types/qs                                 6.9.7          npm   
@@ -102,7 +102,7 @@ acorn                                     7.4.1          npm
 acorn                                     8.8.1          npm   
 acorn-import-assertions                   1.8.0          npm   
 acorn-walk                                8.2.0          npm   
-address                                   1.2.1          npm   
+address                                   1.2.2          npm   
 admin2                                                   npm   
 agent-base                                6.0.2          npm   
 ajv                                       6.12.6         npm   
@@ -163,7 +163,7 @@ callsites                                 3.1.0          npm
 camel-case                                3.0.0          npm   
 camel-case                                4.1.2          npm   
 caniuse-api                               3.0.0          npm   
-caniuse-lite                              1.0.30001435   npm   
+caniuse-lite                              1.0.30001439   npm   
 capture                                   1.0.0          npm   
 case-sensitive-paths-webpack-plugin       2.4.0          npm   
 caseless                                  0.12.0         npm   
@@ -229,7 +229,7 @@ cross-fetch                               3.1.5          npm
 cross-spawn                               6.0.5          npm   
 cross-spawn                               7.0.3          npm   
 css-declaration-sorter                    6.3.1          npm   
-css-loader                                6.7.2          npm   
+css-loader                                6.7.3          npm   
 css-minimizer-webpack-plugin              3.4.1          npm   
 css-select                                4.3.0          npm   
 css-tree                                  1.1.3          npm   
@@ -385,7 +385,7 @@ human-signals                             2.1.0          npm
 iconv-lite                                0.4.24         npm   
 icss-utils                                5.1.0          npm   
 ieee754                                   1.2.1          npm   
-ignore                                    5.2.1          npm   
+ignore                                    5.2.4          npm   
 immediate                                 3.0.6          npm   
 immutable                                 4.1.0          npm   
 import-fresh                              3.3.0          npm   
@@ -422,7 +422,7 @@ isstream                                  0.1.2          npm
 javascript-stringify                      2.1.0          npm   
 jest-worker                               27.5.1         npm   
 joi                                       17.7.0         npm   
-jquery                                    3.6.1          npm   
+jquery                                    3.6.2          npm   
 jqueryui                                  1.11.1         npm   
 js-message                                1.0.7          npm   
 js-tokens                                 4.0.0          npm   
@@ -435,7 +435,7 @@ json-schema-traverse                      0.4.1          npm
 json-schema-traverse                      1.0.0          npm   
 json-stringify-safe                       5.0.1          npm   
 json5                                     1.0.1          npm   
-json5                                     2.2.1          npm   
+json5                                     2.2.2          npm   
 jsonfile                                  6.1.0          npm   
 jsprim                                    1.4.2          npm   
 jszip                                     3.10.1         npm   
@@ -486,7 +486,7 @@ mime-types                                2.1.35         npm
 mimic-fn                                  1.2.0          npm   
 mimic-fn                                  2.1.0          npm   
 mimic-response                            3.1.0          npm   
-mini-css-extract-plugin                   2.7.1          npm   
+mini-css-extract-plugin                   2.7.2          npm   
 minimalistic-assert                       1.0.1          npm   
 minimatch                                 3.1.2          npm   
 minimatch                                 5.1.1          npm   
@@ -515,7 +515,7 @@ node-abi                                  3.30.0         npm
 node-addon-api                            5.0.0          npm   
 node-fetch                                2.6.7          npm   
 node-forge                                1.3.1          npm   
-node-releases                             2.0.6          npm   
+node-releases                             2.0.8          npm   
 normalize-package-data                    2.5.0          npm   
 normalize-path                            3.0.0          npm   
 normalize-range                           0.1.2          npm   
@@ -574,7 +574,7 @@ points-on-path                            0.2.1          npm
 popper.js                                 1.16.1         npm   
 portfinder                                1.0.32         npm   
 postcss                                   7.0.39         npm   
-postcss                                   8.4.19         npm   
+postcss                                   8.4.20         npm   
 postcss-calc                              8.2.4          npm   
 postcss-colormin                          5.3.0          npm   
 postcss-convert-values                    5.1.3          npm   
@@ -611,7 +611,7 @@ postcss-unique-selectors                  5.1.1          npm
 postcss-value-parser                      4.2.0          npm   
 prebuild-install                          7.1.1          npm   
 prepend-http                              2.0.0          npm   
-prettier                                  2.8.0          npm   
+prettier                                  2.8.1          npm   
 pretty-error                              4.0.0          npm   
 process-nextick-args                      2.0.1          npm   
 progress                                  2.0.3          npm   
@@ -662,7 +662,7 @@ safe-buffer                               5.1.2          npm
 safe-buffer                               5.2.1          npm   
 safe-stable-stringify                     2.4.1          npm   
 safer-buffer                              2.1.2          npm   
-sass                                      1.56.1         npm   
+sass                                      1.57.1         npm   
 schema-utils                              3.1.1          npm   
 schema-utils                              4.0.0          npm   
 select                                    1.1.2          npm   
@@ -753,7 +753,7 @@ tweetnacl                                 0.14.5         npm
 type-fest                                 0.6.0          npm   
 type-fest                                 0.8.1          npm   
 type-is                                   1.6.18         npm   
-typescript                                4.9.3          npm   
+typescript                                4.9.4          npm   
 uglify-js                                 3.17.4         npm   
 uifactory                                                npm   
 uifactory                                 0.0.4          npm   
