@@ -1517,7 +1517,7 @@ def _filter_frame(
     cols_having = []
     for key, vals in args.items():
         # check if `key` is in the `id` list -- ONLY when data is updated
-        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+        if (source == 'update' and key in id) or source in {'select', 'delete'}:
             # Parse column names, ignoring missing / unmatched columns
             col, agg, op = _filter_col(key, data.columns)
             if col is None:
@@ -1637,7 +1637,7 @@ def _filter_db(
     cols_having = []
     for key, vals in args.items():
         # check if `key` is in the `id` list -- ONLY when data is updated
-        if (source in ('update', 'delete') and key in id) or (source == 'select'):
+        if (source == 'update' and key in id) or source in {'select', 'delete'}:
             # Parse column names, ignoring missing / unmatched columns
             col, agg, op = _filter_col(key, colslist)
             if col is None:
@@ -1711,7 +1711,12 @@ def _filter_db(
             query = query.with_only_columns([cols[col] for col in show_cols])
             if len(show_cols) == 0:
                 return pd.DataFrame()
-        sorts = _filter_sort_columns(controls, colslist + query.columns.keys(), meta)
+        # SQLAlchemy 1.4+ deprecated SelectBase.columns in favor of SelectBase.selected_columns
+        try:
+            selected_columns = query.selected_columns
+        except KeyError:
+            selected_columns = query.columns
+        sorts = _filter_sort_columns(controls, colslist + selected_columns.keys(), meta)
         for col, asc in sorts:
             orderby = sa.asc if asc else sa.desc
             query = query.order_by(orderby(col))
