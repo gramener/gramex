@@ -665,9 +665,6 @@ class TestEdit(unittest.TestCase):
         gramex.data.update(data, args=args, id=['देश', 'city', 'product'])
         ase(types_original, data.dtypes)
 
-    def test_delete(self):
-        raise SkipTest('TODO: write delete test cases')
-
     @classmethod
     def tearDownClass(cls):
         for path in cls.tmpfiles:
