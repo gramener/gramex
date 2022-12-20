@@ -37,7 +37,7 @@ deploy-gramener:
         export PATH=/mnt/gramener/anaconda3/bin/:$PATH;
         pip install -e . --config-settings editable_mode=strict;
         gramex setup --all;
-        pip install gramexenterprise;
+        pip install --upgrade gramexenterprise;
         gramex license accept;
         rm -rf /mnt/gramener/apps/v1/gramex-update;
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
@@ -54,6 +54,6 @@ deploy-uat:
         export PATH=/home/ubuntu/anaconda3/bin/:$PATH;
         pip install -e . --config-settings editable_mode=strict;
         gramex setup --all;
-        pip install gramexenterprise;
+        pip install --upgrade gramexenterprise;
         gramex license accept;
       "'
