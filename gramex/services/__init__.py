@@ -107,9 +107,7 @@ def app(conf: dict) -> None:
             port_used_codes = {'windows': 10048, 'linux': 98}
             if e.errno not in port_used_codes.values():
                 raise
-            logging.error(
-                'Port %d is busy. Use --listen.port=<new-port>. Stopping Gramex', conf.listen.port
-            )
+            logging.error(f'Port {conf.listen.port} is busy. Use --listen.port=<new-port>')
             sys.exit(1)
 
         def callback():
@@ -125,7 +123,7 @@ def app(conf: dict) -> None:
             except ImportError:
                 pass
 
-            app_log.info('Listening on port %d', conf.listen.port)
+            app_log.info(f'Listening on port {conf.listen.port}')
             app_log_extra['port'] = conf.listen.port
             msg = f'Gramex {__version__} listening on http://127.0.0.1:{conf.listen.port}/. '
 
