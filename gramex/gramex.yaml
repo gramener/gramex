@@ -64,7 +64,9 @@ handlers:
       - gramex*.yaml # Always ignore gramex config files
       - ".*" # Hide dotfiles
       - "*.py*" # Hide Python scripts
-    allow: ".allow" # Allow special dotfile
+    allow:
+      - ".allow" # Allow special dotfile
+      - "*/.conda/*/site-packages/gramex/apps/*"  # Allow Gramex apps code if exposed
 
   FormHandler:
     formats: &FORMATS
