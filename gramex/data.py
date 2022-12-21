@@ -1716,11 +1716,19 @@ def _filter_db(
             selected_columns = query.selected_columns
         except KeyError:
             selected_columns = query.columns
-        sorts = _filter_sort_columns(controls, colslist + selected_columns.keys(), meta)
+        sortable_columns = colslist + selected_columns.keys()
+        sorts = _filter_sort_columns(controls, sortable_columns, meta)
         for col, asc in sorts:
             orderby = sa.asc if asc else sa.desc
             query = query.order_by(orderby(col))
         offset, limit = _filter_offset_limit(controls, meta)
+        # MSSQL does not support OFFSET without ORDER BY. So sort by first column
+        if (
+            'mssql' in engine.url.drivername
+            and (offset is not None or limit is not None)
+            and not sorts
+        ):
+            query = query.order_by(sortable_columns[0])
         if offset is not None:
             query = query.offset(offset)
         if limit is not None:
