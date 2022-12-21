@@ -13,14 +13,12 @@ from orderedattrdict import AttrDict
 import gramex
 import gramex.cache
 from gramex.http import UNAUTHORIZED, FORBIDDEN
-from gramex.config import app_log, objectpath, merge
+from gramex.config import app_log, objectpath, merge, CustomJSONEncoder, CustomJSONDecoder
 from gramex.transforms import build_transform
 from .basehandler import BaseHandler, build_log_info
 
 _folder = os.path.dirname(os.path.abspath(__file__))
 _auth_template = os.path.join(_folder, 'auth.template.html')
-_user_info_path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.user.db')
-_user_info = gramex.cache.SQLiteStore(_user_info_path, table='user')
 
 
 class AuthHandler(BaseHandler):
@@ -129,9 +127,16 @@ class AuthHandler(BaseHandler):
     @staticmethod
     def update_user(_user_id, **kwargs):
         '''Update user login/logout event.'''
-        info = _user_info.load(_user_id)
+        args = {'key': [_user_id]}
+        results = gramex.data.filter(**gramex.service.storelocations.user, args=args)
+        info = json.loads(results.value.iloc[0], cls=CustomJSONDecoder) if len(results) else {}
         info.update(kwargs)
-        _user_info.dump(_user_id, info)
+        args['value'] = [json.dumps(info, ensure_ascii=True, cls=CustomJSONEncoder)]
+        if len(results) == 0:
+            gramex.data.insert(**gramex.service.storelocations.user, args=args)
+        else:
+            gramex.data.update(**gramex.service.storelocations.user, id='key', args=args)
+            # TODO: If there are more than 1 results, we may want to delete the extras
         return info
 
     @coroutine

@@ -13,8 +13,6 @@ from tornado.web import create_signed_value
 from urllib.parse import urlencode, urljoin
 import gramex
 import gramex.config
-from gramex.cache import SQLiteStore
-from gramex.handlers.authhandler import _user_info_path
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, dbutils, in_
 
@@ -496,16 +494,21 @@ class TestAuthActive(AuthBase):
 
     def test_active_status(self):
         # Check that a non-logged-in-user has not record or no active status
-        store = SQLiteStore(_user_info_path, table='user')
 
         # Log in. Then the user should have an active status
         self.login_ok('activeuser', 'activeuser1', check_next='/')
-        activeuser_info = store.load('activeuser')
+        value = gramex.data.filter(
+            **gramex.service.storelocations.user, args={'key': ['activeuser']}
+        ).value.iloc[0]
+        activeuser_info = json.loads(value, cls=gramex.config.CustomJSONDecoder)
         eq_(activeuser_info['active'], 'y')
 
         # Log out. Then the user should not have an active status
         self.logout_ok(check_next='/dir/index/')
-        activeuser_info = store.load('activeuser')
+        value = gramex.data.filter(
+            **gramex.service.storelocations.user, args={'key': ['activeuser']}
+        ).value.iloc[0]
+        activeuser_info = json.loads(value, cls=gramex.config.CustomJSONDecoder)
         eq_(activeuser_info['active'], '')
 
 

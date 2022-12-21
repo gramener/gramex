@@ -324,7 +324,16 @@ app:
 
 # The storelocations: section defines where Gramex stores its data.
 storelocations:
-  # The `otp:` section defines where to store one-time passwords
+  # Stores user information. See gramex/authhandler.py
+  user:
+    url: sqlite:///$GRAMEXDATA/auth.user.db
+    table: user
+    columns:
+      key:
+        type: TEXT
+        primary_key: true
+      value: TEXT
+  # Stores one-time passwords and API keys. See gramex/basehandler.py
   otp:
     url: sqlite:///$GRAMEXDATA/auth.recover.db
     table: users
@@ -333,7 +342,7 @@ storelocations:
       type: TEXT
       token: TEXT
       expire: REAL # Seconds since epoch
-  # Store pipeline execution runs
+  # Store pipeline execution runs. See gramex/transforms/transforms.py
   pipeline:
     url: sqlite:///$GRAMEXDATA/pipeline.db
     table: runs
@@ -361,6 +370,13 @@ schedule:
     minutes: 1
     hours: 0
     dates: "*"
+    thread: true
+
+  # On startup, migrate Gramex
+  gramex_migrate:
+    function:
+      - gramex.migrate.user_db()
+    startup: true
     thread: true
 
 # http://tornado.readthedocs.org/en/stable/web.html#tornado.web.URLSpec
