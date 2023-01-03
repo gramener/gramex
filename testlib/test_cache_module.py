@@ -414,7 +414,7 @@ class TestOpen(unittest.TestCase):
             frozenset(
                 [
                     ('header', 0),  # hashable values hashed as-is
-                    ('parse_dates', '{"date":[0,1,2]}'),  # converts to compact json if possible
+                    ('parse_dates', '[{"date":[0,1,2]}]'),  # converts to compact json if possible
                     ('dtype', None),  # gives up with None otherwise
                 ]
             ),
