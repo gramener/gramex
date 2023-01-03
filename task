@@ -77,7 +77,7 @@ security () {
 
 # Usage: VERSION=1.xx.0 bash task builddocker pushdocker
 builddocker () {
-  docker pull frolvlad/alpine-glibc:alpine-3.16
+  docker pull frolvlad/alpine-glibc:alpine-3.17
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh

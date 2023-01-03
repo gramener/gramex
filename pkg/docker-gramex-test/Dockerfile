@@ -16,6 +16,7 @@ RUN \
     # Install Gramex from source
     git clone --depth 1 https://github.com/gramener/gramex/ && \
     cd gramex/tests && \
+    pip install 
     # TODO: Set up tests so that the server runs from the INSTALLED Gramex and tests run independently
     pytest && \
     nosetests
