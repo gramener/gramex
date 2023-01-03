@@ -225,13 +225,14 @@ class TestFilter(unittest.TestCase):
         for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
             m = eq({'nonexistent' + op: ['']}, sales)
             eq_(m['ignored'], [('nonexistent' + op, [''])])
-        # Non-existent sorts do not raise an error
+        # Non-existent sorts do not raise an error.
         m = eq(
-            {'_sort': ['nonexistent', 'sales']},
-            sales.sort_values('sales', na_position=na_position),
+            # Also sort by sales AND देश to ensure a stable sort. (We need देश if sales is missing)
+            {'_sort': ['nonexistent', 'sales', 'देश']},
+            sales.sort_values(['sales', 'देश'], na_position=na_position),
         )
         eq_(m['ignored'], [('_sort', ['nonexistent'])])
-        eq_(m['sort'], [('sales', True)])
+        eq_(m['sort'], [('sales', True), ('देश', True)])
 
         # Non-existent _c does not raise an error
         m = eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
@@ -583,7 +584,9 @@ class TestInsert(unittest.TestCase):
         rows = self.insert_rows.copy()
         rows['primary_key'] = [1, 2]
         meta = {}
-        inserted = gramex.data.insert(url, meta, args=rows, table='test_insert', id='primary_key')
+        inserted = gramex.data.insert(
+            url=url, args=rows, meta=meta, table='test_insert', id='primary_key'
+        )
         eq_(inserted, 2, 'insert() returns # of records added')
         # metadata has no filters applied, and no columns ignored
         eq_(meta['filters'], [])
@@ -604,13 +607,15 @@ class TestInsert(unittest.TestCase):
 
         # Inserting a single row returns meta['data']['inserted'] with the primary key
         rows = {'primary_key': [3], 'देश': ['भारत'], 'city': ['London'], 'sales': ['']}
-        inserted = gramex.data.insert(url, meta, args=rows, table='test_insert', id='primary_key')
+        inserted = gramex.data.insert(
+            url, meta=meta, args=rows, table='test_insert', id='primary_key'
+        )
         eq_(inserted, 1, 'insert() returns # of records added')
         eq_(meta['inserted'], [{'primary_key': 3}])
 
         # Adding multiple primary keys via id= is supported
         rows = {'a': [1, 2], 'b': [True, False], 'x': [3, None], 'y': [None, 'y']}
-        inserted = gramex.data.insert(url, meta, args=rows, table='t2', id=['a', 'b'])
+        inserted = gramex.data.insert(url, meta=meta, args=rows, table='t2', id=['a', 'b'])
         eq_(inserted, 2, 'insert() returns # of records added')
         eq_(
             insp.get_pk_constraint('t2')['constrained_columns'],
@@ -619,7 +624,7 @@ class TestInsert(unittest.TestCase):
         )
         # Multiple primary keys are returned
         rows = {'a': [3], 'b': [True]}
-        inserted = gramex.data.insert(url, meta, args=rows, table='t2', id=['a', 'b'])
+        inserted = gramex.data.insert(url, meta=meta, args=rows, table='t2', id=['a', 'b'])
         eq_(meta['inserted'], [{'a': 3, 'b': True}])
 
         # Primary keys not specified in input (AUTO INCREMENT) are turned
@@ -632,9 +637,9 @@ class TestInsert(unittest.TestCase):
             },
         )
         # Single inserts return the ID
-        gramex.data.insert(url, meta, args={'x': ['a']}, table='t3')
+        gramex.data.insert(url, meta=meta, args={'x': ['a']}, table='t3')
         eq_(meta['inserted'], [{'id': 1}])
-        gramex.data.insert(url, meta, args={'x': ['b']}, table='t3')
+        gramex.data.insert(url, meta=meta, args={'x': ['b']}, table='t3')
         eq_(meta['inserted'], [{'id': 2}])
         # TODO: multiple inserts don't yet return the IDs. When that's done in SQLAlchemy 1.4,
         # implement test cases here.

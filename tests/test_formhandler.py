@@ -111,10 +111,11 @@ class TestFormHandler(TestGramex):
         # Non-existent column does not raise an error for any operation
         for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
             eq({'nonexistent' + op: ['']}, sales)
-        # Non-existent sorts do not raise an error
+        # Non-existent sorts do not raise an error.
+        # Also sort by sales AND देश to ensure a stable sort. (We need देश if sales is missing)
         eq(
-            {'_sort': ['nonexistent', 'sales']},
-            sales.sort_values('sales', na_position=na_position),
+            {'_sort': ['nonexistent', 'sales', 'देश']},
+            sales.sort_values(['sales', 'देश'], na_position=na_position),
         )
         # Non-existent _c does not raise an error
         eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
