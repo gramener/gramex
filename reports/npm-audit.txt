@@ -1,5 +1,3 @@
-/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin
-found 0 vulnerabilities
 /cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/admin2
 found 0 vulnerabilities
 /cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/capture
@@ -9,6 +7,32 @@ found 0 vulnerabilities
 /cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/pynode
 found 0 vulnerabilities
 /cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/ui
-found 0 vulnerabilities
+# npm audit report
+
+json5  <2.2.2
+Severity: high
+Prototype Pollution in JSON5 via Parse Method - https://github.com/advisories/GHSA-9c47-m6qq-7p4h
+fix available via `npm audit fix --force`
+Will install @vue/cli-service@4.0.5, which is a breaking change
+node_modules/json5
+  loader-utils  <=1.4.2
+  Depends on vulnerable versions of json5
+  node_modules/loader-utils
+    vue-loader  2.0.0 - 16.0.0-rc.2
+    Depends on vulnerable versions of loader-utils
+    Depends on vulnerable versions of vue-style-loader
+    node_modules/@vue/vue-loader-v15
+      @vue/cli-service  *
+      Depends on vulnerable versions of vue-loader
+      Depends on vulnerable versions of vue-style-loader
+      node_modules/@vue/cli-service
+    vue-style-loader  *
+    Depends on vulnerable versions of loader-utils
+    node_modules/vue-style-loader
+
+5 high severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
 /cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
 found 0 vulnerabilities
