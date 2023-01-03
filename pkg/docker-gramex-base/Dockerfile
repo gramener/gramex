@@ -1,6 +1,6 @@
 # Pick a secure Linux image that we can run Miniconda on. Just "FROM alpine" doesn't run Miniconda
 # Don't use frolvlad/alpine-miniconda3 since we want a non-root user
-FROM frolvlad/alpine-glibc:alpine-3.16
+FROM frolvlad/alpine-glibc:alpine-3.17
 
 # Install as non-root user "gramex"
 ARG USER=gramex
