@@ -3,4 +3,5 @@ from .formhandler import FormHandler
 
 
 class FilterHandler(FormHandler):
-    data_filter_method = staticmethod(gramex.data.filtercols)
+    def data_filter_method(*args, **kwargs):
+        gramex.data.filtercols(*args, **kwargs)

@@ -1,17 +1,18 @@
 '''Query and manipule data from any source.'''
-from datetime import datetime
 import io
 import os
 import re
 import time
 import json
 import sqlalchemy as sa
+import sqlite3
 import numpy as np
 import pandas as pd
 import gramex.cache
+from datetime import datetime
 from packaging import version
 from tornado.escape import json_encode
-from typing import Callable, List, Union
+from typing import Callable, List, Tuple, Dict, Union, Any
 from gramex.config import merge, app_log
 from gramex.transforms import build_transform
 from orderedattrdict import AttrDict
@@ -45,6 +46,9 @@ _agg_type = {
 }
 # List of Python types returned by SQLAlchemy
 _numeric_types = {'int', 'long', 'float', 'Decimal'}
+# In SQLite, serialize Pandas timestamp exactly the way it serializes datetimes.
+# https://github.com/python/cpython/blob/3.8/Lib/sqlite3/dbapi2.py#L66
+sqlite3.register_adapter(pd.Timestamp, lambda d: d.isoformat(' '))
 # Data processing plugins.
 # e.g. plugins['mongodb'] = {'filter': fn, 'insert': fn, ...}
 plugins = {}
@@ -55,12 +59,15 @@ def filter(
     args: dict = {},
     meta: dict = {},
     engine: str = None,
+    table: str = None,
     ext: str = None,
-    columns: dict = None,
+    id: List[str] = None,
+    columns: Dict[str, Union[str, dict]] = None,
     query: str = None,
     queryfile: str = None,
     transform: Callable = None,
     transform_kwargs: dict = {},
+    argstype: Dict[str, dict] = {},
     **kwargs: dict,
 ) -> pd.DataFrame:
     '''Filter data using URL query parameters.
@@ -95,6 +102,7 @@ def filter(
             DataFrame. Applied to both file and SQLAlchemy urls.
         transform_kwargs: optional keyword arguments to be passed to the
             transform function -- apart from data
+        argstype: optional dict that specifies `args` type and behavior for `query`.
         **kwargs: Additional parameters are passed to
             [gramex.cache.open][], `sqlalchemy.create_engine` or the plugin's filter
 
@@ -173,6 +181,13 @@ def filter(
     Arguments are converted to the type of the column before comparing. If this
     fails, it raises a ValueError.
 
+    You can specify the SQL argument type for database queries with `argstype`. This (currently)
+    only applies when using `query` or `queryfunction`, not `table`:
+
+    - `argstype: {'x': {type: float}, 'y': {type: bool}}` treats x as a float and y as a bool
+    - `argstype: {'x': {type: int, expanding=True}}` treats x as a list of int, suitable for
+      use in an `IN` clause, e.g. `SELECT * FROM table WHERE size IN :x`
+
     These URL query parameters control the output:
 
     - `?_sort=col` sorts column col in ascending order. `?_sort=-col` sorts
@@ -186,7 +201,7 @@ def filter(
 
     To get additional information about the filtering, use:
 
-        meta = {}      # Create a variable which will be filled with more info
+        meta = {}  # Create a variable which will be filled with more info
         filtered = gramex.data.filter(data, meta=meta, **handler.args)
 
     The `meta` variable is populated with the following keys:
@@ -222,38 +237,45 @@ def filter(
     args = dict(args)  # Do not modify the args -- keep a copy
     controls = _pop_controls(args)
     transform = _transform_fn(transform, transform_kwargs)
-    url, ext, query, queryfile, kwargs = _replace(
-        engine, args, url, ext, query, queryfile, **kwargs
+    url, ext, query, queryfile, table, kwargs = _replace(
+        engine, args, url, ext, query, queryfile, table, **kwargs
     )
 
     # Use the appropriate filter function based on the engine
     if engine == 'dataframe':
         data = transform(url) if callable(transform) else url
-        return _filter_frame(data, meta=meta, controls=controls, args=args)
+        return _filter_frame(data, meta, controls, args, argstype)
     elif engine == 'dir':
         data = dirstat(url, **args)
         data = transform(data) if callable(transform) else data
-        return _filter_frame(data, meta=meta, controls=controls, args=args)
+        return _filter_frame(data, meta, controls, args, argstype)
     elif engine in {'file', 'http', 'https'}:
         if engine == 'file' and not os.path.exists(url):
             raise OSError(f'url: {url} not found')
+        # table= is not a valid option for all gramex.cache.open formats. Use only if specified
+        if table is not None:
+            kwargs['table'] = table
         # Get the full dataset. Then filter it
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
-        return _filter_frame(data, meta=meta, controls=controls, args=args)
+        return _filter_frame(data, meta, controls, args, argstype)
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['filter']
         return method(
             url=url,
+            meta=meta,
             controls=controls,
             args=args,
-            meta=meta,
-            query=query,
+            argstype=argstype,
+            id=id,
+            table=table,
             columns=columns,
+            ext=ext,
+            query=query,
+            queryfile=queryfile,
             **kwargs,
         )
     elif engine == 'sqlalchemy':
-        table = kwargs.pop('table', None)
         state = kwargs.pop('state', None)
         engine = alter(url, table, columns, **kwargs)
         if query or queryfile:
@@ -266,17 +288,30 @@ def filter(
                     state = list(table)
                 elif table is not None:
                     raise ValueError(f'table: must be string or list of strings, not {table!r}')
-            all_params = {k: v[0] for k, v in args.items() if len(v) > 0}
             # sa.text() provides backend-neutral :name for bind parameters
-            data = gramex.cache.query(sa.text(query), engine, state, params=all_params)
+            # NOTE: sa.text() caches queries => .bindparams() UPDATES previous bindparams. So:
+            #   If query = "SELECT * FROM table WHERE x=:x" and we bind with bindparam('x'),
+            #   we can NEVER bind with x as bindparam('x', expanding=True) without restarting.
+            #   Therefore, create a new query each time.
+            sql = sa.text(f'{query}; -- {time.time()}')
+            all_params = {}
+            for key, vals in args.items():
+                conv, expanding = _argstype(argstype, key, str)
+                if expanding:
+                    all_params[key] = tuple(conv(val) for val in vals if val)
+                    sql = sql.bindparams(sa.bindparam(key, expanding=True))
+                elif len(vals) > 0:
+                    all_params[key] = conv(vals[0])
+            data = gramex.cache.query(sql, engine, state, params=all_params)
             data = transform(data) if callable(transform) else data
-            return _filter_frame(data, meta=meta, controls=controls, args=args)
+            # The query acts as base data. Now filter with additional parameters
+            return _filter_frame(data, meta, controls, args, argstype)
         elif table:
             if callable(transform):
                 data = gramex.cache.query(table, engine, [table])
-                return _filter_frame(transform(data), meta=meta, controls=controls, args=args)
+                return _filter_frame(transform(data), meta, controls, args, argstype)
             else:
-                return _filter_db(engine, table, meta=meta, controls=controls, args=args)
+                return _filter_db(engine, table, meta, controls, args, argstype)
         else:
             raise ValueError('No table: or query: specified')
     else:
@@ -285,28 +320,26 @@ def filter(
 
 def delete(
     url: Union[str, pd.DataFrame],
-    meta: dict = {},
     args: dict = {},
+    meta: dict = {},
     engine: str = None,
     table: str = None,
     ext: str = None,
-    id: str = None,
-    columns: dict = None,
+    id: List[str] = None,
+    columns: Dict[str, Union[str, dict]] = None,
     query: str = None,
     queryfile: str = None,
     transform: Callable = None,
     transform_kwargs: dict = {},
+    argstype: Dict[str, dict] = {},
     **kwargs: dict,
 ) -> int:
     '''Deletes data using URL query parameters.
 
     Examples:
-        >>> gramex.data.delete(dataframe, args=handler.args, id=['id'])
-        >>> gramex.data.delete('file.csv', args=handler.args, id=['id'])
-        >>> gramex.data.delete('mysql://server/db', table='x', args=handler.args, id=['id'])
-
-    `id` is a list of column names defining the primary key.
-    Calling this in a handler with `?id=1&id=2` deletes rows with id is 1 or 2.
+        >>> gramex.data.delete(dataframe, args={'city': ['Oslo']})
+        >>> gramex.data.delete('mysql://server/db', table='x', args={'city': ['Oslo']})
+        >>> gramex.data.delete(url, args=handler.args)
 
     It accepts the same parameters as [gramex.data.filter][], and returns the number
     of deleted rows.
@@ -320,15 +353,11 @@ def delete(
         engine, args, url, table, ext, query, queryfile, **kwargs
     )
     if engine == 'dataframe':
-        data_filtered = _filter_frame(
-            url, meta=meta, controls=controls, args=args, source='delete', id=id
-        )
+        data_filtered = _filter_frame(url, meta, controls, args, argstype, source='delete', id=id)
         return len(data_filtered)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
-        data_filtered = _filter_frame(
-            data, meta=meta, controls=controls, args=args, source='delete', id=id
-        )
+        data_filtered = _filter_frame(data, meta, controls, args, argstype, source='delete', id=id)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_filtered)
     elif engine.startswith('plugin+'):
@@ -339,6 +368,7 @@ def delete(
             meta=meta,
             controls=controls,
             args=args,
+            argstype=argstype,
             id=id,
             table=table,
             columns=columns,
@@ -351,26 +381,25 @@ def delete(
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(
-            engine, table, meta=meta, controls=controls, args=args, source='delete', id=id
-        )
+        return _filter_db(engine, table, meta, controls, args, argstype, source='delete', id=id)
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def update(
     url: Union[str, pd.DataFrame],
-    meta: dict = {},
     args: dict = {},
+    meta: dict = {},
     engine: str = None,
     table: str = None,
     ext: str = None,
-    id: str = None,
-    columns: dict = None,
+    id: List[str] = None,
+    columns: Dict[str, Union[str, dict]] = None,
     query: str = None,
     queryfile: str = None,
     transform: Callable = None,
     transform_kwargs: dict = {},
+    argstype: Dict[str, dict] = {},
     **kwargs: dict,
 ) -> int:
     '''Update data using URL query parameters.
@@ -395,15 +424,11 @@ def update(
         engine, args, url, table, ext, query, queryfile, **kwargs
     )
     if engine == 'dataframe':
-        data_updated = _filter_frame(
-            url, meta=meta, controls=controls, args=args, source='update', id=id
-        )
+        data_updated = _filter_frame(url, meta, controls, args, argstype, source='update', id=id)
         return len(data_updated)
     elif engine == 'file':
         data = gramex.cache.open(url, ext, transform=transform, **kwargs)
-        data_updated = _filter_frame(
-            data, meta=meta, controls=controls, args=args, source='update', id=id
-        )
+        data_updated = _filter_frame(data, meta, controls, args, argstype, source='update', id=id)
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(data_updated)
     elif engine.startswith('plugin+'):
@@ -414,6 +439,7 @@ def update(
             meta=meta,
             controls=controls,
             args=args,
+            argstype=argstype,
             id=id,
             table=table,
             columns=columns,
@@ -426,26 +452,25 @@ def update(
         if table is None:
             raise ValueError('No table: specified')
         engine = alter(url, table, columns, **kwargs)
-        return _filter_db(
-            engine, table, meta=meta, controls=controls, args=args, source='update', id=id
-        )
+        return _filter_db(engine, table, meta, controls, args, argstype, source='update', id=id)
     else:
         raise ValueError(f'engine: {engine} invalid. Can be sqlalchemy|file|dataframe')
 
 
 def insert(
     url: Union[str, pd.DataFrame],
-    meta: dict = {},
     args: dict = {},
+    meta: dict = {},
     engine: str = None,
     table: str = None,
     ext: str = None,
-    id: str = None,
-    columns: dict = None,
+    id: List[str] = None,
+    columns: Dict[str, Union[str, dict]] = None,
     query: str = None,
     queryfile: str = None,
     transform: Callable = None,
     transform_kwargs: dict = {},
+    argstype: Dict[str, dict] = {},
     **kwargs: dict,
 ) -> int:
     '''Insert data using URL query parameters.
@@ -466,7 +491,7 @@ def insert(
     if engine is None:
         engine = get_engine(url)
     args = dict(args)  # Do not modify the args -- keep a copy
-    _pop_controls(args)
+    controls = _pop_controls(args)
     if not args:
         raise ValueError('No args: specified')
     meta.update({'filters': [], 'ignored': [], 'inserted': []})
@@ -501,7 +526,21 @@ def insert(
     elif engine.startswith('plugin+'):
         plugin = engine.split('+')[1]
         method = plugins[plugin]['insert']
-        return method(url=url, rows=rows, meta=meta, args=args, table=table, **kwargs)
+        return method(
+            url=url,
+            meta=meta,
+            controls=controls,
+            rows=rows,
+            args=args,
+            argstype=argstype,
+            id=id,
+            table=table,
+            columns=columns,
+            ext=ext,
+            query=query,
+            queryfile=queryfile,
+            **kwargs,
+        )
     elif engine == 'sqlalchemy':
         if table is None:
             raise ValueError('No table: specified')
@@ -1092,7 +1131,9 @@ def filtercols(
     return result
 
 
-def alter(url: str, table: str, columns: dict = None, **kwargs: dict) -> sa.engine.base.Engine:
+def alter(
+    url: str, table: str, columns: Dict[str, Union[str, dict]] = None, **kwargs: dict
+) -> sa.engine.base.Engine:
     '''Create or alter a table with columns specified.
 
     Examples:
@@ -1312,27 +1353,41 @@ def _filter_col(col, cols):
     return None, None, None
 
 
-def _convertor(conv):
-    '''
-    Updates a type conversion function.
+def _argstype(argstype: Dict[str, dict], key: str, default: Any) -> Tuple[Callable, bool]:
+    if not isinstance(argstype, dict):
+        raise ValueError(f'argstype must be a dict of types, not {argstype!r}')
+    argtype = argstype.get(key, {})
+    if not isinstance(argtype, dict):
+        argtype = {'type': argtype}
+    conv = argtype.get('type', default)
+    if conv in {'date', 'datetime'}:
+        def conv(v):
+            return pd.to_datetime(v).to_pydatetime()
+    elif isinstance(conv, str):
+        conv = build_transform({'function': conv}, iter=False)
+    if not callable(conv):
+        raise ValueError(f'argstype[{key}][type] must be callable, not {conv!r}')
+    return conv, argtype.get('expanding', False)
 
-    Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False.
-    Datetimes are converted using dateutil parser.
+
+def _convertor(conv):
+    '''Updates a type conversion function.
+
+    - Booleans are converted treating '', '0', 'n', 'no', 'f', 'false' (in any case) as False.
+    - Datetimes are converted using pandas to_datetime.
     '''
     # Convert based on Pandas datatype. But for boolean, convert from string as below
     if conv in {np.bool_, bool}:
         conv = lambda v: False if v.lower() in {'', '0', 'n', 'no', 'f', 'false'} else True  # noqa
     elif conv in {datetime}:
-        from dateutil.parser import parse
-
-        conv = parse
+        conv = pd.to_datetime
     return conv
 
 
-def _filter_frame_col(data, key, col, op, vals, meta):
+def _filter_frame_col(data, key, col, op, vals, conv, meta):
     # Apply type conversion for values
-    conv = _convertor(data[col].dtype.type)
-    vals = tuple(conv(val) for val in vals if val)
+    convert = _convertor(conv)
+    vals = tuple(convert(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
     elif op == '':
@@ -1347,16 +1402,15 @@ def _filter_frame_col(data, key, col, op, vals, meta):
         data = data[data[col] < max(vals)]
     elif op == '<~':
         data = data[data[col] <= max(vals)]
+    # Note: If data[col] contains nans, then the .str.contains() also has NaNs. This raises a
+    # ValueError: Cannot mask with non-boolean array containing NA / NaN values.
+    # So we use .fillna(False) to convert NaNs to False
     elif op == '!~':
-        data = data[~data[col].str.contains('|'.join(vals))]
+        data = data[~data[col].str.contains('|'.join(vals)).fillna(False)]
     elif op == '~':
-        data = data[data[col].str.contains('|'.join(vals))]
+        data = data[data[col].str.contains('|'.join(vals)).fillna(False)]
     meta['filters'].append((col, op, vals))
     return data
-
-
-# If a column has a datetime type, use Pandas to convert strings to datetime values
-_sql_types = {datetime: pd.to_datetime}
 
 
 def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
@@ -1366,8 +1420,8 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
     - `conv` is a type conversion function that converts `vals` to the correct type
     - Updates `meta` with the fields used for filtering (or ignored)
     '''
-    conv = _sql_types.get(conv, conv)
-    vals = tuple(conv(val) for val in vals if val)
+    convert = _convertor(conv)
+    vals = tuple(convert(val) for val in vals if val)
     if op not in {'', '!'} and len(vals) == 0:
         meta['ignored'].append((key, vals))
     elif op == '':
@@ -1490,8 +1544,9 @@ def _filter_frame(
     meta: dict,
     controls: dict,
     args: dict,
+    argstype: Dict[str, dict] = {},
     source: str = 'select',
-    id: List[str] = [],
+    id: List[str] = None,
 ) -> pd.DataFrame:
     '''
     If `source` is `'select'`, returns a DataFrame in which the DataFrame
@@ -1528,8 +1583,10 @@ def _filter_frame(
             if agg is not None:
                 cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
+            # If arg's type is not specified, use the column type
+            conv, expanding = _argstype(argstype, key, data[col].dtype.type)
             # Apply filters
-            data = _filter_frame_col(data, key, col, op, vals, meta)
+            data = _filter_frame_col(data, key, col, op, vals, data[col].dtype.type, meta)
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in data.columns or len(vals) == 0:
@@ -1586,7 +1643,9 @@ def _filter_frame(
                     data = data.reset_index()
                 # Apply HAVING operators
                 for key, col, op, vals in cols_having:
-                    data = _filter_frame_col(data, key, col, op, vals, meta)
+                    # If arg's type is not specified, use the column type
+                    conv, expanding = _argstype(argstype, key, data[col].dtype.type)
+                    data = _filter_frame_col(data, key, col, op, vals, conv, meta)
             else:
                 row = [data[col].agg(op) for col, ops in agg_dict.items() for op in ops]
                 data = pd.DataFrame([row], columns=agg_cols)
@@ -1610,8 +1669,9 @@ def _filter_db(
     meta: dict,
     controls: dict,
     args: dict,
+    argstype: Dict[str, dict] = {},
     source: str = 'select',
-    id: List[str] = [],
+    id: List[str] = None,
 ):
     '''
     Parameters:
@@ -1619,8 +1679,9 @@ def _filter_db(
         table: table name in the mentioned database
         meta: dictionary of `filters`, `ignored`, `sort`, `offset`, `limit` params from kwargs
         controls: dictionary of `_sort`, `_c`, `_offset`, `_limit` params
-        args: dictionary of user arguments to filter the data
         source: accepted values - `update`, `delete` for PUT, DELETE methods in FormHandler
+        args: dictionary of user arguments to filter the data
+        argstype: optional dict that specifies `args` type and behavior.
         id: list of keys specific to data using which values can be updated
     '''
     table = get_table(engine, table)
@@ -1648,10 +1709,10 @@ def _filter_db(
             if agg is not None:
                 cols_having.append((key, col + _agg_sep + agg, op, vals))
                 continue
+            # If arg's type is not specified, use the column type
+            conv, expanding = _argstype(argstype, key, cols[col].type.python_type)
             # Apply filters
-            query = _filter_db_col(
-                query, query.where, key, col, op, vals, cols[col], cols[col].type.python_type, meta
-            )
+            query = _filter_db_col(query, query.where, key, col, op, vals, cols[col], conv, meta)
         elif source == 'update':
             # Update values should only contain 1 value. 2nd onwards are ignored
             if key not in cols or len(vals) == 0:
@@ -1714,7 +1775,7 @@ def _filter_db(
         # SQLAlchemy 1.4+ deprecated SelectBase.columns in favor of SelectBase.selected_columns
         try:
             selected_columns = query.selected_columns
-        except KeyError:
+        except AttributeError:
             selected_columns = query.columns
         sortable_columns = colslist + selected_columns.keys()
         sorts = _filter_sort_columns(controls, sortable_columns, meta)
@@ -1745,7 +1806,7 @@ _VEGA_SCRIPT = os.path.join(_FOLDER, 'download.vega.js')
 _mongodb_op_map = {'<': '$lt', '<~': '$lte', '>': '$gt', '>~': '$gte', '': '$in', '!': '$nin'}
 
 
-def _mongodb_query(args, table, id=[], **kwargs):
+def _mongodb_query(args, table, id: List[str] = [], **kwargs):
     # Convert a query like x>=3&x>=4&x>=5 into
     # {"$or": [{x: {$gt: 3}}, {x: {$gt: 4}}, {x: $gt: 5}]}
     row = table.find_one()
@@ -1786,7 +1847,7 @@ def _mongodb_query(args, table, id=[], **kwargs):
     return {'$and': conditions} if len(conditions) > 1 else conditions[0] if conditions else {}
 
 
-def _mongodb_collection(url, database, collection, **kwargs):
+def _mongodb_collection(url: str, database: str, collection: str, **kwargs):
     import pymongo
 
     # Support all MongoDB client arguments
@@ -1873,7 +1934,20 @@ def _mongodb_json(obj):
 
 
 def _filter_mongodb(
-    url, controls, args, meta, database=None, collection=None, query=None, columns=None, **kwargs
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for collection?
+    ext: str = None,
+    database: str = None,
+    collection: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
 ):
     # TODO: Document function and usage
     table = _mongodb_collection(url, database, collection, **kwargs)
@@ -1911,7 +1985,20 @@ def _filter_mongodb(
 
 
 def _delete_mongodb(
-    url, controls, args, meta, database=None, collection=None, query=None, **kwargs
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for collection?
+    ext: str = None,
+    database: str = None,
+    collection: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
 ):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table)
@@ -1920,7 +2007,20 @@ def _delete_mongodb(
 
 
 def _update_mongodb(
-    url, controls, args, meta, database=None, collection=None, query=None, id=[], **kwargs
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for collection?
+    ext: str = None,
+    database: str = None,
+    collection: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
 ):
     table = _mongodb_collection(url, database, collection, **kwargs)
     query = _mongodb_query(args, table, id=id)
@@ -1937,7 +2037,23 @@ def _update_mongodb(
     return result.modified_count
 
 
-def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwargs):
+def _insert_mongodb(
+    url: str,
+    meta: dict,
+    controls: dict,
+    rows: list,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for collection?
+    ext: str = None,
+    database: str = None,
+    collection: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
+):
     table = _mongodb_collection(url, database, collection, **kwargs)
     result = table.insert_many([_mongodb_json(row) for row in rows.to_dict(orient='records')])
     meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]
@@ -1948,7 +2064,7 @@ def _insert_mongodb(url, rows, meta=None, database=None, collection=None, **kwar
 # ----------------------------------------
 
 
-def _get_influxdb_schema(client, bucket):
+def _get_influxdb_schema(client, bucket: str):
     imports = 'import "influxdata/influxdb/schema"\n'
     meas = client.query_api().query(imports + f'schema.measurements(bucket: "{bucket}")')[0]
     tags = client.query_api().query(imports + f'schema.tagKeys(bucket: "{bucket}")')[0]
@@ -1976,7 +2092,22 @@ def _influxdb_offset_limit(controls):
     return offset, limit
 
 
-def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **kwargs):
+def _filter_influxdb(
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for org/bucket?
+    ext: str = None,
+    org: str = None,
+    bucket: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
+):
     with _influxdb_client(url, org=org, **kwargs) as db:
         schema = _get_influxdb_schema(db, bucket)
         cols = schema["_fields"] + schema["_tags"] + schema["_measurement"]
@@ -2022,7 +2153,22 @@ def _filter_influxdb(url, controls, args, org=None, bucket=None, query=None, **k
     return df.drop(["result", "table"], axis=1, errors="ignore")
 
 
-def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
+def _delete_influxdb(
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for org/bucket?
+    ext: str = None,
+    org: str = None,
+    bucket: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
+):
     with _influxdb_client(url, org=org, **kwargs) as db:
         schema = _get_influxdb_schema(db, bucket)
         start = args.pop('_time>', ['0'])[0]
@@ -2039,7 +2185,14 @@ def _delete_influxdb(url, controls, args, org=None, bucket=None, **kwargs):
 
 
 def _influxdb_client(
-    url, token, org, debug=None, timeout=60_000, enable_gzip=False, default_tags=None, **kwargs
+    url: str,
+    token: str,
+    org: str,
+    debug: Any = None,
+    timeout: int = 60_000,
+    enable_gzip: bool = False,
+    default_tags: dict = None,
+    **kwargs,
 ):
     from influxdb_client import InfluxDBClient
 
@@ -2079,7 +2232,23 @@ def _get_ts_points(df, measurement, tags):
     return points
 
 
-def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
+def _insert_influxdb(
+    url: str,
+    meta: dict,
+    controls: dict,
+    rows: list,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,  # TODO: Should table be an alias for org/bucket?
+    ext: str = None,
+    org: str = None,
+    bucket: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
+):
     measurement = rows.pop("measurement").unique()[0]
     tags = rows.pop("tags").dropna().drop_duplicates().tolist() if "tags" in rows else []
     # Ensure that the index is timestamped
@@ -2108,7 +2277,22 @@ def _insert_influxdb(url, rows, meta, args, bucket, **kwargs):
 # ----------------------------------------
 
 
-def _filter_servicenow(url, controls, args, meta, table=None, columns=None, query=None, **kwargs):
+def _filter_servicenow(
+    url: str,
+    meta: dict,
+    controls: dict,
+    args: dict,
+    argstype: Dict[str, dict] = {},
+    id: List[str] = None,
+    table: str = None,
+    ext: str = None,
+    database: str = None,
+    collection: str = None,
+    columns: Dict[str, Union[str, dict]] = None,
+    query: str = None,
+    queryfile: str = None,
+    **kwargs,
+):
     import pysnow
     from gramex.config import locate
 
@@ -2179,11 +2363,6 @@ def _filter_servicenow(url, controls, args, meta, table=None, columns=None, quer
     return pd.DataFrame(response.all())
 
 
-# add test case for inserting nested value ?parent.={child:value}
-#   curl --globoff -I -X POST 'http://127.0.0.1:9988/?x.={"2":3}&y.={"true":true}&Name=abcd'
-# add test case for updating nested value ?parent.child.={key:value}
-#   curl --globoff -I -X PUT 'http://127.0.0.1:9988/?x.2=4&y.true.=[2,3]&Name=abcd'
-# add test case for nested document query ?parent.child=value
 plugins["mongodb"] = {
     "filter": _filter_mongodb,
     "delete": _delete_mongodb,

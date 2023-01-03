@@ -435,6 +435,13 @@ def stat(path: str) -> Union[Tuple[float, int], Tuple[None, None]]:
     return (None, None)
 
 
+def _json_dump(obj: Any) -> str:
+    '''Dumps an object to JSON, sorted by key for stability.'''
+    return json.dumps(
+        obj, sort_keys=True, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+    )
+
+
 def cache_key(*args: List[Any]) -> str:
     '''Converts arguments into a stable string suitable for use as a cache key.
 
@@ -452,7 +459,7 @@ def cache_key(*args: List[Any]) -> str:
     Returns:
         A JSON dump of the arguments, sorted by key for stability.
     '''
-    return json.dumps(args, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+    return _json_dump(args)
 
 
 def hashed(val: Any) -> str:
@@ -1022,9 +1029,7 @@ class RedisStore(KeyStore):
         if value is None:
             self.store.delete(key)
         else:
-            value = json.dumps(
-                value, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
-            )
+            value = _json_dump(value)
             self.store.set(key, value)
 
     def close(self):
@@ -1059,9 +1064,7 @@ class SQLiteStore(KeyStore):
             self.path,
             tablename=table,
             autocommit=True,
-            encode=lambda v: json.dumps(
-                v, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
-            ),
+            encode=_json_dump,
             decode=lambda v: json.loads(v, object_pairs_hook=AttrDict, cls=CustomJSONDecoder),
         )
 
@@ -1124,9 +1127,7 @@ class HDF5Store(KeyStore):
         if self.store.get(key) != value:
             if key in self.store:
                 del self.store[key]
-            self.store[key] = json.dumps(
-                value, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
-            )
+            self.store[key] = _json_dump(value)
             self.changed = True
 
     def _escape(self, key):
@@ -1204,9 +1205,7 @@ class JSONStore(KeyStore):
             return {}
 
     def _write_json(self, data):
-        json_value = json.dumps(
-            data, ensure_ascii=True, separators=(',', ':'), cls=CustomJSONEncoder
-        )
+        json_value = _json_dump(data)
         with io.open(self.path, 'w') as handle:
             handle.write(json_value)
 
