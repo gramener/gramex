@@ -1,12 +1,12 @@
-Run started:2022-12-20 15:05:01.876084
+Run started:2023-01-03 16:07:10.447520
 
 Test results:
 	No issues identified.
 
 Code scanned:
-	Total lines of code: 17606
+	Total lines of code: 17714
 	Total lines skipped (#nosec): 12
-	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 49
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 47
 
 Run metrics:
 	Total issues (by severity):

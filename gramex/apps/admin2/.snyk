@@ -4,12 +4,7 @@ ignore:
   SNYK-JS-HTMLMINIFIER-3091181:
     - '*':
         reason: No fix available. Await html-minifier upgrade
-        expires: 2022-12-31T00:00:00.000Z
-        created: 2022-11-23T00:00:00.000Z
-  SNYK-JS-UGLIFYJS-3113873:
-    - '*':
-        reason: No fix available. Await html-minifier > uglifyjs upgrade
-        expires: 2022-12-31T00:00:00.000Z
+        expires: 2023-03-31T00:00:00.000Z
         created: 2022-11-23T00:00:00.000Z
 
 patch: {}
