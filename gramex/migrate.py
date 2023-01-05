@@ -16,9 +16,7 @@ def user_db():
 
     # No need to migrate if developer specifies a storelocation.user different from default.
     url = objectpath(gramex.service, 'storelocations.user.url', '')
-
-    path = urlparse(url).path
-    path = path[1:].replace('\\', '/')
+    path = urlparse(url).path[1:].replace('\\', '/')
     default_path = variables['GRAMEXDATA'].replace('\\', '/').rstrip('/') + '/auth.user.db'
     if path != default_path:
         app_log.debug(f'1.87.0: SKIP migrating custom storelocations.user.url: {path}')
