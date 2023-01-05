@@ -1,5 +1,4 @@
 '''Migrate from older versions of Gramex'''
-import os
 
 
 def user_db():
@@ -19,9 +18,8 @@ def user_db():
     url = objectpath(gramex.service, 'storelocations.user.url', '')
 
     path = urlparse(url).path
-    if os.path.sep != '/':
-        path = path.lstrip('/').replace(os.path.sep, '/')
-    default_path = variables['GRAMEXDATA'].replace(os.path.sep, '/').rstrip('/') + '/auth.user.db'
+    path = path[1:].replace('\\', '/')
+    default_path = variables['GRAMEXDATA'].replace('\\', '/').rstrip('/') + '/auth.user.db'
     if path != default_path:
         app_log.debug(f'1.87.0: SKIP migrating custom storelocations.user.url: {path}')
         return
@@ -38,10 +36,14 @@ def user_db():
     app_log.info(f'1.87.0: MIGRATING user.value from BLOB to TEXT: {path}')
     cur.executescript(
         '''
-          ALTER TABLE user ADD COLUMN value2 TEXT;
-          UPDATE user SET value2 = value;
-          ALTER TABLE user DROP COLUMN value;
-          ALTER TABLE user RENAME COLUMN value2 TO value;
+        BEGIN TRANSACTION;
+        CREATE TEMPORARY TABLE user_backup(key TEXT PRIMARY KEY, value TEXT);
+        INSERT INTO user_backup SELECT key, value FROM user;
+        DROP TABLE user;
+        CREATE TABLE user(key TEXT PRIMARY KEY, value TEXT);;
+        INSERT INTO user SELECT key, value FROM user_backup;
+        DROP TABLE user_backup;
+        COMMIT;
         '''
     )
 
