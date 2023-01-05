@@ -16,26 +16,32 @@ def user_db():
 
     # No need to migrate if developer specifies a storelocation.user different from default.
     url = objectpath(gramex.service, 'storelocations.user.url', '')
-    path = urlparse(url).path.lstrip('/').replace('\\', '/')
+    path = urlparse(url).path[1:].replace('\\', '/')
     default_path = variables['GRAMEXDATA'].replace('\\', '/').rstrip('/') + '/auth.user.db'
     if path != default_path:
+        app_log.debug(f'1.87.0: SKIP migrating custom storelocations.user.url: {path}')
         return
 
     # No need to migrate unless user.value is a BLOB
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     query = "SELECT type FROM pragma_table_info('user') WHERE name='value'"
-    if cur.execute(query).fetchall()[0][0].lower() != 'blob':
+    if cur.execute(query).fetchall()[0][0].lower() == 'text':
+        app_log.debug(f'1.87.0: SKIP migrated storelocations.user.url: {path}')
         return
 
     # SQLite can't change column type in a single command. So create new column, copy data, drop
-    app_log.info(f'Gramex 1.87.0: migrating {path} user.value from BLOB to TEXT')
+    app_log.info(f'1.87.0: MIGRATING user.value from BLOB to TEXT: {path}')
     cur.executescript(
         '''
-          ALTER TABLE user ADD COLUMN value2 TEXT;
-          UPDATE user SET value2 = value;
-          ALTER TABLE user DROP COLUMN value;
-          ALTER TABLE user RENAME COLUMN value2 TO value;
+        BEGIN TRANSACTION;
+        CREATE TEMPORARY TABLE user_backup(key TEXT PRIMARY KEY, value TEXT);
+        INSERT INTO user_backup SELECT key, value FROM user;
+        DROP TABLE user;
+        CREATE TABLE user(key TEXT PRIMARY KEY, value TEXT);;
+        INSERT INTO user SELECT key, value FROM user_backup;
+        DROP TABLE user_backup;
+        COMMIT;
         '''
     )
 

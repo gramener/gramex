@@ -23,7 +23,7 @@ variables:
 validate:
   image: gramener/builderrors
   script: builderrors
-  # Until 31 Dec 2022, allow build errors to fail
+  # Until 31 Jan 2023, allow build errors to fail
   allow_failure: true
 
 # Deploy the master / release branches on gramener.com
@@ -43,9 +43,9 @@ deploy-gramener:
         cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
       "'
 
-# Deploy the release branch additionally on UAT server
+# Deploy the master / release branches on uat.gramener.com
 deploy-uat:
-  only: [release]
+  only: [master, release]
   script:
     - 'ssh ubuntu@uat.gramener.com "
         cd ~/gramex;
