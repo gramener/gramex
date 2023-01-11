@@ -71,20 +71,16 @@ echo "Install Anaconda\nbash /tmp/conda.sh -b"
 bash /tmp/conda.sh -b
 
 # Add Anaconda to the PATH
+echo "initiate anaconda \n/home/${user}/anaconda3/bin/conda init bash"
 /home/${user}/anaconda3/bin/conda init bash
-source /home/$user/.bashrc
-# TODO: You might be able to eliminate this via `/path/to/conda init && source .bashrc`
-# echo "Setting environment variable for anaconda"
+echo "Setting environment variable for anaconda"
 # $prefix echo 'export PATH="/home/${user}/anaconda3/bin:$PATH"' >> /home/$user/.bashrc
 # $prefix echo ". /home/${user}/anaconda3/etc/profile.d/conda.sh" >> /home/$user/.bashrc
 # $prefix echo "conda activate base" >> /home/$user/.bashrc
-# # Activate the base environment
-# echo "source /home/$user/.bashrc"
-# if [ "$package_type" == "deb" ]; then
-#   # Activating conda environment in debian
-#   echo "Activating conda environment in debian"
-#   source /home/$user/anaconda3/bin/activate base
-# fi
+source /home/${user}/.bashrc
+# Activate the base environment
+echo "Activating conda environment in debian"
+source /home/$user/anaconda3/bin/activate base
 
 echo "conda --version"
 conda --version
@@ -112,7 +108,8 @@ gramex license accept
 
 # install Nodejs
 echo "Installing Nodejs"
-curl -sL <https://${package_type}.nodesource.com/setup_16.x> | sudo bash -
+echo "package_type: ${package_type}"
+curl -sL https://${package_type}.nodesource.com/setup_16.x | sudo bash -
 
 # TODO: Add the following dependencies
 # # icu-data-full is required for comicgen -> fontkit to run TextDecoder('ascii')
