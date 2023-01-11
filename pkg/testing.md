@@ -1,12 +1,14 @@
 # Testing setup
 
-To test this on Ubuntu:
+Tesing the installer script in multiple platforms using docker containers
 
 - Disable path conversion in ***GIT BASH*** (only if using git bash)
 
   ```sh
   export MSYS_NO_PATHCONV=1 
   ```
+
+## Ubuntu:
 
 - Run docker ubuntu container
 
@@ -25,11 +27,41 @@ To test this on Ubuntu:
   usermod -aG sudo ${user}
   echo "${user} ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/${user}
   # Activate user
-  su - ubuntu
+  su - ${user}
   ```
 
 - Test the installer script
 
   ```sh
+  chmod +x /app/pkg/setup.sh
+  /app/pkg/setup.sh
+  ```
+
+## Centos 7:
+
+- Run docker ubuntu container
+
+  ```sh
+  docker run --rm -itv $(pwd):/app -w /app centos:7 bash
+  ```
+
+- Create default user and activate that user in docker ubuntu shell
+
+  ```sh
+  # Install sudo
+  yum install -y sudo
+  # Create user
+  export user=centos
+  useradd -m -p '' ${user}
+  usermod -aG wheel ${user}
+  echo "${user} ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/${user}
+  # Activate user
+  su - ${user}
+  ```
+
+- Test the installer script
+
+  ```sh
+  chmod +x /app/pkg/setup.sh
   /app/pkg/setup.sh
   ```
