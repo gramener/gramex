@@ -1,5 +1,10 @@
 # !/bin/bash
 
+if [ -z "$BASH_VERSION" ]; then
+  echo "This script must be run in Bash. Exiting now."
+  exit 1
+fi
+
 # Declare an associative array for OS-specific default users
 declare -A users_map
 
@@ -8,7 +13,6 @@ users_map["ubuntu"]="ubuntu"
 users_map["debian"]="admin"
 users_map["centos"]="centos"
 users_map["amzn"]="ec2-user"
-users_map["alpine"]="root"
 
 # TODO: Anaconda version should be a variable
 # TODO: Consider miniconda instead of Anaconda
