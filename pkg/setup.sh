@@ -7,6 +7,7 @@ declare -A users_map
 users_map["ubuntu"]="ubuntu"
 users_map["debian"]="admin"
 users_map["centos"]="centos"
+users_map["amzn"]="ec2-user"
 users_map["alpine"]="root"
 
 # TODO: Anaconda version should be a variable
