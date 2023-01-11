@@ -95,3 +95,20 @@ Tesing the installer script in multiple platforms using docker containers
   chmod +x /app/pkg/setup.sh
   /app/pkg/setup.sh
   ```
+
+## Alpine:
+
+- Run docker Amazon linux container
+
+  ```sh
+  docker run --rm -itv $(pwd):/app -w /app alpine:latest sh
+  ```
+
+> TODO: Create a `sh` script that runs in `shell` not `bash`
+
+- Test the installer script
+
+  ```sh
+  chmod +x /app/pkg/setup_sh.sh
+  /app/pkg/setup_sh.sh
+  ```
