@@ -39,7 +39,7 @@ Tesing the installer script in multiple platforms using docker containers
 
 ## Centos 7:
 
-- Run docker ubuntu container
+- Run docker Centos container
 
   ```sh
   docker run --rm -itv $(pwd):/app -w /app centos:7 bash
@@ -68,7 +68,7 @@ Tesing the installer script in multiple platforms using docker containers
 
 ## amazonlinux 2:
 
-- Run docker ubuntu container
+- Run docker Amazon linux container
 
   ```sh
   docker run --rm -itv $(pwd):/app -w /app amazonlinux:2 bash
