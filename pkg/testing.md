@@ -8,7 +8,7 @@ Tesing the installer script in multiple platforms using docker containers
   export MSYS_NO_PATHCONV=1 
   ```
 
-## Ubuntu:
+## Ubuntu
 
 - Run docker ubuntu container
 
@@ -37,7 +37,7 @@ Tesing the installer script in multiple platforms using docker containers
   /app/pkg/setup.sh
   ```
 
-## Centos 7:
+## Centos 7
 
 - Run docker Centos container
 
@@ -66,14 +66,14 @@ Tesing the installer script in multiple platforms using docker containers
   /app/pkg/setup.sh
   ```
 
-## amazonlinux 2:
+## amazonlinux 2
 
   ```sh
   cd tests
   ./test_amazon_linux_2.sh
   ```
 
-## Alpine:
+## Alpine
 
 - Run docker Amazon linux container
 
