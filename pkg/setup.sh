@@ -1,23 +1,75 @@
-# !/bin/bash
+#!/bin/sh
 
 if [ -z "$BASH_VERSION" ]; then
   echo "This script must be run in Bash. Exiting now."
   exit 1
 fi
 
-# Declare an associative array for OS-specific default users
-declare -A users_map
+# Use environment variable to emulate associative array
+users_map_ubuntu="ubuntu"
+users_map_debian="admin"
+users_map_centos="centos"
+users_map_amzn="ec2-user"
 
-# Set the default users for each OS
-users_map["ubuntu"]="ubuntu"
-users_map["debian"]="admin"
-users_map["centos"]="centos"
-users_map["amzn"]="ec2-user"
+ALLOWED_VERSIONS=("3.7" "3.9")
+while [[ $# -gt 0 ]]; do
+  key="$1"
 
-# TODO: Anaconda version should be a variable
-# TODO: Consider miniconda instead of Anaconda
-# Set the repo URL for the anaconda download
-repo_url="https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"
+  case $key in
+  -d | --default)
+    VERSION=3.9
+    GRAMEX_VERSION=1.86.1
+    shift # past argument
+    ;;
+  -v | --version)
+    VERSION="$2"
+    if [[ ! " ${ALLOWED_VERSIONS[@]} " =~ " ${VERSION} " ]]; then
+      echo "Error: python versions must be set to one of the following values: ${ALLOWED_VERSIONS[*]}"
+      exit 1
+    fi
+
+    shift # past argument
+    shift # past value
+    ;;
+  -g | --gramex)
+    GRAMEX_VERSION="$2"
+    shift # past argument
+    shift # past value
+    ;;
+  *) # unknown option
+    echo "Unknown option: $key"
+    ;;
+  esac
+done
+
+# Check if Python VERSION variable is empty or unset
+if [ -z "$VERSION" ]; then
+  # Prompt user to enter the version of python to be installed
+  echo -n "Specify a version of python to be installed 3.7/3.9 [3.9]: "
+  # Read the input from user
+  read VERSION
+  # Set default value for VERSION if it's unset or empty
+  VERSION=${VERSION:-3.9}
+fi
+
+# Check if Gramex VERSION variable is empty or unset
+if [ -z "$GRAMEX_VERSION" ]; then
+  # Prompt user to enter the version of python to be installed
+  echo -n "Specify a version of python to be installed 3.7/3.9 [3.9]: "
+  # Read the input from user
+  read GRAMEX_VERSION
+  # Set default value for GRAMEX_VERSION if it's unset or empty
+  GRAMEX_VERSION=${GRAMEX_VERSION:-1.86.1}
+fi
+
+# Set the default repo URL for the Miniconda download
+  repo_url="https://repo.anaconda.com/miniconda/Miniconda3-py39_22.11.1-1-Linux-x86_64.sh"
+
+# Check if the VERSION is 3.9
+if [ "$VERSION" = "3.7" ]; then
+  # Reassign the repo URL with the URL for version 3.7
+  repo_url="https://repo.anaconda.com/miniconda/Miniconda3-py37_22.11.1-1-Linux-x86_64.sh"
+fi
 
 # Check if the user is the root user
 if [ "$(id -u)" -ne 0 ]; then
@@ -29,21 +81,20 @@ else
   prefix=""
 fi
 
-
 # TODO: Set up distro-specific scripts for Debian, CentOS, Alpine, etc.
 # TODO: Based on the distro, call the relevant one
 # Set the package manager to use
-if command -v apt-get > /dev/null 2>&1; then
+if command -v apt-get >/dev/null 2>&1; then
   echo "The OS supports 'apt'."
   echo "Updating the pakcage indices."
   package_type=deb
   package_manager=apt
   $prefix apt update -qq -y
-elif command -v yum > /dev/null 2>&1; then
+elif command -v yum >/dev/null 2>&1; then
   echo "The OS supports 'yum'"
   package_type=rpm
   package_manager=yum
-elif command -v dnf > /dev/null 2>&1; then
+elif command -v dnf >/dev/null 2>&1; then
   echo "The OS supports 'dnf'"
   package_type=rpm
   package_manager=dnf
@@ -52,40 +103,37 @@ else
   exit 1
 fi
 
+
+
 # Read the ID field from /etc/os-release
-os_id=$(grep ^ID= /etc/os-release | awk -F= '{ print $2 }')
-
-# Remove the surrounding quotes from the ID string
-os_id="${os_id%\"}"
-os_id="${os_id#\"}"
-
+os_id=$(grep ^ID= /etc/os-release | awk -F= '{ print $2 }' | tr -d '"')
 # Set the user variable to the default user for the current OS
-user=${users_map[$os_id]}
-echo "The Os detected is '${os_id}', hence the default user is '${user}'"
+eval "user=\$users_map_$os_id"
+echo "The Os detected is '$os_id', hence the default user is '$user'"
 
 # If curl is not installed, install it
-if ! command -v curl > /dev/null 2>&1; then
+if ! command -v curl >/dev/null 2>&1; then
   echo "$prefix $package_manager install -y curl"
   $prefix $package_manager install -y curl
 fi
-echo "Download anaconda installer\ncurl ${repo_url} -o /tmp/conda.sh"
+echo "Download miniconda installer\ncurl ${repo_url} -o /tmp/conda.sh"
 curl $repo_url -o /tmp/conda.sh
-
-# Run the Anaconda installer with the '-b' flag to run it in batch mode without prompts
-echo "Install Anaconda\nbash /tmp/conda.sh -b"
+# TODO: veryfy checksum of the downloaded file
+# Run the miniconda installer with the '-b' flag to run it in batch mode without prompts
+echo "Install miniconda\nbash /tmp/conda.sh -b"
 bash /tmp/conda.sh -b
 
-# Add Anaconda to the PATH
-echo "initiate anaconda \n/home/${user}/anaconda3/bin/conda init bash"
-/home/${user}/anaconda3/bin/conda init bash
+# Add miniconda to the PATH
+echo "initiate miniconda \n/home/${user}/miniconda3/bin/conda init bash"
+/home/${user}/miniconda3/bin/conda init bash
 echo "Setting environment variable for anaconda"
-# $prefix echo 'export PATH="/home/${user}/anaconda3/bin:$PATH"' >> /home/$user/.bashrc
-# $prefix echo ". /home/${user}/anaconda3/etc/profile.d/conda.sh" >> /home/$user/.bashrc
+# $prefix echo 'export PATH="/home/${user}/miniconda3/bin:$PATH"' >> /home/$user/.bashrc
+# $prefix echo ". /home/${user}/miniconda3/etc/profile.d/conda.sh" >> /home/$user/.bashrc
 # $prefix echo "conda activate base" >> /home/$user/.bashrc
 source /home/${user}/.bashrc
 # Activate the base environment
 echo "Activating conda environment in debian"
-source /home/$user/anaconda3/bin/activate base
+source /home/$user/miniconda3/bin/activate base
 
 echo "conda --version"
 conda --version
@@ -101,10 +149,7 @@ pip install --upgrade pip
 echo "$prefix rm -rf /tmp/conda.sh"
 $prefix rm -rf /tmp/conda.sh
 
-# TODO: Allow the user to specify version of Gramex
 # Install Gramex
-echo "GRAMEX_VERSION=\"1.86.1\" pip install gramex<=\"${GRAMEX_VERSION}\" gramexenterprise<=\"${GRAMEX_VERSION}\""
-GRAMEX_VERSION="1.86.1"
 pip install "gramex<=${GRAMEX_VERSION}" "gramexenterprise<=${GRAMEX_VERSION}"
 pip cache purge
 
@@ -130,10 +175,9 @@ echo "npm --version"
 npm --version
 
 # Allow `npm install -g` to work without sudo by installing to ~/.npm-packages
-mkdir -p ~/.npm-packages && \
-npm config set prefix "${HOME_DIR}/.npm-packages" && \
-
-gramex setup --all
+mkdir -p ~/.npm-packages &&
+  npm config set prefix "${HOME_DIR}/.npm-packages" &&
+  gramex setup --all
 
 # Clean up npm cache
 npm cache clean --force
