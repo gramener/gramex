@@ -10,31 +10,9 @@ Tesing the installer script in multiple platforms using docker containers
 
 ## Ubuntu
 
-- Run docker ubuntu container
-
   ```sh
-  docker run --rm -itv $(pwd):/app -w /app ubuntu:latest bash
-  ```
-
-- Create default user and activate that user in docker ubuntu shell
-
-  ```sh
-  # Install sudo
-  apt update -y && apt install -y sudo
-  # Create user
-  export user=ubuntu
-  adduser --disabled-password --gecos "" ${user}
-  usermod -aG sudo ${user}
-  echo "${user} ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/${user}
-  # Activate user
-  su - ${user}
-  ```
-
-- Test the installer script
-
-  ```sh
-  chmod +x /app/pkg/setup.sh
-  /app/pkg/setup.sh
+  cd tests
+  ./test_ubuntu.sh
   ```
 
 ## Centos 7
