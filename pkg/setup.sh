@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!/bin/bash
+# FIXME: The script still does nto work for sh
 if [ -z "$BASH_VERSION" ]; then
   echo "This script must be run in Bash. Exiting now."
   exit 1
@@ -126,6 +126,10 @@ bash /tmp/conda.sh -b
 # Add miniconda to the PATH
 echo "initiate miniconda \n/home/${user}/miniconda3/bin/conda init bash"
 /home/${user}/miniconda3/bin/conda init bash
+# if command -v bash >/dev/null 2>&1; then
+#   echo "Bash is installed."
+#   echo "initiate miniconda \n/home/${user}/miniconda3/bin/conda init bash"
+#   /home/${user}/miniconda3/bin/conda init bash
 echo "Setting environment variable for anaconda"
 # $prefix echo 'export PATH="/home/${user}/miniconda3/bin:$PATH"' >> /home/$user/.bashrc
 # $prefix echo ". /home/${user}/miniconda3/etc/profile.d/conda.sh" >> /home/$user/.bashrc
