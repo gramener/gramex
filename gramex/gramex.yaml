@@ -258,7 +258,7 @@ app:
     # default_host: 'host'          # Optional name of default host
     compress_response: True # GZip the HTTP response
 
-    # Debug=true enables all the below parameters, as well as Ctrl+D for pdb debugging on console
+    # Debug=true enables all the below parameters, as well as Ctrl+D for breakpoint on console
     debug: False # autoreload + !compiled_template_cache + !static_hash_cache + serve_traceback
     # Debug parameters
     # autoreload: False               # Reload Gramex when imported Python file changes
