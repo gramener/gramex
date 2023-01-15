@@ -69,7 +69,7 @@ class BaseMixin:
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
         # Note: call setup_session before setup_auth to ensure that
-        # override_user is run before authorize
+        # This also ensures we override_user before auth
         cls.setup_session(conf.app.get('session'))
         cls.setup_ratelimit(ratelimit, conf.app.get('ratelimit'))
         cls.setup_auth(auth)
@@ -1199,6 +1199,7 @@ class BaseHandler(RequestHandler, BaseMixin):
 
         # If the user doesn't have permissions, show 403 (with template)
         for permit_generator in self.permissions:
+            # If any permit_generator raises an Exception, let it bubble up to a HTTP 500
             for result in permit_generator(self):
                 if not result:
                     template = self.conf.kwargs.auth.get('template')

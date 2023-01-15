@@ -38,7 +38,7 @@ def mysql():
 def postgres():
     server = os.environ.get('POSTGRES_SERVER', 'localhost')
     url = dbutils.postgres_create_db(server, 'test_filter', sales=sales_data, dates=dates_data)
-    # Postgres needs a "ping" to connect to the database.
+    # Postgres needs a "ping" to connect to the database. So run a query and fetch 1 row.
     # Maybe related to https://stackoverflow.com/a/42546718/100904
     gramex.data.filter(url=url, table='sales', args={'_limit': [1]})
     yield {'url': url, 'table': 'sales'}
