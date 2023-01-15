@@ -163,9 +163,7 @@ def app(conf: dict) -> None:
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
-                        import pdb  # noqa: T100
-
-                        pdb.set_trace()  # noqa: T100
+                        breakpoint()  # noqa: T100
                     # If Ctrl-B is pressed, start the browser
                     if char == b'\x02':
                         browser = webbrowser.get()
