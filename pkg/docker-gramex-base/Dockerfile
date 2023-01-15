@@ -63,7 +63,12 @@ WORKDIR /app
 # Expose port 9988 by default. Map to host port 80 via `docker run -p 80:9988`
 EXPOSE 9988
 
-# Use CMD instead of ENTRYPOINT. Override via `docker run -it /bin/sh -l`
+# Add environment variables for Dockerfiles to reference
 ENV CONDA_DIR="$CONDA_DIR"
 ENV HOME_DIR="$HOME_DIR"
-CMD "$CONDA_DIR/bin/gramex"
+
+# Ensure Gramex is in the PATH, so we can just run "gramex"
+ENV PATH="${CONDA_DIR}/bin:${PATH}"
+
+# Use CMD instead of ENTRYPOINT. Override via `docker run -it /bin/sh -l`
+CMD gramex
