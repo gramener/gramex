@@ -697,18 +697,23 @@ def handler(func):
 
     @wraps(func)
     def wrapper(handler, *cfg_args, **cfg_kwargs):
+        # If someone passes None or a non-handler object, assume empty attributes
+        path_args = getattr(handler, 'path_args', [])
+        path_kwargs = getattr(handler, 'path_kwargs', {})
+        args = getattr(handler, 'args', {})
+        request = getattr(handler, 'request', AttrDict(headers={}, body='{}'))
         # We'll create a (*args, **kwargs)
         # College args from the config `args:` and then the handler pattern /(.*)/(.*)
-        req_args = list(cfg_args) + handler.path_args
+        req_args = list(cfg_args) + path_args
         # Collect kwargs from the config `kwargs:` and then the handler pattern /(?P<key>.*)
         # and the the URL query params
         req_kwargs = {'handler': handler}
-        for d in (cfg_kwargs, handler.path_kwargs, handler.args):
+        for d in (cfg_kwargs, path_kwargs, args):
             req_kwargs.update(d)
-        headers = handler.request.headers
+        headers = request.headers
         # If POSTed with Content-Type: application/json, parse body as well
         if headers.get('Content-Type', '') == 'application/json':
-            req_kwargs.update(json.loads(handler.request.body))
+            req_kwargs.update(json.loads(request.body))
 
         # Map these into the signature
         args, kwargs = [], {}
@@ -716,7 +721,7 @@ def handler(func):
             hint = hints.get(arg, identity)
             # If hint says it's a header, pass the header without converting
             if hint is Header:
-                kwargs[arg] = handler.request.headers.get(arg)
+                kwargs[arg] = request.headers.get(arg)
                 continue
             # Populate positional arguments first, if any
             if len(req_args):
