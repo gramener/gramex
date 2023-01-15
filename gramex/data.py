@@ -1157,6 +1157,8 @@ def alter(
 
     If the table does not exist, the table is created with the specified columns.
 
+    If there are no changes, the function returns quickly (5 ms), since metadata is cached.
+
     `columns` can be a dict with values as SQL types (e.g. `"INTEGER"` or `"VARCHAR(10)"`):
 
         >>> gramex.data.alter(url, table, columns={'id': 'INTEGER', 'name': 'VARCHAR(10)'})
@@ -1361,8 +1363,10 @@ def _argstype(argstype: Dict[str, dict], key: str, default: Any) -> Tuple[Callab
         argtype = {'type': argtype}
     conv = argtype.get('type', default)
     if conv in {'date', 'datetime'}:
+
         def conv(v):
             return pd.to_datetime(v).to_pydatetime()
+
     elif isinstance(conv, str):
         conv = build_transform({'function': conv}, iter=False)
     if not callable(conv):
