@@ -441,16 +441,19 @@ def build_pipeline(
                 from gramex.data import insert
 
                 end = datetime.datetime.utcnow().isoformat()
-                insert(
-                    **info.storelocations.pipeline,
-                    id=['name', 'start'],
-                    args={
-                        'name': [filename],
-                        'start': [start],
-                        'end': [end],
-                        'error': [error],
-                    },
-                )
+                try:
+                    insert(
+                        **info.storelocations.pipeline,
+                        id=['name', 'start'],
+                        args={
+                            'name': [filename],
+                            'start': [start],
+                            'end': [end],
+                            'error': [error],
+                        },
+                    )
+                except Exception:
+                    app_log.exception(f'pipeline:{filename} exception logging failed')
 
     return run_pipeline
 

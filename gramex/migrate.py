@@ -9,7 +9,6 @@ def user_db():
     This function migrates the old database to the new format.
     '''
     import gramex
-    import gramex.cache
     import sqlite3
     from gramex.config import objectpath, app_log, variables
     from urllib.parse import urlparse
@@ -30,7 +29,9 @@ def user_db():
         app_log.debug(f'1.87.0: SKIP migrated storelocations.user.url: {path}')
         return
 
-    # SQLite can't change column type in a single command. So create new column, copy data, drop
+    # SQLite can't change column type in a single command.
+    # Also, SQLite < 3.35 does not support DROP COLUMN in ALTER TABLE.
+    # So create new column, copy data, drop
     app_log.info(f'1.87.0: MIGRATING user.value from BLOB to TEXT: {path}')
     cur.executescript(
         '''
@@ -38,7 +39,7 @@ def user_db():
         CREATE TEMPORARY TABLE user_backup(key TEXT PRIMARY KEY, value TEXT);
         INSERT INTO user_backup SELECT key, value FROM user;
         DROP TABLE user;
-        CREATE TABLE user(key TEXT PRIMARY KEY, value TEXT);;
+        CREATE TABLE user(key TEXT PRIMARY KEY, value TEXT);
         INSERT INTO user SELECT key, value FROM user_backup;
         DROP TABLE user_backup;
         COMMIT;
