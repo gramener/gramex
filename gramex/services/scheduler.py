@@ -78,7 +78,7 @@ class Task:
             def on_done(future):
                 exception = future.exception(timeout=0)
                 if exception:
-                    app_log.error(f'schedule:{name}: {exception}')
+                    app_log.exception(f'schedule:{name}: {exception}', exc_info=exception)
 
             def run_function(*args, **kwargs):
                 future = threadpool.submit(fn, *args, **kwargs)
