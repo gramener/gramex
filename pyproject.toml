@@ -64,7 +64,7 @@ dependencies = [
     "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
     "seaborn",  # OPT: gramex.data.download()
     "six",  # for gramex.yaml backward compatibility
-    "sqlalchemy",  # for gramex.data.filter()
+    "sqlalchemy<2",  # for gramex.data.filter()
     "sqlitedict>=1.5.0",  # for SQLiteStore
     "tables",  # for HDF5 reading / writing. TODO: Where do we need this?
     "tornado>=5.1.1",  # for Web server
