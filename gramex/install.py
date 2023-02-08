@@ -676,7 +676,6 @@ def init(args, kwargs):
                 with io.open(source, 'rb') as handle:
                     result = handle.read()
                     if template_data is not None:
-                        print('Rendering', source, 'as template')
                         result = Template(result).generate(**template_data)
                 with io.open(target, 'wb') as handle:
                     handle.write(result)
