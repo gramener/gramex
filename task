@@ -93,6 +93,7 @@ pushdocker () {
 # Run all commands from the same folder as this script
 cd "$(dirname "$0")"
 # Run all commands
-for cmd in "$@"; do
+for cmd in "$@"
+do
   "$cmd"
 done
