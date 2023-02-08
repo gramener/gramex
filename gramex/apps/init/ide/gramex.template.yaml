@@ -1,0 +1,11 @@
+url:
+  {{ appname }}-home:
+    pattern: /$YAMLURL/
+    handler: FileHandler
+    kwargs:
+      path: $YAMLPATH/index.html
+
+import:
+  ui:
+    path: $GRAMEXAPPS/ui/gramex.yaml
+    YAMLURL: $YAMLURL/ui/

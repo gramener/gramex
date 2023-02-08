@@ -628,7 +628,7 @@ def init(args, kwargs):
         args.append('default')
     source_dir = os.path.join(variables['GRAMEXPATH'], 'apps', 'init', args[0])
     if not os.path.exists(source_dir):
-        app_log.error(f'Unknown init template {args[0]}')
+        app_log.error(f'Unknown init template: {args[0]} under {source_dir}')
 
     kwargs.setdefault('target', os.getcwd())
     app_log.info(f'Initializing Gramex project at {kwargs.target}')
@@ -676,6 +676,7 @@ def init(args, kwargs):
                 with io.open(source, 'rb') as handle:
                     result = handle.read()
                     if template_data is not None:
+                        print('Rendering', source, 'as template')
                         result = Template(result).generate(**template_data)
                 with io.open(target, 'wb') as handle:
                     handle.write(result)
