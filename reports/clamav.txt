@@ -15,6 +15,7 @@ C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\nodeids: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\stepwise: OK
 C:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 C:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
+C:\site\gramener.com\viz\async-gramex\commitlint.config.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.eslintrc.js: OK
@@ -68,6 +69,9 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\package.template.
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\README.template.md: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\style.scss: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\template-navbar.template.html: OK
+C:\site\gramener.com\viz\async-gramex\gramex\apps\init\ide\.gitlab-ci.template.yml: OK
+C:\site\gramener.com\viz\async-gramex\gramex\apps\init\ide\gramex.template.yaml: OK
+C:\site\gramener.com\viz\async-gramex\gramex\apps\init\ide\index.template.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\minimal\gramex.template.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\minimal\index.template.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\languagetool\gramex.yaml: OK
@@ -343,7 +347,7 @@ C:\site\gramener.com\viz\async-gramex\pyproject.toml: OK
 C:\site\gramener.com\viz\async-gramex\pytest\dbutils.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\README.md: OK
-C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: Empty file
+C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\loc.csv: OK
@@ -594,13 +598,13 @@ C:\site\gramener.com\viz\async-gramex\tests\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8646966
+Known viruses: 8651928
 Engine version: 0.105.1
-Scanned directories: 85
-Scanned files: 566
+Scanned directories: 87
+Scanned files: 571
 Infected files: 0
-Data scanned: 8.33 MB
-Data read: 4.01 MB (ratio 2.08:1)
-Time: 30.370 sec (0 m 30 s)
-Start Date: 2023:01:04 00:03:42
-End Date:   2023:01:04 00:04:13
+Data scanned: 8.60 MB
+Data read: 4.15 MB (ratio 2.07:1)
+Time: 74.058 sec (1 m 14 s)
+Start Date: 2023:02:08 22:26:59
+End Date:   2023:02:08 22:28:13
