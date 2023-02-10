@@ -353,6 +353,21 @@ storelocations:
       start: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       end: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       error: TEXT # Error stage + traceback
+  # Stores user log information. See gramex/authhandler.py
+  userlog:
+    url: sqlite:///$GRAMEXDATA/auth.user.db
+    table: log
+    columns:
+      event: TEXT # login/logout/fail
+      # Except event, these values must be keys for transforms.build_log_info()
+      port: INTEGER # gramex.conf.app.listen.port
+      uri: TEXT # handler.request.uri
+      name: TEXT # handler.name
+      class: TEXT # handler.__class__.__name__
+      datetime: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SSZ)
+      user: TEXT # handler.current_user.id
+      ip: TEXT # user IP address
+      browser: TEXT # headers.user-agent
 
 # The `schedule:` section defines when specific code is to run.
 schedule:

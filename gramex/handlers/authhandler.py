@@ -47,10 +47,10 @@ class AuthHandler(BaseHandler):
         super(AuthHandler, cls).setup(**kwargs)
 
         # Set up logging for login/logout events
-        logger = logging.getLogger('gramex.user')
         keys = objectpath(gramex.conf, 'log.handlers.user.keys', [])
-        log_info = build_log_info(keys, 'event')
-        cls.log_user_event = lambda handler, event: logger.info(log_info(handler, event))
+        cls.log_info = build_log_info(keys, 'event')
+        keys = list(objectpath(gramex.conf, 'storelocations.userlog.columns', {}).keys())
+        cls.user_log_info = build_log_info(keys, 'event')
 
         # Count failed logins
         cls.failed_logins = Counter()
@@ -111,6 +111,12 @@ class AuthHandler(BaseHandler):
                         conf, vars={'handler': None}, filename=f'url:{cls.name}:{conf.function}'
                     )
                 )
+
+    def log_user_event(self, event, user=None):
+        info = self.log_info(event)
+        logging.getLogger('gramex.user').info(info)
+        args = {key: [val] for key, val in self.user_log_info(event).items()}
+        gramex.data.insert(**gramex.service.storelocations.userlog, args=args)
 
     @coroutine
     def prepare(self):
