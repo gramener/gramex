@@ -356,7 +356,7 @@ storelocations:
   # Stores user log information. See gramex/authhandler.py
   userlog:
     url: sqlite:///$GRAMEXDATA/auth.user.db
-    table: log
+    table: userlog
     columns:
       event: TEXT # login/logout/fail
       # Except event, these values must be keys for transforms.build_log_info()
