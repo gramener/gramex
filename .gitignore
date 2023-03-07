@@ -28,6 +28,7 @@ tests/watcher.txt
 !testlib/*.xlsx
 !gramex/apps/**/*.csv
 !gramex/apps/guide/**/*.xlsx
+!gramex/gramexfeatures.csv
 
 tests/circles.csv
 tests/sales.xlsx.*.xlsx

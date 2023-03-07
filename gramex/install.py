@@ -13,8 +13,11 @@ import string
 import shutil
 import datetime
 import requests
+import pandas as pd
 from shutil import which
 from pathlib import Path
+from collections import Counter
+from tqdm import tqdm
 
 # B404:import_subprocess only developers can access this, not users
 from subprocess import Popen, check_output, CalledProcessError  # nosec B404
@@ -772,3 +775,87 @@ def license(args, kwargs):
         gramex.license.reject()
     else:
         app_log.error(f'Invalid command license {args[0]}')
+
+
+
+def feature(args, kwargs) -> dict:
+    """
+    This function extracts feature information from a gramex.yaml file and returns
+    a dictionary with a Pandas DataFrame containing information about the features
+    used in the gramex application.
+
+    Args:
+        args: This function doesn't use any arguments.
+        kwargs: A dictionary that can contain a 'path' key that specifies the path
+            to the gramex.yaml file. If 'path' is not specified, the function will
+            use the current working directory.
+
+    Returns:
+        A dictionary containing a Pandas DataFrame with the following columns:
+            - type: The type of feature (e.g., 'MS' for a URL handler)
+            - feature: The name of the feature (e.g., the name of the URL handler)
+            - count: The number of times the feature is used in the gramex app.
+    """
+
+    # Determine the path to the gramex.yaml file
+    project_path = os.getcwd()
+    if 'path' in kwargs:
+        project_path = kwargs.path
+    path = os.path.join(project_path, 'gramex.yaml')
+    
+    # Check if the gramex.yaml file exists
+
+    if not os.path.exists(path):
+        app_log.error(f'No gramex.yaml found in {os.getcwd()}')
+        return
+
+    # Load the feature mapping from cache
+    features = gramex.cache.open('gramexfeatures.csv', rel=True).set_index(['type', 'name'])['feature']
+
+    # Load the gramex.yaml configuration
+    base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
+    proj_features= Counter()    
+    try:
+        app = gramex.config.PathConfig(path)
+        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
+    except Exception as e:  # noqa: B902 capture load errors as a "feature"
+        app_log.error(str(e))
+        return
+
+    # If the configuration is not a dictionary, return an empty result
+    if not isinstance(conf, dict):
+        return 0
+
+    # List the features used. TODO: Improve this using configuration
+    for url in conf.get('url', {}).values():
+        if not isinstance(url, dict):
+            continue
+        name = url.get('handler', '').replace('gramex.handlers.', '')
+        if name in features['MS']:
+            proj_features[('MS', features['MS'][name])] += 1
+        else:
+            proj_features[('ERR-MS', name)] += 1
+
+        if 'cache' in url:
+            proj_features[('KWARG', 'cache')] += 1
+
+        url_kwargs = url.get('kwargs', {})
+        for key in url_kwargs:
+            if key not in features['KWARG']:
+                continue
+            proj_features[('KWARG', features['KWARG'][key])] += 1
+
+    # List the services used
+    for service in conf.keys():
+        # If the service is conditional, e.g. `log if condition`, take just the first part
+        name = service.split()[0]
+        if name in features['SVC']:
+            proj_features[('SVC', features['SVC'][name])] += 1
+
+    # Create features table
+    proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
+    proj_features.columns = ['type', 'feature', 'count']
+
+    return {
+        'features': proj_features,
+    }

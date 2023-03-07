@@ -150,6 +150,7 @@ def commandline(args: List[str] = None):
             'init',
             'mail',
             'license',
+            'feature',
         }:
             import gramex.install
 
