@@ -42,6 +42,7 @@ gramex init                   Add Gramex project scaffolding to current dir
 gramex service                Windows service setup
 gramex mail                   Send email from command line
 gramex license                See Gramex license, accept or reject it
+gramex feature                List features of Gramex used in the current project
 
 Installation commands. For usage, run "gramex <command> --help"
 

@@ -158,6 +158,9 @@ license: |
     gramex license                  # Show Gramex license
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
+
+feature: |
+    gramex feature                  # Show Gramex features used in corrent project
 '''
 # B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)  # nosec B506
