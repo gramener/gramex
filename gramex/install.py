@@ -1,6 +1,9 @@
 '''
 Defines command line services to install, setup and run apps.
 '''
+import ast
+import mccabe
+import fnmatch
 import contextlib
 import io
 import os
@@ -781,6 +784,16 @@ def license(args, kwargs):
 
 
 
+def _walk(node: dict, parents: tuple = ()):
+    for key, value in node.items():
+        new_key = parents + (str(key),)
+        if hasattr(value, 'items'):
+            yield new_key, None
+            yield from _walk(value, new_key)
+        else:
+            yield new_key, value
+
+
 def feature(args, kwargs) -> dict:
     """
     This function extracts feature information from a gramex.yaml file and returns
@@ -817,7 +830,8 @@ def feature(args, kwargs) -> dict:
 
     # Load the gramex.yaml configuration
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
-    proj_features= Counter()    
+    proj_features= Counter()
+    complexity = {}
     try:
         app = gramex.config.PathConfig(path)
         conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
@@ -859,6 +873,39 @@ def feature(args, kwargs) -> dict:
     proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
     proj_features.columns = ['type', 'feature', 'count']
 
+    # Calulate cyclomatic complexity of the project
+    project_complexity = 0
+    for root, _dirs, files in os.walk(project_path):
+        for file in files:
+            if file.lower().endswith('.py'):
+                path: str = os.path.join(root, file)
+                rel_path: str = os.path.relpath(path, project_path)
+                with open(path, 'rb') as handle:
+                    code = handle.read()
+                try:
+                    tree = compile(code, rel_path, 'exec', ast.PyCF_ONLY_AST)
+                except SyntaxError as e:
+                    app_log.error('SYNTAXERROR: %s %s', path, e)
+                    continue
+                visitor = mccabe.PathGraphingAstVisitor()
+                visitor.preorder(tree, visitor)
+                for node in visitor.graphs.values():
+                    project_complexity += node.complexity()
+
+    # Sum up cyclomatic complexity of Gramex features used
+    yamlpaths = ['.'.join(key) for key, val in _walk(conf)]
+    used = set()
+    gramexsize = gramex.cache.open('gramexsize.csv', rel=True)
+    for _index, gramex_code in gramexsize.iterrows():
+        codepath = gramex_code['codepath']
+        # TODO: fnmatch.filter() is the slowest part. Optimize it
+        if fnmatch.filter(yamlpaths, gramex_code['yamlpath']):
+            used.add(codepath)
+    gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
+    complexity['gramex_complexity'] = gramex_complexity, project_complexity
+    complexity['project_complexity'] = project_complexity
+
     return {
         'features': proj_features,
+        'complexity': complexity,
     }
