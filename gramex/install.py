@@ -778,17 +778,6 @@ def license(args, kwargs):
         app_log.error(f'Invalid command license {args[0]}')
 
 
-
-def _walk(node: dict, parents: tuple = ()):
-    for key, value in node.items():
-        new_key = parents + (str(key),)
-        if hasattr(value, 'items'):
-            yield new_key, None
-            yield from _walk(value, new_key)
-        else:
-            yield new_key, value
-
-
 def features(args, kwargs) -> dict:
     """
     This function extracts feature information from a gramex.yaml file and returns
