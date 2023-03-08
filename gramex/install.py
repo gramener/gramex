@@ -821,8 +821,14 @@ def complexity(args, kwargs) -> dict:
     elif os.path.exists('gramex.yaml'):
         confpath = os.path.abspath('gramex.yaml')
     else:
-        app_log.error('This is not a Gramex project')
+        app_log.warning('This is not a Gramex project')
         is_gramex_project = False
+
+    c_xity = {'project_complexity': project_complexity}
+
+    # Sum up cyclomatic complexity of Gramex features used
+    if not is_gramex_project:
+        return c_xity
 
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
     try:
@@ -831,22 +837,18 @@ def complexity(args, kwargs) -> dict:
     except Exception as e:  # noqa: B902 capture load errors as a "feature"
         app_log.exception(str(e))
         return {'features': None}
-    c_xity = {'project_complexity': project_complexity}
+    yamlpaths = ['.'.join(key) for key, val in walk(conf)]
+    used = set()
+    gramexsize = gramex.cache.open('gramexsize.csv', rel=True)
+    for _index, gramex_code in gramexsize.iterrows():
+        codepath = gramex_code['codepath']
+        # TODO: fnmatch.filter() is the slowest part. Optimize it
+        if fnmatch.filter(yamlpaths, gramex_code['yamlpath']):
+            used.add(codepath)
 
-    # Sum up cyclomatic complexity of Gramex features used
-    if is_gramex_project:
-        yamlpaths = ['.'.join(key) for key, val in walk(conf)]
-        used = set()
-        gramexsize = gramex.cache.open('gramexsize.csv', rel=True)
-        for _index, gramex_code in gramexsize.iterrows():
-            codepath = gramex_code['codepath']
-            # TODO: fnmatch.filter() is the slowest part. Optimize it
-            if fnmatch.filter(yamlpaths, gramex_code['yamlpath']):
-                used.add(codepath)
-
-        gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
-        c_xity['gramex_complexity'] = gramex_complexity
-        c_xity['total_complexity'] = project_complexity + gramex_complexity
-        c_xity['gramex_complexity_percent'] = round(100 * gramex_complexity / c_xity['total_complexity'], 2)
+    gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
+    c_xity['gramex_complexity'] = gramex_complexity
+    c_xity['total_complexity'] = project_complexity + gramex_complexity
+    c_xity['gramex_complexity_percent'] = round(100 * gramex_complexity / c_xity['total_complexity'], 2)
         
     return c_xity
