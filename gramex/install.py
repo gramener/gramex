@@ -157,8 +157,8 @@ license: |
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
 
-feature: |
-    gramex feature                  # Show Gramex features used in corrent project
+features: |
+    gramex features                 # Show Gramex features used in current project
 '''
 # B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)  # nosec B506
@@ -789,7 +789,7 @@ def _walk(node: dict, parents: tuple = ()):
             yield new_key, value
 
 
-def feature(args, kwargs) -> dict:
+def features(args, kwargs) -> dict:
     """
     This function extracts feature information from a gramex.yaml file and returns
     a dictionary with a Pandas DataFrame containing information about the features
