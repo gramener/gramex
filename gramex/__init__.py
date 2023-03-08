@@ -50,6 +50,7 @@ gramex update                 Update an app
 gramex setup                  Run make, npm install, bower install etc on app
 gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
+gramex complexity             Calculate cylomatic complexity of the project
 '''
 
 __version__ = '1.87.0'
@@ -150,6 +151,7 @@ def commandline(args: List[str] = None):
             'init',
             'mail',
             'license',
+            'complexity',
         }:
             import gramex.install
 

@@ -155,6 +155,9 @@ license: |
     gramex license                  # Show Gramex license
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
+
+complexity: |
+    gramex complexity               # Creates a cyclomatic complexity report
 '''
 # B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)  # nosec B506
@@ -772,3 +775,78 @@ def license(args, kwargs):
         gramex.license.reject()
     else:
         app_log.error(f'Invalid command license {args[0]}')
+
+
+def complexity(args, kwargs) -> dict:
+    # Calulate cyclomatic complexity of the project
+    import mccabe
+    import re
+    import ast
+    import fnmatch
+
+    def walk(node: dict, parents: tuple = ()):
+        for key, value in node.items():
+            new_key = parents + (str(key),)
+            if hasattr(value, 'items'):
+                yield new_key, None
+                yield from walk(value, new_key)
+            else:
+                yield new_key, value
+
+    project_path = os.getcwd()
+    project_complexity = 0
+    relevent_file_matcher = re.compile(r'^((?!(site_packages|node_modules)).)*\.py$')
+
+    for root, _dirs, files in os.walk(project_path):
+        for filename in files:
+            if not relevent_file_matcher.match(filename):
+                continue
+            path: str = os.path.join(root, filename)
+            rel_path: str = os.path.relpath(path, project_path)
+            with open(path, 'rb') as handle:
+                code = handle.read()
+            try:
+                tree = compile(code, rel_path, 'exec', ast.PyCF_ONLY_AST)
+            except SyntaxError as e:
+                app_log.exception('SYNTAXERROR: %s %s', path, e)
+                continue
+            visitor = mccabe.PathGraphingAstVisitor()
+            visitor.preorder(tree, visitor)
+            for node in visitor.graphs.values():
+                project_complexity += node.complexity()
+
+    is_gramex_project = True
+    if 'conf' in kwargs:
+        confpath = kwargs.conf
+    elif os.path.exists('gramex.yaml'):
+        confpath = os.path.abspath('gramex.yaml')
+    else:
+        app_log.error('This is not a Gramex project')
+        is_gramex_project = False
+
+    base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
+    try:
+        app = gramex.config.PathConfig(confpath)
+        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
+    except Exception as e:  # noqa: B902 capture load errors as a "feature"
+        app_log.exception(str(e))
+        return {'features': None}
+    c_xity = {'project_complexity': project_complexity}
+
+    # Sum up cyclomatic complexity of Gramex features used
+    if is_gramex_project:
+        yamlpaths = ['.'.join(key) for key, val in walk(conf)]
+        used = set()
+        gramexsize = gramex.cache.open('gramexsize.csv', rel=True)
+        for _index, gramex_code in gramexsize.iterrows():
+            codepath = gramex_code['codepath']
+            # TODO: fnmatch.filter() is the slowest part. Optimize it
+            if fnmatch.filter(yamlpaths, gramex_code['yamlpath']):
+                used.add(codepath)
+
+        gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
+        c_xity['gramex_complexity'] = gramex_complexity
+        c_xity['total_complexity'] = project_complexity + gramex_complexity
+        c_xity['gramex_complexity_percent'] = round(100 * gramex_complexity / c_xity['total_complexity'], 2)
+        
+    return c_xity
