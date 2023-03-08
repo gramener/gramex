@@ -50,7 +50,7 @@ gramex update                 Update an app
 gramex setup                  Run make, npm install, bower install etc on app
 gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
-gramex complexity             Calculate cylomatic complexity of the project
+gramex complexity             Calculate cyclomatic complexity of the project
 '''
 
 __version__ = '1.87.0'
