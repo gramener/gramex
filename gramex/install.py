@@ -797,8 +797,8 @@ def features(args, kwargs) -> dict:
 
     Args:
         args: This function doesn't use any arguments.
-        kwargs: A dictionary that can contain a 'path' key that specifies the path
-            to the gramex.yaml file. If 'path' is not specified, the function will
+        kwargs: A dictionary that can contain a 'conf' key that specifies the path
+            to the gramex.yaml file. If 'conf' is not specified, the function will
             use the current working directory.
 
     Returns:
@@ -808,34 +808,32 @@ def features(args, kwargs) -> dict:
             - count: The number of times the feature is used in the gramex app.
     """
 
-    # Determine the path to the gramex.yaml file
-    project_path = os.getcwd()
-    if 'path' in kwargs:
-        project_path = kwargs.path
-    path = os.path.join(project_path, 'gramex.yaml')
-    
-    # Check if the gramex.yaml file exists
-
-    if not os.path.exists(path):
+    # Get config file location
+    if 'conf' in kwargs:
+        confpath = kwargs.conf
+    elif os.path.exists('gramex.yaml'):
+        confpath = os.path.abspath('gramex.yaml')
+    else:
         app_log.error(f'No gramex.yaml found in {os.getcwd()}')
-        return
+        return {'features': None}
 
     # Load the feature mapping from cache
-    features = gramex.cache.open('gramexfeatures.csv', rel=True).set_index(['type', 'name'])['feature']
-
+    features = gramex.cache.open("gramexfeatures.csv", rel=True).set_index(["type", "name"])[
+        "feature"
+    ]
     # Load the gramex.yaml configuration
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
     proj_features= Counter()
     try:
-        app = gramex.config.PathConfig(path)
+        app = gramex.config.PathConfig(confpath)
         conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
     except Exception as e:  # noqa: B902 capture load errors as a "feature"
-        app_log.error(str(e))
-        return
+        app_log.exception(str(e))
+        return {'features': None}
 
     # If the configuration is not a dictionary, return an empty result
     if not isinstance(conf, dict):
-        return 0
+        return {'features': None}
 
     # List the features used. TODO: Improve this using configuration
     for url in conf.get('url', {}).values():
