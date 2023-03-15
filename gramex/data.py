@@ -161,8 +161,10 @@ def filter(
     - `?x>~=val` selects x >= val
     - `?x<=val` selects x < val
     - `?x<~=val` selects x <= val
-    - `?x~=val` selects x matches val as a regular expression
-    - `?x!~=val` selects x does not match val as a regular expression
+    - `?x~=val` selects x matches val
+    - `?x!~=val` selects x does not match val
+    - `?x*=val` selects x matches val case-insensitively
+    - `?x!*=val` selects x does not match val case-insensitively
 
     Multiple filters are combined into an AND clause. Ranges can also be
     specified like this:
@@ -1317,7 +1319,7 @@ def _path_safe(path):
 
 # The order of operators is important. ~ is at the end. Otherwise, !~
 # or >~ will also be mapped to ~ as an operator
-operators = ['!', '>', '>~', '<', '<~', '!~', '~']
+operators = ['!', '>', '>~', '<', '<~', '!~', '~', '!*', '*']
 
 
 def _filter_col(col, cols):
@@ -1413,6 +1415,10 @@ def _filter_frame_col(data, key, col, op, vals, conv, meta):
         data = data[~data[col].str.contains('|'.join(vals)).fillna(False)]
     elif op == '~':
         data = data[data[col].str.contains('|'.join(vals)).fillna(False)]
+    elif op == '!*':
+        data = data[~data[col].str.contains('|'.join(vals), case=False).fillna(False)]
+    elif op == '*':
+        data = data[data[col].str.contains('|'.join(vals), case=False).fillna(False)]
     meta['filters'].append((col, op, vals))
     return data
 
@@ -1446,6 +1452,10 @@ def _filter_db_col(query, method, key, col, op, vals, column, conv, meta):
         query = method(column.notlike('%' + '%'.join(vals) + '%'))
     elif op == '~':
         query = method(column.like('%' + '%'.join(vals) + '%'))
+    elif op == '!*':
+        query = method(column.notilike('%' + '%'.join(vals) + '%'))
+    elif op == '*':
+        query = method(column.ilike('%' + '%'.join(vals) + '%'))
     meta['filters'].append((col, op, vals))
     return query
 
@@ -1841,8 +1851,12 @@ def _mongodb_query(args, table, id: List[str] = [], **kwargs):
             elif op == '<~':
                 add({_mongodb_op_map[op]: min(vals)})
         elif op == '!~':
-            add({"$not": {"$regex": '|'.join(vals), "$options": 'i'}})
+            add({"$not": {"$regex": '|'.join(vals)}})
         elif op == '~':
+            add({"$regex": '|'.join(vals)})
+        elif op == '!*':
+            add({"$not": {"$regex": '|'.join(vals), "$options": 'i'}})
+        elif op == '*':
             add({"$regex": '|'.join(vals), "$options": 'i'})
         elif col and op in _mongodb_op_map:
             add({_mongodb_op_map[op]: convert(val)} for val in vals)
@@ -2345,6 +2359,7 @@ def _filter_servicenow(
                 query.field(col).not_contains(value[0])
             elif op == '~':
                 query.field(col).contains(value[0])
+            # TODO: Handle case insensitive search via * and !* operators
             else:
                 raise ValueError(f'Unknown ServiceNow operator: {op}')
 
