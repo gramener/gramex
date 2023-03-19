@@ -2359,7 +2359,7 @@ def _filter_servicenow(
                 query.field(col).not_contains(value[0])
             elif op == '~':
                 query.field(col).contains(value[0])
-            # TODO: Handle case insensitive search via * and !* operators
+            # TODO: Handle case insensitive search via * and !* operators for ServiceNow
             else:
                 raise ValueError(f'Unknown ServiceNow operator: {op}')
 
