@@ -235,6 +235,12 @@ def prepare_where(query, args, columns):
         elif op == '!~':
             q = ' OR '.join('"{}" NOT LIKE "%{}%"'.format(col, x) for x in vals)
             wheres.append('({})'.format(q))
+        elif op == '*':
+            q = ' OR '.join('"{}" ILIKE "%{}%"'.format(col, x) for x in vals)
+            wheres.append('({})'.format(q))
+        elif op == '!*':
+            q = ' OR '.join('"{}" NOT ILIKE "%{}%"'.format(col, x) for x in vals)
+            wheres.append('({})'.format(q))
     wheres = ' AND '.join(wheres)
     if not wheres:
         return wheres

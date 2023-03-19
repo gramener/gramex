@@ -158,6 +158,9 @@ class TestFilter(unittest.TestCase):
         m = eq({'city~': ['ore']}, sales[sales['city'].str.contains('ore')])
         eq_(m['filters'], [('city', '~', ('ore',))])
 
+        m = eq({'city*': ['OrE']}, sales[sales['city'].str.contains('ore')])
+        eq_(m['filters'], [('city', '*', ('OrE',))])
+
         m = eq(
             {'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
             sales[
@@ -173,6 +176,9 @@ class TestFilter(unittest.TestCase):
 
         m = eq({'city!~': ['ore']}, sales[~sales['city'].str.contains('ore')])
         eq_(m['filters'], [('city', '!~', ('ore',))])
+
+        m = eq({'city!*': ['OrE']}, sales[~sales['city'].str.contains('ore')])
+        eq_(m['filters'], [('city', '!*', ('OrE',))])
 
         m = eq(
             {'sales>': ['100'], 'sales<': ['1000']},
@@ -222,7 +228,7 @@ class TestFilter(unittest.TestCase):
         eq_(m['filters'], [('देश', '', ('भारत',))])
 
         # Non-existent column does not raise an error for any operation
-        for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
+        for op in ['', '!', '>', '<', '<~', '>', '>~', '~', '!~', '*', '!*']:
             m = eq({'nonexistent' + op: ['']}, sales)
             eq_(m['ignored'], [('nonexistent' + op, [''])])
         # Non-existent sorts do not raise an error.
@@ -488,9 +494,13 @@ class TestFilter(unittest.TestCase):
         size(args={'sales>~': ['200']}, b=8)
         size(args={'sales<~': ['41.9']}, b=8)
         size(args={'city~': ['South']}, b=4)
+        size(args={'city*': ['south']}, b=4)
+        size(args={'city*': ['south']}, b=4)
         size(args={'city!~': ['Newport']}, b=20)
+        size(args={'city!*': ['nEWpORT']}, b=20)
         size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
         size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
+        size(args={'city*': ['sOuTH'], 'product': ['Biscuit']}, b=1)
         # TODO: NOT NULL
         # TEST size(args={'sales!': []}, b=2)
         # TEST size(args={'sales': []}, b=22)
