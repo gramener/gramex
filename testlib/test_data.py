@@ -497,7 +497,7 @@ class TestFilter(unittest.TestCase):
         size(args={'city*': ['south']}, b=4)
         size(args={'city*': ['south']}, b=4)
         size(args={'city!~': ['Newport']}, b=20)
-        size(args={'city!*': ['dkfj']}, b=20)
+        size(args={'city!*': ['nEWpORT']}, b=20)
         size(args={'sales>': ['20'], 'sales<': ['500']}, b=13)
         size(args={'city~': ['South'], 'product': ['Biscuit']}, b=1)
         size(args={'city*': ['sOuTH'], 'product': ['Biscuit']}, b=1)
