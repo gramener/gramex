@@ -1,0 +1,24 @@
+url:
+  csv:
+    pattern: /$YAMLURL/csv/
+    handler: FormHandler
+    kwargs:
+      url: $YAMLPATH/data.csv
+  sqlite:
+    pattern: /$YAMLURL/sqlite/
+    handler: FormHandler
+    kwargs:
+      url: 'sqlite:///$YAMLPATH/mydatabase.db'
+      table: mytable
+  mysql:
+    pattern: /$YAMLURL/mysql/
+    handler: FormHandler
+    kwargs:
+      url: 'mysql+pymysql://root@localhost:3306/test_filter'
+      table: test_filter
+  postgres:
+    pattern: /$YAMLURL/postgres/
+    handler: FormHandler
+    kwargs:
+      url: 'postgresql://postgres@localhost:5432/test_filter'
+      table: test_filter
