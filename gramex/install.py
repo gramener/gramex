@@ -825,11 +825,11 @@ def complexity(args, kwargs) -> dict:
         app_log.warning('This is not a Gramex project')
         is_gramex_project = False
 
-    c_xity = {'project_complexity': project_complexity}
+    result = {'project_complexity': project_complexity}
 
     # Sum up cyclomatic complexity of Gramex features used
     if not is_gramex_project:
-        return c_xity
+        return result
 
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
     try:
@@ -848,8 +848,8 @@ def complexity(args, kwargs) -> dict:
             used.add(codepath)
 
     gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
-    c_xity['gramex_complexity'] = gramex_complexity
-    c_xity['total_complexity'] = project_complexity + gramex_complexity
-    c_xity['gramex_complexity_percent'] = round(100 * gramex_complexity / c_xity['total_complexity'], 2)
+    result['gramex_complexity'] = gramex_complexity
+    result['total_complexity'] = project_complexity + gramex_complexity
+    result['gramex_complexity_percent'] = round(100 * gramex_complexity / result['total_complexity'], 2)
 
-    return c_xity
+    return result
