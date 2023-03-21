@@ -4,7 +4,7 @@ import glob
 from gramex.install import complexity
 
 
-def test_actual_vs_expected():
+def test_cli_features():
     for root in glob.glob('pytest/complexity-*'):    
         path = os.path.join(os.getcwd(), root)
         actual = complexity([path], {})
