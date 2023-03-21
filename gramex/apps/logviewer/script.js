@@ -9,7 +9,7 @@ function updateParams(params, keeponly, remove) {
   if (keeponly.length) {
     var to_remove = Object.keys(query.searchKey).filter(function (i) {
       // remove filter-like characters from end
-      var ci = i.replace(/(>~|<~|!~|>|<|~|!)$/, "");
+      var ci = i.replace(/(>~|<~|!~|>|<|~|\*|!)$/, "");
       return keeponly.indexOf(ci) === -1;
     });
     remove.push.apply(remove, to_remove);
