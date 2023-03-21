@@ -1,6 +1,6 @@
 {
-  "project_complexity": 0,
+  "project_complexity": 9,
   "gramex_complexity": 495,
-  "total_complexity": 495,
-  "gramex_complexity_percent": 100.0
+  "total_complexity": 504,
+  "gramex_complexity_percent": 98.21
 }
