@@ -793,15 +793,15 @@ def complexity(args, kwargs) -> dict:
             else:
                 yield new_key, value
 
-    project_path = os.getcwd()
+    project_path = os.getcwd() if len(args) == 0 else args[0]
     project_complexity = 0
-    relevent_file_matcher = re.compile(r'^((?!(site_packages|node_modules)).)*\.py$')
+    relevent_file_matcher = re.compile(r'^((?!(site-packages|node_modules)).)*\.py$')
 
     for root, _dirs, files in os.walk(project_path):
         for filename in files:
-            if not relevent_file_matcher.match(filename):
-                continue
             path: str = os.path.join(root, filename)
+            if not relevent_file_matcher.match(path):
+                continue
             rel_path: str = os.path.relpath(path, project_path)
             with open(path, 'rb') as handle:
                 code = handle.read()
@@ -816,9 +816,10 @@ def complexity(args, kwargs) -> dict:
                 project_complexity += node.complexity()
 
     is_gramex_project = True
+
     if 'conf' in kwargs:
         confpath = kwargs.conf
-    elif os.path.exists('gramex.yaml'):
+    elif os.path.exists(os.path.join(project_path, 'gramex.yaml')):
         confpath = os.path.abspath('gramex.yaml')
     else:
         app_log.warning('This is not a Gramex project')
@@ -850,5 +851,5 @@ def complexity(args, kwargs) -> dict:
     c_xity['gramex_complexity'] = gramex_complexity
     c_xity['total_complexity'] = project_complexity + gramex_complexity
     c_xity['gramex_complexity_percent'] = round(100 * gramex_complexity / c_xity['total_complexity'], 2)
-        
+
     return c_xity
