@@ -797,13 +797,15 @@ def features(args, kwargs) -> dict:
             - count: The number of times the feature is used in the gramex app.
     """
 
+    project_path = os.getcwd() if len(args) == 0 else args[0]
+
     # Get config file location
     if 'conf' in kwargs:
         confpath = kwargs.conf
-    elif os.path.exists('gramex.yaml'):
+    elif os.path.exists(os.path.join(project_path, 'gramex.yaml')):
         confpath = os.path.abspath('gramex.yaml')
     else:
-        app_log.error(f'No gramex.yaml found in {os.getcwd()}')
+        app_log.error(f'No gramex.yaml found in {project_path}')
         return {'features': None}
 
     # Load the feature mapping from cache
@@ -855,6 +857,4 @@ def features(args, kwargs) -> dict:
     proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
     proj_features.columns = ['type', 'feature', 'count']
 
-    return {
-        'features': proj_features,
-    }
+    return proj_features.to_dict(orient='records')
