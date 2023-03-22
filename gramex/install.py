@@ -798,15 +798,8 @@ def features(args, kwargs) -> dict:
     """
     import pandas as pd
 
-    project_yaml = os.path.join(os.getcwd() if len(args) == 0 else args[0], 'gramex.yaml')
-
-    # Get config file location
-    if 'conf' in kwargs:
-        confpath = kwargs.conf
-    elif os.path.exists(project_yaml):
-        confpath = project_yaml
-    else:
-        app_log.error(f'Missing {project_yaml}')
+    project_yaml = _gramex_yaml_path(os.getcwd() if len(args) == 0 else args[0], kwargs)
+    if project_yaml is None:
         return
 
     # Load the feature mapping from cache
@@ -817,7 +810,7 @@ def features(args, kwargs) -> dict:
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
     proj_features = Counter({(type, feature): 0 for ((type, _name), feature) in features.items()})
     try:
-        app = gramex.config.PathConfig(confpath)
+        app = gramex.config.PathConfig(project_yaml)
         conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
     except Exception as e:  # noqa: B902 capture load errors as a "feature"
         app_log.exception(str(e))
@@ -859,3 +852,87 @@ def features(args, kwargs) -> dict:
     proj_features.columns = ['type', 'feature', 'count']
 
     return proj_features
+
+
+def complexity(args, kwargs) -> dict:
+    # Calulate cyclomatic complexity of the project
+    import ast
+    import fnmatch
+    import mccabe
+    import pandas as pd
+    import re
+
+    project_path = os.getcwd() if len(args) == 0 else args[0]
+    project_yaml = _gramex_yaml_path(project_path, kwargs)
+    if project_yaml is None:
+        return
+
+    def walk(node: dict, parents: tuple = ()):
+        for key, value in node.items():
+            new_key = parents + (str(key),)
+            if hasattr(value, 'items'):
+                yield new_key, None
+                yield from walk(value, new_key)
+            else:
+                yield new_key, value
+
+    py_complexity = 0
+    relevent_file_matcher = re.compile(r'^((?!(site-packages|node_modules)).)*\.py$')
+
+    for root, _dirs, files in os.walk(project_path):
+        for filename in files:
+            path: str = os.path.join(root, filename)
+            if not relevent_file_matcher.match(path):
+                continue
+            rel_path: str = os.path.relpath(path, project_path)
+            with open(path, 'rb') as handle:
+                code = handle.read()
+            try:
+                tree = compile(code, rel_path, 'exec', ast.PyCF_ONLY_AST)
+            except SyntaxError as e:
+                app_log.exception('SYNTAXERROR: %s %s', path, e)
+                continue
+            visitor = mccabe.PathGraphingAstVisitor()
+            visitor.preorder(tree, visitor)
+            for node in visitor.graphs.values():
+                py_complexity += node.complexity()
+
+    base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
+    try:
+        app = gramex.config.PathConfig(project_yaml)
+        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
+    except Exception as e:  # noqa: B902 capture load errors as a "feature"
+        app_log.exception(str(e))
+        return
+    yamlpaths = {'.'.join(key): val for key, val in walk(conf)}
+    used = set()
+    gramexsize = gramex.cache.open('gramexsize.csv', rel=True)
+    for _index, gramex_code in gramexsize.iterrows():
+        # TODO: fnmatch.filter() is the slowest part. Optimize it
+        if '=' not in gramex_code['yamlpath']:
+            if fnmatch.filter(yamlpaths.keys(), gramex_code['yamlpath']):
+                used.add(gramex_code['codepath'])
+        else:
+            yaml_key, yaml_value = gramex_code['yamlpath'].split('=', 1)
+            matches = fnmatch.filter(yamlpaths.keys(), yaml_key)
+            for key in matches:
+                if yamlpaths[key] in yaml_value.split('|'):
+                    used.add(gramex_code['codepath'])
+    gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
+    return pd.DataFrame({
+        'py': [py_complexity],
+        'js': [0],
+        'gramex': [gramex_complexity],
+    })
+
+
+def _gramex_yaml_path(folder, kwargs):
+    project_yaml = os.path.join(folder, 'gramex.yaml')
+    # Get config file location
+    if 'conf' in kwargs:
+        return kwargs.conf
+    elif os.path.exists(project_yaml):
+        return project_yaml
+    else:
+        app_log.error(f'Missing {project_yaml}')
+        return

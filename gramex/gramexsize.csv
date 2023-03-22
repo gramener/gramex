@@ -1,12 +1,11 @@
 codepath,yamlpath,complexity
 gramex.cache._delete_temp_files,*,3
 gramex.cache.open,*,13
-gramex.cache.*,.cache.,49
+gramex.cache.stat,*,2
 gramex.cache.save,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,4
 gramex.cache.query,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,9
-gramex.cache.stat,*,2
 gramex.cache.reload_module,*,5
-gramex.cache.urlfetch,alert.,6
+gramex.cache.urlfetch,alert,6
 gramex.cache.Subprocess.*,url.*.handler=ProcessHandler|Process,25
 gramex.cache.daemon,url.*.handler=ComicHandler|Comic,24
 gramex.cache.daemon,import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml,24
@@ -22,8 +21,9 @@ gramex.cache.HDF5Store.*,app.session.type=hdf5,18
 gramex.cache.HDF5Store.*,url.*.kwargs.store.type=hdf5,18
 gramex.cache.JSONStore.*,app.session.type=json,15
 gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
+gramex.cache.*,cache,49
 gramex.config.*,*,158
-gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,342
+gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,320
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
 gramex.install.*,TODO - Gramex app installation & management,128
 gramex.license.*,TODO - Gramex enterprise license management,9
@@ -48,6 +48,7 @@ gramex.topcause.*,TODO - if any PY code uses topcause,15
 gramex.transformers.*,url.*.handler=MLHandler|ML,31
 gramex.winservice.*,TODO - if app is deployed on Windows server,22
 gramex.__init__.*,*,49
+gramex.apps.admin.*,import.*.path=$GRAMEXAPPS/admin/gramex.yaml,28
 gramex.apps.admin2.*,import.*.path=$GRAMEXAPPS/admin2/gramex.yaml,53
 gramex.apps.filemanager.*,import.*.path=$GRAMEXAPPS/filemanager/gramex.yaml,7
 gramex.apps.logviewer.*,import.*.path=$GRAMEXAPPS/logviewer/gramex.yaml,59
@@ -55,7 +56,7 @@ gramex.apps.mail.*,import.*.path=$GRAMEXAPPS/mail/gramex.yaml,2
 gramex.apps.ui.*,import.*.path=$GRAMEXAPPS/ui/gramex.yaml,28
 gramex.apps.uifactory.*,import.*.path=$GRAMEXAPPS/uifactory/gramex.yaml,21
 gramex.apps.update.*,import.*.path=$GRAMEXAPPS/update/gramex.yaml,14
-gramex.handlers.authhandler.AuthHandler.*,url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,34
+gramex.handlers.authhandler.AuthHandler.*,url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,33
 gramex.handlers.authhandler.LogoutHandler.*,url.*.handler=LogoutHandler,4
 gramex.handlers.authhandler.GoogleAuth.*,url.*.handler=GoogleAuth,5
 gramex.handlers.authhandler.SimpleAuth.*,url.*.handler=SimpleAuth,5
@@ -89,7 +90,7 @@ gramex.handlers.basehandler.BaseMixin.save_redirect_page,url.*.kwargs.redirect,3
 gramex.handlers.basehandler.BaseMixin.redirect_next,url.*.kwargs.redirect,2
 gramex.handlers.basehandler.BaseMixin._cached_get,url,2
 gramex.handlers.basehandler.BaseMixin._write_headers,url.*.kwargs.headers,4
-gramex.handlers.basehandler.BaseMixin.debug_exception,url,1
+gramex.handlers.basehandler.BaseMixin.debug_exception,url,3
 gramex.handlers.basehandler.BaseMixin._write_custom_error,url.*.kwargs.error,7
 gramex.handlers.basehandler.BaseMixin.session,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin._set_new_session_id,url.*.kwargs.auth,4
@@ -123,7 +124,7 @@ gramex.handlers.capturehandler.*,url.*.handler=CaptureHandler|Screenshot,46
 gramex.handlers.comichandler.*,url.*.handler=ComicHandler|Comic,6
 gramex.handlers.drivehandler.*,url.*.handler=DriveHandler|Storage,36
 gramex.handlers.filehandler.*,url.*.handler=FileHandler|DirectoryHandler|File,59
-gramex.handlers.formhandler.*,url.*.handler=FormHandler|Data,63
+gramex.handlers.formhandler.*,url.*.handler=FormHandler|Data,62
 gramex.handlers.functionhandler.*,url.*.handler=FunctionHandler|Function,14
 gramex.handlers.jsonhandler.*,url.*.handler=JSONHandler|JSON,31
 gramex.handlers.mlhandler.get_model,url.*.handler=MLHandler|ML,6
@@ -155,11 +156,11 @@ gramex.services.urlcache.RedisCacheFile.*,cache.*.type=redis,4
 gramex.services.watcher.*,watch,23
 gramex.services.__init__.version,version,2
 gramex.services.__init__.log,log,10
-gramex.services.__init__.app,app,21
+gramex.services.__init__.app,app,23
 gramex.services.__init__.schedule,schedule,5
 gramex.services.__init__.alert,alert,7
 gramex.services.__init__.threadpool,threadpool,2
-gramex.services.__init__.url,url,16
+gramex.services.__init__.url,url,15
 gramex.services.__init__.mime,mime,2
 gramex.services.__init__.watch,watch,9
 gramex.services.__init__.cache,cache,10
