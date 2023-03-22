@@ -1,15 +1,14 @@
 import os
-import json
 import glob
+from pandas import read_json
+from pandas.testing import assert_frame_equal
 from gramex.install import features
 
 
 def test_cli_features():
-    for root in glob.glob('pytest/features-*'):    
-        path = os.path.join(os.getcwd(), root)
-        actual = features([path], {})
-        expected_path = os.path.join(path, 'expected.json')
-
-        with open(expected_path, 'r') as expected:
-            expected = json.load(expected)
-            assert expected == actual
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    getGlob = lambda x: glob.glob(os.path.join(dir_path, f'{x}-*'))
+    for root in getGlob('complexity') +  getGlob('features'):
+        actual = features([root], {})
+        expected = read_json(os.path.join(root, 'expected.json'))
+        assert_frame_equal( expected, actual)

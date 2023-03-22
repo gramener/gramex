@@ -1,8 +1,8 @@
 [
-  { "count": 2, "feature": "FileHandler", "type": "MS" },
-  { "count": 2, "feature": "Headers", "type": "KWARG" },
-  { "count": 2, "feature": "Microservice", "type": "SVC" },
-  { "count": 1, "feature": "Logging", "type": "SVC" },
-  { "count": 1, "feature": "Apps", "type": "SVC" },
-  { "count": 1, "feature": "Schedule", "type": "SVC" }
+  { "type": "MS"    , "feature": "FileHandler"  , "count": 2 },
+  { "type": "KWARG" , "feature": "Headers"      , "count": 2 },
+  { "type": "SVC"   , "feature": "Microservice" , "count": 2 },
+  { "type": "SVC"   , "feature": "Logging"      , "count": 1 },
+  { "type": "SVC"   , "feature": "Apps"         , "count": 1 },
+  { "type": "SVC"   , "feature": "Schedule"     , "count": 1 }
 ]

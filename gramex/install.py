@@ -857,4 +857,4 @@ def features(args, kwargs) -> dict:
     proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
     proj_features.columns = ['type', 'feature', 'count']
 
-    return proj_features.to_dict(orient='records')
+    return proj_features
