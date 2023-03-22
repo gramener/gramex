@@ -1,6 +1,5 @@
-{
-  "project_complexity": 9,
-  "gramex_complexity": 495,
-  "total_complexity": 504,
-  "gramex_complexity_percent": 98.21
-}
+[{
+  "py": 9,
+  "js": 0,
+  "gramex": 495
+}]

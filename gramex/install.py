@@ -825,7 +825,7 @@ def complexity(args, kwargs) -> dict:
         app_log.warning('This is not a Gramex project')
         is_gramex_project = False
 
-    result = {'project_complexity': project_complexity}
+    result = {'py': project_complexity}
 
     # Sum up cyclomatic complexity of Gramex features used
     if not is_gramex_project:
@@ -848,8 +848,9 @@ def complexity(args, kwargs) -> dict:
             used.add(codepath)
 
     gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
-    result['gramex_complexity'] = gramex_complexity
-    result['total_complexity'] = project_complexity + gramex_complexity
-    result['gramex_complexity_percent'] = round(100 * gramex_complexity / result['total_complexity'], 2)
+    result['js'] = 0
+    result['gramex'] = gramex_complexity
 
-    return result
+    import pandas as pd
+
+    return pd.DataFrame([result])
