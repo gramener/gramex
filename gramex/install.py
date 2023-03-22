@@ -796,17 +796,18 @@ def features(args, kwargs) -> dict:
             - feature: The name of the feature (e.g., the name of the URL handler)
             - count: The number of times the feature is used in the gramex app.
     """
+    import pandas as pd
 
-    project_path = os.getcwd() if len(args) == 0 else args[0]
+    project_yaml = os.path.join(os.getcwd() if len(args) == 0 else args[0], 'gramex.yaml')
 
     # Get config file location
     if 'conf' in kwargs:
         confpath = kwargs.conf
-    elif os.path.exists(os.path.join(project_path, 'gramex.yaml')):
-        confpath = os.path.abspath('gramex.yaml')
+    elif os.path.exists(project_yaml):
+        confpath = project_yaml
     else:
-        app_log.error(f'No gramex.yaml found in {project_path}')
-        return {'features': None}
+        app_log.error(f'Missing {project_yaml}')
+        return
 
     # Load the feature mapping from cache
     features = gramex.cache.open("gramexfeatures.csv", rel=True).set_index(["type", "name"])[
@@ -814,17 +815,17 @@ def features(args, kwargs) -> dict:
     ]
     # Load the gramex.yaml configuration
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
-    proj_features= Counter()
+    proj_features = Counter({(type, feature): 0 for ((type, _name), feature) in features.items()})
     try:
         app = gramex.config.PathConfig(confpath)
         conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
     except Exception as e:  # noqa: B902 capture load errors as a "feature"
         app_log.exception(str(e))
-        return {'features': None}
+        return
 
     # If the configuration is not a dictionary, return an empty result
     if not isinstance(conf, dict):
-        return {'features': None}
+        return
 
     # List the features used. TODO: Improve this using configuration
     for url in conf.get('url', {}).values():
@@ -853,7 +854,7 @@ def features(args, kwargs) -> dict:
             proj_features[('SVC', features['SVC'][name])] += 1
 
     # Create features table
-    import pandas as pd
+
     proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
     proj_features.columns = ['type', 'feature', 'count']
 

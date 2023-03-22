@@ -1,8 +1,0 @@
-[
-  { "type": "MS"    , "feature": "FileHandler"  , "count": 2 },
-  { "type": "KWARG" , "feature": "Headers"      , "count": 2 },
-  { "type": "SVC"   , "feature": "Microservice" , "count": 2 },
-  { "type": "SVC"   , "feature": "Logging"      , "count": 1 },
-  { "type": "SVC"   , "feature": "Apps"         , "count": 1 },
-  { "type": "SVC"   , "feature": "Schedule"     , "count": 1 }
-]
