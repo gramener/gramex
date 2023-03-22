@@ -15,6 +15,7 @@ import datetime
 import requests
 from shutil import which
 from pathlib import Path
+from collections import Counter
 
 # B404:import_subprocess only developers can access this, not users
 from subprocess import Popen, check_output, CalledProcessError  # nosec B404
@@ -155,6 +156,9 @@ license: |
     gramex license                  # Show Gramex license
     gramex license accept           # Accept Gramex license
     gramex license reject           # Reject Gramex license
+
+features: |
+    gramex features                 # Show Gramex features used in current project
 '''
 # B506:yaml_load yaml.load is safe since it only reads the string above, not user-created content
 usage = yaml.load(usage, Loader=AttrDictYAMLLoader)  # nosec B506
@@ -772,3 +776,86 @@ def license(args, kwargs):
         gramex.license.reject()
     else:
         app_log.error(f'Invalid command license {args[0]}')
+
+
+def features(args, kwargs) -> dict:
+    """
+    This function extracts feature information from a gramex.yaml file and returns
+    a dictionary with a Pandas DataFrame containing information about the features
+    used in the gramex application.
+
+    Args:
+        args: This function doesn't use any arguments.
+        kwargs: A dictionary that can contain a 'conf' key that specifies the path
+            to the gramex.yaml file. If 'conf' is not specified, the function will
+            use the current working directory.
+
+    Returns:
+        A dictionary containing a Pandas DataFrame with the following columns:
+            - type: The type of feature (e.g., 'MS' for a URL handler)
+            - feature: The name of the feature (e.g., the name of the URL handler)
+            - count: The number of times the feature is used in the gramex app.
+    """
+    import pandas as pd
+
+    project_yaml = os.path.join(os.getcwd() if len(args) == 0 else args[0], 'gramex.yaml')
+
+    # Get config file location
+    if 'conf' in kwargs:
+        confpath = kwargs.conf
+    elif os.path.exists(project_yaml):
+        confpath = project_yaml
+    else:
+        app_log.error(f'Missing {project_yaml}')
+        return
+
+    # Load the feature mapping from cache
+    features = gramex.cache.open("gramexfeatures.csv", rel=True).set_index(["type", "name"])[
+        "feature"
+    ]
+    # Load the gramex.yaml configuration
+    base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
+    proj_features = Counter({(type, feature): 0 for ((type, _name), feature) in features.items()})
+    try:
+        app = gramex.config.PathConfig(confpath)
+        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
+    except Exception as e:  # noqa: B902 capture load errors as a "feature"
+        app_log.exception(str(e))
+        return
+
+    # If the configuration is not a dictionary, return an empty result
+    if not isinstance(conf, dict):
+        return
+
+    # List the features used. TODO: Improve this using configuration
+    for url in conf.get('url', {}).values():
+        if not isinstance(url, dict):
+            continue
+        name = url.get('handler', '').replace('gramex.handlers.', '')
+        if name in features['MS']:
+            proj_features[('MS', features['MS'][name])] += 1
+        else:
+            proj_features[('ERR-MS', name)] += 1
+
+        if 'cache' in url:
+            proj_features[('KWARG', 'cache')] += 1
+
+        url_kwargs = url.get('kwargs', {})
+        for key in url_kwargs:
+            if key not in features['KWARG']:
+                continue
+            proj_features[('KWARG', features['KWARG'][key])] += 1
+
+    # List the services used
+    for service in conf.keys():
+        # If the service is conditional, e.g. `log if condition`, take just the first part
+        name = service.split()[0]
+        if name in features['SVC']:
+            proj_features[('SVC', features['SVC'][name])] += 1
+
+    # Create features table
+
+    proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
+    proj_features.columns = ['type', 'feature', 'count']
+
+    return proj_features
