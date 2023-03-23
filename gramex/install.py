@@ -925,14 +925,14 @@ def complexity(args, kwargs) -> dict:
     # Calculate JS complexity here 
 
     # run command "node ../complexity-js/index.js" subprocess and capture the output
-    jspth = os.path.abspath("../../../complexity-js/index.js")
-    print("jspth : ", jspth)
-    output = subprocess.check_output(['node', jspth, project_path])
-    output_str = output.decode('utf-8')
-    escomplexity = int(output_str.split("\n")[-2].strip())
+    # jspth = os.path.abspath("../../../complexity-js/index.js")
+    # print("jspth : ", jspth)
+    # output = subprocess.check_output(['node', jspth, project_path])
+    # output_str = output.decode('utf-8')
+    # escomplexity = int(output_str.split("\n")[-2].strip())
     # output_io = io.StringIO(output_str)
     # jsComplexityDF = pd.read_csv(output_io, sep='\t', header=None, names=['complexity', 'file'])
-
+    escomplexity = 0
     return pd.DataFrame({
         'py': [py_complexity],
         'js': [escomplexity],
