@@ -26,6 +26,7 @@ tests/watcher.txt
 !tests/*.xlsx
 !testlib/**/*.csv
 !testlib/*.xlsx
+!pytest/**/expected.csv
 !gramex/apps/**/*.csv
 !gramex/apps/guide/**/*.xlsx
 !gramex/gramexfeatures.csv
