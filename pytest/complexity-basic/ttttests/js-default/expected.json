@@ -1,0 +1,19 @@
+[
+  { "complexity": 2, "path": "add.js", "type": "complexity" },
+  {
+    "complexity": 2,
+    "path": "add.mjs",
+    "type": "complexity"
+  },
+  {
+    "complexity": 2,
+    "path": "subdir\\add.js",
+    "type": "complexity"
+  },
+  {
+    "complexity": 2,
+    "path": "add.ts",
+    "type": "estimate"
+  },
+  { "complexity": 8, "path": "", "type": "total" }
+]
