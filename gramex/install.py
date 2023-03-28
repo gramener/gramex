@@ -861,7 +861,6 @@ def complexity(args, kwargs) -> dict:
     import mccabe
     import pandas as pd
     import re
-    import io
     import subprocess
 
     project_path = os.getcwd() if len(args) == 0 else args[0]
@@ -922,22 +921,16 @@ def complexity(args, kwargs) -> dict:
                     used.add(gramex_code['codepath'])
     gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
 
-    # Calculate JS complexity here 
-
-    # run command "node ../complexity-js/index.js" subprocess and capture the output
-    # jspth = os.path.abspath("../../../complexity-js/index.js")
-    # print("jspth : ", jspth)
-    # output = subprocess.check_output(['node', jspth, project_path])
-    # output_str = output.decode('utf-8')
-    # escomplexity = int(output_str.split("\n")[-2].strip())
-    # output_io = io.StringIO(output_str)
-    # jsComplexityDF = pd.read_csv(output_io, sep='\t', header=None, names=['complexity', 'file'])
-    escomplexity = 0
-    return pd.DataFrame({
-        'py': [py_complexity],
-        'js': [escomplexity],
-        'gramex': [gramex_complexity],
-    })
+    # Calculate JS complexity
+    output = subprocess.check_output(['npx', '@gramex/escomplexity'], cwd=project_path, shell=True)
+    es_complexity = int(output.decode('utf-8').split('\n')[-2].strip())
+    return pd.DataFrame(
+        {
+            'py': [py_complexity],
+            'js': [es_complexity],
+            'gramex': [gramex_complexity],
+        }
+    )
 
 
 def _gramex_yaml_path(folder, kwargs):
