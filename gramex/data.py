@@ -59,6 +59,7 @@ def filter(
     args: dict = {},
     meta: dict = {},
     engine: str = None,
+    join: str = None,
     table: str = None,
     ext: str = None,
     id: List[str] = None,
@@ -313,7 +314,7 @@ def filter(
                 data = gramex.cache.query(table, engine, [table])
                 return _filter_frame(transform(data), meta, controls, args, argstype)
             else:
-                return _filter_db(engine, table, meta, controls, args, argstype)
+                return _filter_db(engine, join, table, meta, controls, args, argstype)
         else:
             raise ValueError('No table: or query: specified')
     else:
@@ -1679,6 +1680,7 @@ def _filter_frame(
 
 def _filter_db(
     engine: str,
+    join: dict,
     table: str,
     meta: dict,
     controls: dict,
@@ -1698,6 +1700,41 @@ def _filter_db(
         argstype: optional dict that specifies `args` type and behavior.
         id: list of keys specific to data using which values can be updated
     '''
+
+    def get_joins(table, join):
+        tables = [table]
+        if not join:
+            return sa.select(tables)
+
+        cols = [col.label(f"{table.name}_{col.name}") for col in table.columns]
+        join = json.loads(join) or {}
+        tables_map = {}
+
+        for t in join.keys():
+            tbl = get_table(engine, t)
+            tables = [tbl]
+            tables_map[t] = tbl
+            cols += [col.label(f"{table.name}_{col.name}") for col in tbl.columns]
+
+        query = sa.select(*cols)
+
+        # Establish an explicit left side by setting the main table as the base
+        query = query.select_from(table)
+
+        for t, extras in join.items():
+            joinAttr = [tables_map[t]]
+            if ("column" in extras):
+                condition = sa.text([f"{k}=={v}" for k, v in extras["column"].items()][0])
+                joinAttr.append(condition)
+
+            query = query.join(
+                *joinAttr,
+                isouter="type" in extras and extras["type"].lower() in ["left", "outer"],
+            )
+
+        return query
+
+
     table = get_table(engine, table)
     cols = table.columns
     colslist = cols.keys()
@@ -1707,7 +1744,9 @@ def _filter_db(
     elif source == 'update':
         query = sa.update(table)
     else:
-        query = sa.select([table])
+        # query =  sa.select([table])
+        query = get_joins(table, join)
+        
     cols_for_update = {}
     cols_having = []
     for key, vals in args.items():
