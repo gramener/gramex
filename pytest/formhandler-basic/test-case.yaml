@@ -1,0 +1,6 @@
+kwargs:
+  url: ""
+  table: "sales"
+expected: "SELECT * FROM sales"
+formatting:
+  sale_date: to_datetime

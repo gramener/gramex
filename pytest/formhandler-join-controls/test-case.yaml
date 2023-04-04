@@ -1,0 +1,29 @@
+kwargs:
+  url: ""
+  table: sales
+  join:
+    products:
+      type: inner
+      column:
+        products.id: sales.product_id
+    customers:
+      type: left
+      column:
+        sales.customer_id: customers.id
+args:
+  _c:
+  - "id|count"
+  _by:
+  - "customer_id"
+  customer_id>:
+  - '40'
+expected: >
+  SELECT sales.id AS sales_id,
+    customer.id AS customer_id,
+    count(customer.id) as 'id|count'
+  FROM sales
+    JOIN products ON products.id = sales.product_id
+    LEFT OUTER JOIN customers ON sales.customer_id = customers.id
+  WHERE customer.id > 40 GROUP BY customer.id
+formatting:
+  sales_sale_date: to_datetime

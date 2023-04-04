@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import pandas as pd
 import dbutils
 from pandas.testing import assert_frame_equal as afe
-import json
+from glob import glob
 
 
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -16,65 +16,6 @@ sales_join_data: pd.DataFrame = gramex.cache.open(sales_join_file, sheet_name="s
 customers_data: pd.DataFrame = gramex.cache.open(sales_join_file, sheet_name="customers")
 products_data: pd.DataFrame = gramex.cache.open(sales_join_file, sheet_name="products")
 
-results = [{
-    "kwargs" : {
-      "url": "",
-      "table": "sales",
-    },
-    "expected": "SELECT * FROM sales",
-    "formatting": {
-        "sale_date": pd.Timestamp,
-    }
-},{
-    "kwargs" : {
-        "url": "",
-        "table": "sales",
-        "join": json.dumps({
-            "products": {
-                "type": "inner",
-                "column": {"products.id": "sales.product_id"},
-            },
-            "customers": {
-                "type": "left",
-                "column": {"sales.customer_id": "customers.id"},
-            },
-        }),
-    },
-    "expected": """
-      SELECT
-        sales.id              AS sales_id,
-        sales.customer_id     AS sales_customer_id,
-        sales.product_id      AS sales_product_id,
-        sales.sale_date       AS sales_sale_date,
-        sales.amount          AS sales_amount,
-        sales.city            AS sales_city,
-        products.id           AS sales_id,
-        products.name         AS sales_name,
-        products.price        AS sales_price,
-        products.manufacturer AS sales_manufacturer,
-        customers.id          AS sales_id,
-        customers.name        AS sales_name,
-        customers.city        AS sales_city       
-      FROM sales
-      JOIN products ON products.id==sales.product_id
-      LEFT OUTER JOIN customers ON sales.customer_id==customers.id
-    """,
-    "formatting": {
-        "sales_sale_date": pd.Timestamp,
-    }
-# },{
-#     "kwargs" : {
-#         "url": "",
-#         "table": "sales",
-#         "join": json.dumps({
-#             "products": {
-#                 "type": "inner",
-#             },
-#             "customers": {},
-#         }),
-#     },
-#     "expected": 4,
-}]
 
 @contextmanager
 def sqlite():
@@ -95,13 +36,20 @@ db_setups = [
 ]
 
 
-@pytest.mark.parametrize("result,db_setup", product(results, db_setups))
+@pytest.mark.parametrize(
+    "result,db_setup", product(glob(os.path.join(folder, "formhandler-*", "*.yaml")), db_setups)
+)
 def test_formhandler_join(result, db_setup):
-    kwargs = result["kwargs"]
+    resJson = gramex.cache.open(result)
+    kwargs, formatting = resJson["kwargs"], resJson["formatting"]
+    args = []
+    if 'args' in resJson:
+        args = resJson['args']
     with db_setup() as url:
         kwargs["url"] = url
-        actual = gramex.data.filter(args=[], meta={}, **kwargs)
-        expected = pd.read_sql(result["expected"], url)
-        for k, v in result["formatting"].items():
-            expected[k] = expected[k].apply(v)
+        expected = pd.read_sql(resJson["expected"], url)
+        actual = gramex.data.filter(args=args, meta={}, **kwargs)
+        for k, v in formatting.items():
+            fun = getattr(pd, v)
+            expected[k] = expected[k].apply(fun)
         afe(expected, actual)
