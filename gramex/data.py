@@ -1707,7 +1707,6 @@ def _filter_db(
             return sa.select(tables)
 
         cols = [col.label(f"{table.name}_{col.name}") for col in table.columns]
-        join = json.loads(join) or {}
         tables_map = {}
 
         for t in join.keys():
@@ -1724,7 +1723,7 @@ def _filter_db(
         for t, extras in join.items():
             joinAttr = [tables_map[t]]
             if ("column" in extras):
-                condition = sa.text([f"{k}=={v}" for k, v in extras["column"].items()][0])
+                condition = sa.text([f"{k}={v}" for k, v in extras["column"].items()][0])
                 joinAttr.append(condition)
 
             query = query.join(
