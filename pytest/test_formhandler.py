@@ -27,18 +27,47 @@ def sqlite():
     )
     dbutils.sqlite_drop_db("test_formhandler_join.db")
 
+@contextmanager
+def mysql():
+    server = os.environ.get('MYSQL_SERVER', 'localhost')
+    yield dbutils.mysql_create_db(
+        server,
+        "test_formhandler_join",
+        sales=sales_join_data,
+        customers=customers_data,
+        products=products_data,
+    )
+    dbutils.mysql_drop_db(server, "test_formhandler_join")
+
+
+@contextmanager
+def postgres():
+    server = os.environ.get('POSTGRES_SERVER', 'localhost')
+    yield dbutils.postgres_create_db(
+        server,
+        "test_formhandler_join",
+        sales=sales_join_data,
+        customers=customers_data,
+        products=products_data,
+    )
+    dbutils.postgres_drop_db(server, "test_formhandler_join")
+
+# @contextmanager
+# def dataframe():
+#     yield {'url': sales_join_data.copy()}
+
 
 db_setups = [
     # dataframe,
     sqlite,
-    # mysql,
-    # postgres,
+    mysql,
+    postgres,
 ]
 
 
 @pytest.mark.parametrize(
     "result,db_setup",
-    product(glob(os.path.join(folder, "formhandler-*-contr*", "*.yaml")), db_setups),
+    product(glob(os.path.join(folder, "formhandler-*", "*.yaml")), db_setups),
 )
 def test_formhandler_join(result, db_setup):
     resJson = gramex.cache.open(result)
