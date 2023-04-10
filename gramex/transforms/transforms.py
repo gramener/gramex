@@ -768,6 +768,7 @@ _transform_direct_vars = {
     'user': '(handler.current_user or {}).get("id", "")',
     'session': 'handler.session.get("id", "")',
     'error': 'getattr(handler, "_exception", "")',
+    'browser': 'handler.request.headers.get("User-Agent", "")',
 }
 
 # Define object keys for us as key.value. E.g. cookies.sid, user.email, etc

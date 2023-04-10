@@ -13,6 +13,7 @@ from tornado.web import create_signed_value
 from urllib.parse import urlencode, urljoin
 import gramex
 import gramex.config
+import gramex.cache
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, dbutils, in_
 
@@ -70,6 +71,8 @@ class TestSession(TestGramex):
 
 
 class AuthBase(TestGramex):
+    check_userlog = True
+
     @classmethod
     def setUpClass(cls):
         cls.session = requests.Session()
@@ -120,12 +123,20 @@ class AuthBase(TestGramex):
         url = server.base_url + '/auth/logout'
         return self.session.get(url, timeout=10, **self.redirect_kwargs(query_next, header_next))
 
+    def last_userlog(self):
+        query = 'SELECT * FROM userlog WHERE ROWID IN (SELECT max(ROWID) FROM userlog)'
+        row = gramex.data.filter(gramex.conf.storelocations.userlog.url, query=query).iloc[0]
+        return row.to_dict()
+
     def login_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
         r = self.login(*args, **kwargs)
         eq_(r.status_code, OK)
         self.assertNotRegexpMatches(r.text, 'error code')
         eq_(r.url, urljoin(server.base_url, check_next))
+        if self.check_userlog:
+            expected = {'event': 'login', 'uri': self.url[len(server.base_url) :], 'user': args[0]}
+            ok_(expected.items() <= self.last_userlog().items())
 
     def logout_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
@@ -133,12 +144,17 @@ class AuthBase(TestGramex):
         r = self.logout(**kwargs)
         eq_(r.status_code, OK)
         eq_(r.url, urljoin(server.base_url, check_next))
+        if self.check_userlog:
+            expected = {'event': 'logout'}
+            ok_(expected.items() <= self.last_userlog().items())
 
     def unauthorized(self, *args, **kwargs):
         r = self.login(*args, **kwargs)
         eq_(r.status_code, UNAUTHORIZED)
         self.assertRegexpMatches(r.text, 'error code')
         eq_(r.url, self.url)
+        expected = {'event': 'fail'}
+        ok_(expected.items() <= self.last_userlog().items())
 
     def check_direct_post_redirect(self, *mapping):
         # If we call the POST method WITHOUT calling the GET, the redirect still works
@@ -513,6 +529,9 @@ class TestAuthActive(AuthBase):
 
 
 class TestUserKey(AuthBase):
+    # When we chance the user key, we can't retrieve handler.current_user! So skip userlog check
+    check_userlog = False
+
     @classmethod
     def setUpClass(cls):
         AuthBase.setUpClass()
@@ -645,7 +664,7 @@ class DBAuthBase(AuthBase):
     def test_empty(self):
         # issue: 399 DBAuth shouldn't accept empty username or password
         falsy = ['', None, 'abc']
-        for (user, password) in [(x, y) for x in falsy for y in falsy]:
+        for user, password in [(x, y) for x in falsy for y in falsy]:
             r = self.login(user, password)
             # for valid but non-existent username, password
             if user and password:

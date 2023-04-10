@@ -118,10 +118,6 @@ log:
       level: DEBUG
       propagate: false
       handlers: [gramex-console, gramex-logfile]
-    gramex.user:
-      level: INFO
-      propagate: false
-      handlers: [user]
     gramex.alert:
       level: INFO
       propagate: false
@@ -140,6 +136,11 @@ log:
     # Watchdog DEBUG logs are verbose. Restrict to INFO
     watchdog:
       level: INFO
+    # DEPRECATED. authhandler.py used to log login/logout as CSV. Now we use storelocations
+    gramex.user:
+      level: INFO
+      propagate: false
+      handlers: [user]
   handlers:
     none:
       class: logging.NullHandler
@@ -149,7 +150,7 @@ log:
     gramex-console:
       class: logging.StreamHandler
       formatter: gramex-console
-    # Used by AuthHandler to log user events as a CSV file
+    # DEPRECATED. authhandler.py used to log login/logout as CSV. Now we use storelocations
     user:
       class: gramex.config.TimedRotatingCSVHandler
       filename: $GRAMEXDATA/logs/user.csv
@@ -335,6 +336,21 @@ storelocations:
         type: TEXT
         primary_key: true
       value: TEXT
+  # Stores user log information. See gramex/authhandler.py
+  userlog:
+    url: sqlite:///$GRAMEXDATA/auth.user.db
+    table: userlog
+    columns:
+      event: TEXT # login/logout/fail
+      # Except event, these values must be keys for transforms.build_log_info()
+      port: INTEGER # gramex.conf.app.listen.port
+      uri: TEXT # handler.request.uri
+      name: TEXT # handler.name
+      class: TEXT # handler.__class__.__name__
+      datetime: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SSZ)
+      user: TEXT # handler.current_user.id
+      ip: TEXT # user IP address
+      browser: TEXT # headers.user-agent
   # Stores one-time passwords and API keys. See gramex/basehandler.py
   otp:
     url: sqlite:///$GRAMEXDATA/auth.recover.db
