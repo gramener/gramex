@@ -378,7 +378,7 @@ C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\README.md: OK
 C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
-C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: Empty file
+C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\loc.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\npm-audit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: OK
@@ -635,10 +635,10 @@ C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 Known viruses: 8661216
 Engine version: 0.105.1
 Scanned directories: 99
-Scanned files: 603
+Scanned files: 604
 Infected files: 0
-Data scanned: 9.68 MB
+Data scanned: 9.70 MB
 Data read: 4.70 MB (ratio 2.06:1)
-Time: 36.750 sec (0 m 36 s)
-Start Date: 2023:04:10 18:53:58
-End Date:   2023:04:10 18:54:34
+Time: 47.401 sec (0 m 47 s)
+Start Date: 2023:04:10 20:37:35
+End Date:   2023:04:10 20:38:22

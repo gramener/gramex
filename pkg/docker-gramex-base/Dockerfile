@@ -42,7 +42,7 @@ RUN \
     # Update conda to the latest (hopefully secure) packages
     conda update --all --yes && \
     # Clean package downloads, metadata, etc. to avoid container scan vulnerabilities
-    conda clean --all --yes && \
+    conda clean --all --force-pkgs-dirs --yes && \
     find "$CONDA_DIR" -follow -type f \( -iname '*.a' -o -iname '*.pyc' -o -iname '*.js.map' \) -delete && \
     # Don't auto-update conda whenever user installs a package. Only on `conda update conda`
     conda config --set auto_update_conda False && \

@@ -54,7 +54,7 @@ gramex uninstall              Uninstall an app
 gramex complexity             Calculate cyclomatic complexity of the project
 '''
 
-__version__ = '1.89.0'
+__version__ = '1.89.1'
 
 paths = AttrDict()  # Paths where configurations are stored
 conf = AttrDict()  # Final merged configurations
