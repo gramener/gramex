@@ -861,6 +861,7 @@ def complexity(args, kwargs) -> dict:
     import mccabe
     import pandas as pd
     import re
+    import subprocess
 
     project_path = os.getcwd() if len(args) == 0 else args[0]
     project_yaml = _gramex_yaml_path(project_path, kwargs)
@@ -919,11 +920,17 @@ def complexity(args, kwargs) -> dict:
                 if yamlpaths[key] in yaml_value.split('|'):
                     used.add(gramex_code['codepath'])
     gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
-    return pd.DataFrame({
-        'py': [py_complexity],
-        'js': [0],
-        'gramex': [gramex_complexity],
-    })
+
+    # Calculate JS complexity
+    output = subprocess.check_output(['npx', '@gramex/escomplexity'], cwd=project_path, shell=True)
+    es_complexity = int(output.decode('utf-8').split('\n')[-2].strip())
+    return pd.DataFrame(
+        {
+            'py': [py_complexity],
+            'js': [es_complexity],
+            'gramex': [gramex_complexity],
+        }
+    )
 
 
 def _gramex_yaml_path(folder, kwargs):
