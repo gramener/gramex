@@ -40,6 +40,8 @@ tests/login.csv
 tests/authtemplate.html
 tests/translate.xlsx
 
+!pytest/**/expected.csv
+
 *.ppt*
 !testlib/input.pptx
 !testlib/input2.pptx

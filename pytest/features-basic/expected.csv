@@ -1,0 +1,39 @@
+type,feature,count
+MS,CaptureHandler,0
+MS,ComicHandler,0
+MS,FileHandler,2
+MS,DriveHandler,0
+MS,SocialHandlers,0
+MS,FilterHandler,0
+MS,FormHandler,4
+MS,FunctionHandler,0
+MS,AuthHandlers,0
+MS,JSONHandler,0
+MS,MLHandler,0
+MS,MLPredictor,0
+MS,OpenAPIHandler,0
+MS,PPTXHandler,0
+MS,ProcessHandler,0
+MS,ProxyHandler,0
+MS,WebSocketHandler,0
+MS,Deprecated,0
+KWARG,Access Control,0
+KWARG,Security,0
+KWARG,Error handling,0
+KWARG,Headers,2
+KWARG,Logging,0
+KWARG,Methods,0
+KWARG,Rate limiting,0
+KWARG,Redirection,0
+KWARG,Transform,0
+SVC,Microservice,2
+SVC,Import,0
+SVC,Deprecated,0
+SVC,Apps,1
+SVC,Variables,0
+SVC,Email,0
+SVC,Schedule,1
+SVC,Logging,1
+SVC,Alert,0
+SVC,Watch,0
+SVC,SMS,0
