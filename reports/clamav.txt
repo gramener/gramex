@@ -13,6 +13,7 @@ C:\site\gramener.com\viz\async-gramex\.pytest_cache\README.md: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\lastfailed: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\nodeids: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\stepwise: OK
+C:\site\gramener.com\viz\async-gramex\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 C:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
 C:\site\gramener.com\viz\async-gramex\commitlint.config.js: OK
@@ -259,6 +260,8 @@ C:\site\gramener.com\viz\async-gramex\gramex\deploy.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\download.vega.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\favicon.ico: OK
 C:\site\gramener.com\viz\async-gramex\gramex\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\gramex\gramexfeatures.csv: OK
+C:\site\gramener.com\viz\async-gramex\gramex\gramexsize.csv: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\400.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\401.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\403.html: OK
@@ -344,12 +347,38 @@ C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-test\setup.sh: OK
 C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.py: OK
 C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pyproject.toml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\.gitignore: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\expected.json: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\increase_complexity.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\index.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\node_modules: Excluded
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\site-packages\lorem.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\add.cjs: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\add.mjs: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\add.ts: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\site-packages\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-default\subdir\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\js-with-error\withError.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-basic\subfolder\test.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-error\.gitignore: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-error\expected.json: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-error\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-error\increase_complexity.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity-error\invalid.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\dbutils.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features-all\expected.csv: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features-all\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features-basic\expected.csv: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features-basic\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\test_cli.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\README.md: OK
 C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
-C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: OK
+C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: Empty file
 C:\site\gramener.com\viz\async-gramex\reports\loc.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\npm-audit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: OK
@@ -437,6 +466,7 @@ C:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
+C:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
 C:\site\gramener.com\viz\async-gramex\tests\dir\.hidden: Empty file
@@ -487,6 +517,7 @@ C:\site\gramener.com\viz\async-gramex\tests\dir\template-handler.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\template.sub.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\template.txt: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\text.txt: OK
+C:\site\gramener.com\viz\async-gramex\tests\drive\.meta.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\error-404.json: OK
 C:\site\gramener.com\viz\async-gramex\tests\events.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\filemanager\.gitignore: OK
@@ -583,6 +614,9 @@ C:\site\gramener.com\viz\async-gramex\tests\test_uploadhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_watcher.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_websockethandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\throwerror.py: OK
+C:\site\gramener.com\viz\async-gramex\tests\titanic\config.json: OK
+C:\site\gramener.com\viz\async-gramex\tests\titanic\data.h5: OK
+C:\site\gramener.com\viz\async-gramex\tests\titanic\model.pkl: OK
 C:\site\gramener.com\viz\async-gramex\tests\titanic.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\a.ts: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\b.ts: OK
@@ -598,13 +632,13 @@ C:\site\gramener.com\viz\async-gramex\tests\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8651928
+Known viruses: 8661216
 Engine version: 0.105.1
-Scanned directories: 87
-Scanned files: 571
+Scanned directories: 99
+Scanned files: 603
 Infected files: 0
-Data scanned: 8.60 MB
-Data read: 4.15 MB (ratio 2.07:1)
-Time: 74.058 sec (1 m 14 s)
-Start Date: 2023:02:08 22:26:59
-End Date:   2023:02:08 22:28:13
+Data scanned: 9.68 MB
+Data read: 4.70 MB (ratio 2.06:1)
+Time: 36.750 sec (0 m 36 s)
+Start Date: 2023:04:10 18:53:58
+End Date:   2023:04:10 18:54:34

@@ -861,7 +861,9 @@ def complexity(args, kwargs) -> dict:
     import mccabe
     import pandas as pd
     import re
-    import subprocess
+
+    # B404:import_subprocess only used for internal Gramex scripts
+    from subprocess import check_output  # nosec B404
 
     project_path = os.getcwd() if len(args) == 0 else args[0]
     project_yaml = _gramex_yaml_path(project_path, kwargs)
@@ -922,7 +924,9 @@ def complexity(args, kwargs) -> dict:
     gramex_complexity = gramexsize.set_index('codepath')['complexity'][list(used)].sum()
 
     # Calculate JS complexity
-    output = subprocess.check_output(['npx', '@gramex/escomplexity'], cwd=project_path, shell=True)
+    # B602:subprocess_popen_with_shell_equals_true and
+    # B607:start_process_with_partial_path are safe to skip since this is a Gramex internal cmd
+    output = check_output(['npx', '@gramex/escomplexity'], cwd=project_path, shell=True)  # nosec
     es_complexity = int(output.decode('utf-8').split('\n')[-2].strip())
     return pd.DataFrame(
         {

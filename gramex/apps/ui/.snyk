@@ -2,6 +2,13 @@
 version: v1.19.0
 ignore:
 
+  # get-google-fonts impacts only the installation of comicgen. No runtime impact.
+  SNYK-JS-REQUEST-3361831:
+    - '*':
+        reason: No fix. Await get-google-fonts upgrade
+        expires: 2030-01-01T00:00:00.000Z
+        created: 2021-07-24T00:00:00.000Z
+
   # @vue/cli-service has vulnerabilities that only affects projects using Vue. Known risk.
   # Since this only impacts developer-controlled code, it's acceptable
   SNYK-JS-ANSIREGEX-1583908:
