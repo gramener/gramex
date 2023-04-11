@@ -32,8 +32,8 @@ test () {
 }
 
 stats () {
-  # Get complexity of each part of Gramex and Gramex Enterprise. Save in reports/
-  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > reports/gramexsize.csv
+  # Get complexity of each part of Gramex and Gramex Enterprise. Save in gramex/
+  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > gramex/gramexsize.csv
 
   # Count number of lines of code
   PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
