@@ -103,7 +103,7 @@ Project path:      C:\site\gramener.com\viz\async-gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 729 dependencies for known issues, no vulnerable paths found.
+✔ Tested 683 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.

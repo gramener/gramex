@@ -12,8 +12,8 @@ clean () {
 }
 
 reformat () {
-  git ls-files | grep -E '\.py$' | xargs black --skip-string-normalization --line-length=99
-  git ls-files | grep -E '\.(js|jsx|vue|ts|css|scss|sass|yaml|md)$' | xargs npx prettier --write
+  git ls-files | grep -E '\.py$' | grep -v pytest.complexity-error.invalid.py | xargs black --skip-string-normalization --line-length=99
+  git ls-files | grep -E '\.(js|jsx|vue|ts|css|scss|sass|yaml|md)$' | xargs npx -n200 prettier --write
 }
 
 lint () {

@@ -116,7 +116,7 @@ url:
     pattern: /$YAMLURL/drivedemo
     handler: DriveHandler
     kwargs:
-      path: $GRAMEXDATA/apps/guide/drive-data/  # ... save files here
+      path: $GRAMEXDATA/apps/guide/drive-data/ # ... save files here
   comichandler/comics:
     pattern: /$YAMLURL/comics
     handler: ComicHandler
@@ -782,16 +782,16 @@ sms:
 
 alert:
   alert-schedule:
-    days: '*'                     # Send email every day
-    hours: '6, 12'                # at 6am and 12noon
-    minutes: 0                    # at the 0th minute, i.e. 6:00am and 12:00pm
-    utc: true                     # GMT (or UTC). Set false for local server time
+    days: "*" # Send email every day
+    hours: "6, 12" # at 6am and 12noon
+    minutes: 0 # at the 0th minute, i.e. 6:00am and 12:00pm
+    utc: true # GMT (or UTC). Set false for local server time
     to: admin@example.org
     subject: Scheduled alert
     body: This email will be scheduled and sent as long as Gramex is running.
 
-watch:                                  # Define files to watch
-    data-files:                         # Create a watched named data-files
-        paths:                          # Watch for these files
-            - data.xslx                 # - data.xlsx from where Gramex was started
-        on_modified: module.function    # When file is changed, call module.function(event)
+watch: # Define files to watch
+  data-files: # Create a watched named data-files
+    paths: # Watch for these files
+      - data.xslx # - data.xlsx from where Gramex was started
+    on_modified: module.function # When file is changed, call module.function(event)
