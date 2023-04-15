@@ -19,10 +19,12 @@ from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
 from .openapihandler import OpenAPIHandler
+from .commenthandler import CommentHandler
 
 # Aliases
 Comic = ComicHandler
 Command = ProcessHandler
+Comment = CommentHandler
 Data = FormHandler
 Facebook = FacebookGraphHandler
 File = DirectoryHandler = FileHandler
@@ -47,6 +49,8 @@ __all__ = [
     'Capture',
     'CaptureHandler',
     'Command',
+    'Comment',
+    'CommentHandler',
     'Comic',
     'ComicHandler',
     'Data',

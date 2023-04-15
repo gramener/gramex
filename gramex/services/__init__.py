@@ -593,22 +593,26 @@ class GramexApp(tornado.web.Application):
         del self.wildcard_router.rules[:]
 
 
-def create_alert(name, alert):
-    '''Generate the function to be run by alert() using the alert configuration'''
-
-    # Configure email service
-    if alert.get('service', None) is None:
+def get_mailer(config, context=''):
+    if config.get('service', None) is None:
         if len(info.email) > 0:
-            service = alert['service'] = list(info.email.keys())[0]
-            app_log.warning(f'alert: {name}: using first email service: {service}')
+            service = config['service'] = list(info.email.keys())[0]
+            app_log.warning(f'{context}: using first email service: {service}')
         else:
-            app_log.error(f'alert: {name}: define an email: service to use')
-            return
-    service = alert['service']
+            app_log.error(f'{context}: define an email: service to use')
+            return None, None
+    service = config['service']
     mailer = info.email.get(service, None)
     if mailer is None:
-        app_log.error(f'alert: {name}: undefined email service: {service}')
-        return
+        app_log.error(f'{context}: undefined email service: {service}')
+        return None, None
+    return service, mailer
+
+
+def create_alert(name, alert):
+    '''Generate the function to be run by alert() using the alert configuration'''
+    # Configure email service
+    service, mailer = get_mailer(alert, context=f'alert: {name}')
 
     # - Warn if to, cc, bcc exists and is not a string or list of strings. Ignore incorrect
     #    - if to: [1, 'user@example.org'], then
