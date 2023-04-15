@@ -676,11 +676,11 @@ class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         import numpy as np
 
-        if hasattr(obj, 'to_dict'):
-            # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
-            return loads(
-                obj.to_json(orient='records', date_format='iso'), object_pairs_hook=OrderedDict
-            )
+        # Detect Pandas objects without importing Pandas, which is slow
+        if hasattr(obj, 'to_json'):
+            fmt = 'index' if obj.__class__.__name__ == 'Series' else 'records'
+            # loads + to_json() is slow but reliable. Handles numpy objects, mixed types, etc.
+            return loads(obj.to_json(orient=fmt, date_format='iso'), object_pairs_hook=OrderedDict)
         elif isinstance(obj, datetime.datetime):
             # Use local timezone if no timezone is specified
             if obj.tzinfo is None:
