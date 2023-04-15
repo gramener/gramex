@@ -1076,6 +1076,28 @@ class BaseMixin:
         if ratelimit.usage >= ratelimit.limit:
             self.set_header('Retry-After', str(ratelimit.expiry))
 
+    def initialize_handler(self):
+        '''Initialize self.args and other handler attributes'''
+        # self.request.arguments does not handle unicode keys well. It returns latin-1 unicode.
+        # https://github.com/tornadoweb/tornado/issues/2733
+        # Convert this to proper unicode using UTF-8 and store in self.args
+        self.args = {}
+        for k in self.request.arguments:
+            key = k.encode('latin-1').decode('utf-8')
+            # Invalid unicode (e.g. ?x=%f4) throws HTTPError. This disrupts even
+            # error handlers. So if there's invalid unicode, log & continue.
+            try:
+                self.args[key] = self.get_arguments(k)
+            except HTTPError:
+                app_log.exception(f'{self.name}: Invalid unicode ?{k}')
+        self._session, self._session_json = None, 'null'
+        if self.cache:
+            self.cachefile = self.cache()
+            self.original_get = self.get
+            self.get = self._cached_get
+        if self._set_xsrf:
+            self.xsrf_token
+
 
 class BaseHandler(RequestHandler, BaseMixin):
     '''
@@ -1084,26 +1106,7 @@ class BaseHandler(RequestHandler, BaseMixin):
     '''
 
     def initialize(self, **kwargs):
-        # self.request.arguments does not handle unicode keys well.
-        # In Py2, it returns a str (not unicode). In Py3, it returns latin-1 unicode.
-        # Convert this to proper unicode using UTF-8 and store in self.args
-        self.args = {}
-        for k in self.request.arguments:
-            key = (k if isinstance(k, bytes) else k.encode('latin-1')).decode('utf-8')
-            # Invalid unicode (e.g. ?x=%f4) throws HTTPError. This disrupts even
-            # error handlers. So if there's invalid unicode, log & continue.
-            try:
-                self.args[key] = self.get_arguments(k)
-            except HTTPError:
-                app_log.exception(f'Invalid URL argument {k}')
-
-        self._session, self._session_json = None, 'null'
-        if self.cache:
-            self.cachefile = self.cache()
-            self.original_get = self.get
-            self.get = self._cached_get
-        if self._set_xsrf:
-            self.xsrf_token
+        self.initialize_handler()
 
         # Set the method to the ?x-http-method-overrride argument or the
         # X-HTTP-Method-Override header if they exist
@@ -1363,13 +1366,7 @@ class BaseHandler(RequestHandler, BaseMixin):
 
 class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
     def initialize(self, **kwargs):
-        self._session, self._session_json = None, 'null'
-        if self.cache:
-            self.cachefile = self.cache()
-            self.original_get = self.get
-            self.get = self._cached_get
-        if self._set_xsrf:
-            self.xsrf_token
+        self.initialize_handler()
 
     @tornado.gen.coroutine
     def get(self, *args, **kwargs):
