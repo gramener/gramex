@@ -88,7 +88,7 @@ def walk(node):
     Bottom-up recursive walk through a data structure yielding a (key, value,
     node) tuple for every entry. `node[key] == value` is true in every entry.
 
-    For example::
+    For example:
 
         >>> list(walk([{'x': 1}]))
         [
@@ -96,7 +96,7 @@ def walk(node):
             (0, {'x': 1}, [{'x': 1}])   # parent: index, value, node
         ]
 
-    Circular linkage can lead to a RuntimeError::
+    Circular linkage can lead to a RuntimeError.
 
         >>> x = {}
         >>> x['x'] = x
@@ -302,7 +302,7 @@ class PathConfig(AttrDict):
     has a conflict.
 
     Like http://configure.readthedocs.org/ but supports imports not inheritance.
-    This lets us import YAML files in the middle of a YAML structure::
+    This lets us import YAML files in the middle of a YAML structure.
 
         key:
             import:
@@ -435,7 +435,7 @@ variables = setup_variables()
 
 class ConfigYAMLLoader(SafeLoader):
     '''
-    A YAML loader that loads a YAML file into an ordered AttrDict. Usage::
+    A YAML loader that loads a YAML file into an ordered AttrDict.
 
         >>> attrdict = yaml.load(yaml_string, Loader=ConfigYAMLLoader)
 
@@ -649,7 +649,7 @@ def _add_ns(config, namespace, prefix):
     '''
     Given a YAML config (basically a dict), add prefix to specified namespaces.
 
-    For example::
+    For example:
 
         >>> _add_ns({'x': 1}, '*', 'a')
         {'a.x': 1}
@@ -687,7 +687,7 @@ def load_imports(config, source, warn=None):
     `source`.)
 
     For example, if the `source` is  `base.yaml` (which has the below
-    configuration) and is loaded into `config`::
+    configuration) and is loaded into `config`.
 
         app:
             port: 20
@@ -695,13 +695,13 @@ def load_imports(config, source, warn=None):
         path: /
         import: update*.yaml    # Can be any glob, e.g. */gramex.yaml
 
-    ... and `update.yaml` looks like this::
+    ... and `update.yaml` looks like this.
 
         app:
             port: 30
             new: yes
 
-    ... then after this function is called, `config` looks like this::
+    ... then after this function is called, `config` looks like this.
 
         app:
             port: 20        # From base.yaml. NOT updated by update.yaml
@@ -712,18 +712,18 @@ def load_imports(config, source, warn=None):
     The `import:` keys are deleted. The return value contains :func:_pathstat
     values for `base.yaml` and `update.yaml` in that order.
 
-    Multiple `import:` values can be specified as a dictionary::
+    Multiple `import:` values can be specified as a dictionary.
 
         import:
             first-app: app1/*.yaml
             next-app: app2/*.yaml
 
-    To import sub-keys as namespaces, use::
+    To import sub-keys as namespaces
 
         import:
             app: {path: */gramex.yaml, namespace: 'url'}
 
-    This prefixes all keys under `url:`. Here are more examples::
+    This prefixes all keys under `url:`. Here are more examples.
 
         namespace: True             # Add namespace to all top-level keys
         namespace: url              # Add namespace to url.*
