@@ -135,7 +135,12 @@ class AuthBase(TestGramex):
         self.assertNotRegexpMatches(r.text, 'error code')
         eq_(r.url, urljoin(server.base_url, check_next))
         if self.check_userlog:
-            expected = {'event': 'login', 'uri': self.url[len(server.base_url) :], 'user': args[0]}
+            expected = {
+                'event': 'login',
+                'uri': self.url[len(server.base_url) :],
+                'user': args[0],
+                'request.method': 'POST',
+            }
             ok_(expected.items() <= self.last_userlog().items())
 
     def logout_ok(self, *args, **kwargs):
