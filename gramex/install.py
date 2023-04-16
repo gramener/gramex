@@ -779,79 +779,80 @@ def license(args, kwargs):
 
 
 def features(args, kwargs) -> dict:
-    """
-    This function extracts feature information from a gramex.yaml file and returns
-    a dictionary with a Pandas DataFrame containing information about the features
-    used in the gramex application.
+    '''
+    usage: gramex features [<path> [...]]
 
-    Args:
-        args: This function doesn't use any arguments.
-        kwargs: A dictionary that can contain a 'conf' key that specifies the path
-            to the gramex.yaml file. If 'conf' is not specified, the function will
-            use the current working directory.
+    Counts gramex features used in a project path (or current directory) from gramex.yaml.
+    Prints 3 columns:
+        - type: SVC=Service, MS=Microservice, KWARG=Config (keyword argument)
+        - feature: Feature name (e.g. FormHandler)
+        - count: Number of times the feature is used
 
-    Returns:
-        A dictionary containing a Pandas DataFrame with the following columns:
-            - type: The type of feature (e.g., 'MS' for a URL handler)
-            - feature: The name of the feature (e.g., the name of the URL handler)
-            - count: The number of times the feature is used in the gramex app.
-    """
+    Options:
+        --format [table|json|csv]   # Output format. Defaults to table
+    '''
     import pandas as pd
-
-    project_yaml = _gramex_yaml_path(os.getcwd() if len(args) == 0 else args[0], kwargs)
-    if project_yaml is None:
-        return
 
     # Load the feature mapping from cache
     features = gramex.cache.open("gramexfeatures.csv", rel=True).set_index(["type", "name"])[
         "feature"
     ]
-    # Load the gramex.yaml configuration
+
     base = gramex.config.PathConfig(os.path.join(os.path.dirname(gramex.__file__), 'gramex.yaml'))
-    proj_features = Counter({(type, feature): 0 for ((type, _name), feature) in features.items()})
-    try:
+    # Load the gramex.yaml configuration
+    usage = Counter({(type, feature): 0 for ((type, _name), feature) in features.items()})
+    parsed_count = 0
+    for folder in args or [os.getcwd()]:
+        project_yaml = os.path.join(folder, 'gramex.yaml')
         app = gramex.config.PathConfig(project_yaml)
-        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
-    except Exception as e:  # noqa: B902 capture load errors as a "feature"
-        app_log.exception(str(e))
-        return
-
-    # If the configuration is not a dictionary, return an empty result
-    if not isinstance(conf, dict):
-        return
-
-    # List the features used. TODO: Improve this using configuration
-    for url in conf.get('url', {}).values():
-        if not isinstance(url, dict):
+        # Skip if gramex.yaml is not found or empty or we're unable to parse
+        if not app:
             continue
-        name = url.get('handler', '').replace('gramex.handlers.', '')
-        if name in features['MS']:
-            proj_features[('MS', features['MS'][name])] += 1
+        parsed_count += 1
+        conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
+
+        # Convert invalid gramex.yaml (e.g. empty gramex.yaml) as an empty dict
+        conf = conf if isinstance(conf, dict) else {}
+        # List the features used. TODO: Improve this using configuration
+        for url in conf.get('url', {}).values():
+            if isinstance(url, dict):
+                name = url.get('handler', '').replace('gramex.handlers.', '')
+                # Count micro-services usage
+                if name in features['MS']:
+                    usage[('MS', features['MS'][name])] += 1
+                else:
+                    usage[('ERR-MS', name)] += 1
+                # Count kwargs: usage
+                url_kwargs = url.get('kwargs', {})
+                for key in url_kwargs:
+                    if key in features['KWARG']:
+                        usage[('KWARG', features['KWARG'][key])] += 1
+                # cache: is a special kwarg that sits outside kwargs. Count it too
+                if 'cache' in url:
+                    usage[('KWARG', 'cache')] += 1
+        # List the services used
+        for service in conf.keys():
+            # If the service is conditional, e.g. `log if condition`, take just the first part
+            name = service.split()[0]
+            if name in features['SVC']:
+                usage[('SVC', features['SVC'][name])] += 1
+
+    # Return features usage table
+    output = ''
+    if parsed_count:
+        usage = pd.DataFrame(usage.values(), index=usage.keys()).reset_index()
+        usage.columns = ['type', 'feature', 'count']
+        format = kwargs.get('format', 'table')
+        if format == 'table':
+            output = usage.to_string()
+        elif format == 'csv':
+            output = usage.to_csv(index=False, lineterminator='\n')
+        elif format == 'json':
+            output = usage.to_json(orient='records')
         else:
-            proj_features[('ERR-MS', name)] += 1
-
-        if 'cache' in url:
-            proj_features[('KWARG', 'cache')] += 1
-
-        url_kwargs = url.get('kwargs', {})
-        for key in url_kwargs:
-            if key not in features['KWARG']:
-                continue
-            proj_features[('KWARG', features['KWARG'][key])] += 1
-
-    # List the services used
-    for service in conf.keys():
-        # If the service is conditional, e.g. `log if condition`, take just the first part
-        name = service.split()[0]
-        if name in features['SVC']:
-            proj_features[('SVC', features['SVC'][name])] += 1
-
-    # Create features table
-
-    proj_features = pd.DataFrame(proj_features.values(), index=proj_features.keys()).reset_index()
-    proj_features.columns = ['type', 'feature', 'count']
-
-    return proj_features
+            app_log.error(f'--format must be [table|csv|json] not {format}')
+            return
+    return output
 
 
 def complexity(args, kwargs) -> dict:

@@ -11,14 +11,14 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_features_empty():
-    assert features(['/nonexistent'], {}) is None
+    assert features(['/nonexistent'], {}) == ''
 
 
 @pytest.mark.parametrize("root", glob(os.path.join(folder, 'features-*')))
 def test_features(root):
-    actual = features([root], {})
-    expected = gramex.cache.open(os.path.join(root, 'expected.csv'))
-    assert_frame_equal(expected, actual)
+    actual = features([root], {'format': 'csv'})
+    expected = gramex.cache.open(os.path.join(root, 'expected.csv'), 'text')
+    assert expected == actual
 
 
 @pytest.mark.parametrize("root", glob(os.path.join(folder, 'complexity-*')))
