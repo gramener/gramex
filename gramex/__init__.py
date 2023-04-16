@@ -43,6 +43,7 @@ gramex service                Windows service setup
 gramex mail                   Send email from command line
 gramex license                See Gramex license, accept or reject it
 gramex features               List features of Gramex used in the current project
+gramex complexity             Calculate cyclomatic complexity of the project
 
 Installation commands. For usage, run "gramex <command> --help"
 
@@ -51,7 +52,6 @@ gramex update                 Update an app
 gramex setup                  Run make, npm install, bower install etc on app
 gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
-gramex complexity             Calculate cyclomatic complexity of the project
 '''
 
 __version__ = '1.89.2'
@@ -116,7 +116,7 @@ def commandline(args: List[str] = None):
     '''
     commands = sys.argv[1:] if args is None else args
 
-    # t first, setup log: service at INFO to log progress. App's log: may override this later.
+    # First, setup log: service at INFO to log progress. App's log: may override this later.
     log_config = (+PathConfig(paths['source'] / 'gramex.yaml')).get('log', AttrDict())
     log_config.loggers.gramex.level = logging.INFO
     from . import services

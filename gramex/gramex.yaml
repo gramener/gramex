@@ -137,6 +137,7 @@ log:
     watchdog:
       level: INFO
     # DEPRECATED. authhandler.py used to log login/logout as CSV. Now we use storelocations
+    # Remove after 1 Jan 2024
     gramex.user:
       level: INFO
       propagate: false
@@ -151,6 +152,7 @@ log:
       class: logging.StreamHandler
       formatter: gramex-console
     # DEPRECATED. authhandler.py used to log login/logout as CSV. Now we use storelocations
+    # Remove after 1 Jan 2024
     user:
       class: gramex.config.TimedRotatingCSVHandler
       filename: $GRAMEXDATA/logs/user.csv
