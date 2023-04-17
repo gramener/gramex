@@ -3,7 +3,7 @@ import time
 from gramex.config import CustomJSONEncoder
 from .websockethandler import WebSocketHandler
 from typing import Dict, Any, Union, Optional, Awaitable
-
+from gramex.services import SMTPMailer
 
 class CommentHandler(WebSocketHandler):
     '''A WebSocketHandler that sends and receives comments.
@@ -35,6 +35,14 @@ class CommentHandler(WebSocketHandler):
         cols.setdefault('user', 'text')
         cols.setdefault('timestamp', 'float')
 
+        # setting up the email configuration
+        if email:
+            cls.mailer = SMTPMailer(
+                type=email.get('type','gmail'),
+                email=email.get('email','gramex.guide@gmail.com'),       # Replace with your email ID
+                password=email.get('password','tlpmupxnhucitpte'),          # Replace with your passsword
+            )
+
     def open(self):
         import gramex.data
         from blinker import signal
@@ -63,16 +71,27 @@ class CommentHandler(WebSocketHandler):
         args['user'] = [self.current_user.get('id', None) if self.current_user else None]
         args['timestamp'] = [time.time()]
         if message['type'] == 'post':
+            if self.email:
+                message_data = message["data"]
+                author = message_data.get("author","anonymous user")
+                receipient = message_data.get("receipient",None)
+                self.mailer.mail(
+                    to =  receipient,
+                    subject = 'New comment posted',
+                    body = f"A new comment has been posted by {author}: {message['data']['message']}"
+                )
             gramex.data.insert(**self.data, args=args)
         elif message['type'] == 'delete':
-            gramex.data.delete(**self.data, args=args)
+            gramex.data.delete(**self.data, args={"id":[message["data"]["id"]]})
         elif message['type'] == 'put':
-            gramex.data.update(**self.data, args=args)
+            updated_msg = {k: [v] for k, v in message['data'].items()}
+            gramex.data.update(**self.data, args=updated_msg)
 
         # Send email asynchronously
         # TODO mailer = get_mailer(self.email)
 
         # Send message to all clients
+        args["type"] = message['type']
         signal(self.name).send(pd.DataFrame(args))
 
         # TODO: Handle errors
