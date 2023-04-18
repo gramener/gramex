@@ -208,7 +208,7 @@ def schedule(conf: dict) -> None:
             app_log.exception(e)
 
 
-def alert(conf: dict) -> None:
+def config(conf: dict) -> None:
     '''
     Sets up the alert service
     '''
@@ -593,26 +593,84 @@ class GramexApp(tornado.web.Application):
         del self.wildcard_router.rules[:]
 
 
-def get_mailer(config, context=''):
+def get_mailer(config, name=''):
     if config.get('service', None) is None:
         if len(info.email) > 0:
             service = config['service'] = list(info.email.keys())[0]
-            app_log.warning(f'{context}: using first email service: {service}')
+            app_log.warning(f'{name}: using first email service: {service}')
         else:
-            app_log.error(f'{context}: define an email: service to use')
+            app_log.error(f'{name}: define an email: service to use')
             return None, None
     service = config['service']
     mailer = info.email.get(service, None)
     if mailer is None:
-        app_log.error(f'{context}: undefined email service: {service}')
+        app_log.error(f'{name}: undefined email service: {service}')
         return None, None
     return service, mailer
+
+
+_addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
+
+
+def create_mail(data, config, name):
+    '''
+    Return kwargs that can be passed to a mailer.mail
+    '''
+    mail = {}
+    for key in ['bodyfile', 'htmlfile', 'markdownfile']:
+        target = key.replace('file', '')
+        if key in config and target not in config:
+            path = _tmpl(config[key]).generate(**data).decode('utf-8')
+            tmpl = gramex.cache.open(path, 'template')
+            mail[target] = tmpl.generate(**data).decode('utf-8')
+    for key in _addr_fields + ['subject', 'body', 'html', 'markdown']:
+        if key not in config:
+            continue
+        if isinstance(config[key], list):
+            mail[key] = [_tmpl(v).generate(**data).decode('utf-8') for v in config[key]]
+        else:
+            mail[key] = _tmpl(config[key]).generate(**data).decode('utf-8')
+    headers = {}
+    # user: {id: ...} creates an X-Gramex-User header to mimic the user
+    if 'user' in config:
+        user = deepcopy(config['user'])
+        for key, val, node in walk(user):
+            node[key] = _tmpl(val).generate(**data).decode('utf-8')
+        user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
+        headers['X-Gramex-User'] = tornado.web.create_signed_value(
+            info.app.settings['cookie_secret'], 'user', user
+        )
+    if 'markdown' in mail:
+        mail['html'] = _markdown_convert(mail.pop('markdown'))
+    if 'images' in config:
+        mail['images'] = {}
+        for cid, val in config['images'].items():
+            urlpath = _tmpl(val).generate(**data).decode('utf-8')
+            urldata = urlfetch(urlpath, info=True, headers=headers)
+            if urldata['content_type'].startswith('image/'):
+                mail['images'][cid] = urldata['name']
+            else:
+                with io.open(urldata['name'], 'rb') as temp_file:
+                    bytestoread = 80
+                    first_line = temp_file.read(bytestoread)
+                # TODO: let admin know that the image was not processed
+                app_log.error(
+                    f'{name}: {cid}: {urldata["r"].status_code} '
+                    f'({urldata["content_type"]}) not an image: {urlpath}\n'
+                    f'{first_line!r}'
+                )
+    if 'attachments' in config:
+        mail['attachments'] = [
+            urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
+            for v in config['attachments']
+        ]
+    return mail
 
 
 def create_alert(name, alert):
     '''Generate the function to be run by alert() using the alert configuration'''
     # Configure email service
-    service, mailer = get_mailer(alert, context=f'alert: {name}')
+    service, mailer = get_mailer(alert, name=f'alert: {name}')
 
     # - Warn if to, cc, bcc exists and is not a string or list of strings. Ignore incorrect
     #    - if to: [1, 'user@example.org'], then
@@ -624,8 +682,7 @@ def create_alert(name, alert):
         return
     # Ensure that config has the right type (str, dict, list)
     contentfields = ['body', 'html', 'bodyfile', 'htmlfile', 'markdown', 'markdownfile']
-    addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
-    for key in ['subject'] + addr_fields + contentfields:
+    for key in ['subject'] + _addr_fields + contentfields:
         if not isinstance(alert.get(key, ''), (str, list)):
             app_log.error(f'alert: {name}.{key}: {alert[key]!r} must be a list or str')
             return
@@ -716,60 +773,6 @@ def create_alert(name, alert):
         else:
             each.append((0, None))
 
-    def create_mail(data):
-        '''
-        Return kwargs that can be passed to a mailer.mail
-        '''
-        mail = {}
-        for key in ['bodyfile', 'htmlfile', 'markdownfile']:
-            target = key.replace('file', '')
-            if key in alert and target not in alert:
-                path = _tmpl(alert[key]).generate(**data).decode('utf-8')
-                tmpl = gramex.cache.open(path, 'template')
-                mail[target] = tmpl.generate(**data).decode('utf-8')
-        for key in addr_fields + ['subject', 'body', 'html', 'markdown']:
-            if key not in alert:
-                continue
-            if isinstance(alert[key], list):
-                mail[key] = [_tmpl(v).generate(**data).decode('utf-8') for v in alert[key]]
-            else:
-                mail[key] = _tmpl(alert[key]).generate(**data).decode('utf-8')
-        headers = {}
-        # user: {id: ...} creates an X-Gramex-User header to mimic the user
-        if 'user' in alert:
-            user = deepcopy(alert['user'])
-            for key, val, node in walk(user):
-                node[key] = _tmpl(val).generate(**data).decode('utf-8')
-            user = json.dumps(user, ensure_ascii=True, separators=(',', ':'))
-            headers['X-Gramex-User'] = tornado.web.create_signed_value(
-                info.app.settings['cookie_secret'], 'user', user
-            )
-        if 'markdown' in mail:
-            mail['html'] = _markdown_convert(mail.pop('markdown'))
-        if 'images' in alert:
-            mail['images'] = {}
-            for cid, val in alert['images'].items():
-                urlpath = _tmpl(val).generate(**data).decode('utf-8')
-                urldata = urlfetch(urlpath, info=True, headers=headers)
-                if urldata['content_type'].startswith('image/'):
-                    mail['images'][cid] = urldata['name']
-                else:
-                    with io.open(urldata['name'], 'rb') as temp_file:
-                        bytestoread = 80
-                        first_line = temp_file.read(bytestoread)
-                    # TODO: let admin know that the image was not processed
-                    app_log.error(
-                        f'alert: {name}: {cid}: {urldata["r"].status_code} '
-                        f'({urldata["content_type"]}) not an image: {urlpath}\n'
-                        f'{first_line!r}'
-                    )
-        if 'attachments' in alert:
-            mail['attachments'] = [
-                urlfetch(_tmpl(v).generate(**data).decode('utf-8'), headers=headers)
-                for v in alert['attachments']
-            ]
-        return mail
-
     def run_alert(callback=None, args=None):
         '''
         Runs the configured alert. If a callback is specified, calls the
@@ -788,7 +791,13 @@ def create_alert(name, alert):
         for index, row in each:
             data['index'], data['row'], data['config'] = index, row, alert
             try:
-                retval.append(AttrDict(index=index, row=row, mail=create_mail(data)))
+                retval.append(
+                    AttrDict(
+                        index=index,
+                        row=row,
+                        mail=create_mail(data, alert, _addr_fields, name=f'alert: {name}'),
+                    )
+                )
             except Exception as e:
                 app_log.exception(f'alert: {name}[{index}] templating (row={row!r})')
                 fail.append({'index': index, 'row': row, 'error': e})

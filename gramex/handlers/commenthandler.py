@@ -1,7 +1,8 @@
 import json
 import time
-from gramex.config import CustomJSONEncoder
 from .websockethandler import WebSocketHandler
+from gramex.config import CustomJSONEncoder
+from tornado.gen import coroutine
 from typing import Dict, Any, Union, Optional, Awaitable
 
 
@@ -47,33 +48,38 @@ class CommentHandler(WebSocketHandler):
 
         signal(self.name).disconnect(self.write_data)
 
+    @coroutine
     def on_message(self, message: Union[str, bytes]) -> Optional[Awaitable[None]]:
         import pandas as pd
         import gramex.data
+        from gramex import service
+        from gramex.services import create_mail, get_mailer
         from base64 import urlsafe_b64encode
         from blinker import signal
         from uuid import uuid4
 
-        # TODO from gramex.services import get_mailer
-
-        # Store in database
         message = json.loads(message)
-        args = {k: [v] for k, v in message['data'].items()}
-        args['id'] = [urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')]
-        args['user'] = [self.current_user.get('id', None) if self.current_user else None]
-        args['timestamp'] = [time.time()]
-        if message['type'] == 'post':
+        # TODO: plugins
+        # TODO: Restrict usage by user -- handler.current_user must match something
+        # Store in database
+        method = message.setdefault('_method', 'post')
+        message['id'] = urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')
+        message['user'] = self.current_user.get('id', None) if self.current_user else None
+        message['timestamp'] = time.time()
+        args = {k: [v] for k, v in message.items() if k != '_method'}
+        if method == 'post':
             gramex.data.insert(**self.data, args=args)
-        elif message['type'] == 'delete':
-            gramex.data.delete(**self.data, args=args)
-        elif message['type'] == 'put':
-            gramex.data.update(**self.data, args=args)
-
-        # Send email asynchronously
-        # TODO mailer = get_mailer(self.email)
-
+        elif method == 'delete':
+            gramex.data.delete(**self.data, args={"id": [message["data"]["id"]]})
+        elif method == 'put':
+            updated_msg = {k: [v] for k, v in message['data'].items()}
+            gramex.data.update(**self.data, args=updated_msg)
         # Send message to all clients
         signal(self.name).send(pd.DataFrame(args))
+
+        if self.email and method in self.email.get('methods', ['post']):
+            _services, mailer = get_mailer(self.email, self.name)
+            service.threadpool.submit(mailer.mail, **create_mail(message, self.email, self.name))
 
         # TODO: Handle errors
 
