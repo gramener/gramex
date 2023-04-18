@@ -208,7 +208,7 @@ def schedule(conf: dict) -> None:
             app_log.exception(e)
 
 
-def config(conf: dict) -> None:
+def alert(conf: dict) -> None:
     '''
     Sets up the alert service
     '''
@@ -594,6 +594,7 @@ class GramexApp(tornado.web.Application):
 
 
 def get_mailer(config, name=''):
+    '''Return the email service config and corresponding mailer for a given config.'''
     if config.get('service', None) is None:
         if len(info.email) > 0:
             service = config['service'] = list(info.email.keys())[0]
@@ -613,9 +614,7 @@ _addr_fields = ['to', 'cc', 'bcc', 'reply_to', 'on_behalf_of', 'from']
 
 
 def create_mail(data, config, name):
-    '''
-    Return kwargs that can be passed to a mailer.mail
-    '''
+    '''Return kwargs that can be passed to a mailer.mail'''
     mail = {}
     for key in ['bodyfile', 'htmlfile', 'markdownfile']:
         target = key.replace('file', '')
@@ -792,11 +791,7 @@ def create_alert(name, alert):
             data['index'], data['row'], data['config'] = index, row, alert
             try:
                 retval.append(
-                    AttrDict(
-                        index=index,
-                        row=row,
-                        mail=create_mail(data, alert, _addr_fields, name=f'alert: {name}'),
-                    )
+                    AttrDict(index=index, row=row, mail=create_mail(data, alert, f'alert: {name}'))
                 )
             except Exception as e:
                 app_log.exception(f'alert: {name}[{index}] templating (row={row!r})')
