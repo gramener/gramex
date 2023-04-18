@@ -89,6 +89,9 @@ slidesense = "gramex.pptgen2:commandline"
 [tool.setuptools.packages.find]
 include = ["gramex*"]
 
+[tool.black]
+extend-exclude = /(complexity-error)/
+
 [project.optional-dependencies]
 # pip install "gramex[full]" for better debugging and ML support
 full = [

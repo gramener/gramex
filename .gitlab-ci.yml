@@ -22,9 +22,7 @@ variables:
 
 validate:
   image: gramener/builderrors
-  script: builderrors
-  # Until 31 Jan 2023, allow build errors to fail
-  allow_failure: true
+  script: builderrors --skip=duplicate-files --skip=duplicate-lines --skip=py-filenames
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:

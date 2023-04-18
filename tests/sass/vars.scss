@@ -1,3 +1,4 @@
+/* stylelint-disable */
 // URL arguments are available as variables
 {% for key, val in variables.items() %}
   ${{ key }}: {% raw val %};
@@ -7,7 +8,6 @@ $color: black !default;
   color: $color;
 }
 
-//
 .google_font {
   after: "{{ google_fonts }}";
 }
