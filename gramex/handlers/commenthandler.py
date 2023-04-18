@@ -34,6 +34,8 @@ class CommentHandler(WebSocketHandler):
         cols.setdefault('id', 'text')
         cols.setdefault('user', 'text')
         cols.setdefault('timestamp', 'float')
+        cols.setdefault('author', 'text')
+        cols.setdefault('recipient', 'text')
 
         # setting up the email configuration
         if email:
@@ -74,9 +76,9 @@ class CommentHandler(WebSocketHandler):
             if self.email:
                 message_data = message["data"]
                 author = message_data.get("author","anonymous user")
-                receipient = message_data.get("receipient",None)
+                recipient = message_data.get("recipient",None)
                 self.mailer.mail(
-                    to =  receipient,
+                    to =  recipient,
                     subject = 'New comment posted',
                     body = f"A new comment has been posted by {author}: {message['data']['message']}"
                 )
