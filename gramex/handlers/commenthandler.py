@@ -63,11 +63,11 @@ class CommentHandler(WebSocketHandler):
         # TODO: Restrict usage by user -- handler.current_user must match something
         # Store in database
         method = message.setdefault('_method', 'post')
-        message['id'] = urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')
-        message['user'] = self.current_user.get('id', None) if self.current_user else None
-        message['timestamp'] = time.time()
         args = {k: [v] for k, v in message.items() if k != '_method'}
         if method == 'post':
+            message['user'] = self.current_user.get('id', None) if self.current_user else None
+            message['timestamp'] = time.time()
+            message['id'] = urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')
             gramex.data.insert(**self.data, args=args)
         elif method == 'delete':
             gramex.data.delete(**self.data, args={"id": [message["data"]["id"]]})
