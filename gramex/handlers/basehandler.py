@@ -53,6 +53,7 @@ class BaseMixin:
         xsrf_cookies=None,
         cors: Union[None, bool, dict] = None,
         ratelimit: Optional[dict] = None,
+        lookup: Optional[dict] = None,
         # If you add any explicit kwargs here, add them to special_keys too.
         **kwargs,
     ):
@@ -78,6 +79,7 @@ class BaseMixin:
         cls.setup_log()
         cls.setup_httpmethods(methods)
         cls.setup_cors(cors, auth=auth)
+        cls.setup_lookup(lookup)
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -1097,6 +1099,28 @@ class BaseMixin:
             self.get = self._cached_get
         if self._set_xsrf:
             self.xsrf_token
+
+        self._fetch_lookup()
+
+    def _fetch_lookup(self):
+        for key, query in self._lookup.items():
+            query = dict(query)
+            query['args'] = {k: v(self) for k, v in query.get('args', {}).items()}
+            setattr(self, key, gramex.data.filter(**query))
+
+    @classmethod
+    def setup_lookup(cls, lookup):
+        if not lookup or not isinstance(lookup, dict):
+            return
+        for key, query in tuple(lookup.items()):
+            if not isinstance(query, dict):
+                # TODO: report error and continue
+                del lookup[key]
+            elif 'args' in query:
+                # Compile args values
+                for param, value in tuple(query['args'].items()):
+                    query['args'][param] = build_transform(value, vars=['handler'], iter=False)
+        cls._lookup = lookup
 
 
 class BaseHandler(RequestHandler, BaseMixin):
