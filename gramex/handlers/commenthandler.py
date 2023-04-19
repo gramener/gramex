@@ -81,7 +81,7 @@ class CommentHandler(WebSocketHandler):
             # Send email
             if self.email:
                 _services, mailer = get_mailer(self.email, self.name)
-                msg = create_mail(message, self.email, self.name)
+                msg = create_mail({k: v[0] for k, v in args.items()}, self.email, self.name)
                 service.threadpool.submit(mailer.mail, **msg)
 
         # TODO: Handle errors
