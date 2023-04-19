@@ -74,12 +74,15 @@ class CommentHandler(WebSocketHandler):
         elif method == 'put':
             updated_msg = {k: [v] for k, v in message['data'].items()}
             gramex.data.update(**self.data, args=updated_msg)
-        # Send message to all clients
-        signal(self.name).send(pd.DataFrame(args))
 
         if self.email and method in self.email.get('methods', ['post']):
-            _services, mailer = get_mailer(self.email, self.name)
-            service.threadpool.submit(mailer.mail, **create_mail(message, self.email, self.name))
+            # Send message to all clients
+            signal(self.name).send(pd.DataFrame(args))
+            # Send email
+            if self.email:
+                _services, mailer = get_mailer(self.email, self.name)
+                msg = create_mail(message, self.email, self.name)
+                service.threadpool.submit(mailer.mail, **msg)
 
         # TODO: Handle errors
 
