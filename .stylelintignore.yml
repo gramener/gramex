@@ -1,0 +1,3 @@
+# Ignore CSS files with templates
+gramex/apps/ui/bootstrap-theme.scss
+tests/sass/vars.scss

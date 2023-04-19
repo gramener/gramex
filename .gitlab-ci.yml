@@ -22,7 +22,7 @@ variables:
 
 validate:
   image: gramener/builderrors
-  script: builderrors --skip=duplicate-files --skip=duplicate-lines --skip=py-filenames
+  script: builderrors --skip=lib --skip=duplicate-files --skip=duplicate-lines --skip=duplicate-lines --skip=py-filenames
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:

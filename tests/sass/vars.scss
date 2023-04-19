@@ -1,4 +1,3 @@
-/* stylelint-disable */
 // URL arguments are available as variables
 {% for key, val in variables.items() %}
   ${{ key }}: {% raw val %};
