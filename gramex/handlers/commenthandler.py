@@ -65,12 +65,12 @@ class CommentHandler(WebSocketHandler):
         method = message.setdefault('_method', 'post')
         args = {k: [v] for k, v in message.items() if k != '_method'}
         if method == 'post':
-            message['user'] = self.current_user.get('id', None) if self.current_user else None
-            message['timestamp'] = time.time()
-            message['id'] = urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')
+            args['user'] = [self.current_user.get('id', None) if self.current_user else None]
+            args['timestamp'] = [time.time()]
+            args['id'] = [urlsafe_b64encode(uuid4().bytes).strip(b"=").decode('utf-8')]
             gramex.data.insert(**self.data, args=args)
         elif method == 'delete':
-            gramex.data.delete(**self.data, args={"id": [message["data"]["id"]]})
+            gramex.data.delete(**self.data, args={"id": [message["id"]]})
         elif method == 'put':
             updated_msg = {k: [v] for k, v in message['data'].items()}
             gramex.data.update(**self.data, args=updated_msg)
