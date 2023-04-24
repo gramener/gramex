@@ -10,6 +10,7 @@ module.exports = {
   },
   env: {
     browser: true,
+    es6: true
   },
   // These default plugins are installed in the root gramex director via package.json
   plugins: ["html", "template"],
