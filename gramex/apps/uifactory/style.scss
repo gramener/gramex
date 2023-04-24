@@ -86,6 +86,7 @@
   padding: 0.5rem;
   display: inline-grid;
 }
+/* stylelint-disable selector-type-no-unknown */
 .form-fields > *:not(bs4-multiselect),
 .form-fields > *:not(.divider) {
   display: block;

@@ -22,9 +22,9 @@ variables:
 
 validate:
   image: gramener/builderrors
-  script: builderrors
-  # Until 31 Jan 2023, allow build errors to fail
-  allow_failure: true
+  # --skip=lib          for pytest/complexity_basic/node_modules/ipsum.py
+  # --skip=py-filenames for pytest/complexity_basic/site-packages/lorem.py
+  script: builderrors --skip=lib --skip=py-filenames
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
