@@ -8,8 +8,10 @@
   "author": "{{ author }} <{{ email }}>",
   "license": "ISC",
   "dependencies": {
-    "bootstrap": "5",
-    "lodash": "4",
-    "uifactory": "0.0.6"
+  },
+  "devDependencies": {
+    "eslint": "8",
+    "eslint-plugin-html": "7",
+    "eslint-plugin-template": "0.7"
   }
 }

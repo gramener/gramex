@@ -303,9 +303,7 @@ def init(args, kwargs):
     for root, dirs, files in os.walk(source_dir):
         relpath = os.path.relpath(root, start=source_dir)
         for name in dirs + files:
-            source = os.path.join(root, name)
-            targetname = name.replace('$appname', appname)
-            template_data = None
+            source, targetname, template_data = os.path.join(root, name), name, None
             if '.template.' in name:
                 targetname, template_data = name.replace('.template.', '.'), data
             target = os.path.join(kwargs.target, relpath, targetname)
