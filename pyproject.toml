@@ -90,7 +90,8 @@ slidesense = "gramex.pptgen2:commandline"
 include = ["gramex*"]
 
 [tool.black]
-extend-exclude = "/(complexity_error/"
+# pytest/complexity_error/invalid.py has non-parseable Python code
+force-exclude = "complexity_error"
 
 [project.optional-dependencies]
 # pip install "gramex[full]" for better debugging and ML support
