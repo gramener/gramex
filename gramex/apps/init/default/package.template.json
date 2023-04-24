@@ -8,5 +8,10 @@
   "author": "{{ author }} <{{ email }}>",
   "license": "ISC",
   "dependencies": {
+  },
+  "devDependencies": {
+    "eslint": "8",
+    "eslint-plugin-html": "7",
+    "eslint-plugin-template": "0.7"
   }
 }
