@@ -31,3 +31,6 @@ rules:
   selector-type-no-unknown: true
   string-no-newline: true
   unit-no-unknown: true
+ignoreFiles:
+  - gramex/apps/ui/bootstrap-theme.scss
+  - tests/sass/vars.scss

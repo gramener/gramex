@@ -8,9 +8,9 @@ tests/sass/vars.scss
 
 # These YAML test cases have deliberate errors -- for testing
 
-pytest/complexity-basic/subfolder/js-default/add.mjs
-pytest/complexity-basic/subfolder/js-with-error/withError.js
-pytest/complexity-error/gramex.yaml
+pytest/complexity_basic/subfolder/js-default/add.mjs
+pytest/complexity_basic/subfolder/js-with-error/withError.js
+pytest/complexity_error/gramex.yaml
 testlib/test_config/config.error.yaml
 testlib/test_config/config.random.yaml
 tests/sass/import.sass
