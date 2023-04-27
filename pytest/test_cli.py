@@ -14,7 +14,11 @@ folder = os.path.dirname(os.path.abspath(__file__))
 @pytest.fixture(scope="function", autouse=True)
 def create_test_files(request):
     files2create = {
-        ("complexity_basic", "site-packages", "lorem.py"): '''
+        (
+            "complexity_basic",
+            "site-packages",
+            "lorem.py",
+        ): '''
         """
         Complexity O(m*n)
         This file will be ignored in calculation being inside "site-packages"
@@ -33,7 +37,11 @@ def create_test_files(request):
                         lcs[i][j] = max(lcs[i - 1][j], lcs[i][j - 1])
             return lcs[m][n]
         ''',
-        ("complexity_basic", "node_modules", "ipsum.py"): '''
+        (
+            "complexity_basic",
+            "node_modules",
+            "ipsum.py",
+        ): '''
 
         """
         Complexity: O(n log n) in worst case
@@ -64,11 +72,17 @@ def create_test_files(request):
             result += right[j:]
             return result
         ''',
-        ("complexity_basic", "subfolder", "js-default", "site-packages", "add.js"): '''
+        (
+            "complexity_basic",
+            "subfolder",
+            "js-default",
+            "site-packages",
+            "add.js",
+        ): """
         function add(a, b) {
             return a + b;
         }
-        '''
+        """,
     }
     files = []
     for filetpl, content in files2create.items():
@@ -77,13 +91,12 @@ def create_test_files(request):
         files.append(filepath)
         with open(filepath, "w") as f:
             f.write(content)
-    
+
     def remove_test_files():
         for filepath in files:
             os.remove(filepath)
-    
-    request.addfinalizer(remove_test_files)
 
+    request.addfinalizer(remove_test_files)
 
 
 def test_features_empty():
