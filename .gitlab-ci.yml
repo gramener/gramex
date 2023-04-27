@@ -22,9 +22,7 @@ variables:
 
 validate:
   image: gramener/builderrors
-  # --skip=lib          for pytest/complexity_basic/node_modules/ipsum.py
-  # --skip=py-filenames for pytest/complexity_basic/site-packages/lorem.py
-  script: builderrors --skip=lib --skip=py-filenames
+  script: builderrors
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
