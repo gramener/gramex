@@ -19,12 +19,12 @@ from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
 from .openapihandler import OpenAPIHandler
-from .commenthandler import CommentHandler
+from .messagehandler import MessageHandler
 
 # Aliases
 Comic = ComicHandler
 Command = ProcessHandler
-Comment = CommentHandler
+Message = CommentHandler = MessageHandler
 Data = FormHandler
 Facebook = FacebookGraphHandler
 File = DirectoryHandler = FileHandler
@@ -49,7 +49,6 @@ __all__ = [
     'Capture',
     'CaptureHandler',
     'Command',
-    'Comment',
     'CommentHandler',
     'Comic',
     'ComicHandler',
@@ -68,6 +67,8 @@ __all__ = [
     'JSON',
     'JSONHandler',
     'LogoutHandler',
+    'Message',
+    'MessageHandler',
     'ModelHandler',
     'ML',
     'MLHandler',
