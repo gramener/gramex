@@ -116,7 +116,9 @@ class MessageHandler(BaseWebSocketHandler):
         # Send alert for specified methods and if message does not disallow alert
         if method in self.alert.get('methods', ['POST']) and msg.get('_alert', True):
             _services, mailer = get_mailer(self.alert, self.name)
-            yield service.threadpool.submit(mailer.mail, **create_mail(msg, self.alert, self.name))
+            # Do NOT yield this future. Just call and forget it. Else future messages are queued.
+            # mail_log() ensures that exceptions are logged.
+            service.threadpool.submit(mailer.mail_log, **create_mail(msg, self.alert, self.name))
 
     def write_data(self, *args, **kwargs) -> List[Future]:
         '''Filter dataframe/url on arguments and send each row to client'''
