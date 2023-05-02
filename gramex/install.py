@@ -603,6 +603,13 @@ def complexity(args, kwargs) -> dict:
     )
 
 
+def task(args, kwargs) -> dict:
+    import gramex.task
+    # kkk = " ".join(f"""-{key}='{value.strftime("%Y-%m-%d %H:%M:%S.%f")}'""" if isinstance(value, datetime.datetime) else f'-{key}="{value}"' for key, value in kwargs.items())
+    # gramex.task.commandline(kkk)
+    gramex.task.commandline(kwargs)
+    return {"output": None, "args": args, "kwargs": kwargs}
+
 class TryAgainError(Exception):
     '''If shutil.rmtree fails, and we've fixed the problem, raise this to try again'''
 
