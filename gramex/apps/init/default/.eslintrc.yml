@@ -1,7 +1,7 @@
 # See https:#eslint.org/docs/user-guide/configuring
 parserOptions:
-    # Parse with latest JavaScript version
-    ecmaVersion: "latest"
+  # Parse with latest JavaScript version
+  ecmaVersion: "latest"
 # Add all global variables in the browser, as well as $/jQuery.
 # This handles the most common use of JavaScript in projects.
 env:
