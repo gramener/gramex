@@ -32,11 +32,11 @@ extra_css:
   - readthedocs-extra.css
 
 markdown_extensions:
-    - smarty
-    - toc:
-        permalink: true
-    - sane_lists
-    - admonition
+  - smarty
+  - toc:
+      permalink: true
+  - sane_lists
+  - admonition
 
 theme:
   name: readthedocs
