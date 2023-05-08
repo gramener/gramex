@@ -697,7 +697,7 @@ def table(shape, spec, data: dict):
         # Apply commands that run on each cell
         if key in table_cell_commands:
             for i, (index, row) in enumerate(table_data.iterrows()):
-                for j, (column, val) in enumerate(row.iteritems()):
+                for j, (column, val) in enumerate(row.items()):
                     data['cell'] = AttrDict(
                         val=val,
                         column=column,
@@ -762,7 +762,7 @@ def chart(shape, spec, data: dict):
         elif chart_type == 'Xy':
             for name, col in chart_data.iteritems():
                 series = new_chart_data.add_series(name)
-                for index, v in col.iteritems():
+                for index, v in col.items():
                     series.add_data_point(index, v)
         shape.chart.replace_data(new_chart_data)
 
