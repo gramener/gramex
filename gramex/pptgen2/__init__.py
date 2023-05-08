@@ -445,7 +445,7 @@ def iterate_on(spec, data: dict):
         return enumerate(val)
     # pd.Series({x: 1}) -> (x, 1)
     elif isinstance(val, pd.Series):
-        return val.iteritems()
+        return val.items()
     # pd.DataFrame([{x:1, y:2], {x:3, y:4}]) -> (0, {x: 1, y:2}), ...
     elif isinstance(val, pd.DataFrame):
         return val.iterrows()
