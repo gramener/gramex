@@ -272,6 +272,7 @@ def filter(
             argstype=argstype,
             id=id,
             table=table,
+            join=join,
             columns=columns,
             ext=ext,
             query=query,
@@ -314,7 +315,7 @@ def filter(
                 data = gramex.cache.query(table, engine, [table])
                 return _filter_frame(transform(data), meta, controls, args, argstype)
             else:
-                return _filter_db(engine, join, table, meta, controls, args, argstype)
+                return _filter_db(engine, table, meta, controls, args, argstype, join=join)
         else:
             raise ValueError('No table: or query: specified')
     else:
@@ -1680,7 +1681,6 @@ def _filter_frame(
 
 def _filter_db(
     engine: str,
-    join: dict,
     table: str,
     meta: dict,
     controls: dict,
@@ -1688,6 +1688,7 @@ def _filter_db(
     argstype: Dict[str, dict] = {},
     source: str = 'select',
     id: List[str] = None,
+    join: dict = None,
 ):
     '''
     Parameters:
@@ -1706,14 +1707,12 @@ def _filter_db(
         if not join:
             return sa.select(tables)
 
-        cols = [col.label(f"{table.name}_{col.name}") for col in table.columns]
+        # Identify all tables and columns required
+        cols = [col.label(col.name) for col in table.columns]
         tables_map = {}
-
         for t in join.keys():
-            tbl = get_table(engine, t)
-            tables = [tbl]
-            tables_map[t] = tbl
-            cols += [col.label(f"{table.name}_{col.name}") for col in tbl.columns]
+            tables_map[t] = tbl = get_table(engine, t)
+            cols += [col.label(f'{t}_{col.name}') for col in tbl.columns]
 
         query = sa.select(*cols)
 
@@ -1721,18 +1720,18 @@ def _filter_db(
         query = query.select_from(table)
 
         for t, extras in join.items():
-            joinAttr = [tables_map[t]]
-            if ("column" in extras):
-                condition = sa.text([f"{k}={v}" for k, v in extras["column"].items()][0])
-                joinAttr.append(condition)
+            join_attr = [tables_map[t]]
+            if 'column' in extras:
+                # TODO: check
+                condition = sa.text([f'{k}={v}' for k, v in extras['column'].items()][0])
+                join_attr.append(condition)
 
             query = query.join(
-                *joinAttr,
-                isouter="type" in extras and extras["type"].lower() in ["left", "outer"],
+                *join_attr,
+                isouter='type' in extras and extras['type'].lower() in ['left', 'outer'],
             )
 
         return query
-
 
     table = get_table(engine, table)
     cols = table.columns
@@ -1743,9 +1742,8 @@ def _filter_db(
     elif source == 'update':
         query = sa.update(table)
     else:
-        # query =  sa.select([table])
         query = get_joins(table, join)
-        
+
     cols_for_update = {}
     cols_having = []
     for key, vals in args.items():
