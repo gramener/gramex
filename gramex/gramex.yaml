@@ -378,6 +378,21 @@ storelocations:
       start: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       end: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       error: TEXT # Error stage + traceback
+  roles:
+    url: sqlite:///$GRAMEXDATA/roles.db
+    table: roles
+    columns:
+      app: TEXT
+      namespace: TEXT
+      project: TEXT
+      user: TEXT
+      role: TEXT
+  permissions:
+    url: sqlite:///$GRAMEXDATA/roles.db
+    table: permissions
+    columns:
+      role: TEXT
+      permission: TEXT
 
 # The `schedule:` section defines when specific code is to run.
 schedule:

@@ -449,6 +449,7 @@ class BaseMixin:
         cls._ratelimit.store = cls._get_store(ratelimit_app_conf)
         cls._on_init_methods.append(cls.check_ratelimit)
         cls._on_finish_methods.append(cls.update_ratelimit)
+        cls._on_finish_methods.append(cls.add_roles)
 
     @classmethod
     def reset_ratelimit(cls, pool: str, keys: List[Any], value: int = 0) -> bool:
@@ -1097,6 +1098,22 @@ class BaseMixin:
             self.get = self._cached_get
         if self._set_xsrf:
             self.xsrf_token
+
+    def add_roles(self):
+        '''Add roles to the current user'''
+        if isinstance(self.current_user, dict):
+            args = {
+                'app': [gramex.config.variables.get('APPNAME', None)],
+                'namespace': [self.path_kwargs.get('namespace', None)],
+                'project': [self.path_kwargs.get('project', None)],
+                'user': [self.current_user.get('id', None)],
+            }
+            self.current_user['roles'] = gramex.data.filter(
+                **gramex.service.storelocations.roles, args=args
+            )['role'].tolist()
+            self.current_user['permissions'] = gramex.data.filter(
+                **gramex.service.storelocations.roles, args={'role': self.current_user['roles']}
+            )['permission'].tolist()
 
 
 class BaseHandler(RequestHandler, BaseMixin):
