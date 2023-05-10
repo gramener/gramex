@@ -1701,21 +1701,28 @@ def _filter_db(
         argstype: optional dict that specifies `args` type and behavior.
         id: list of keys specific to data using which values can be updated
     '''
-
     def get_joins(table, join):
-        tables = [table]
         if not join:
-            return sa.select(tables)
+            return table.columns, sa.select(tables)
+
+        tables = [table]
+        cols = {}
+        labels = []
+        for c in table.columns:
+            cols[c.name] = c
+            labels.append(c.label(c.name))
 
         # Identify all tables and columns required
-        cols = [col.label(col.name) for col in table.columns]
         tables_map = {}
         for t in join.keys():
             tables_map[t] = tbl = get_table(engine, t)
-            cols += [col.label(f'{t}_{col.name}') for col in tbl.columns]
+            for c in tbl.columns:
+                lbl = f'{t}_{c.name}'
+                cols[lbl] = c
+                labels.append(c.label(lbl))
+            # cols += [col.label(f'{t}_{col.name}') for col in tbl.columns]
 
-        query = sa.select(*cols)
-
+        query = sa.select(*labels)
         # Establish an explicit left side by setting the main table as the base
         query = query.select_from(table)
 
@@ -1730,19 +1737,18 @@ def _filter_db(
                 *join_attr,
                 isouter='type' in extras and extras['type'].lower() in ['left', 'outer'],
             )
-
-        return query
+        return cols, query
 
     table = get_table(engine, table)
     cols = table.columns
     colslist = cols.keys()
-
     if source == 'delete':
         query = sa.delete(table)
     elif source == 'update':
         query = sa.update(table)
     else:
-        query = get_joins(table, join)
+        cols, query = get_joins(table, join)
+        colslist = list(cols.values())
 
     cols_for_update = {}
     cols_having = []
