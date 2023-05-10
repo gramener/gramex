@@ -1748,7 +1748,7 @@ def _filter_db(
         query = sa.update(table)
     else:
         cols, query = get_joins(table, join)
-        colslist = list(cols.values())
+        colslist = list(cols.keys())
 
     cols_for_update = {}
     cols_having = []
@@ -1756,6 +1756,8 @@ def _filter_db(
         # check if `key` is in the `id` list -- ONLY when data is updated
         if (source == 'update' and key in id) or source in {'select', 'delete'}:
             # Parse column names, ignoring missing / unmatched columns
+            # if join:
+            #     breakpoint()
             col, agg, op = _filter_col(key, colslist)
             if col is None:
                 meta['ignored'].append((key, vals))
