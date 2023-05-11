@@ -12,8 +12,8 @@ clean () {
 }
 
 reformat () {
-  git ls-files | grep -E '\.py$' | xargs black --skip-string-normalization --line-length=99
-  git ls-files | grep -E '\.(js|jsx|vue|ts|css|scss|sass|yaml|md)$' | xargs npx prettier --write
+  git ls-files | grep -E '\.py$' | grep -v pytest.complexity_error.invalid.py | xargs black --skip-string-normalization --line-length=99
+  git ls-files | grep -E '\.(js|jsx|vue|ts|css|scss|sass|yaml|yml|md)$' | xargs -n100 npx prettier --write
 }
 
 lint () {
@@ -32,8 +32,8 @@ test () {
 }
 
 stats () {
-  # Get complexity of each part of Gramex and Gramex Enterprise. Save in reports/
-  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > reports/gramexsize.csv
+  # Get complexity of each part of Gramex and Gramex Enterprise. Save in gramex/
+  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > gramex/gramexsize.csv
 
   # Count number of lines of code
   PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
@@ -46,6 +46,7 @@ docs () {
   (cd mkdocs; mkdocs build)
 }
 pushdocs () {
+  # Requires pip install -e . --config-settings editable_mode=strict
   rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
 }
 
@@ -53,6 +54,7 @@ pushpypi () {
   clean
   pip install --upgrade build twine
   python -m build .
+  # twine does not work behind self-signed VPN certificates
   # Note: if this fails, add '-p PASSWORD'
   twine upload -u gramener dist/*
 }

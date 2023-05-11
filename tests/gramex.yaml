@@ -2922,3 +2922,9 @@ storelocations:
   # The `otp:` section defines where to store one-time passwords
   otp:
     url: sqlite:///$YAMLPATH/otp.db
+  userlog:
+    columns:
+      event: TEXT
+      uri: TEXT
+      user: TEXT
+      request.method: TEXT

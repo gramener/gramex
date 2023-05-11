@@ -38,7 +38,11 @@ def complexity(dir: str) -> Iterator[dict]:
                 rel_path: str = os.path.relpath(path, dir)
                 with open(path, 'rb') as handle:
                     code = handle.read()
-                tree = compile(code, rel_path, 'exec', ast.PyCF_ONLY_AST)
+                try:
+                    tree = compile(code, rel_path, 'exec', ast.PyCF_ONLY_AST)
+                except SyntaxError:
+                    # skip test cases with Python syntax errors
+                    continue
                 visitor = mccabe.PathGraphingAstVisitor()
                 visitor.preorder(tree, visitor)
                 for node in visitor.graphs.values():

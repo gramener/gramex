@@ -4,7 +4,7 @@
 validate:
   image: gramener/builderrors
   script: builderrors
-
+#
 # Sample script to deploy to UAT.gramener.com
 # deploy:
 #   stage: deploy

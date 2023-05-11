@@ -36,6 +36,8 @@ code2yaml:
   gramex.debug.*: TODO - if any PY code uses gramex.debug
   gramex.install.*: TODO - Gramex app installation & management
   gramex.license.*: TODO - Gramex enterprise license management
+  # Migration is mostly for user store locations as of v1.89
+  gramex.migrate.*: url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
   gramex.ml.Classifier.*: url.*.handler=ModelHandler
   gramex.ml._conda_r_home: TODO - if any PY code uses gramex.ml.r
   gramex.ml.r: TODO - if any PY code uses gramex.ml.r
@@ -134,6 +136,7 @@ code2yaml:
   gramex.handlers.comichandler.*: url.*.handler=ComicHandler|Comic
   gramex.handlers.drivehandler.*: url.*.handler=DriveHandler|Storage
   gramex.handlers.filehandler.*: url.*.handler=FileHandler|DirectoryHandler|File
+  gramex.handlers.filterhandler.*: url.*.handler=FilterHandler|Filter
   gramex.handlers.formhandler.*: url.*.handler=FormHandler|Data
   gramex.handlers.functionhandler.*: url.*.handler=FunctionHandler|Function
   gramex.handlers.jsonhandler.*: url.*.handler=JSONHandler|JSON
@@ -227,6 +230,7 @@ code2yaml:
   gramexenterprise.handlers.authhandler.IntegratedAuth.*: url.*.handler=IntegratedAuth
   gramexenterprise.handlers.authhandler.SMSAuth.*: url.*.handler=SMSAuth
   gramexenterprise.handlers.authhandler.EmailAuth.*: url.*.handler=EmailAuth
+  gramexenterprise.handlers.authhandler.*: url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
   # These Gramex features shouldn't count towards project complexity/effort
   build.*: null
   pkg.*: null

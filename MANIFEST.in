@@ -3,6 +3,7 @@
 
 include README.md
 include gramex/*.yaml
+include gramex/*.csv
 include gramex/favicon.ico
 include gramex/download.vega.js
 include gramex/handlers/*.html

@@ -1,6 +1,5 @@
 C:\site\gramener.com\viz\async-gramex\.bandit: OK
-C:\site\gramener.com\viz\async-gramex\.eslintignore: OK
-C:\site\gramener.com\viz\async-gramex\.eslintrc.js: OK
+C:\site\gramener.com\viz\async-gramex\.eslintrc.yml: OK
 C:\site\gramener.com\viz\async-gramex\.git: Excluded
 C:\site\gramener.com\viz\async-gramex\.github: Excluded
 C:\site\gramener.com\viz\async-gramex\.gitignore: OK
@@ -13,24 +12,20 @@ C:\site\gramener.com\viz\async-gramex\.pytest_cache\README.md: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\lastfailed: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\nodeids: OK
 C:\site\gramener.com\viz\async-gramex\.pytest_cache\v\cache\stepwise: OK
+C:\site\gramener.com\viz\async-gramex\.snyk: OK
+C:\site\gramener.com\viz\async-gramex\.stylelintignore: OK
+C:\site\gramener.com\viz\async-gramex\.stylelintrc.yml: OK
 C:\site\gramener.com\viz\async-gramex\.travis.yml: OK
 C:\site\gramener.com\viz\async-gramex\.vscode\settings.json: OK
 C:\site\gramener.com\viz\async-gramex\commitlint.config.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin\gramex.yaml: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.eslintrc.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\admin.css: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\gramexadmin.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\index.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\node_modules: Excluded
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\package-lock.json: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\package.json: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\rollup.config.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\schedule.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\schedule.src.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\schedule.template.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\capture.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\chromecapture.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\index.html: OK
@@ -48,19 +43,12 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\navbar.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\filemanager\README.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\$appname.py: Empty file
+C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.eslintrc.yml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.flake8: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.gitlab-ci.yml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.secrets.yaml: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.stylelintrc.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\.template.gitignore: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\assets\README.template.md: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\error\400.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\error\401.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\error\403.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\error\404.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\error\500.html: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\favicon.ico: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\gramex.template.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\index.template.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\init\default\js\README.template.md: OK
@@ -259,6 +247,8 @@ C:\site\gramener.com\viz\async-gramex\gramex\deploy.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\download.vega.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\favicon.ico: OK
 C:\site\gramener.com\viz\async-gramex\gramex\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\gramex\gramexfeatures.csv: OK
+C:\site\gramener.com\viz\async-gramex\gramex\gramexsize.csv: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\400.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\401.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\403.html: OK
@@ -277,6 +267,7 @@ C:\site\gramener.com\viz\async-gramex\gramex\handlers\filterhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\formhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\functionhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\jsonhandler.py: OK
+C:\site\gramener.com\viz\async-gramex\gramex\handlers\messagehandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\mlhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\modelhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\openapiconfig.yaml: OK
@@ -344,12 +335,35 @@ C:\site\gramener.com\viz\async-gramex\pkg\docker-gramex-test\setup.sh: OK
 C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.py: OK
 C:\site\gramener.com\viz\async-gramex\pkg\usage\gramexsize.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pyproject.toml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\expected.json: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\increase_complexity.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\index.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\node_modules: Excluded
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-default\add.cjs: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-default\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-default\add.mjs: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-default\add.ts: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-default\subdir\add.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\js-with-error\withError.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_basic\subfolder\test.js: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_error\.gitignore: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_error\expected.json: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_error\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_error\increase_complexity.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\complexity_error\invalid.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\dbutils.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features_all\expected.csv: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features_all\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features_basic\expected.csv: OK
+C:\site\gramener.com\viz\async-gramex\pytest\features_basic\gramex.yaml: OK
+C:\site\gramener.com\viz\async-gramex\pytest\test_cli.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\test_json.py: OK
 C:\site\gramener.com\viz\async-gramex\README.md: OK
-C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: OK
+C:\site\gramener.com\viz\async-gramex\reports\bandit.txt: Empty file
 C:\site\gramener.com\viz\async-gramex\reports\clamav.txt: OK
-C:\site\gramener.com\viz\async-gramex\reports\gramexsize.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\loc.csv: OK
 C:\site\gramener.com\viz\async-gramex\reports\npm-audit.txt: OK
 C:\site\gramener.com\viz\async-gramex\reports\snyk.txt: OK
@@ -418,7 +432,6 @@ C:\site\gramener.com\viz\async-gramex\testlib\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_debug.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_email.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_install.py: OK
-C:\site\gramener.com\viz\async-gramex\testlib\test_json.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_license.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_log.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_ml.py: OK
@@ -598,13 +611,13 @@ C:\site\gramener.com\viz\async-gramex\tests\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8651928
+Known viruses: 8665978
 Engine version: 0.105.1
-Scanned directories: 87
-Scanned files: 571
+Scanned directories: 96
+Scanned files: 584
 Infected files: 0
-Data scanned: 8.60 MB
-Data read: 4.15 MB (ratio 2.07:1)
-Time: 74.058 sec (1 m 14 s)
-Start Date: 2023:02:08 22:26:59
-End Date:   2023:02:08 22:28:13
+Data scanned: 8.65 MB
+Data read: 4.16 MB (ratio 2.08:1)
+Time: 29.120 sec (0 m 29 s)
+Start Date: 2023:05:07 21:13:55
+End Date:   2023:05:07 21:14:24

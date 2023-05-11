@@ -1021,7 +1021,7 @@ class TestPPTGen(TestCase):
             for i, (index, row) in enumerate(data.iterrows()):
                 # Row height is the same as in the source table (or its last row)
                 eq_(table.rows[i].height, src_table.rows[min(i, maxrow)].height)
-                for j, (column, val) in enumerate(row.iteritems()):
+                for j, (column, val) in enumerate(row.items()):
                     # Unspecified col width is the same as in the source table (or its last col)
                     if column in {'sales', 'growth'}:
                         eq_(table.columns[j].width, src_table.columns[min(j, maxcol)].width)

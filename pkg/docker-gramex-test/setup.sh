@@ -10,7 +10,7 @@ docker pull aquasec/trivy:latest
 docker run --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/trivycache:/root/.cache/ \
-    aquasec/trivy:latest --security-checks vuln \
+    aquasec/trivy:latest --scanners vuln \
     image gramener/gramex:$VERSION | tee "${SCRIPT_DIR}/../../reports/trivy.txt"
 
 # To run tests, run the following. (This doesn't work in an automated way currently)

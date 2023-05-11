@@ -1,22 +1,31 @@
-'''
-Manages YAML config files as layered configurations with imports.
+'''Utilities to manage Gramex configurations.
 
-:class:PathConfig loads YAML files from a path::
+These utilities handle objects:
 
-    pc = PathConfig('/path/to/file.yaml')
+- [gramex.config.walk][] walks through a data structure recursively
+- [gramex.config.merge][] merges two data structures recursively
+- [gramex.config.objectpath][] gets/sets a value in a nested data structure
+- [gramex.config.CustomJSONEncoder][] encodes objects with Pandas / Numpy objects as JSON
+- [gramex.config.CustomJSONDecoder][] decodes JSON converting ISO dates to datetime objects
+- [gramex.config.recursive_encode][] convert Unicode to UTF-8 encoded byte strings in-place
+- [gramex.config.prune_keys][] removes specified keys anywhere in a nested data structure
+- [gramex.config.used_kwargs][] splits kwargs into those used by method, and those that are not
 
-This can be reloaded via the ``+`` operator. ``+pc`` reloads the YAML file
-(but only if it is newer than before.)
+These classes manage YAML config files as layered configurations with imports.
 
-:class:ChainConfig chains multiple YAML files into a single config. For example
-this merges ``base.yaml`` and ``next.yaml`` in sequence::
+- [gramex.config.PathConfig][] loads YAML configs `PathConfig('/path/to/file.yaml')`
+- [gramex.config.ChainConfig][] chains multiple YAML files into a single config
 
-    cc = ChainConfig()
-    cc['base'] = PathConfig('base.yaml')
-    cc['next'] = PathConfig('next.yaml')
+Some additional utilities are:
 
-To get the merged file, use ``+cc``. This updates the PathConfig files and
-merges the YAMLs.
+- `gramex.config.app_log` is the default logger used by all of Gramex.
+  Use `gramex.config.app_log.error(...)` to log errors
+- `gramex.config.slug.filename(string)` converts a string to a valid filename,
+   replacing invalid characters with '-'
+- `gramex.config.slug.module(string)` converts a string to a valid Python module name,
+  replacing invalid characters with '_'
+- [gramex.config.locate][] loads a module from a string
+- [gramex.config.ioloop_running][] returns True if the Gramex is running, else False
 '''
 
 import os
@@ -77,9 +86,9 @@ slug = AttrDict(
 def walk(node):
     '''
     Bottom-up recursive walk through a data structure yielding a (key, value,
-    node) tuple for every entry. ``node[key] == value`` is true in every entry.
+    node) tuple for every entry. `node[key] == value` is true in every entry.
 
-    For example::
+    For example:
 
         >>> list(walk([{'x': 1}]))
         [
@@ -87,7 +96,7 @@ def walk(node):
             (0, {'x': 1}, [{'x': 1}])   # parent: index, value, node
         ]
 
-    Circular linkage can lead to a RuntimeError::
+    Circular linkage can lead to a RuntimeError.
 
         >>> x = {}
         >>> x['x'] = x
@@ -113,14 +122,14 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
         >>> merge({'a': {'x': 1}}, {'a': {'y': 2}})
         {'a': {'x': 1, 'y': 2}}
 
-    If ``new`` is a list, convert into a dict with random keys.
+    If `new` is a list, convert into a dict with random keys.
 
-    If ``mode='overwrite'``, the old dict is overwritten (default).
-    If ``mode='setdefault'``, the old dict values are updated only if missing.
+    If `mode='overwrite'`, the old dict is overwritten (default).
+    If `mode='setdefault'`, the old dict values are updated only if missing.
 
-    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
+    `warn=` is an optional list of key paths. Any conflict on dictionaries
     matching any of these paths is logged as a warning. For example,
-    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
+    `warn=['url.*', 'watch.*']` warns if any url: sub-key or watch: sub-key
     has a conflict.
     '''
     for key in new:
@@ -137,6 +146,223 @@ def merge(old, new, mode='overwrite', warn=None, _path=''):
     return old
 
 
+def objectpath(node, keypath, default=None):
+    '''
+    Traverse down a dot-separated object path into dict items or object attrs.
+    For example, `objectpath(handler, 'request.headers.User-Agent')` returns
+    `handler.request.headers['User-Agent']`. Dictionary access is preferred.
+    Returns `None` if the path is not found.
+    '''
+    for key in keypath.split('.'):
+        if hasattr(node, '__getitem__'):
+            node = node.get(key)
+        else:
+            node = getattr(node, key, None)
+        if node is None:
+            return default
+    return node
+
+
+class CustomJSONEncoder(JSONEncoder):
+    '''
+    Encodes object to JSON, additionally converting datetime into ISO 8601 format
+    '''
+
+    def default(self, obj):
+        import numpy as np
+
+        # Detect Pandas objects without importing Pandas, which is slow
+        if hasattr(obj, 'to_json'):
+            fmt = 'index' if obj.__class__.__name__ == 'Series' else 'records'
+            # loads + to_json() is slow but reliable. Handles numpy objects, mixed types, etc.
+            return loads(obj.to_json(orient=fmt, date_format='iso'), object_pairs_hook=OrderedDict)
+        elif isinstance(obj, datetime.datetime):
+            # Use local timezone if no timezone is specified
+            if obj.tzinfo is None:
+                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
+            return obj.isoformat()
+        elif isinstance(obj, np.datetime64):
+            obj = obj.item()
+            if isinstance(obj, datetime.datetime) and obj.tzinfo is None:
+                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
+            return obj.isoformat()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.bytes_):
+            return obj.decode('utf-8')
+        return super(CustomJSONEncoder, self).default(obj)
+
+
+class CustomJSONDecoder(JSONDecoder):
+    '''
+    Decodes JSON string, converting ISO 8601 datetime to datetime
+    '''
+
+    # Check if a string might be a datetime. Handles variants like:
+    # 2001-02-03T04:05:06Z
+    # 2001-02-03T04:05:06+000
+    # 2001-02-03T04:05:06.000+0000
+    re_datetimeval = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+    re_datetimestr = re.compile(r'"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+
+    def __init__(self, *args, **kwargs):
+        self.old_object_pairs_hook = kwargs.get('object_pairs_hook')
+        kwargs['object_pairs_hook'] = self.convert
+        super(CustomJSONDecoder, self).__init__(*args, **kwargs)
+
+    def decode(self, obj):
+        if self.re_datetimestr.match(obj):
+            return dateutil.parser.parse(obj[1:-1])
+        return super(CustomJSONDecoder, self).decode(obj)
+
+    def convert(self, obj):
+        for index, (key, val) in enumerate(obj):
+            if isinstance(val, str) and self.re_datetimeval.match(val):
+                obj[index] = (key, dateutil.parser.parse(val))
+        if callable(self.old_object_pairs_hook):
+            return self.old_object_pairs_hook(obj)
+        return dict(obj)
+
+
+def recursive_encode(data, encoding='utf-8'):
+    '''Convert Unicode to UTF-8 encoded byte strings in-place.'''
+    for key, value, node in walk(data):
+        if isinstance(key, str):
+            newkey = key.encode(encoding)
+            node[newkey] = node.pop(key)
+            key = newkey
+        if isinstance(value, str):
+            node[key] = value.encode(encoding)
+
+
+def prune_keys(conf, keys={}):
+    '''Returns a deep copy of a configuration removing specified keys.
+
+    `prune_keys(conf, {'comment'})` drops the "comment" key from any dict or sub-dict.
+    '''
+    if isinstance(conf, dict):
+        conf = AttrDict({k: prune_keys(v, keys) for k, v in conf.items() if k not in keys})
+    elif isinstance(conf, (list, tuple)):
+        conf = [prune_keys(v, keys) for v in conf]
+    return conf
+
+
+def used_kwargs(method, kwargs, ignore_keywords=False):
+    '''
+    Splits kwargs into those used by method, and those that are not.
+
+    Returns a tuple of (used, rest). *used* is a dict subset of kwargs with only
+    keys used by method. *rest* has the remaining kwargs keys.
+
+    If the method uses `**kwargs` (keywords), it uses all keys. To ignore this
+    and return only named arguments, use `ignore_keywords=True`.
+    '''
+    # In Pandas 1.5, DataFrame.to_csv and DataFrame.to_excel are wrapped with @deprecate_kwargs.
+    # We dive deeper to detect the actual keywords. __wrapped__ is provided by functools.wraps
+    # https://docs.python.org/3/library/functools.html
+    while hasattr(method, '__wrapped__'):
+        method = method.__wrapped__
+    argspec = inspect.getfullargspec(method)
+    # If method uses **kwargs, return all kwargs (unless you ignore **kwargs)
+    if argspec.varkw and not ignore_keywords:
+        used, rest = kwargs, {}
+    else:
+        # Split kwargs into 2 dicts -- used and rest
+        used, rest = {}, {}
+        for key, val in kwargs.items():
+            target = used if key in set(argspec.args) else rest
+            target[key] = val
+    return used, rest
+
+
+_valid_key_chars = string.ascii_letters + string.digits
+
+
+def random_string(size, chars=_valid_key_chars):
+    '''Return random string of length size using chars (which defaults to alphanumeric)'''
+    # B311:random random() is safe since it's for non-cryptographic use
+    return ''.join(choice(chars) for index in range(size))  # nosec B311
+
+
+class PathConfig(AttrDict):
+    '''
+    An `AttrDict` that is loaded from a path as a YAML file. For e.g.,
+    `conf = PathConfig(path)` loads the YAML file at `path` as an AttrDict.
+    `+conf` reloads the path if required.
+
+    `warn=` is an optional list of key paths. Any conflict on dictionaries
+    matching any of these paths is logged as a warning. For example,
+    `warn=['url.*', 'watch.*']` warns if any url: sub-key or watch: sub-key
+    has a conflict.
+
+    Like http://configure.readthedocs.org/ but supports imports not inheritance.
+    This lets us import YAML files in the middle of a YAML structure.
+
+        key:
+            import:
+                conf1: file1.yaml       # Import file1.yaml here
+                conf2: file2.yaml       # Import file2.yaml here
+
+    Each `PathConfig` object has an `__info__` attribute with the following
+    keys:
+
+    __info__.path
+        The path that this instance syncs with, stored as a `pathlib.Path`
+    __info__.warn
+        The keys to warn in case about in case of an import merge conflict
+    __info__.imports
+        A list of imported files, stored as an `AttrDict` with 2 attributes:
+
+        path
+            The path that was imported, stored as a `pathlib.Path`
+        stat
+            The `os.stat()` information about this file (or `None` if the
+            file is missing.)
+    '''
+
+    duplicate_warn = None
+
+    def __init__(self, path, warn=None):
+        super(PathConfig, self).__init__()
+        if warn is None:
+            warn = self.duplicate_warn
+        self.__info__ = AttrDict(path=Path(path), imports=[], warn=warn)
+        self.__pos__()
+
+    def __pos__(self):
+        '''+config reloads this config (if it has a path)'''
+        path = self.__info__.path
+
+        # We must reload the layer if nothing has been imported...
+        reload = not self.__info__.imports
+        # ... or if an imported file is deleted / updated
+        for imp in self.__info__.imports:
+            exists = imp.path.exists()
+            # If the path existed but has now been deleted, log it
+            if not exists and imp.stat is not None:
+                reload = True
+                app_log.debug(f'Config deleted: {imp.path}')
+                break
+            if exists and (
+                imp.path.stat().st_mtime > imp.stat.st_mtime
+                or imp.path.stat().st_size != imp.stat.st_size
+            ):
+                reload = True
+                app_log.info(f'Updated config: {imp.path}')
+                break
+        if reload:
+            self.clear()
+            self.update(_yaml_open(path))
+            self.__info__.imports = load_imports(self, source=path, warn=self.__info__.warn)
+        return self
+
+
 class ChainConfig(AttrDict):
     '''
     An AttrDict that manages multiple configurations as layers.
@@ -147,7 +373,7 @@ class ChainConfig(AttrDict):
         ...     ('app2', AttrDict())
         ... ])
 
-    Any dict-compatible values are allowed. ``+config`` returns the merged values.
+    Any dict-compatible values are allowed. `+config` returns the merged values.
     '''
 
     def __pos__(self):
@@ -207,6 +433,21 @@ def setup_variables():
 variables = setup_variables()
 
 
+class ConfigYAMLLoader(SafeLoader):
+    '''
+    A YAML loader that loads a YAML file into an ordered AttrDict.
+
+        >>> attrdict = yaml.load(yaml_string, Loader=ConfigYAMLLoader)
+
+    If there are duplicate keys, this raises an error.
+    '''
+
+    def __init__(self, *args, **kwargs):
+        super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
+        self.add_constructor('tag:yaml.org,2002:map', _from_yaml)
+        self.add_constructor('tag:yaml.org,2002:omap', _from_yaml)
+
+
 def _substitute_variable(val):
     '''
     If val contains a ${VAR} or $VAR and VAR is in the variables global,
@@ -257,15 +498,6 @@ def _calc_value(val, key):
         return _substitute_variable(val)
 
 
-_valid_key_chars = string.ascii_letters + string.digits
-
-
-def random_string(size, chars=_valid_key_chars):
-    '''Return random string of length size using chars (which defaults to alphanumeric)'''
-    # B311:random random() is safe since it's for non-cryptographic use
-    return ''.join(choice(chars) for index in range(size))  # nosec B311
-
-
 RANDOM_KEY = r'$*'
 
 
@@ -306,27 +538,12 @@ def _from_yaml(loader, node):
         attrdict[key] = loader.construct_object(value_node, deep=False)
 
 
-class ConfigYAMLLoader(SafeLoader):
-    '''
-    A YAML loader that loads a YAML file into an ordered AttrDict. Usage::
-
-        >>> attrdict = yaml.load(yaml_string, Loader=ConfigYAMLLoader)
-
-    If there are duplicate keys, this raises an error.
-    '''
-
-    def __init__(self, *args, **kwargs):
-        super(ConfigYAMLLoader, self).__init__(*args, **kwargs)
-        self.add_constructor('tag:yaml.org,2002:map', _from_yaml)
-        self.add_constructor('tag:yaml.org,2002:omap', _from_yaml)
-
-
 def _yaml_open(path, default=AttrDict(), **kwargs):
     '''
     Load a YAML path.Path as AttrDict. Replace ${VAR} or $VAR with variables.
     Defines special variables $YAMLPATH as the absolute path of the YAML file,
     and $YAMLURL as the path relative to current directory. These can be
-    overridden via keyward arguments (e.g. ``YAMLURL=...``)
+    overridden via keyward arguments (e.g. `YAMLURL=...`)
 
     If key has " if ", include it only if the condition (eval-ed in Python) is
     true.
@@ -418,9 +635,9 @@ def _yaml_open(path, default=AttrDict(), **kwargs):
 
 def _pathstat(path):
     '''
-    Return a path stat object, which has 2 attributes/keys: ``.path`` is the
-    same as the ``path`` parameter. ``stat`` is the result of ``os.stat``. If
-    path is missing, ``stat`` has ``st_mtime`` and ``st_size`` set to ``0``.
+    Return a path stat object, which has 2 attributes/keys: `.path` is the
+    same as the `path` parameter. `stat` is the result of `os.stat`. If
+    path is missing, `stat` has `st_mtime` and `st_size` set to `0`.
     '''
     # If path doesn't exist, create a dummy stat structure with
     # safe defaults (old mtime, 0 filesize, etc)
@@ -432,7 +649,7 @@ def _add_ns(config, namespace, prefix):
     '''
     Given a YAML config (basically a dict), add prefix to specified namespaces.
 
-    For example::
+    For example:
 
         >>> _add_ns({'x': 1}, '*', 'a')
         {'a.x': 1}
@@ -460,17 +677,17 @@ def load_imports(config, source, warn=None):
     '''
     Post-process a config for imports.
 
-    ``config`` is the data to process. ``source`` is the path where it was
+    `config` is the data to process. `source` is the path where it was
     loaded from.
 
-    If ``config`` has an ``import:`` key, treat all values below that as YAML
-    files (specified relative to ``source``) and import them in sequence.
+    If `config` has an `import:` key, treat all values below that as YAML
+    files (specified relative to `source`) and import them in sequence.
 
     Return a list of imported paths as :func:_pathstat objects. (This includes
-    ``source``.)
+    `source`.)
 
-    For example, if the ``source`` is  ``base.yaml`` (which has the below
-    configuration) and is loaded into ``config``::
+    For example, if the `source` is  `base.yaml` (which has the below
+    configuration) and is loaded into `config`.
 
         app:
             port: 20
@@ -478,13 +695,13 @@ def load_imports(config, source, warn=None):
         path: /
         import: update*.yaml    # Can be any glob, e.g. */gramex.yaml
 
-    ... and ``update.yaml`` looks like this::
+    ... and `update.yaml` looks like this.
 
         app:
             port: 30
             new: yes
 
-    ... then after this function is called, ``config`` looks like this::
+    ... then after this function is called, `config` looks like this.
 
         app:
             port: 20        # From base.yaml. NOT updated by update.yaml
@@ -492,21 +709,21 @@ def load_imports(config, source, warn=None):
             new: yes        # From update.yaml
         path: /             # From base.yaml
 
-    The ``import:`` keys are deleted. The return value contains :func:_pathstat
-    values for ``base.yaml`` and ``update.yaml`` in that order.
+    The `import:` keys are deleted. The return value contains :func:_pathstat
+    values for `base.yaml` and `update.yaml` in that order.
 
-    Multiple ``import:`` values can be specified as a dictionary::
+    Multiple `import:` values can be specified as a dictionary.
 
         import:
             first-app: app1/*.yaml
             next-app: app2/*.yaml
 
-    To import sub-keys as namespaces, use::
+    To import sub-keys as namespaces
 
         import:
             app: {path: */gramex.yaml, namespace: 'url'}
 
-    This prefixes all keys under ``url:``. Here are more examples::
+    This prefixes all keys under `url:`. Here are more examples.
 
         namespace: True             # Add namespace to all top-level keys
         namespace: url              # Add namespace to url.*
@@ -516,9 +733,9 @@ def load_imports(config, source, warn=None):
     By default, the prefix is the relative path of the imported YAML file
     (relative to the importer).
 
-    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
+    `warn=` is an optional list of key paths. Any conflict on dictionaries
     matching any of these paths is logged as a warning. For example,
-    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
+    `warn=['url.*', 'watch.*']` warns if any url: sub-key or watch: sub-key
     has a conflict.
     '''
     imported_paths = [_pathstat(source)]
@@ -570,90 +787,17 @@ def load_imports(config, source, warn=None):
     return imported_paths
 
 
-class PathConfig(AttrDict):
-    '''
-    An ``AttrDict`` that is loaded from a path as a YAML file. For e.g.,
-    ``conf = PathConfig(path)`` loads the YAML file at ``path`` as an AttrDict.
-    ``+conf`` reloads the path if required.
-
-    ``warn=`` is an optional list of key paths. Any conflict on dictionaries
-    matching any of these paths is logged as a warning. For example,
-    ``warn=['url.*', 'watch.*']`` warns if any url: sub-key or watch: sub-key
-    has a conflict.
-
-    Like http://configure.readthedocs.org/ but supports imports not inheritance.
-    This lets us import YAML files in the middle of a YAML structure::
-
-        key:
-            import:
-                conf1: file1.yaml       # Import file1.yaml here
-                conf2: file2.yaml       # Import file2.yaml here
-
-    Each ``PathConfig`` object has an ``__info__`` attribute with the following
-    keys:
-
-    __info__.path
-        The path that this instance syncs with, stored as a ``pathlib.Path``
-    __info__.warn
-        The keys to warn in case about in case of an import merge conflict
-    __info__.imports
-        A list of imported files, stored as an ``AttrDict`` with 2 attributes:
-
-        path
-            The path that was imported, stored as a ``pathlib.Path``
-        stat
-            The ``os.stat()`` information about this file (or ``None`` if the
-            file is missing.)
-    '''
-
-    duplicate_warn = None
-
-    def __init__(self, path, warn=None):
-        super(PathConfig, self).__init__()
-        if warn is None:
-            warn = self.duplicate_warn
-        self.__info__ = AttrDict(path=Path(path), imports=[], warn=warn)
-        self.__pos__()
-
-    def __pos__(self):
-        '''+config reloads this config (if it has a path)'''
-        path = self.__info__.path
-
-        # We must reload the layer if nothing has been imported...
-        reload = not self.__info__.imports
-        # ... or if an imported file is deleted / updated
-        for imp in self.__info__.imports:
-            exists = imp.path.exists()
-            # If the path existed but has now been deleted, log it
-            if not exists and imp.stat is not None:
-                reload = True
-                app_log.debug(f'Config deleted: {imp.path}')
-                break
-            if exists and (
-                imp.path.stat().st_mtime > imp.stat.st_mtime
-                or imp.path.stat().st_size != imp.stat.st_size
-            ):
-                reload = True
-                app_log.info(f'Updated config: {imp.path}')
-                break
-        if reload:
-            self.clear()
-            self.update(_yaml_open(path))
-            self.__info__.imports = load_imports(self, source=path, warn=self.__info__.warn)
-        return self
-
-
 def locate(path, modules=[], forceload=0):
     '''
     Locate an object by name or dotted path.
 
-    For example, ``locate('str')`` returns the ``str`` built-in.
-    ``locate('gramex.handlers.FileHandler')`` returns the class
-    ``gramex.handlers.FileHandler``.
+    For example, `locate('str')` returns the `str` built-in.
+    `locate('gramex.handlers.FileHandler')` returns the class
+    `gramex.handlers.FileHandler`.
 
-    ``modules`` is a list of modules to search for the path in first. So
-    ``locate('FileHandler', modules=[gramex.handlers])`` will return
-    ``gramex.handlers.FileHandler``.
+    `modules` is a list of modules to search for the path in first. So
+    `locate('FileHandler', modules=[gramex.handlers])` will return
+    `gramex.handlers.FileHandler`.
 
     If importing raises an Exception, log it and return None.
     '''
@@ -668,121 +812,12 @@ def locate(path, modules=[], forceload=0):
         return None
 
 
-class CustomJSONEncoder(JSONEncoder):
-    '''
-    Encodes object to JSON, additionally converting datetime into ISO 8601 format
-    '''
-
-    def default(self, obj):
-        import numpy as np
-
-        if hasattr(obj, 'to_dict'):
-            # Slow but reliable. Handles conversion of numpy objects, mixed types, etc.
-            return loads(
-                obj.to_json(orient='records', date_format='iso'), object_pairs_hook=OrderedDict
-            )
-        elif isinstance(obj, datetime.datetime):
-            # Use local timezone if no timezone is specified
-            if obj.tzinfo is None:
-                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
-            return obj.isoformat()
-        elif isinstance(obj, np.datetime64):
-            obj = obj.item()
-            if isinstance(obj, datetime.datetime) and obj.tzinfo is None:
-                obj = obj.replace(tzinfo=dateutil.tz.tzlocal())
-            return obj.isoformat()
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, np.bool_):
-            return bool(obj)
-        elif isinstance(obj, np.bytes_):
-            return obj.decode('utf-8')
-        return super(CustomJSONEncoder, self).default(obj)
-
-
-class CustomJSONDecoder(JSONDecoder):
-    '''
-    Decodes JSON string, converting ISO 8601 datetime to datetime
-    '''
-
-    # Check if a string might be a datetime. Handles variants like:
-    # 2001-02-03T04:05:06Z
-    # 2001-02-03T04:05:06+000
-    # 2001-02-03T04:05:06.000+0000
-    re_datetimeval = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
-    re_datetimestr = re.compile(r'"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
-
-    def __init__(self, *args, **kwargs):
-        self.old_object_pairs_hook = kwargs.get('object_pairs_hook')
-        kwargs['object_pairs_hook'] = self.convert
-        super(CustomJSONDecoder, self).__init__(*args, **kwargs)
-
-    def decode(self, obj):
-        if self.re_datetimestr.match(obj):
-            return dateutil.parser.parse(obj[1:-1])
-        return super(CustomJSONDecoder, self).decode(obj)
-
-    def convert(self, obj):
-        for index, (key, val) in enumerate(obj):
-            if isinstance(val, str) and self.re_datetimeval.match(val):
-                obj[index] = (key, dateutil.parser.parse(val))
-        if callable(self.old_object_pairs_hook):
-            return self.old_object_pairs_hook(obj)
-        return dict(obj)
-
-
-def objectpath(node, keypath, default=None):
-    '''
-    Traverse down a dot-separated object path into dict items or object attrs.
-    For example, ``objectpath(handler, 'request.headers.User-Agent')`` returns
-    ``handler.request.headers['User-Agent']``. Dictionary access is preferred.
-    Returns ``None`` if the path is not found.
-    '''
-    for key in keypath.split('.'):
-        if hasattr(node, '__getitem__'):
-            node = node.get(key)
-        else:
-            node = getattr(node, key, None)
-        if node is None:
-            return default
-    return node
-
-
-def recursive_encode(data, encoding='utf-8'):
-    '''
-    Convert all Unicode values into UTF-8 encoded byte strings in-place
-    '''
-    for key, value, node in walk(data):
-        if isinstance(key, str):
-            newkey = key.encode(encoding)
-            node[newkey] = node.pop(key)
-            key = newkey
-        if isinstance(value, str):
-            node[key] = value.encode(encoding)
-
-
-def prune_keys(conf, keys={}):
-    '''
-    Returns a deep copy of a configuration removing specified keys.
-    ``prune_keys(conf, {'comment'})`` drops the "comment" key from any dict or sub-dict.
-    '''
-    if isinstance(conf, dict):
-        conf = AttrDict({k: prune_keys(v, keys) for k, v in conf.items() if k not in keys})
-    elif isinstance(conf, (list, tuple)):
-        conf = [prune_keys(v, keys) for v in conf]
-    return conf
-
-
 class TimedRotatingCSVHandler(logging.handlers.TimedRotatingFileHandler):
     '''
     Same as logging.handlers.TimedRotatingFileHandler, but writes to a CSV.
-    The constructor accepts an additional ``keys`` list as input that has
-    column keys. When ``.emit()`` is called, it expects an object with the
-    same keys as ``keys``.
+    The constructor accepts an additional `keys` list as input that has
+    column keys. When `.emit()` is called, it expects an object with the
+    same keys as `keys`.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -827,42 +862,14 @@ def ioloop_running(loop):
     return loop.asyncio_loop.is_running()
 
 
-def used_kwargs(method, kwargs, ignore_keywords=False):
-    '''
-    Splits kwargs into those used by method, and those that are not.
-
-    Returns a tuple of (used, rest). *used* is a dict subset of kwargs with only
-    keys used by method. *rest* has the remaining kwargs keys.
-
-    If the method uses ``**kwargs`` (keywords), it uses all keys. To ignore this
-    and return only named arguments, use ``ignore_keywords=True``.
-    '''
-    # In Pandas 1.5, DataFrame.to_csv and DataFrame.to_excel are wrapped with @deprecate_kwargs.
-    # We dive deeper to detect the actual keywords. __wrapped__ is provided by functools.wraps
-    # https://docs.python.org/3/library/functools.html
-    while hasattr(method, '__wrapped__'):
-        method = method.__wrapped__
-    argspec = inspect.getfullargspec(method)
-    # If method uses **kwargs, return all kwargs (unless you ignore **kwargs)
-    if argspec.varkw and not ignore_keywords:
-        used, rest = kwargs, {}
-    else:
-        # Split kwargs into 2 dicts -- used and rest
-        used, rest = {}, {}
-        for key, val in kwargs.items():
-            target = used if key in set(argspec.args) else rest
-            target[key] = val
-    return used, rest
-
-
 def setup_secrets(path, max_age_days=1000000, clear=True):
     '''
-    Load ``<path>`` (which must be Path) as a YAML file. Update it into gramex.config.variables.
+    Load `<path>` (which must be Path) as a YAML file. Update it into gramex.config.variables.
 
-    If there's a ``SECRETS_URL:`` and ``SECRETS_KEY:`` key, the text from ``SECRETS_URL:`` is
-    decrypted using ``secrets_key``.
+    If there's a `SECRETS_URL:` and `SECRETS_KEY:` key, the text from `SECRETS_URL:` is
+    decrypted using `secrets_key`.
 
-    If there's a ``SECRETS_IMPORT:`` string, list or dict, the values are treated as file patterns
+    If there's a `SECRETS_IMPORT:` string, list or dict, the values are treated as file patterns
     pointing to other secrets file to be imported.
     '''
     if not path.is_file():
