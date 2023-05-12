@@ -144,7 +144,8 @@ class BaseMixin:
             raise ValueError(err)
         if caps:
             val = val.upper()
-        return set(val.replace(',', ' ').split())
+        # Return de-duplicated list. Avoid set(), use dict to preserve order
+        return list(dict.fromkeys(val.replace(',', ' ').split()))
 
     @classmethod
     def setup_httpmethods(cls, methods: Union[list, tuple, str]):
@@ -375,18 +376,35 @@ class BaseMixin:
         '''Initialize rate limiting checks'''
         if ratelimit is None:
             return
-        if ratelimit_app_conf is None:
+        if not ratelimit_app_conf:
             raise ValueError(f"url:{cls.name}.ratelimit: no app.ratelimit defined")
-        if 'keys' not in ratelimit:
-            raise ValueError(f'url:{cls.name}.ratelimit.keys: missing')
-        if 'limit' not in ratelimit:
-            raise ValueError(f'url:{cls.name}.ratelimit.limit: missing')
 
         # All ratelimit related info is stored in self._ratelimit
-        cls._ratelimit = AttrDict(key_fn=[])
+        cls._ratelimit = []
+        cls._on_init_methods.append(cls.check_ratelimit)
+        cls._on_finish_methods.append(cls.update_ratelimit)
 
-        # Default the pool name to `pattern:`
-        cls._ratelimit.pool = ratelimit.get('pool', cls.conf.pattern)
+        if isinstance(ratelimit, (list, tuple)):
+            for ratelimit_conf in ratelimit:
+                cls._setup_ratelimit(ratelimit_conf, ratelimit_app_conf)
+        else:
+            cls._setup_ratelimit(ratelimit, ratelimit_app_conf)
+
+    @classmethod
+    def _setup_ratelimit(cls, ratelimit, ratelimit_app_conf):
+        for key in ('keys', 'limit'):
+            if key not in ratelimit:
+                raise ValueError(f'url:{cls.name}.ratelimit.{key}: missing')
+
+        # All info for current ratelimit is in _ratelimit, which is added to cls._ratelimit
+        _ratelimit = AttrDict(
+            # Default the pool name to `pattern:`
+            pool=ratelimit.get('pool', cls.conf.pattern),
+            # Pick up the store location from the default app config
+            store=cls._get_store(ratelimit_app_conf),
+            key_fn=[],
+        )
+        cls._ratelimit.append(_ratelimit)
 
         # Convert keys: into list
         keys_spec = ratelimit['keys']
@@ -400,7 +418,7 @@ class BaseMixin:
         elif not isinstance(keys_spec, (list, tuple)):
             raise ValueError(f'url:{cls.name}.ratelimit.keys: needs dict list, not {keys_spec}')
 
-        # Pre-compile keys: into self._ratelimit.keys = [key_fn, key_fn, ...]
+        # Pre-compile keys: into _ratelimit.key_fn = [key_fn, key_fn, ...]
         #   key_fn['function'](self) will return nth key
         #   key_fn['expiry'](self) will return nth expiry (in seconds)
         predefined_keys = ratelimit_app_conf.get('keys', {})
@@ -418,7 +436,7 @@ class BaseMixin:
             # {function: ...} MUST be defined for a key. {expiry: ... } is optional
             if not isinstance(key_spec, dict) or 'function' not in key_spec:
                 raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} has no function:')
-            # Compile key/expiry functions into cls._ratelimit.keys[index]['function' / 'expiry']
+            # Compile key/expiry functions into _ratelimit.key_fn[index]['function' / 'expiry']
             key_fn = {}
             for fn in ('function', 'expiry'):
                 if fn in key_spec:
@@ -428,7 +446,7 @@ class BaseMixin:
                         filename=f'url:{cls.name}.ratelimit.keys[{index}].{fn}',
                         iter=False,
                     )
-            cls._ratelimit.key_fn.append(key_fn)
+            _ratelimit.key_fn.append(key_fn)
 
         # Ensure limit: is a number or a {function: ...}
         limit_spec = ratelimit['limit']
@@ -438,17 +456,13 @@ class BaseMixin:
             example = "{'function': number}"
             raise ValueError(f'url:{cls.name}.ratelimit.limit: needs {example}, not {limit_spec}')
 
-        # Pre-compile limit: into self._ratelimit.limit_fn
-        cls._ratelimit.limit_fn = build_transform(
+        # Pre-compile limit: into _ratelimit.limit_fn
+        _ratelimit.limit_fn = build_transform(
             limit_spec,
             vars={'handler': None},
             filename=f'url:{cls.name}.ratelimit.limit',
             iter=False,
         )
-
-        cls._ratelimit.store = cls._get_store(ratelimit_app_conf)
-        cls._on_init_methods.append(cls.check_ratelimit)
-        cls._on_finish_methods.append(cls.update_ratelimit)
 
     @classmethod
     def reset_ratelimit(cls, pool: str, keys: List[Any], value: int = 0) -> bool:
@@ -782,7 +796,8 @@ class BaseMixin:
                 return
             except Exception:
                 app_log.exception(f'url:{self.name}.error.{status_code} raised an exception')
-        # HTTP 429 error code reports ratelimits
+        # HTTP 429 error code reports ratelimits. Set the headers if ratelimit is set.
+        # Note: Previous headers are cleared, so we need to explicitly write them here.
         if status_code == TOO_MANY_REQUESTS and hasattr(self, '_ratelimit'):
             self.set_ratelimit_headers()
         # If error was not written, use the default error
@@ -1035,37 +1050,44 @@ class BaseMixin:
 
     def check_ratelimit(self):
         '''Raise HTTP 429 if usage exceeds rate limit. Set X-Ratelimit-* HTTP headers'''
-        ratelimit = self._ratelimit
-        # Get the rate limit key, limit and expiry
-        ratelimit.key = json.dumps(
-            [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
-        )
-        ratelimit.limit = ratelimit.limit_fn(self)
-        expiries = [key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn]
-        # If no expiry is specified, store for 100 years
-        ratelimit.expiry = min(expiries + [3155760000])
+        for ratelimit in self._ratelimit:
+            # Get the rate limit key, limit and expiry
+            ratelimit.key = json.dumps(
+                [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
+            )
+            ratelimit.limit = ratelimit.limit_fn(self)
+            expiries = [
+                key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn
+            ]
+            # If no expiry is specified, store for 100 years
+            ratelimit.expiry = min(expiries + [3155760000])
 
-        # Ensure usage does not hit limit
-        ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
-        if ratelimit.usage >= ratelimit.limit:
-            raise HTTPError(TOO_MANY_REQUESTS, f'{ratelimit.key} hit rate limit {ratelimit.limit}')
+            # Ensure usage does not hit limit
+            ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
+            if ratelimit.usage >= ratelimit.limit:
+                raise HTTPError(
+                    TOO_MANY_REQUESTS,
+                    f'{ratelimit.pool}: {ratelimit.key} hit rate limit {ratelimit.limit}',
+                )
         self.set_ratelimit_headers()
 
     def update_ratelimit(self):
         '''If request succeeds, increase rate limit usage count by 1'''
-        ratelimit = self._ratelimit
-        # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
-        # If response is a HTTP error, don't count towards rate limit
-        if 'key' not in ratelimit or self.get_status() >= 400:
-            return
-        # Increment the rate limit by 1
-        usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
-        usage_obj['n'] += 1
-        usage_obj['_t'] = time.time() + ratelimit.expiry
-        ratelimit.store.dump(ratelimit.key, usage_obj)
+        for ratelimit in self._ratelimit:
+            # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
+            # If response is a HTTP error, don't count towards rate limit
+            if 'key' not in ratelimit or self.get_status() >= 400:
+                return
+            # Increment the rate limit by 1
+            usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
+            usage_obj['n'] += 1
+            usage_obj['_t'] = time.time() + ratelimit.expiry
+            ratelimit.store.dump(ratelimit.key, usage_obj)
 
     def set_ratelimit_headers(self):
-        ratelimit = self._ratelimit
+        # Reference: https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html
+        # Pick the rate limit with the lowest remaining count
+        ratelimit = min(self._ratelimit, key=lambda r: r.limit - r.usage)
         # ratelimit.usage goes 0, 1, 2, ...
         # If limit is 3, remaining goes 3, 2, 1, ... -- use (limit - usage - 1)
         # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
