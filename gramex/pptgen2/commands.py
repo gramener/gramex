@@ -756,11 +756,11 @@ def chart(shape, spec, data: dict):
         new_chart_data = getattr(pptxchartdata, chart_type + 'ChartData')()
         new_chart_data.categories = chart_data.index
         if chart_type == 'Category':
-            for name, col in chart_data.iteritems():
+            for name, col in chart_data.items():
                 new_chart_data.add_series(name, col.values)
         # TODO: This messes up the resulting Excel sheet, and is not extensible. Rewrite via lxml
         elif chart_type == 'Xy':
-            for name, col in chart_data.iteritems():
+            for name, col in chart_data.items():
                 series = new_chart_data.add_series(name)
                 for index, v in col.items():
                     series.add_data_point(index, v)

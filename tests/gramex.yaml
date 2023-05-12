@@ -188,16 +188,30 @@ url:
       ratelimit:
         <<: *RATELIMIT_POOL1
 
+  ratelimit/ab:
+    pattern: /ratelimit/ab
+    handler: FunctionHandler
+    kwargs:
+      function: 1 / float(handler.get_arg('n', 1))
+      ratelimit:
+        - <<: *RATELIMIT_POOL1
+        - pool: pool2
+          keys: [env.HOME, daily]
+          limit: 4
+
   ratelimit/reset:
     pattern: /ratelimit/reset
     handler: FunctionHandler
     kwargs:
       function: >
-        handler.reset_ratelimit(
-          'pool1',
-          [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d'), handler.get_arg('user', '')],
-          0,
-        )
+        handler.reset_ratelimit('pool1', [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d'), handler.get_arg('user', '')], 0)
+
+  ratelimit/reset2:
+    pattern: /ratelimit/reset2
+    handler: FunctionHandler
+    kwargs:
+      function: >
+        handler.reset_ratelimit('pool2', [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d')], 0)
 
   # TestFunctionHandler
   func/args:
