@@ -385,8 +385,8 @@ storelocations:
       app: TEXT
       namespace: TEXT
       project: TEXT
+      role: TEXT
       permission: TEXT
-      description: TEXT
   roles:
     url: sqlite:///$GRAMEXDATA/roles.db
     table: roles
@@ -394,20 +394,11 @@ storelocations:
       app: TEXT
       namespace: TEXT
       project: TEXT
-      role: TEXT
-      permission: TEXT
-  map_user_role:
-    url: sqlite:///$GRAMEXDATA/roles.db
-    table: map_user_role
-    columns:
-      app: TEXT
-      namespace: TEXT
-      project: TEXT
       user: TEXT
       role: TEXT
-  map_user_extra_permissions:
+  user_permissions:
     url: sqlite:///$GRAMEXDATA/roles.db
-    table: map_user_extra_permissions
+    table: user_permissions
     columns:
       app: TEXT
       namespace: TEXT
