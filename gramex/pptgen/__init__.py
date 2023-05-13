@@ -31,9 +31,8 @@ def commandline():
 
 def run_commands(commands, callback):
     '''
-    For example::
-
-        run_commands(['a.yaml', 'b.yaml', '--x=1'], method)
+    Examples:
+        >>> run_commands(['a.yaml', 'b.yaml', '--x=1'], method)
 
     will do the following:
 
@@ -46,7 +45,7 @@ def run_commands(commands, callback):
         - Change to directory where b.yaml is
         - Call method(config)
 
-    Command line arguments are passed as ``commands``.
+    Command line arguments are passed as `commands`.
     Callback is a function that is called for each config file.
     '''
     args = parse_command_line(commands)
@@ -208,9 +207,9 @@ def pptgen(source, target=None, **config):
 def change_shapes(collection, change, data, handler, **kwargs):
     '''
     Apply changes to a collection of shapes in the context of data.
-    ``collection`` is a slide.shapes or group shapes.
-    ``change`` is typically a dict of <shape-name>: commands.
-    ``data`` is a dictionary passed to the template engine.
+    `collection` is a slide.shapes or group shapes.
+    `change` is typically a dict of <shape-name>: commands.
+    `data` is a dictionary passed to the template engine.
     '''
     prs = kwargs.get('prs')
     new_slide = kwargs.get('new_slide')

@@ -5,17 +5,17 @@ def color(domain, range, bin=False, to='hex', name='Gramex color'):
     '''
     Returns a function that scales a number in domain to a color in the range.
 
-    - ``color(domain=[0, 1], range=['white', 'blue'])``
+    - `color(domain=[0, 1], range=['white', 'blue'])`
       maps values between 0 to 1 smoothly from white to blue.
 
     Use multiple colors in a smooth gradient.
 
-    - ``color(domain=[-1, 0, 1], range=['red', 'yellow', 'green'])``
+    - `color(domain=[-1, 0, 1], range=['red', 'yellow', 'green'])`
       maps values between -1 to +1 smoothly from red to yellow to green
 
     Use multiple colors discretely by binning into buckets (called quantization).
 
-    - ``color(domain=[-1, 0, 1], range=['red', 'green'], bin=True)``
+    - `color(domain=[-1, 0, 1], range=['red', 'green'], bin=True)`
       maps (-1, 0) to red, and (0, 1) to green
     '''
     import numpy as np

@@ -201,7 +201,7 @@ class TestPPTGen(TestCase):
         eq_(shape.rotation, 45)
 
     def test_only(self, slides=[2, 4]):
-        # Delete slides except those specified in ``only``
+        # Delete slides except those specified in `only`
         with assert_raises(TypeError):
             pptgen(source=self.input, only={})
         with assert_raises(TypeError):

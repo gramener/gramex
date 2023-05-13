@@ -18,17 +18,19 @@ from gramex.transforms import build_transform
 
 def is_slide_allowed(change, slide, number):
     '''
-    Given a change like one of the below::
+    Given a change like one of the below:
 
-        slide-number: 1
-        slide-number: [1, 2, 3]
-        slide-title: 'company'
-        slide-title: ['company', 'industry']
+    ```yaml
+    slide-number: 1
+    slide-number: [1, 2, 3]
+    slide-title: 'company'
+    slide-title: ['company', 'industry']
+    ```
 
     ... return True if:
 
-    1. ``number`` matches a slide-number
-    2. ``slide`` title matches a slide-title regex (case-insensitive)
+    1. `number` matches a slide-number
+    2. `slide` title matches a slide-title regex (case-insensitive)
 
     If none of these are specified, return True.
     '''
@@ -205,17 +207,17 @@ def scale(series, lo=None, hi=None):
     The lowest value becomes 0, the highest value becomes 1, and all other
     values are proportionally multiplied and have a range between 0 and 1.
 
-    :arg Series series: Data to scale. Pandas Series, numpy array, list or iterable
-    :arg float lo: Value that becomes 0. Values lower than ``lo`` in ``series``
-        will be mapped to negative numbers.
-    :arg float hi: Value that becomes 1. Values higher than ``hi`` in ``series``
-        will be mapped to numbers greater than 1.
+    Parameters:
 
-    Examples::
+        series: Data to scale. Pandas Series, numpy array, list or iterable
+        lo: Value that becomes 0. Values lower than `lo` in `series`
+            will be mapped to negative numbers.
+        hi: Value that becomes 1. Values higher than `hi` in `series`
+            will be mapped to numbers greater than 1.
 
+    Examples:
         >>> stats.scale([1, 2, 3, 4, 5])
         ... array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
-
         >>> stats.scale([1, 2, 3, 4, 5], lo=2, hi=4)
         ... array([-0.5,  0. ,  0.5,  1. ,  1.5])
     '''
@@ -227,20 +229,20 @@ def scale(series, lo=None, hi=None):
 
 def decimals(series):
     '''
-    Given a ``series`` of numbers, returns the number of decimals
+    Given a `series` of numbers, returns the number of decimals
     *just enough* to differentiate between most numbers.
 
-    :arg Series series: Pandas Series, numpy array, list or iterable.
-        Data to find the required decimal precision for
-    :return: The minimum number of decimals required to differentiate between
-        most numbers
+    Parameters:
+        series: Pandas Series, numpy array, list or iterable. Data to find decimal precision for
 
-    Examples::
+    Returns:
+        The minimum number of decimals required to differentiate between most numbers
 
-        stats.decimals([1, 2, 3])       # 0: All integers. No decimals needed
-        stats.decimals([.1, .2, .3])    # 1: 1 decimal is required
-        stats.decimals([.01, .02, .3])  # 2: 2 decimals are required
-        stats.decimals(.01)             # 2: Only 1 no. of 2 decimal precision
+    Examples:
+        >>> stats.decimals([1, 2, 3])       # 0: All integers. No decimals needed
+        >>> stats.decimals([.1, .2, .3])    # 1: 1 decimal is required
+        >>> stats.decimals([.01, .02, .3])  # 2: 2 decimals are required
+        >>> stats.decimals(.01)             # 2: Only 1 no. of 2 decimal precision
 
     Note: This function first calculates the smallest difference between any pair
     of numbers (ignoring floating-point errors). It then finds the log10 of that
@@ -465,9 +467,7 @@ def squarified(x, y, w, h, data):
     See <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.36.6685>
     Returns a numpy array with (x, y, w, h) for each item in data.
 
-    Examples::
-
-        # The result is a 2x2 numpy array::
+    Examples:
         >>> squarified(x=0, y=0, w=6, h=4, data=[6, 6, 4, 3, 2, 2, 1])
         array([[ 0.        ,  0.        ,  3.        ,  2.        ],
                [ 0.        ,  2.        ,  3.        ,  2.        ],
@@ -476,7 +476,6 @@ def squarified(x, y, w, h, data):
                [ 3.        ,  2.33333333,  1.2       ,  1.66666667],
                [ 4.2       ,  2.33333333,  1.2       ,  1.66666667],
                [ 5.4       ,  2.33333333,  0.6       ,  1.66666667]])
-
         >>> squarified(x=0, y=0, w=1, h=1, data=[np.nan, 0, 1, 2])
         array([[ 0.        ,  0.        ,  0.        ,  0.        ],
                [ 0.        ,  0.        ,  0.        ,  0.        ],

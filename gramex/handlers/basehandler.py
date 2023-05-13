@@ -36,8 +36,9 @@ Morsel._reserved.setdefault('samesite', 'SameSite')
 
 
 class BaseMixin:
-    '''Common utilities for all handlers. This is usde by [gramex.handlers.BaseHandler][] and
-    [gramex.handlers.BaseWebSocketHandler][].
+    '''Common utilities for all handlers. This is used by
+    [BaseHandler][gramex.handlers.BaseHandler] and
+    [BaseWebSocketHandler][gramex.handlers.BaseWebSocketHandler].
     '''
 
     @classmethod
@@ -469,12 +470,10 @@ class BaseMixin:
         '''Reset the rate limit usage for a specific pool.
 
         Examples:
-
             >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'])
             >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'], 10)
 
         Parameters:
-
             pool: Rate limit pool to use. This is the url's `pattern:` unless you specified a
                 `kwargs.ratelimit.pool:`
             keys: specific instance to reset. If your `ratelimit.keys` is `[daily, user.id]`,
@@ -493,30 +492,34 @@ class BaseMixin:
     @classmethod
     def setup_redirect(cls, redirect):
         '''
-        Any handler can have a ``redirect:`` kwarg that looks like this::
+        Any handler can have a `redirect:` kwarg that looks like this:
 
-            redirect:
-                query: next         # If the URL has a ?next=..., redirect to that page next
-                header: X-Next      # Else if the header has an X-Next=... redirect to that
-                url: ...            # Else redirect to this URL
+        ```yaml
+        redirect:
+            query: next         # If the URL has a ?next=..., redirect to that page next
+            header: X-Next      # Else if the header has an X-Next=... redirect to that
+            url: ...            # Else redirect to this URL
+        ```
 
         Only these 3 keys are allowed. All are optional, and checked in the
-        order specified. So, for example::
+        order specified. So, for example:
 
-            redirect:
-                header: X-Next      # Checks the X-Next header first
-                query: next         # If it's missing, uses the ?next=
+        ```yaml
+        redirect:
+            header: X-Next      # Checks the X-Next header first
+            query: next         # If it's missing, uses the ?next=
+        ```
 
-        You can also specify a string for redirect. ``redirect: ...`` is the same
-        as ``redirect: {url: ...}``.
+        You can also specify a string for redirect. `redirect: ...` is the same
+        as `redirect: {url: ...}`.
 
-        When any BaseHandler subclass calls ``self.save_redirect_page()``, it
-        stores the redirect URL in ``session['_next_url']``. The URL is
+        When any BaseHandler subclass calls `self.save_redirect_page()`, it
+        stores the redirect URL in `session['_next_url']`. The URL is
         calculated relative to the handler's URL.
 
-        After that, when the subclass calls ``self.redirect_next()``, it
-        redirects to ``session['_next_url']`` and clears the value. (If the
-        ``_next_url`` was not stored, we redirect to the home page ``/``.)
+        After that, when the subclass calls `self.redirect_next()`, it
+        redirects to `session['_next_url']` and clears the value. (If the
+        `_next_url` was not stored, we redirect to the home page `/`.)
 
         Only some handlers implement redirection. But they all implement it in
         this same consistent way.
@@ -625,18 +628,20 @@ class BaseMixin:
     @classmethod
     def setup_error(cls, error):
         '''
-        Sample configuration::
+        Sample configuration:
 
-            error:
-                404:
-                    path: template.json         # Use a template
-                    autoescape: false           # with no autoescape
-                    whitespace: single          # as a single line
-                    headers:
-                        Content-Type: application/json
-                500:
-                    function: module.fn
-                    args: [=status_code, =kwargs, =handler]
+        ```yaml
+        error:
+            404:
+                path: template.json         # Use a template
+                autoescape: false           # with no autoescape
+                whitespace: single          # as a single line
+                headers:
+                    Content-Type: application/json
+            500:
+                function: module.fn
+                args: [=status_code, =kwargs, =handler]
+        ```
         '''
         if not error:
             return
@@ -686,10 +691,12 @@ class BaseMixin:
     @classmethod
     def setup_xsrf(cls, xsrf_cookies):
         '''
-        Sample configuration::
+        Sample configuration:
 
-            xsrf_cookies: false         # Disables xsrf_cookies
-            xsrf_cookies: true          # or anything other than false keeps it enabled
+        ```yaml
+        xsrf_cookies: false         # Disables xsrf_cookies
+        xsrf_cookies: true          # or anything other than false keeps it enabled
+        ```
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
 
@@ -725,9 +732,9 @@ class BaseMixin:
     def save_redirect_page(self):
         '''
         Loop through all redirect: methods and save the first available redirect
-        page against the session. Defaults to previously set value, else ``/``.
+        page against the session. Defaults to previously set value, else `/`.
 
-        See :py:func:`setup_redirect`
+        See [setup_redirect][gramex.handlers.BaseMixin.setup_redirect].
         '''
         for method in self.redirects:
             next_url = method(self)
@@ -738,10 +745,10 @@ class BaseMixin:
 
     def redirect_next(self):
         '''
-        Redirect the user ``session['_next_url']``. If it does not exist,
+        Redirect the user `session['_next_url']`. If it does not exist,
         set it up first. Then redirect.
 
-        See :py:func:`setup_redirect`
+        See [setup_redirect][gramex.handlers.BaseMixin.setup_redirect].
         '''
         if '_next_url' not in self.session:
             self.save_redirect_page()
@@ -807,8 +814,8 @@ class BaseMixin:
     def session(self):
         '''
         By default, session is not implemented. You need to specify a
-        ``session:`` section in ``gramex.yaml`` to activate it. It is replaced by
-        the ``get_session`` method as a property.
+        `session:` section in `gramex.yaml` to activate it. It is replaced by
+        the `get_session` method as a property.
         '''
         raise NotImplementedError('Specify a session: section in gramex.yaml')
 
@@ -849,15 +856,15 @@ class BaseMixin:
 
         Sessions use these pre-defined timing keys (values are timestamps):
 
-        - ``_t`` is the expiry time of the session
-        - ``_l`` is the last time the user accessed a page. Updated by
-          :py:func:`BaseHandler.set_last_visited`
-        - ``_i`` is the inactive expiry duration in seconds, i.e. if ``now > _l +
-          _i``, the session has expired.
+        - `_t` is the expiry time of the session
+        - `_l` is the last time the user accessed a page. Updated by
+          [setup_redirect][gramex.handlers.BaseMixin.set_last_visited]
+        - `_i` is the inactive expiry duration in seconds, i.e. if `now > _l +
+          _i`, the session has expired.
 
-        ``new=`` creates a new session to avoid session fixation.
+        `new=` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
-        :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
+        [`set_user()`][gramex.handlers.AuthHandler.set_user] uses it.
         When the user logs in:
 
         - If no old session exists, it returns a new session object.
@@ -911,7 +918,7 @@ class BaseMixin:
         size: int = None,
         type: str = 'OTP',
     ) -> str:
-        '''Return one-time password valid for ``expire`` seconds.
+        '''Return one-time password valid for `expire` seconds.
 
         The OTP is used as the X-Gramex-OTP header or in `?gramex-otp=` on any request.
         This overrides the user with the passed `user` object for that session.
@@ -1038,7 +1045,7 @@ class BaseMixin:
 
         - `session._l` is the last time the user accessed a page.
         - `session._i` is the seconds of inactivity after which the session expires.
-        - If `session._i` is set (we track inactive expiry), we set ``session._l` to now.
+        - If `session._i` is set (we track inactive expiry), we set `session._l` to now.
         '''
         # Called by BaseHandler.prepare() when any user accesses a page.
         # For efficiency reasons, don't call get_session every time. Check
@@ -1140,15 +1147,15 @@ class BaseHandler(RequestHandler, BaseMixin):
     def get_arg(self, name, default=..., first=False):
         '''
         Returns the value of the argument with the given name. Similar to
-        ``.get_argument`` but uses ``self.args`` instead.
+        `.get_argument` but uses `self.args` instead.
 
         If default is not provided, the argument is considered to be
         required, and we raise a `MissingArgumentError` if it is missing.
 
-        If the argument is repeated, we return the last value. If ``first=True``
+        If the argument is repeated, we return the last value. If `first=True`
         is passed, we return the first value.
 
-        ``self.args`` is always UTF-8 decoded unicode. Whitespaces are stripped.
+        `self.args` is always UTF-8 decoded unicode. Whitespaces are stripped.
         '''
         if name not in self.args:
             if default is ...:
@@ -1186,7 +1193,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             callback(self)
 
     def get_current_user(self):
-        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        '''Return the `user` key from the session as an AttrDict if it exists.'''
         result = self.session.get('user')
         return AttrDict(result) if isinstance(result, dict) else result
 
@@ -1235,50 +1242,64 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def argparse(self, *args, **kwargs):
         '''
-        Parse URL query parameters and return an AttrDict. For example::
+        Parse URL query parameters and return an AttrDict. For example:
 
-            args = handler.argparse('x', 'y')
-            args.x      # is the last value of ?x=value
-            args.y      # is the last value of ?y=value
+        ```python
+        args = handler.argparse('x', 'y')
+        args.x      # is the last value of ?x=value
+        args.y      # is the last value of ?y=value
+        ```
 
-        A missing ``?x=`` or ``?y=`` raises a HTTP 400 error mentioning the
+        A missing `?x=` or `?y=` raises a HTTP 400 error mentioning the
         missing key.
 
-        For optional arguments, use::
+        For optional arguments, use:
 
-            args = handler.argparse(z={'default': ''})
-            args.z      # returns '' if ?z= is missing
+        ```python
+        args = handler.argparse(z={'default': ''})
+        args.z      # returns '' if ?z= is missing
+        ```
 
-        You can convert the value to a type::
+        You can convert the value to a type:
 
-            args = handler.argparse(limit={'type': int, 'default': 100})
-            args.limit      # returns ?limit= as an integer
+        ```python
+        args = handler.argparse(limit={'type': int, 'default': 100})
+        args.limit      # returns ?limit= as an integer
+        ```
 
         You can restrict the choice of values. If the query parameter is not in
-        choices, we raise a HTTP 400 error mentioning the invalid key & value::
+        choices, we raise a HTTP 400 error mentioning the invalid key & value:
 
-            args = handler.argparse(gender={'choices': ['M', 'F']})
-            args.gender      # returns ?gender= which will be 'M' or 'F'
+        ```python
+        args = handler.argparse(gender={'choices': ['M', 'F']})
+        args.gender      # returns ?gender= which will be 'M' or 'F'
+        ```
 
-        You can retrieve multiple values as a list::
+        You can retrieve multiple values as a list:
 
-            args = handler.argparse(cols={'nargs': '*', 'default': []})
-            args.cols       # returns an array with all ?col= values
+        ```python
+        args = handler.argparse(cols={'nargs': '*', 'default': []})
+        args.cols       # returns an array with all ?col= values
+        ```
 
-        ``type:`` conversion and ``choices:`` apply to each value in the list.
+        `type:` conversion and `choices:` apply to each value in the list.
 
-        To return all arguments as a list, pass ``list`` as the first parameter::
+        To return all arguments as a list, pass `list` as the first parameter:
 
-            args = handler.argparse(list, 'x', 'y')
-            args.x      # ?x=1 sets args.x to ['1'], not '1'
-            args.y      # Similarly for ?y=1
+        ```python
+        args = handler.argparse(list, 'x', 'y')
+        args.x      # ?x=1 sets args.x to ['1'], not '1'
+        args.y      # Similarly for ?y=1
+        ```
 
-        To handle unicode arguments and return all arguments as ``str`` or
-        ``unicode`` or ``bytes``, pass the type as the first parameter::
+        To handle unicode arguments and return all arguments as `str` or
+        `unicode` or `bytes`, pass the type as the first parameter:
 
-            args = handler.argparse(str, 'x', 'y')
-            args = handler.argparse(bytes, 'x', 'y')
-            args = handler.argparse(unicode, 'x', 'y')
+        ```python
+        args = handler.argparse(str, 'x', 'y')
+        args = handler.argparse(bytes, 'x', 'y')
+        args = handler.argparse(unicode, 'x', 'y')
+        ```
 
         By default, all arguments are added as str in PY3 and unicode in PY2.
 
@@ -1293,17 +1314,19 @@ class BaseHandler(RequestHandler, BaseMixin):
         - type: Python type to which the parameter should be converted (e.g. `int`)
         - choices: A container of the allowable values for the argument (after type conversion)
 
-        You can combine all these options. For example::
+        You can combine all these options. For example:
 
-            args = handler.argparse(
-                'name',                         # Raise error if ?name= is missing
-                department={'name': 'dept'},    # ?dept= is mapped to args.department
-                org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
-                age={'type': int},              # Convert ?age= to an integer
-                married={'type': bool},         # Convert ?married to a boolean
-                alias={'nargs': '*'},           # Convert all ?alias= to a list
-                gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
-            )
+        ```python
+        args = handler.argparse(
+            'name',                         # Raise error if ?name= is missing
+            department={'name': 'dept'},    # ?dept= is mapped to args.department
+            org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
+            age={'type': int},              # Convert ?age= to an integer
+            married={'type': bool},         # Convert ?married to a boolean
+            alias={'nargs': '*'},           # Convert all ?alias= to a list
+            gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
+        )
+        ```
         '''
         result = AttrDict()
 
@@ -1402,7 +1425,7 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
             callback(self)
 
     def get_current_user(self):
-        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        '''Return the `user` key from the session as an AttrDict if it exists.'''
         result = self.session.get('user')
         return AttrDict(result) if isinstance(result, dict) else result
 

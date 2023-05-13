@@ -1,8 +1,8 @@
 '''
-pptgen2.pptgen() modifies slides using commands (in ``__init__.py``). This file maps the commands
-and their functions in ``cmdlist``.
+pptgen2.pptgen() modifies slides using commands (in `__init__.py`). This file maps the commands
+and their functions in `cmdlist`.
 
-Each command accepts ``(shape, spec, data)`` and modifies shape based on spec(ification) and data.
+Each command accepts `(shape, spec, data)` and modifies shape based on spec(ification) and data.
 '''
 
 import copy
@@ -138,14 +138,14 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     '''
     Set the FillFormat color to value specified as a:
 
-    - a named color, like ``black``
-    - a hex value, like ``#f80`` or ``#ff8800``
-    - an RGB value, like ``rgb(255, 255, 0)`` or ``rgb(1, 0.5, 0.1)``
-    - a tuple or list of RGB values, like ``(255, 255, 0)`` or ``[255, 255, 0]``
-    - a theme color, like ``ACCENT_1``, ``ACCENT_2``, ``BACKGROUND_1``, ``DARK_1``, ``LIGHT_2``
-    - a theme color with a brightness modifier, like ``ACCENT_1+40``, which is 40% brighter than
-      Accent 1, or ``ACCENT_2-20`` which is 20% darker than Accent 2
-    - ``'none'`` clears the color, i.e. makes it transparent
+    - a named color, like `black`
+    - a hex value, like `#f80` or `#ff8800`
+    - an RGB value, like `rgb(255, 255, 0)` or `rgb(1, 0.5, 0.1)`
+    - a tuple or list of RGB values, like `(255, 255, 0)` or `[255, 255, 0]`
+    - a theme color, like `ACCENT_1`, `ACCENT_2`, `BACKGROUND_1`, `DARK_1`, `LIGHT_2`
+    - a theme color with a brightness modifier, like `ACCENT_1+40`, which is 40% brighter than
+      Accent 1, or `ACCENT_2-20` which is 20% darker than Accent 2
+    - `'none'` clears the color, i.e. makes it transparent
     '''
     fill.solid()
     if val == 'none':

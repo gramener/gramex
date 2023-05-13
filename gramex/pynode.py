@@ -15,17 +15,18 @@ _info = {}
 
 
 class Node:
-    '''
-    Usage::
-
-        node = Node(port=9966, node_path='/tmp/')
-        total = await node.js('return {"total": x + y}', x='a', y=10)['total']
-    '''
-
     _source = os.path.join(variables['GRAMEXAPPS'], 'pynode')
     _delay = 0.01
 
-    def __init__(self, port=9966, cwd=None, node_path=None, timeout=10):
+    def __init__(
+        self, port: int = 9966, cwd: str = None, node_path: str = None, timeout: int = 10
+    ):
+        '''
+        Example:
+
+            >>> node = Node(port=9966, node_path='/tmp/')
+            >>> total = await node.js('return {"total": x + y}', x='a', y=10)['total']
+        '''
         self.port = port
         # cwd is the directory where node runs. Defaults to $GRAMEXDATA/pynode/
         # node_modules is updated under this.
