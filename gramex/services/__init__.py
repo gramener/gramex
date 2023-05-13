@@ -7,7 +7,7 @@ log:
     version: 1
 ```
 
-... calls [gramex.service.log()][gramex.services.log] as ``log({"version": 1})``.
+... calls [gramex.service.log()][gramex.services.log] as `log({"version": 1})`.
 If no such function exists, a warning is raised.
 '''
 import io
@@ -905,14 +905,14 @@ def _get_cache_key(conf, name):
 
     The cache key is a string or a list of strings. The strings can be:
 
-    - ``request.attr`` => ``request.attr`` can be any request attribute, as str
-    - ``header.key`` => ``request.headers[key]``
-    - ``cookies.key`` => ``request.cookies[key].value``
-    - ``args.key`` => ``handler.args[key]`` joined with a comma.
-    - ``user.key`` => ``handler.current_user[key]`` as str
+    - `request.attr` => `request.attr` can be any request attribute, as str
+    - `header.key` => `request.headers[key]`
+    - `cookies.key` => `request.cookies[key].value`
+    - `args.key` => `handler.args[key]` joined with a comma.
+    - `user.key` => `handler.current_user[key]` as str
 
     Invalid key strings are ignored with a warning. If all key strings are
-    invalid, the default cache.key of ``request.uri`` is used.
+    invalid, the default cache.key of `request.uri` is used.
     '''
     default_key = 'request.uri'
     keys = conf.get('key', default_key)
@@ -961,35 +961,34 @@ def _get_cache_key(conf, name):
 
 def _cache_generator(conf, name):
     '''
-    The ``url:`` section of ``gramex.yaml`` can specify a ``cache:`` section. For
-    example::
+    The `url:` section of `gramex.yaml` can specify a `cache:` section.
 
-        url:
-            home:
-                pattern: /
-                handler: ...
-                cache:
-                    key: request.uri
-                    store: memory
-                    expires:
-                        duration: 1 minute
+    ```yaml
+    url:
+        home:
+            pattern: /
+            handler: ...
+            cache:
+                key: request.uri
+                store: memory
+                expires:
+                    duration: 1 minute
+    ```
 
-    This function takes the ``cache`` section of the configuration and returns a
+    This function takes the `cache` section of the configuration and returns a
     "cache" function. This function accepts a RequestHandler and returns a
-    ``CacheFile`` instance.
+    `CacheFile` instance.
 
-    Here's a typical usage::
+    Example:
 
-        cache_method = _cache_generator(conf.cache)     # one-time initialisation
-        cache_file = cache_method(handler)              # used inside a hander
-
-    The cache_file instance exposes the following interface::
-
-        cache_file.get()        # returns None
-        cache_file.write('abc')
-        cache_file.write('def')
-        cache_file.close()
-        cache_file.get()        # returns 'abcdef'
+        >>> cache_method = _cache_generator(conf.cache)     # one-time initialisation
+        >>> cache_file = cache_method(handler)              # used inside a hander
+        >>> # The cache_file instance exposes the following interface
+        >>> cache_file.get()        # returns None
+        >>> cache_file.write('abc')
+        >>> cache_file.write('def')
+        >>> cache_file.close()
+        >>> cache_file.get()        # returns 'abcdef'
     '''
     # cache: can be True (to use default settings) or False (to disable cache)
     if conf is True:

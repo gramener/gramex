@@ -160,8 +160,9 @@ class FileUpload:
 
 class UploadHandler(BaseHandler):
     '''
-    UploadHandler lets users upload files. Here's a typical configuration::
+    UploadHandler lets users upload files. Here's a typical configuration:
 
+    ```yaml
         path: /$GRAMEXDATA/apps/appname/    # Save files here
         keys: [upload, file]                # <input name=""> can be upload / file
         store:
@@ -170,6 +171,7 @@ class UploadHandler(BaseHandler):
         redirect:                           # After uploading the file,
             query: next                     #   ... redirect to ?next=
             url: /$YAMLURL/                 #   ... else to this directory
+    ```
     '''
 
     @classmethod

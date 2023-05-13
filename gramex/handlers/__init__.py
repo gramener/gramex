@@ -4,7 +4,7 @@ from .basehandler import BaseMixin, BaseHandler, BaseWebSocketHandler, SetupFail
 from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
-from .authhandler import GoogleAuth, SimpleAuth, LogoutHandler
+from .authhandler import AuthHandler, GoogleAuth, SimpleAuth, LogoutHandler
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
@@ -43,6 +43,7 @@ Websocket = WebSocketHandler
 
 
 __all__ = [
+    'AuthHandler',
     'BaseHandler',
     'BaseWebSocketHandler',
     'BaseMixin',

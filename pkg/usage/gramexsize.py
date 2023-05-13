@@ -60,7 +60,6 @@ def gramexsize(*dirs: str):
     '''Saves complexity of Gramex code and corresponding YAML config in target.
 
     Examples:
-
         >>> gramexsize('/path/to/gramex/', '/path/to/gramexenterprise/', target='codesize.csv')
     '''
     import yaml

@@ -79,7 +79,6 @@ def open(
     When called again, returns the cached result unless the file has updated.
 
     Examples:
-
         >>> gramex.cache.open('data.yaml')
         >>> gramex.cache.open('data.csv')
         >>> # Load data.json as JSON into an AttrDict
@@ -88,7 +87,6 @@ def open(
         >>> gramex.cache.open('data.csv', 'csv', encoding='cp1252')
 
     Parameters:
-
         path: path to the file to open
         callback: type of file, e.g. `csv`, `json`, or callback function
         transform: function to transform the data before caching
@@ -137,8 +135,9 @@ def open(
         open('data.xlsx', 'xslx', transform=lambda data: data.groupby('city')['sales'].sum())
 
     If `transform=` is not a function, it is used as a cache key.
-    You can use this to fetch multiple cached version of the file. For example:
+    You can use this to fetch multiple cached version of the file.
 
+    Examples:
         >>> original = open('data.csv', 'csv', transform='v1')
         >>> same_copy = open('data.csv', 'csv', transform='v1')
         >>> new_copy = open('data.csv', 'csv', transform='v2')
@@ -152,7 +151,7 @@ def open(
     `D:/app/calc.py` calls `open('data.csv', 'csv', rel=True)`, the path
     is replaced with `D:/app/data.csv`.
 
-    All ``kwargs`` are passed directly to the callback. If the callback is a predefined string
+    All `kwargs` are passed directly to the callback. If the callback is a predefined string
     using `io.open()`, all `io.open()` arguments are passed to `io.open()`, rest to the callback.
     '''
     # Pass _reload_status = True for testing purposes. This returns a tuple:
@@ -226,7 +225,6 @@ def read_excel(
     '''Read data from an XLSX as a DataFrame using `openpyxl`.
 
     Examples:
-
         >>> gramex.cache.read_excel('data.xlsx', sheet_name='Sheet1')
         >>> gramex.cache.read_excel('data.xlsx', sheet_name=0)
         >>> gramex.cache.read_excel('data.xlsx', table='Table1')
@@ -234,7 +232,6 @@ def read_excel(
         >>> gramex.cache.read_excel('data.xlsx', range='A1:D10', header=[0, 1])
 
     Parameters:
-
         io: path or file-like object pointing to an Excel file
         sheet_name: sheet to load data from. Sheet names are specified as strings.
             Integers pick zero-indexed sheet position. default: 0
@@ -313,7 +310,6 @@ def save(
     '''Saves a Pandas DataFrame into file at url.
 
     Examples:
-
         >>> gramex.cache.save(pd.DataFrame({'x': [1, 2]}), 'sample.csv')
         >>> gramex.cache.save(pd.DataFrame({'x': [1, 2]}), 'sample.xlsx', sheet_name='data')
 
@@ -349,7 +345,6 @@ def query(
     It uses `state` to determine whether to run the query again or not.
 
     Examples:
-
         >>> engine = sqlalchemy.create_engine('sqlite:///path/to/file.db')
         >>> gramex.cache.query('SELECT * FROM table', engine, state='SELECT max(date) FROM table')
 
@@ -417,7 +412,6 @@ def stat(path: str) -> Union[Tuple[float, int], Tuple[None, None]]:
     '''Returns a file's modified time and size. Used to check if a file has changed.
 
     Examples:
-
         >>> gramex.cache.stat('gramex.yaml')
         (1654149106.1422858, 7675)
         >>> gramex.cache.stat('non-existent-file')
@@ -446,7 +440,6 @@ def cache_key(*args: List[Any]) -> str:
     '''Converts arguments into a stable string suitable for use as a cache key.
 
     Examples:
-
         >>> t1 = gramex.cache.cache_key(tweet1)
         >>> data[t1] = tweet1
         >>> t2 = gramex.cache.cache_key(tweet2)
@@ -482,7 +475,6 @@ def reload_module(*modules: List[ModuleType]) -> None:
     '''Reloads one or more modules if they have changed on disk.
 
     Examples:
-
         >>> import mymodule1
         >>> import mymodule2
         >>> reload_module(mymodule1, mymodule2)
@@ -523,7 +515,6 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
     '''Fetch the content in the url and return a file path where it is downloaded.
 
     Examples:
-
         >>> gramex.cache.urlfetch('https://gramener.com/gramex/guide/mlhandler/titanic')
         '/path/to/tmpfile.json'
 
@@ -574,7 +565,6 @@ class Subprocess:
     This is a threaded alternative.
 
     Examples:
-
         Run a program async and wait for it to execute. Then get its output:
 
         >>> stdout, stderr = yield Subprocess(['ls', '-la']).wait_for_exit()
@@ -781,24 +771,22 @@ def daemon(
 
     This is used to run & cache servers like Node web servers, Elasticsearch, etc. in Tornado.
 
-    Examples:
+    ```python
+    @tornado.gen.coroutine
+    def fetch_from_server(handler):
+        server = yield gramex.cache.daemon(
+            ['python', '-m', 'http_server', '8000']
+            restart=3,
+            first_line=re.compile(r'Serving HTTP on .* port 8000'),
+            timeout=5,
+            stream=sys.stdout.write,
+            buffer_size='line',
+        )
+        return requests.get('http://localhost:8000/').text
+    ```
 
-        ```python
-        @tornado.gen.coroutine
-        def fetch_from_server(handler):
-            server = yield gramex.cache.daemon(
-                ['python', '-m', 'http_server', '8000']
-                restart=3,
-                first_line=re.compile(r'Serving HTTP on .* port 8000'),
-                timeout=5,
-                stream=sys.stdout.write,
-                buffer_size='line',
-            )
-            return requests.get('http://localhost:8000/').text
-        ```
-
-        The first time `fetch_from_server` is called, it starts a Python web server on port 8000.
-        Subsequent calls use the same server.
+    The first time `fetch_from_server` is called, it starts a Python web server on port 8000.
+    Subsequent calls use the same server.
 
     Parameters:
 
@@ -1256,7 +1244,6 @@ def opener(callback, read=False, **open_kwargs):
     a function that takes the first parameter from a file path.
 
     Examples:
-
         >>> jsonload = opener(json.load)
         >>> jsonload('x.json')      # opens x.json and runs json.load(handle)
         >>> gramex.cache.open('x.json', jsonload)   # Loads x.json, cached

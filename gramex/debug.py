@@ -22,8 +22,9 @@ def _caller():
 
 class Timer:
     '''
-    Find how long a code blocks takes to execute. Wrap any code block like this::
+    Find how long a code blocks takes to execute. Wrap any code block like this:
 
+    Examples:
         >>> from gramex.debug import Timer
         >>> with Timer('optional message'):
         >>>     slow_running_code()
@@ -57,9 +58,10 @@ def _write(obj, prefix=None, stream=sys.stdout):
 
 def print(*args, **kwargs):  # noqa
     '''
-    A replacement for the ``print`` function that also logs the (file, function,
-    line, msg) from where it is called. For example::
+    A replacement for the `print` function that also logs the (file, function,
+    line, msg) from where it is called. For example:
 
+    Examples:
         >>> from gramex.debug import print              # import print function
         >>> print('hello world')                        # It works like the print function
         <file>(line).<function>: hello world
@@ -86,13 +88,15 @@ def print(*args, **kwargs):  # noqa
 
 def trace(trace=True, exclude=None, **kwargs):
     '''
-    Decorator to trace line execution. Usage::
+    Decorator to trace line execution. Usage:
 
-        @trace()
-        def method(...):
-            ...
+    ```python
+    @trace()
+    def method(...):
+        ...
+    ```
 
-    When ``method()`` is called, every line of execution is traced.
+    When `method()` is called, every line of execution is traced.
     '''
     if exclude is None:
         ignoredirs = (sys.prefix,)
@@ -115,8 +119,9 @@ def trace(trace=True, exclude=None, **kwargs):
 def lineprofile(func):
     '''
     A decorator that prints the time taken for each line of a function every
-    time it is called. This example prints each line's performance::
+    time it is called. This example prints each line's performance:
 
+    Examples:
         >>> from gramex.debug import lineprofile
         >>> @lineprofile
         >>> def calc():
@@ -197,8 +202,9 @@ else:
 
 def _make_timer():
     '''
-    ``timer("msg")`` prints the time elapsed since the last timer call::
+    `timer("msg")` prints the time elapsed since the last timer call:
 
+    Examples:
         >>> from gramex.debug import timer
         >>> gramex.debug.timer('abc')
         WARNING:gramex:7.583s abc [<file>:<function>:1]     # Time since Gramex start

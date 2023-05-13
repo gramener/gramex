@@ -15,16 +15,18 @@ load = joblib.load
 
 
 class Classifier:
-    '''
-    :arg data DataFrame: data to train / re-train the model with
-    :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-    :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-    :arg output str: output column name (default: last column in training data)
-    :arg input list: input column names (default: all columns except ``output``)
-    :arg labels list: list of possible output values (default: unique ``output`` in training)
-    '''
-
     def __init__(self, **kwargs):
+        '''
+        Parameters:
+
+            data DataFrame: data to train / re-train the model with
+            model_class str: model class to use (default: `sklearn.naive_bayes.BernoulliNB`)
+            model_kwargs dict: kwargs to pass to model class constructor (defaults: `{}`)
+            output str: output column name (default: last column in training data)
+            input list: input column names (default: all columns except `output`)
+            labels list: list of possible output values (default: unique `output` in training)
+        '''
+
         vars(self).update(kwargs)
         self.model_class = kwargs.get('model_class', 'sklearn.naive_bayes.BernoulliNB')
         self.trained = False  # Boolean Flag
@@ -43,14 +45,16 @@ class Classifier:
             self.trained = params.get('trained', False)
         vars(self).update(model_params)
 
-    def train(self, data):
+    def train(self, data: pd.DataFrame):
         '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
+        Parameters:
+
+            data DataFrame: data to train / re-train the model with
+            model_class str: model class to use (default: `sklearn.naive_bayes.BernoulliNB`)
+            model_kwargs dict: kwargs to pass to model class constructor (defaults: `{}`)
+            output str: output column name (default: last column in training data)
+            input list: input column names (default: all columns except `output`)
+            labels list: list of possible output values (default: unique `output` in training)
 
         Notes:
         - If model has already been trained, extend the model. Else create it
@@ -131,23 +135,25 @@ def _conda_r_home():
 
 
 def r(
-    code=None,
-    path=None,
-    rel=True,
-    conda=True,
-    convert=True,
-    repo='https://cran.r-project.org/',
+    code: str = None,
+    path: str = None,
+    rel: bool = True,
+    conda: bool = True,
+    convert: bool = True,
+    repo: str = 'https://cran.r-project.org/',
     **kwargs,
 ):
     '''
     Runs the R script and returns the result.
 
-    :arg str code: R code to execute.
-    :arg str path: R script path. Cannot be used if code is specified
-    :arg bool rel: True treats path as relative to the caller function's file
-    :arg bool conda: True overrides R_HOME to use the Conda R
-    :arg bool convert: True converts R objects to Pandas and vice versa
-    :arg str repo: CRAN repo URL
+    Parameters:
+
+        code: R code to execute.
+        path: R script path. Cannot be used if code is specified
+        rel: True treats path as relative to the caller function's file
+        conda: True overrides R_HOME to use the Conda R
+        convert: True converts R objects to Pandas and vice versa
+        repo: CRAN repo URL
 
     All other keyword arguments as passed as parameters
     '''
@@ -198,24 +204,34 @@ def r(
     return result
 
 
-def groupmeans(data, groups, numbers, cutoff=0.01, quantile=0.95, minsize=None, weight=None):
+def groupmeans(
+    data: pd.DataFrame,
+    groups: list,
+    numbers: list,
+    cutoff: float = 0.01,
+    quantile: float = 0.95,
+    minsize: int = None,
+    weight: str = None,
+):
     '''
     **DEPRECATED**. Use TopCause() instead.
 
     Yields the significant differences in average between every pair of
     groups and numbers.
 
-    :arg DataFrame data: pandas.DataFrame to analyze
-    :arg list groups: category column names to group data by
-    :arg list numbers: numeric column names in to summarize data by
-    :arg float cutoff: ignore anything with prob > cutoff.
-        cutoff=None ignores significance checks, speeding it up a LOT.
-    :arg float quantile: number that represents target improvement. Defaults to .95.
-        The ``diff`` returned is the % impact of everyone moving to the 95th
-        percentile
-    :arg int minsize: each group should contain at least minsize values.
-        If minsize=None, automatically set the minimum size to
-        1% of the dataset, or 10, whichever is larger.
+    Parameters:
+
+        data: pandas.DataFrame to analyze
+        groups: category column names to group data by
+        numbers: numeric column names in to summarize data by
+        cutoff: ignore anything with prob > cutoff.
+            cutoff=None ignores significance checks, speeding it up a LOT.
+        float quantile: number that represents target improvement. Defaults to .95.
+            The `diff` returned is the % impact of everyone moving to the 95th
+            percentile
+        int minsize: each group should contain at least minsize values.
+            If minsize=None, automatically set the minimum size to
+            1% of the dataset, or 10, whichever is larger.
     '''
     from scipy.stats.mstats import ttest_ind
 
@@ -307,39 +323,50 @@ translate_api = {'google': _google_translate}
 _translate_cache_lock = threading.Lock()
 
 
-def translate(*q, **kwargs):
+def translate(
+    *q: str,
+    source: str = None,
+    target: str = None,
+    key: str = None,
+    cache: dict = None,
+    api: str = 'google',
+    **kwargs,
+):
     '''
-    Translate strings using the Google Translate API. Example::
+    Translate strings using the Google Translate API.
 
-        translate('Hello', 'World', source='en', target='de', key='...')
+    ```python
+    translate('Hello', 'World', source='en', target='de', key='...')
+    ```
 
-    returns a DataFrame::
+    returns a DataFrame
 
-        source  target  q       t
-        en      de      Hello   ...
-        en      de      World   ...
+    ```text
+    source  target  q       t
+    en      de      Hello   ...
+    en      de      World   ...
+    ```
 
-    The results can be cached via a ``cache={...}`` that has parameters for
-    :py:func:`gramex.data.filter`. Example::
+    The results can be cached via a `cache={...}` that has parameters for
+    [gramex.data.filter]. Example:
 
-        translate('Hello', key='...', cache={'url': 'translate.xlsx'})
+    ```python
+    translate('Hello', key='...', cache={'url': 'translate.xlsx'})
+    ```
 
-    :arg str q: one or more strings to translate
-    :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
-    :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
-    :arg str key: Google Translate API key
-    :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as
-        url (required), table (for databases), sheet_name (for Excel), etc.
+    Parameters:
+
+        q: one or more strings to translate
+        source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
+        target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
+        key: Google Translate API key
+        cache: kwargs for [gramex.data.filter]. Has keys such as
+            url (required), table (for databases), sheet_name (for Excel), etc.
 
     Reference: https://cloud.google.com/translate/docs/apis
     '''
     import gramex.data
 
-    source = kwargs.pop('source', None)
-    target = kwargs.pop('target', None)
-    key = kwargs.pop('key', None)
-    cache = kwargs.pop('cache', None)
-    api = kwargs.pop('api', 'google')
     if cache is not None and not isinstance(cache, dict):
         raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
 

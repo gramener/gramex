@@ -135,12 +135,10 @@ def sass2(
         >>> sass2(handler, 'x.sass')
 
     Parameters:
-
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
         path: absolute path of input SASS file to compile into CSS
 
     Returns:
-
         compiled CSS file or source map if ?_map is specified
 
     URL query parameters in `handler.args` are converted into SASS variables.
@@ -236,7 +234,6 @@ def jscompiler(
         ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
 
     Parameters:
-
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
         path: absolute path of input file to compile into JavaScript
         target_ext: extension of output file (e.g. `.js`, `.min.js`)
@@ -247,7 +244,6 @@ def jscompiler(
             - `$targetDir` for the absolute path to the output directory
 
     Returns:
-
         compiled JS file or source map if ?_map is specified
     '''
     # Get valid variables from URL query parameters
@@ -294,13 +290,11 @@ def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> 
         >>> _sourcemap(handler, 'output.js', 'text/javascript')
 
     Parameters:
-
         handler: the [FileHandler][gramex.handlers.FileHandler] serving this file
         target: absolute path of compiled output
         mime: MIME type of compiled output
 
     Returns:
-
         source map or target file contents
 
     This is used by FileHandlers compiling Vue, TS, SASS, etc.

@@ -53,30 +53,36 @@ class Capture:
         ),
     )
 
-    '''
-    Create a proxy for capture.js. Typical usage::
+    def __init__(
+        self,
+        port: int = None,
+        url: str = None,
+        engine: str = None,
+        cmd: str = None,
+        timeout: int = DEFAULT_TIMEOUT,
+    ):
+        '''
+        Create a proxy for capture.js.
 
-        capture = Capture()
-        with open('screenshot.png', 'wb') as handle:
-            handle.write(capture.png('https://gramener.com/'))
-        with open('screenshot.pdf', 'wb') as handle:
-            handle.write(capture.pdf('https://gramener.com/'))
+        Examples:
+            >>> capture = Capture()
+            >>> with open('screenshot.png', 'wb') as handle:
+            ...    handle.write(capture.png('https://gramener.com/'))
+            >>> with open('screenshot.pdf', 'wb') as handle:
+            ...    handle.write(capture.pdf('https://gramener.com/'))
 
-    The constructor accepts these optional parameters:
+        Parameters:
+            port: port where capture.js is running. Default: 9900
+            url: URL:port where PhantomJS is running with capture.js.
+                Default: `http://localhost:<port>/`
+            cmd: Command to run PhantomJS with capture.js at the specified
+                port. Default: `phantomjs $GRAMEXPATH/apps/capture/capture.js --port=<port>`
+            timeout: Seconds to wait for PhantomJS to timeout. Default: 10
 
-    :arg int port: port where capture.js is running. Default: 9900
-    :arg string url: URL:port where PhantomJS is running with capture.js.
-        Default: ``http://localhost:<port>/``
-    :arg string cmd: Command to run PhantomJS with capture.js at the specified
-        port. Default: ``phantomjs $GRAMEXPATH/apps/capture/capture.js --port=<port>``
-    :arg int timeout: Seconds to wait for PhantomJS to timeout. Default: 10
-
-    The constructor runs :meth:`Capture.start` in a new thread, which checks if
-    capture.js is running at ``url``. If not, it runs ``cmd`` and checks again.
-    Until capture.js is detected, all capture methods will fail.
-    '''
-
-    def __init__(self, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT):
+        The constructor runs `Capture.start()` in a new thread, which checks if
+        capture.js is running at `url`. If not, it runs `cmd` and checks again.
+        Until capture.js is detected, all capture methods will fail.
+        '''
         # Set default values for port, url and cmd
         self.engine = self.engines['phantomjs' if engine is None else engine]
         port = self.default_port if port is None else port
@@ -96,11 +102,11 @@ class Capture:
 
     def start(self):
         '''
-        Starts a thread and check if capture is already running at ``url``. If
-        not, start ``cmd`` and check again. Print logs from ``cmd``.
+        Starts a thread and check if capture is already running at `url`. If
+        not, start `cmd` and check again. Print logs from `cmd`.
 
         This method is thread-safe. It may be called as often as required.
-        :class:`CaptureHandler` calls this method if ``?start`` is passed.
+        CaptureHandler calls this method if `?start` is passed.
         '''
         with self.lock:
             thread = Thread(target=self._start, name=f'Capture {self.engine} @ {self.url}')
@@ -109,8 +115,8 @@ class Capture:
 
     def _start(self):
         '''
-        Check if capture is already running at ``url``. If not, start ``cmd``
-        and check again. Print logs from ``cmd``.
+        Check if capture is already running at `url`. If not, start `cmd`
+        and check again. Print logs from `cmd`.
         '''
         self.started = False
         script = self.engine.script
@@ -183,7 +189,7 @@ class Capture:
     def capture_async(self, headers=None, **kwargs):
         '''
         Returns a screenshot of the URL. Runs asynchronously in Gramex. Arguments
-        are same as :py:func:`capture`
+        are same as [capture][gramex.handlers.capturehandler.Capture.capture]
         '''
         # If ?start is provided, start server and wait until timeout
         if 'start' in kwargs:
@@ -210,24 +216,28 @@ class Capture:
         '''
         Return a screenshot of the URL.
 
-        :arg str url: URL to take a screenshot of
-        :arg str ext: format of output. Can be pdf, png, gif or jpg
-        :arg str selector: Restrict screenshot to (optional) CSS selector in URL
-        :arg int delay: milliseconds (or expression) to wait for before taking a screenshot
-        :arg str format: A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
-        :arg str layout: A3, A4, A5, Legal, 16x9, 16x10, 4x3. Defaults to 4x3. For PPTX
-        :arg str orientation: portrait or landscape. Defaults to portrait. For PDF
-        :arg str header: header for the page. For PDF
-        :arg str footer: footer for the page. For PDF
-        :arg int width: screen width. Default: 1200. For PNG/GIF/JPG
-        :arg int height: screen height. Default: 768. For PNG/GIF/JPG
-        :arg float scale: zooms the screen by a factor. For PNG/GIF/JPG
-        :arg int dpi: dots (pixels) per inch. For PPTX
-        :arg str title: slide title. For PPTX
-        :arg int debug: sets log level for HTTP requests (2) and responses (1)
-        :return: a bytestring with the binary contents of the screenshot
-        :rtype: bytes
-        :raises RuntimeError: if capture.js is not running or fails
+        Parameters:
+            url (str): URL to take a screenshot of
+            ext (str): format of output. Can be pdf, png, gif or jpg
+            selector (str): Restrict screenshot to (optional) CSS selector in URL
+            delay (int): milliseconds (or expression) to wait for before taking a screenshot
+            format (str): A3, A4, A5, Legal, Letter or Tabloid. Defaults to A4. For PDF
+            layout (str): A3, A4, A5, Legal, 16x9, 16x10, 4x3. Defaults to 4x3. For PPTX
+            orientation (str): portrait or landscape. Defaults to portrait. For PDF
+            header (str): header for the page. For PDF
+            footer (str): footer for the page. For PDF
+            width (int): screen width. Default: 1200. For PNG/GIF/JPG
+            height (int): screen height. Default: 768. For PNG/GIF/JPG
+            scale (float): zooms the screen by a factor. For PNG/GIF/JPG
+            dpi (int): dots (pixels) per inch. For PPTX
+            title (str): slide title. For PPTX
+            debug (int): sets log level for HTTP requests (2) and responses (1)
+
+        Returns:
+            a bytestring with the binary contents of the screenshot
+
+        Raises:
+            RuntimeError: if capture.js is not running or fails
         '''
         # Ensure that we're connecting to the right version of capture.js
         if not self.started:
@@ -245,27 +255,27 @@ class Capture:
             raise RuntimeError(f'{self.engine.script} error: {r.content}')
 
     def pdf(self, url, **kwargs):
-        '''An alias for :meth:`Capture.capture` with ``ext='pdf'``.'''
+        '''An alias for `Capture.capture()` with `ext='pdf'`.'''
         kwargs['ext'] = 'pdf'
         return self.capture(url, **kwargs)
 
     def png(self, url, **kwargs):
-        '''An alias for :meth:`Capture.capture` with ``ext='png'``.'''
+        '''An alias for `Capture.capture()` with `ext='png'`.'''
         kwargs['ext'] = 'png'
         return self.capture(url, **kwargs)
 
     def pptx(self, url, **kwargs):
-        '''An alias for :meth:`Capture.capture` with ``ext='pptx'``.'''
+        '''An alias for `Capture.capture()` with `ext='pptx'`.'''
         kwargs['ext'] = 'pptx'
         return self.capture(url, **kwargs)
 
     def jpg(self, url, **kwargs):
-        '''An alias for :meth:`Capture.capture` with ``ext='jpg'``.'''
+        '''An alias for `Capture.capture()` with `ext='jpg'`.'''
         kwargs['ext'] = 'jpg'
         return self.capture(url, **kwargs)
 
     def gif(self, url, **kwargs):
-        '''An alias for :meth:`Capture.capture` with ``ext='gif'``.'''
+        '''An alias for `Capture.capture()` with `ext='gif'`.'''
         kwargs['ext'] = 'gif'
         return self.capture(url, **kwargs)
 
@@ -273,10 +283,10 @@ class Capture:
 class CaptureHandler(BaseHandler):
     '''
     Renders a web page as a PDF or as an image. It accepts the same arguments as
-    :class:`Capture`.
+    `Capture`.
 
-    The page is called with the same args as :meth:`Capture.capture`. It also
-    accepts a ``?start`` parameter that restarts capture.js if required.
+    The page is called with the same args as `Capture.capture()`. It also
+    accepts a `?start` parameter that restarts capture.js if required.
     '''
 
     # Each config maps to a Capture() object. cls.captures[config] = Capture()
