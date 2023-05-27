@@ -27,11 +27,12 @@ def copy_file(source, target):
 
 
 class TestFormHandler(TestGramex):
-    sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx')
+    sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), sheet_name='sales')
+    cities = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), sheet_name='cities')
 
     @classmethod
     def setUpClass(cls):
-        dbutils.sqlite_create_db('formhandler.db', sales=cls.sales)
+        dbutils.sqlite_create_db('formhandler.db', sales=cls.sales, cities=cls.cities)
 
     @classmethod
     def tearDownClass(cls):
@@ -833,6 +834,18 @@ class TestFormHandler(TestGramex):
             expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
+
+    def test_join(self):
+        def check(expected, **params):
+            r = self.get('/formhandler/join', params=params)
+            actual = pd.DataFrame(r.json())
+            afe(actual, expected.reset_index(drop=True), check_like=True)
+
+        expected = self.sales.merge(self.cities, how='left')
+        expected = expected.rename(columns={'demand': 'cities_demand', 'drive': 'cities_drive'})
+        check(expected)
+        check(expected[expected['city'] == 'Singapore'], city='Singapore')
+        # TODO: Add remaining join tests
 
     def test_edit_id_type(self):
         target = copy_file('sales.xlsx', 'sales-edits.xlsx')

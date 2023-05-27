@@ -1701,11 +1701,11 @@ def _filter_db(
         argstype: optional dict that specifies `args` type and behavior.
         id: list of keys specific to data using which values can be updated
     '''
+
     def get_joins(table, join):
         if not join:
-            return table.columns, sa.select(tables)
+            return table.columns, sa.select([table])
 
-        tables = [table]
         cols = {}
         labels = []
         for c in table.columns:
@@ -1720,7 +1720,6 @@ def _filter_db(
                 lbl = f'{t}_{c.name}'
                 cols[lbl] = c
                 labels.append(c.label(lbl))
-            # cols += [col.label(f'{t}_{col.name}') for col in tbl.columns]
 
         query = sa.select(*labels)
         # Establish an explicit left side by setting the main table as the base
