@@ -1708,9 +1708,11 @@ def _filter_db(
 
         cols = {}
         labels = []
+        label_texts = []
         for c in table.columns:
             cols[c.name] = c
             labels.append(c.label(c.name))
+            label_texts.append(f"{table.name}.{c.name}")
 
         # Identify all tables and columns required
         tables_map = {}
@@ -1720,22 +1722,42 @@ def _filter_db(
                 lbl = f'{t}_{c.name}'
                 cols[lbl] = c
                 labels.append(c.label(lbl))
+                label_texts.append(f'{t}.{c.name}')
 
-        query = sa.select(*labels)
+        query = sa.select()
         # Establish an explicit left side by setting the main table as the base
         query = query.select_from(table)
 
         for t, extras in join.items():
             join_attr = [tables_map[t]]
             if 'column' in extras:
-                # TODO: check
-                condition = sa.text([f'{k}={v}' for k, v in extras['column'].items()][0])
+                conditions = []
+                for k, v in extras['column'].items():
+                    invalidColumns = []
+                    if k not in label_texts:
+                        invalidColumns.append(k)
+                    if v not in label_texts:
+                        invalidColumns.append(v)
+                    if len(invalidColumns) > 0:
+                        app_log.warning(f'invalid column(s): {", ". join(invalidColumns)}')
+                        continue
+
+                    conditions.append(f'{k}={v}')
+                    labels = [
+                        l
+                        for l in labels
+                        if l.name not in [k.replace('.', '_'), v.replace('.', '_')]
+                    ]
+
+                condition = sa.text(' AND '.join(conditions))
                 join_attr.append(condition)
 
             query = query.join(
                 *join_attr,
                 isouter='type' in extras and extras['type'].lower() in ['left', 'outer'],
             )
+
+        query = query.with_only_columns(labels)
         return cols, query
 
     table = get_table(engine, table)
