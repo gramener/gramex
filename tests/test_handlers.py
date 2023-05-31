@@ -411,3 +411,18 @@ class TestRateLimit(TestGramex):
         self.check('/ratelimit/reset2')
         # Pool: None: 2/3, alpha: 2/3, beta: 1/3, all: 0/4
         self.check_rate('/ratelimit/ab', 'beta', 3, 1)
+
+    def test_get_ratelimit(self):
+        self.check('/ratelimit/reset')
+
+        def check(limit, usage):
+            result = self.check('/ratelimit/info').json()
+            eq_(result['limit'], limit)
+            eq_(result['usage'], usage)
+            eq_(result['remaining'], max(limit - usage - 1, 0))
+            ok_(result['expiry'] < 86400)
+
+        check(limit=3, usage=0)
+        check(limit=3, usage=1)
+        check(limit=3, usage=2)
+        self.check('/ratelimit/info', code=TOO_MANY_REQUESTS)

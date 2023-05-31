@@ -199,6 +199,14 @@ url:
           keys: [env.HOME, daily]
           limit: 4
 
+  ratelimit/info:
+    pattern: /ratelimit/info
+    handler: FunctionHandler
+    kwargs:
+      function: handler.get_ratelimit()
+      ratelimit:
+        <<: *RATELIMIT_POOL1
+
   ratelimit/reset:
     pattern: /ratelimit/reset
     handler: FunctionHandler

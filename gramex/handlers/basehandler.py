@@ -1080,10 +1080,12 @@ class BaseMixin:
 
     def update_ratelimit(self):
         '''If request succeeds, increase rate limit usage count by 1'''
+        # If response is a HTTP error, don't count towards rate limit
+        if self.get_status() >= 400:
+            return
         for ratelimit in self._ratelimit:
             # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
-            # If response is a HTTP error, don't count towards rate limit
-            if 'key' not in ratelimit or self.get_status() >= 400:
+            if 'key' not in ratelimit:
                 return
             # Increment the rate limit by 1
             usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
@@ -1091,16 +1093,42 @@ class BaseMixin:
             usage_obj['_t'] = time.time() + ratelimit.expiry
             ratelimit.store.dump(ratelimit.key, usage_obj)
 
-    def set_ratelimit_headers(self):
-        # Reference: https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html
-        # Pick the rate limit with the lowest remaining count
+    def get_ratelimit(self):
+        '''Get the rate limit with the least remaining usage for the current request.
+
+        If there are multiple rate limits, it picks the one with least remaining usage and
+        returns an AttrDict with these keys:
+
+        - `limit`: the limit on the rate limit (e.g. 3)
+        - `usage`: the usage so far (BEFORE current request, e.g. 0, 1, 2, 3, ...)
+        - `remaining`: the remaining requests (AFTER current request, e.g. 2, 1, 0, 0, ...)
+        - `expiry`: seconds to expiry for this rate limit
+        '''
         ratelimit = min(self._ratelimit, key=lambda r: r.limit - r.usage)
-        # ratelimit.usage goes 0, 1, 2, ...
-        # If limit is 3, remaining goes 3, 2, 1, ... -- use (limit - usage - 1)
-        # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
-        remaining = max(ratelimit.limit - ratelimit.usage - 1, 0)
+        return AttrDict(
+            limit=ratelimit.limit,
+            usage=ratelimit.usage,
+            # ratelimit.usage goes 0, 1, 2, ...
+            # If limit is 3, remaining goes 2, 1, 0, ... -- use (limit - usage - 1)
+            # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
+            remaining=max(ratelimit.limit - ratelimit.usage - 1, 0),
+            expiry=ratelimit.expiry,
+        )
+
+    def set_ratelimit_headers(self):
+        '''Sets the headers from the [Ratelimit HTTP headers draft][1].
+
+        - `X-Ratelimit-Limit` is the rate limit
+        - `X-Ratelimit-Remaining` has the remaining requests
+        - `X-Ratelimit-Reset` has seconds after which the rate limit resets
+        - `Retry-After` is same as X-Ratelimit-Reset, but is set only if the limit is exceeded
+
+        [1]: https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html
+        '''
+        # Pick the rate limit with the lowest remaining count
+        ratelimit = self.get_ratelimit()
         self.set_header('X-Ratelimit-Limit', str(ratelimit.limit))
-        self.set_header('X-Ratelimit-Remaining', str(remaining))
+        self.set_header('X-Ratelimit-Remaining', str(ratelimit.remaining))
         self.set_header('X-RateLimit-Reset', str(ratelimit.expiry))
         if ratelimit.usage >= ratelimit.limit:
             self.set_header('Retry-After', str(ratelimit.expiry))
