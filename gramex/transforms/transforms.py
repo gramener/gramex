@@ -512,7 +512,6 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
     '''Generates a function that flattens deep dictionaries.
 
     Examples:
-
         >>> flat = flattener({
         ...     'id': 'id',
         ...     'name': 'user.screen_name'

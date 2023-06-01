@@ -89,9 +89,9 @@ class TestFilter(unittest.TestCase):
         an "args" dict as argument. This is used to test filter with frame, file
         and sqlalchemy URLs
 
-        - ``na_position`` indicates whether NA are moved to the end or not. Can
+        - `na_position` indicates whether NA are moved to the end or not. Can
           be 'first' or 'last'
-        - ``sum_na`` indicates whether SUM() over zero elements results in NA
+        - `sum_na` indicates whether SUM() over zero elements results in NA
           (instead of 0)
         '''
 
@@ -770,7 +770,6 @@ class TestDownload(unittest.TestCase):
 
 
 class FilterColsMixin:
-
     sales = gramex.cache.open(sales_file, 'xlsx')
     census = gramex.cache.open(sales_file, 'xlsx', sheet_name='census')
 

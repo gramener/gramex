@@ -6,7 +6,7 @@ from gramex.config import app_log
 class Notifier:
     def send(self, to, subject, sender):
         '''
-        Send an SMS to the ``to`` mobile with ``subject`` as the contents. ``sender`` optional.
+        Send an SMS to the `to` mobile with `subject` as the contents. `sender` optional.
 
         Return API-specific response object.
         Raise Exception if API access fails. (This does not guarantee SMS delivery.)
@@ -15,15 +15,16 @@ class Notifier:
 
     def status(self, result):
         '''
-        Returns the delivery status of the SMS. The ``result`` is the output from ``.send()``.
+        Returns the delivery status of the SMS. The `result` is the output from `.send()`.
         '''
         raise NotImplementedError()
 
 
 class AmazonSNS(Notifier):
     '''
-    Send messages via AmazonSNS::
+    Send messages via AmazonSNS.
 
+    Examples:
         >>> notifier = AmazonSNS(
         ...     aws_access_key_id='...',
         ...     aws_secret_access_key='...',
@@ -69,8 +70,9 @@ class AmazonSNS(Notifier):
 
 class Exotel(Notifier):
     '''
-    Send messages via Exotel::
+    Send messages via Exotel.
 
+    Examples:
         >>> notifier = Exotel(
         ...     sid='...',
         ...     token='...',

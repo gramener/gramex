@@ -1,5 +1,5 @@
 '''
-The file watch service uses `watchdog <https://pythonhosted.org/watchdog/>`_ to
+The file watch service uses [watchdog](https://pythonhosted.org/watchdog/) to
 monitor files, and run functions when the file changes.
 '''
 
@@ -7,6 +7,7 @@ import os
 import atexit
 from fnmatch import fnmatch
 from orderedattrdict import AttrDict
+from typing import List, Dict, Callable
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from gramex.config import app_log
@@ -42,38 +43,41 @@ class FileEventHandler(FileSystemEventHandler):
             super(FileEventHandler, self).dispatch(event)
 
 
-def watch(name, paths, **events):
+def watch(name: str, paths: List[str], **events: Dict[str, Callable]):
     '''
     Watch one or more paths, and trigger an event function.
 
-    Example::
-
-        watch('test', ['test.txt'],
+    Examples:
+        >>> watch('test', ['test.txt'],
               on_modified: lambda event: logging.info('Modified test.txt'),
               on_created: lambda event: logging.info('Created test.txt'))
 
-    When ``test.txt`` is modified or created, it logs one of the above messages.
+    When `test.txt` is modified or created, it logs one of the above messages.
 
-    To replace the same handler with another, use the same ``name``::
+    To replace the same handler with another, use the same `name`.
 
-        watch('test', ['test.txt'],
+    Examples:
+        >>> watch('test', ['test.txt'],
               on_deleted: lambda event: logging.info('Deleted test.txt'))
 
-    Now, when ``test.txt`` is deleted, it logs a message. But when ``test.txt``
+    Now, when `test.txt` is deleted, it logs a message. But when `test.txt`
     is created or modified, no message is shown, since the old handler has been
     replaced.
 
-    To remove this watch, call ``unwatch('test')``.
+    To remove this watch, call `unwatch('test')`.
 
-    :arg string name: Unique name of the watch.  To replace an existing watch,
-        re-use the same name.
-    :arg list paths: List of relative or absolute paths to watch.  The paths
-        can be strings or ``pathlib.Path`` objects.
-    :arg function on_modified(event): Called when any path is modified.
-    :arg function on_created(event): Called when any path is created.
-    :arg function on_deleted(event): Called when any path is deleted.
-    :arg function on_moved(event): Called when any path is moved.
-    :arg function on_any_event(event): Called on any of the above events.
+    Parameters:
+
+        name: Unique name of the watch.  To replace an existing watch,
+            re-use the same name.
+        paths: List of relative or absolute paths to watch.  The paths
+            can be strings or `pathlib.Path` objects.
+        events: a map of event handlers, called with an `event` object. Keys can be:
+            - `on_modified`: path is modified.
+            - `on_created`: path is created.
+            - `on_deleted`: path is deleted.
+            - `on_moved`: path is moved.
+            - `on_any_event`: any of the above events.
     '''
     # Create a series of schedules and handlers
     unwatch(name)

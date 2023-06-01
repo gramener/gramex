@@ -32,84 +32,79 @@ def _match(path, pat):
 
 
 class FileHandler(BaseHandler):
-    '''
-    Serves files with transformations. It accepts these parameters:
-
-    :arg string path: Can be one of these:
-
-        - The filename to serve. For all files matching the pattern, this
-          filename is returned.
-        - The root directory from which files are served. The first parameter of
-          the URL pattern is the file path under this directory. Relative paths
-          are specified from where gramex was run.
-        - A wildcard path where `*` is replaced by the URL pattern's first
-          `(..)` group.
-        - A list of files to serve. These files are concatenated and served one
-          after the other.
-        - A dict of {regex: path}. If the URL matches the regex, the path is
-          served. The path is string formatted using the regex capture groups
-
-    :arg string default_filename: If the URL maps to a directory, this filename
-        is displayed by default. For example, ``index.html`` or ``README.md``.
-        It can be a list of default filenames tried in order, e.g.
-        ``[index.template.html, index.html, README.md]``.
-        The default is ``None``, which displays all files in the directory
-        using the ``index_template`` option.
-    :arg boolean index: If ``true``, shows a directory index. If ``false``,
-        raises a HTTP 404: Not Found error when users try to access a directory.
-    :arg list ignore: List of glob patterns to ignore. Even if the path matches
-        these, the files will not be served.
-    :arg list allow: List of glob patterns to allow. This overrides the ignore
-        patterns, so use with care.
-    :arg string index_template: The file to be used as the template for
-        displaying the index. If this file is missing, it defaults to Gramex's
-        default ``filehandler.template.html``. It can use these string
-        variables:
-
-        - ``$path`` - the directory name
-        - ``$body`` - an unordered list with all filenames as links
-    :arg dict headers: HTTP headers to set on the response.
-    :arg dict transform: Transformations that should be applied to the files.
-        The key matches one or more `glob patterns`_ separated by space/comma
-        (e.g. ``'*.md, 'data/**'``.) The value is a dict with the same
-        structure as :class:`FunctionHandler`, and accepts these keys:
-
-        ``function``
-            The expression to return. Example: ``function: mymodule.transform(content, handler)``.
-            ``content`` has the file contents. ``handler`` has the FileHandler object
-
-        ``encoding``
-            The encoding to read the file with, e.g. ``utf-8``. If ``None`` (the default), the
-            file is read as bytes, and the transform `function` MUST accept the content as bytes
-
-        ``headers``:
-            HTTP headers to set on the response
-    :arg string template: ``template="*.html"`` renders all HTML files as Tornado templates.
-        ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
-    :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS (new in Gramex 1.66).
-    :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS (new in Gramex 1.66).
-    :arg string ts: ``ts="*.ts"`` renders all TypeScript files as JS (new in Gramex 1.78).
-
-    .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
-
-    FileHandler exposes these attributes:
-
-    - ``root``: Root path for this handler. Aligns with the ``path`` argument
-    - ``path``; Absolute path requested by the user, without adding a default filename
-    - ``file``: Absolute path served to the user, after adding a default filename
-    '''
-
     @classmethod
     def setup(
         cls,
-        path,
-        default_filename=None,
-        index=None,
-        index_template=None,
-        headers={},
+        path: str,
+        default_filename: str = None,
+        index: bool = None,
+        index_template: str = None,
+        headers: dict = {},
         default={},
         **kwargs,
     ):
+        '''
+        Serves files with transformations.
+
+        Parameters:
+
+            path: Can be one of these:
+
+                - The filename to serve. For all files matching the pattern, this
+                filename is returned.
+                - The root directory from which files are served. The first parameter of
+                the URL pattern is the file path under this directory. Relative paths
+                are specified from where gramex was run.
+                - A wildcard path where `*` is replaced by the URL pattern's first
+                `(..)` group.
+                - A list of files to serve. These files are concatenated and served one
+                after the other.
+                - A dict of {regex: path}. If the URL matches the regex, the path is
+                served. The path is string formatted using the regex capture groups
+
+            default_filename: If the URL maps to a directory, this filename
+                is displayed by default. For example, `index.html` or `README.md`.
+                It can be a list of default filenames tried in order, e.g.
+                `[index.template.html, index.html, README.md]`.
+                The default is `None`, which displays all files in the directory
+                using the `index_template` option.
+            index: If `true`, shows a directory index. If `false`,
+                raises a HTTP 404: Not Found error when users try to access a directory.
+            ignore: List of glob patterns to ignore. Even if the path matches
+                these, the files will not be served.
+            allow: List of glob patterns to allow. This overrides the ignore
+                patterns, so use with care.
+            index_template: The file to be used as the template for
+                displaying the index. If this file is missing, it defaults to Gramex's
+                default `filehandler.template.html`. It can use these string
+                variables:
+
+                - `$path` - the directory name
+                - `$body` - an unordered list with all filenames as links
+            headers: HTTP headers to set on the response.
+            transform: Transformations that should be applied to the files.
+                The key matches one or more `glob patterns` separated by space/comma
+                (e.g. `'*.md, 'data/**'`.) The value is a dict with the same
+                structure as [FunctionHandler][gramex.handlers.FunctionHandler], and accepts keys:
+
+                - `function`: The expression to return. E.g.: `function: method(content, handler)`.
+                    `content` has the file contents. `handler` has the FileHandler object
+                - `encoding`: Encoding to read the file with, e.g. `utf-8`. If `None` (default),
+                    file is read as bytes. Transform `function` MUST accept the content as bytes
+                - `headers`: HTTP headers to set on the response
+
+            template: `template="*.html"` renders all HTML files as Tornado templates.
+                `template=True` renders all files as Tornado templates (new in Gramex 1.14).
+            sass: `sass="*.sass"` renders all SASS files as CSS (new in Gramex 1.66).
+            scss: `scss="*.scss"` renders all SCSS files as CSS (new in Gramex 1.66).
+            ts: `ts="*.ts"` renders all TypeScript files as JS (new in Gramex 1.78).
+
+        FileHandler exposes these attributes:
+
+        - `root`: Root path for this handler. Aligns with the `path` argument
+        - `path`; Absolute path requested by the user, without adding a default filename
+        - `file`: Absolute path served to the user, after adding a default filename
+        '''
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required

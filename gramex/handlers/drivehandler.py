@@ -13,17 +13,19 @@ from .formhandler import FormHandler
 
 class DriveHandler(FormHandler):
     '''
-    Lets users manage files. Here's a typical configuration::
+    Lets users manage files. Here's a typical configuration
 
-        path: $GRAMEXDATA/apps/appname/     # Save files here
-        user_fields: [id, role, hd]         # user attributes to store
-        tags: [tag]                         # <input name=""> to store
-        allow: [.doc, .docx]                # Only allow these files
-        ignore: [.pdf]                      # Don't allow these files
-        max_file_size: 100000               # Files must be smaller than this
-        redirect:                           # After uploading the file,
-            query: next                     #   ... redirect to ?next=
-            url: /$YAMLURL/                 #   ... else to this directory
+    ```yaml
+    path: $GRAMEXDATA/apps/appname/     # Save files here
+    user_fields: [id, role, hd]         # user attributes to store
+    tags: [tag]                         # <input name=""> to store
+    allow: [.doc, .docx]                # Only allow these files
+    ignore: [.pdf]                      # Don't allow these files
+    max_file_size: 100000               # Files must be smaller than this
+    redirect:                           # After uploading the file,
+        query: next                     #   ... redirect to ?next=
+        url: /$YAMLURL/                 #   ... else to this directory
+    ```
 
     File metadata is stored in <path>/.meta.db as SQLite
     '''
