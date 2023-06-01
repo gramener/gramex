@@ -18,21 +18,34 @@ _jsonstores = store  # Internal legacy alias for store
 
 
 class JSONHandler(BaseHandler):
-    '''
-    Provides a REST API for managing and persisting JSON data.
+    @classmethod
+    def setup(cls, path: str = None, data: str = None, **kwargs):
+        '''
+        Provides a REST API for managing and persisting JSON data.
 
-    Sample URL configuration::
+        Sample URL configuration
 
+        ```yaml
         pattern: /$YAMLURL/data/(.*)
         handler: JSONHandler
         kwargs:
             path: $YAMLPATH/data.json
+        ```
 
-    :arg string path: optional file where the JSON data is persisted. If not
-        specified, the JSON data is not persisted.
-    :arg string data: optional initial dataset, used only if path is not
-        specified. Defaults to null
-    '''
+        Parameters:
+
+            path: optional file where the JSON data is persisted. If not
+                specified, the JSON data is not persisted.
+            data: optional initial dataset, used only if path is not
+                specified. Defaults to null
+        '''
+        super(JSONHandler, cls).setup(**kwargs)
+        cls.path = path
+        cls.default_data = data
+        cls.json_kwargs = {
+            'ensure_ascii': True,
+            'separators': (',', ':'),
+        }
 
     def parse_body_as_json(self):
         try:
@@ -89,16 +102,6 @@ class JSONHandler(BaseHandler):
                 continue
             return parent, key, None
         return parent, key, data
-
-    @classmethod
-    def setup(cls, path=None, data=None, **kwargs):
-        super(JSONHandler, cls).setup(**kwargs)
-        cls.path = path
-        cls.default_data = data
-        cls.json_kwargs = {
-            'ensure_ascii': True,
-            'separators': (',', ':'),
-        }
 
     def initialize(self, **kwargs):
         super(JSONHandler, self).initialize(**kwargs)

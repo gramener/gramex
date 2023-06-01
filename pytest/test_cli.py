@@ -114,4 +114,6 @@ def test_features(root):
 def test_complexity(root):
     actual = complexity([root], {})
     expected = read_json(os.path.join(root, "expected.json"))
+    # NOTE: This test will fail when Gramex code complexity changes.
+    # Update complexity_*/expected.json with the actual value and re-run.
     assert_frame_equal(expected, actual)

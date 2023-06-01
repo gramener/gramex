@@ -3,70 +3,37 @@ import os
 import tornado.web
 import tornado.gen
 from threading import RLock
+from typing import Union, List
 from .basehandler import BaseHandler
 from gramex.config import app_log
 from gramex.cache import Subprocess
 
 
 class ProcessHandler(BaseHandler):
-    '''
-    Runs sub-processes with transformations. It accepts these parameters:
-
-    :arg list/string args: The first value is the command. The rest are optional
-        string arguments. This is the same as in `Popen`_.
-    :arg boolean shell: ``True`` passes the ``args`` through the shell, allowing
-        wildcards like ``*``. If ``shell=True`` then use a single string for
-        ``args`` that includes the arguments.
-    :arg string cwd: Current working directory from where the command will run.
-        Defaults to the same directory Gramex ran from.
-    :arg string stdout: The process output can be sent to:
-
-        - ``pipe``: Display the (transformed) output. This is the default
-        - ``false``: Ignore the output
-        - ``filename.txt``: Save output to a ``filename.txt``
-
-    :arg string stderr: The process error stream has the same options as stdout.
-    :arg string stdin: (**TODO**)
-    :arg int/string buffer: 'line' will write lines as they are generated.
-        Numbers indicate the number of bytes to buffer. Defaults to
-        ``io.DEFAULT_BUFFER_SIZE``.
-    :arg dict headers: HTTP headers to set on the response.
-    :arg dict transform: (**TODO**)
-        Transformations that should be applied to the files. The key matches a
-        `glob pattern`_ (e.g. ``'*.md'`` or ``'data/*'``.) The value is a dict
-        with the same structure as :class:`FunctionHandler`, and accepts these
-        keys:
-
-        ``encoding``
-            The encoding to load the file as. If you don't specify an encoding,
-            file contents are passed to ``function`` as a binary string.
-
-        ``function``
-            A string that resolves into any Python function or method (e.g.
-            ``markdown.markdown``). By default, it is called with the file
-            contents as ``function(content)`` and the result is rendered as-is
-            (hence must be a string.)
-
-        ``args``
-            optional positional arguments to be passed to the function. By
-            default, this is just ``['content']`` where ``content`` is the file
-            contents. You can also pass the handler via ``['handler']``, or both
-            of them in any order.
-
-        ``kwargs``:
-            an optional list of keyword arguments to be passed to the function.
-            A value with of ``handler`` and ``content`` is replaced with the
-            RequestHandler and file contents respectively.
-
-        ``headers``:
-            HTTP headers to set on the response.
-
-    .. _Popen: https://docs.python.org/3/library/subprocess.html#subprocess.Popen
-
-    '''
-
     @classmethod
-    def setup(cls, args, shell=False, cwd=None, buffer=0, headers={}, **kwargs):
+    def setup(
+        cls,
+        args: Union[List[str], str],
+        shell: bool = False,
+        cwd: str = None,
+        buffer: Union[str, int] = 0,
+        headers: dict = {},
+        **kwargs,
+    ):
+        '''Set up handler to stream process output.
+
+        Parameters:
+
+            args: The first value is the command. The rest are optional string arguments.
+                Same as `subprocess.Popen()`.
+            shell: `True` passes the `args` through the shell, allowing wildcards like `*`.
+                If `shell=True` then use a single string for `args` that includes the arguments.
+            cwd: Current working directory from where the command will run.
+                Defaults to the same directory Gramex ran from.
+            buffer: Number of bytes to buffer. Defaults: `io.DEFAULT_BUFFER_SIZE`. Or `"line"`
+                to buffer by newline.
+            headers: HTTP headers to set on the response.
+        '''
         super(ProcessHandler, cls).setup(**kwargs)
         cls.cmdargs = args
         cls.shell = shell
@@ -111,7 +78,27 @@ class ProcessHandler(BaseHandler):
                 app_log.warning(f'ProcessHandler: {name}: {target} is not implemented')
         return callbacks
 
-    def initialize(self, stdout=None, stderr=None, stdin=None, **kwargs):
+    def initialize(
+        self,
+        stdout: Union[List[str], str] = None,
+        stderr: Union[List[str], str] = None,
+        stdin: Union[List[str], str] = None,
+        **kwargs,
+    ):
+        '''Sets up I/O stream processing.
+
+        Parameters:
+
+            stdout: The process output can be sent to
+            stderr: The process error stream has the same options as stdout.
+            stdin: (**TODO**)
+
+        `stdout`, `stderr` and `stdin` can be one of the below, or a list of the below:
+
+        - `"pipe"`: Display the (transformed) output. This is the default
+        - `"false"`: Ignore the output
+        - `"filename.txt"`: Save output to a `filename.txt`
+        '''
         super(ProcessHandler, self).initialize(**kwargs)
         self.stream_stdout = self.stream_callbacks(stdout, name='stdout')
         self.stream_stderr = self.stream_callbacks(stderr, name='stderr')

@@ -296,7 +296,7 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
 
     @classmethod
     @coroutine
-    def exchange_refresh_token(cls, user, refresh_token=None):
+    def exchange_refresh_token(cls, user: dict, refresh_token: str = None):
         '''
         Exchange the refresh token for the current user for a new access token.
 
@@ -305,20 +305,22 @@ class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
         The token is picked up from the persistent user info store. Developers can explicitly pass
         a refresh_token as well.
 
-        Sample usage in a FunctionHandler coroutine::
+        Sample usage in a FunctionHandler coroutine
 
-            @tornado.gen.coroutine
-            def refresh(handler):
-                # Get the Google auth handler though which the current user logged in
-                auth_handler = gramex.service.url['google-handler'].handler_class
-                # Exchange refresh token for access token
-                yield auth_handler.exchange_refresh_token(handler.current_user)
+        ```python
+        @tornado.gen.coroutine
+        def refresh(handler):
+            # Get the Google auth handler though which the current user logged in
+            auth_handler = gramex.service.url['google-handler'].handler_class
+            # Exchange refresh token for access token
+            yield auth_handler.exchange_refresh_token(handler.current_user)
+        ```
 
-        It accepts the following parameters:
+        Parameters:
 
-        :arg dict user: current user object, i.e. ``handler.current_user`` (read-only)
-        :arg str refresh_token: optional. By default, the refresh token is picked up from
-            ``handler.current_user.refresh_token``
+            user: current user object, i.e. `handler.current_user` (read-only)
+            refresh_token: optional. By default, the refresh token is picked up from
+                `handler.current_user.refresh_token`
         '''
         if refresh_token is None:
             if 'refresh_token' in user:
@@ -347,37 +349,43 @@ class SimpleAuth(AuthHandler):
     authentication methods -- i.e. where **we** render the login screen, not a third party service.
 
     The login page is rendered in case of a login error as well. The page is a
-    Tornado template that is passed an ``error`` variable. ``error`` is ``None``
-    by default. If the login fails, it must be a ``dict`` with attributes
+    Tornado template that is passed an `error` variable. `error` is `None`
+    by default. If the login fails, it must be a `dict` with attributes
     specific to the handler.
 
-    The simplest configuration (``kwargs``) for SimpleAuth is::
+    The simplest configuration (`kwargs`) for SimpleAuth is
 
-        credentials:                        # Mapping of user IDs and passwords
-            user1: password1                # user1 maps to password1
-            user2: password2
+    ```yaml
+    credentials:                        # Mapping of user IDs and passwords
+        user1: password1                # user1 maps to password1
+        user2: password2
+    ```
 
-    An alternate configuration is::
+    An alternate configuration is
 
-        credentials:                        # Mapping of user IDs and user info
-            user1:                          # Each user ID has a dictionary of keys
-                password: password1         # One of them MUST be password
-                email: user1@example.org    # Any other attributes can be added
-                role: employee              # These are available from the session info
-            user2:
-                password: password2
-                email: user2@example.org
-                role: manager
+    ```yaml
+    credentials:                        # Mapping of user IDs and user info
+        user1:                          # Each user ID has a dictionary of keys
+            password: password1         # One of them MUST be password
+            email: user1@example.org    # Any other attributes can be added
+            role: employee              # These are available from the session info
+        user2:
+            password: password2
+            email: user2@example.org
+            role: manager
+    ```
 
-    The full configuration (``kwargs``) for SimpleAuth looks like this::
+    The full configuration (`kwargs`) for SimpleAuth looks like this
 
-        template: $YAMLPATH/auth.template.html  # Render the login form template
-        user:
-            arg: user                       # ... the ?user= argument from the form.
-        password:
-            arg: password                   # ... the ?password= argument from the form
-        data:
-            ...                             # Same as above
+    ```yaml
+    template: $YAMLPATH/auth.template.html  # Render the login form template
+    user:
+        arg: user                       # ... the ?user= argument from the form.
+    password:
+        arg: password                   # ... the ?password= argument from the form
+    data:
+        ...                             # Same as above
+    ```
 
     The login flow is as follows:
 

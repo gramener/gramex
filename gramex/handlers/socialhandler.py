@@ -129,27 +129,29 @@ class SocialHandler(BaseHandler):
 
 class TwitterRESTHandler(SocialHandler, TwitterMixin):
     '''
-    Proxy for the Twitter 1.1 REST API via these ``kwargs``::
+    Proxy for the Twitter 1.1 REST API via these `kwargs`:
 
-        pattern: /twitter/(.*)
-        handler: TwitterRESTHandler
-        kwargs:
-            key: your-consumer-key
-            secret: your-consumer-secret
-            access_key: your-access-key         # Optional -- picked up from session
-            access_secret: your-access-token    # Optional -- picked up from session
-            methods: [get, post]                # HTTP methods to use for the API
-            path: /search/tweets.json           # Freeze Twitter API request
+    ```yaml
+    pattern: /twitter/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+        key: your-consumer-key
+        secret: your-consumer-secret
+        access_key: your-access-key         # Optional -- picked up from session
+        access_secret: your-access-token    # Optional -- picked up from session
+        methods: [get, post]                # HTTP methods to use for the API
+        path: /search/tweets.json           # Freeze Twitter API request
+    ```
 
-    Now ``POST /twitter/search/tweets.json?q=gramener`` returns the same response
-    as the Twitter REST API ``/search/tweets.json``.
+    Now `POST /twitter/search/tweets.json?q=gramener` returns the same response
+    as the Twitter REST API `/search/tweets.json`.
 
-    If you only want to expose a specific API, specify a ``path:``. It overrides
+    If you only want to expose a specific API, specify a `path:`. It overrides
     the URL path. The query parameters will still work.
 
-    By default, ``methods`` is POST, and GET logs the user in, storing the access
-    token in the session for future use. But you can specify the ``access_...``
-    values and set ``methods`` to ``[get, post]`` to use both GET and POST
+    By default, `methods` is POST, and GET logs the user in, storing the access
+    token in the session for future use. But you can specify the `access_...`
+    values and set `methods` to `[get, post]` to use both GET and POST
     requests to proxy the API.
     '''
 
@@ -208,32 +210,32 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
 
 class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
     '''
-    Proxy for the Facebook Graph API via these ``kwargs``::
+    Proxy for the Facebook Graph API via these `kwargs`:
 
-        pattern: /facebook/(.*)
-        handler: FacebookGraphHandler
-        kwargs:
-            key: your-consumer-key
-            secret: your-consumer-secret
-            access_token: your-access-token     # Optional -- picked up from session
-            methods: [get, post]                # HTTP methods to use for the API
-            scope: user_posts,user_photos       # Permissions requested for the user
-            path: /me/feed                      # Freeze Facebook Graph API request
+    ```yaml
+    pattern: /facebook/(.*)
+    handler: FacebookGraphHandler
+    kwargs:
+        key: your-consumer-key
+        secret: your-consumer-secret
+        access_token: your-access-token     # Optional -- picked up from session
+        methods: [get, post]                # HTTP methods to use for the API
+        scope: user_posts,user_photos       # Permissions requested for the user
+        path: /me/feed                      # Freeze Facebook Graph API request
+    ```
 
-    Now ``POST /facebook/me`` returns the same response as the Facebook Graph API
-    ``/me``. To request specific access rights, specify the ``scope`` based on
-    `permissions`_ required by the `Graph API`_.
+    Now `POST /facebook/me` returns the same response as the Facebook Graph API
+    `/me`. To request specific access rights, specify the `scope` based on
+    [permissions](https://developers.facebook.com/docs/facebook-login/permissions) required by the
+    [Graph API](https://developers.facebook.com/docs/graph-api/reference).
 
-    If you only want to expose a specific API, specify a ``path:``. It overrides
+    If you only want to expose a specific API, specify a `path:`. It overrides
     the URL path. The query parameters will still work.
 
-    By default, ``methods`` is POST, and GET logs the user in, storing the access
-    token in the session for future use. But you can specify the ``access_token``
-    values and set ``methods`` to ``[get, post]`` to use both GET and POST
+    By default, `methods` is POST, and GET logs the user in, storing the access
+    token in the session for future use. But you can specify the `access_token`
+    values and set `methods` to `[get, post]` to use both GET and POST
     requests to proxy the API.
-
-    .. _permissions: https://developers.facebook.com/docs/facebook-login/permissions
-    .. _Graph API: https://developers.facebook.com/docs/graph-api/reference
     '''
 
     @classmethod
