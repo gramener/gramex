@@ -840,14 +840,10 @@ class TestFormHandler(TestGramex):
             url = '/formhandler/join'
             if args:
                 url += f'?{"&".join(args)}'
-                print(url)
                 params = {}
 
             r = self.get(url, params=params)
-            print("\n-----------\n", r.url)
             actual = pd.DataFrame(r.json())
-            print("actual :\n", actual)
-            print("expected :\n", expected, "\n-----------\n")
             afe(actual, expected.reset_index(drop=True), check_like=True)
 
         expected = self.sales.merge(self.cities, how='left')
