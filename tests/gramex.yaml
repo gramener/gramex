@@ -2230,6 +2230,7 @@ url:
       credentials:
         alpha: alpha
         beta: beta
+        gamma: gamma
 
   auth/rules:
     pattern: /auth/rulesdb

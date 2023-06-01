@@ -641,11 +641,10 @@ class TestRoles(AuthBase):
         eq_(session['user']['roles'], ['lead'])
         eq_(sorted(session['user']['permissions']), sorted(['read', 'write', 'delete']))
 
-        # FIXME: find a proper user to test this scenario
-        # self.login_ok('gamma', 'gamma', check_next='/')
-        # session = self.session.get(server.base_url + '/auth/session').json()
-        # eq_(session['user']['roles'], ['junior'])
-        # eq_(sorted(session['user']['permissions']), sorted(['read', 'write', 'delete']))
+        self.login_ok('gamma', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], ['junior'])
+        eq_(sorted(session['user']['permissions']), sorted(['read', 'write', 'delete']))
 
 
 class TestRules(AuthBase):
