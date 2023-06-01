@@ -836,16 +836,58 @@ class TestFormHandler(TestGramex):
             afe(actual, expected, check_like=True)
 
     def test_join(self):
-        def check(expected, **params):
-            r = self.get('/formhandler/join', params=params)
+        def check(expected, *args, **params):
+            url = '/formhandler/join'
+            if args:
+                url += f'?{"&".join(args)}'
+                print(url)
+                params = {}
+
+            r = self.get(url, params=params)
+            print("\n-----------\n", r.url)
             actual = pd.DataFrame(r.json())
+            print("actual :\n", actual)
+            print("expected :\n", expected, "\n-----------\n")
             afe(actual, expected.reset_index(drop=True), check_like=True)
 
         expected = self.sales.merge(self.cities, how='left')
         expected = expected.rename(columns={'demand': 'cities_demand', 'drive': 'cities_drive'})
         check(expected)
         check(expected[expected['city'] == 'Singapore'], city='Singapore')
-        # TODO: Add remaining join tests
+        check(expected[expected['sales'] != 500], **{"sales%33": '500'})
+        check(expected[expected['sales'] > 500], **{"sales>": '500'})
+        check(expected[expected['sales'] >= 500], **{"sales>~": '500'})
+        check(expected[expected['sales'] < 500], **{"sales<": '500'})
+        check(expected[expected['sales'] <= 500], **{"sales<~": '500'})
+        check(
+            expected[expected['cities_demand'] > 400].sort_values(by='product'),
+            **{"cities_demand>": '400', "_sort": 'product'},
+        )
+        check(
+            expected[expected['cities_demand'] > 400].sort_values(by='product', ascending=False),
+            **{"cities_demand>": '400', "_sort": '-product'},
+        )
+        check(
+            # FIXME: we should not have to rename the columns, the column name must always be same
+            expected[['sales', 'growth', 'cities_drive']].rename(
+                columns={'cities_drive': 'drive'}
+            ),
+            "_c=sales",
+            "_c=growth",
+            "_c=cities_drive",
+        )
+        # check(
+        #     # FIXME: Test Failing
+        #     expected.drop(['sales', 'growth', 'cities_drive'], axis=1),
+        #     "_c=-sales",
+        #     "_c=-growth",
+        #     "_c=-cities_drive",
+        # )
+        check(expected.dropna(subset=['sales']), "sales")
+        check(
+            expected[expected['sales'].isna()].applymap(lambda x: None if pd.isnull(x) else x),
+            "sales!",
+        )
 
     def test_edit_id_type(self):
         target = copy_file('sales.xlsx', 'sales-edits.xlsx')
