@@ -2961,3 +2961,7 @@ storelocations:
       request.method: TEXT
   roles:
     url: sqlite:///$YAMLPATH/roles.db
+  permissions:
+    url: sqlite:///$YAMLPATH/roles.db
+  user_permissions:
+    url: sqlite:///$YAMLPATH/roles.db
