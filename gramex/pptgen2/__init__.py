@@ -1,7 +1,7 @@
 '''
-pptgen2.pptgen() modifies a ``source`` PPTX using ``rules`` and ``data``.
+pptgen2.pptgen() modifies a `source` PPTX using `rules` and `data`.
 
-The main loop is in :py:func:`pptgen`, which calls other functions as required.
+The main loop is in [pptgen()][gramex.pptgen2.pptgen], which calls other functions as required.
 '''
 
 import copy
@@ -38,19 +38,20 @@ def pptgen(
 ) -> pptx.presentation.Presentation:
     '''
     Process a configuration. This loads a Presentation from source, applies the
-    (optional) configuration changes and (optionally) saves it into target. Returns the modified
+    (optional) configuration changes and (optionally) saves it into target. Returns modified PPTX.
 
-    :arg PPTX source: string or pptx.Presentation object to transform
-    :arg list rules: list of rules to apply to the ``source`` PPTX. Each rule
-    :arg str target: optional path save file
-    :arg int/list only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
-    :arg dict register: new commands to register via :py:func:`register_commands`.
-    :arg str unit: default length unit (Inches, Cm, Centipoints, etc)
-    :arg str mode: default expression mode. Values in Python are treated as 'literals'
-        (e.g. 'red' is the STRING red). But PPTXHandler passes the mode as `expr`. Values are
-        treated as expressions (e.g. 'red' is the VARIABLE red).
-    :arg handler: if PPTXHandler passes a handler, make it available to the commands as a variable
-    :return: target PPTX
+    Parameters:
+
+        source: string or pptx.Presentation object to transform
+        rules: list of rules to apply to the `source` PPTX. Each rule
+        target: optional path save file
+        only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
+        register: new commands to register via [gramex.pptgen2.register_commands][]
+        unit: default length unit (Inches, Cm, Centipoints, etc)
+        mode: default expression mode. Values in Python are treated as 'literals'
+            (e.g. 'red' is the STRING red). But PPTXHandler passes the mode as `expr`. Values are
+            treated as expressions (e.g. 'red' is the VARIABLE red).
+        handler: if PPTXHandler passes a handler, make it available to the commands as a variable
     '''
     # TODO: source can be an expression. PPTXHandler may need to use multiple themes
     prs = source if isinstance(source, pptx.presentation.Presentation) else Presentation(source)
@@ -132,10 +133,12 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
     '''
     Apply commands in rule to change shapes using data.
 
-    :arg dict rule: a dict of shape names, and commands to apply on each.
-        e.g. ``{"Oval 1": {"fill": "red"}, "Oval 2": {"text": "OK"}}``
-    :arg Shapes shapes: a slide.shapes or group.shapes object on which the rule should be applied
-    :arg dict data: data context for the commands in the rule
+    Parameters:
+
+        rule: a dict of shape names, and commands to apply on each.
+            e.g. `{"Oval 1": {"fill": "red"}, "Oval 2": {"text": "OK"}}`
+        shapes: a slide.shapes or group.shapes object on which the rule should be applied
+        data: data context for the commands in the rule
     '''
     # Apply every rule to every pattern -- as long as the rule key matches the shape name
     for pattern, spec in rule.items():
@@ -191,27 +194,30 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
     '''
     Loads datasets based on configuration and returns a dict of those datasets.
 
-    :arg dataset _conf: The dataset configuration
-    :arg str _default_key: Can be ``function``, ``url`` or ``None`` (default).
-        If specified, it converts string data configurations into ``{_default_key: _conf}``.
-    :return: A dict of datasets loaded based on the configuration.
+    Parameters:
+        _conf: The dataset configuration
+        _default_key: Can be `function`, `url` or `None` (default).
+            If specified, it converts string data configurations into `{_default_key: _conf}`.
 
-    ``_conf`` is processed as follows:
+    Returns:
+        A dict of datasets loaded based on the configuration.
 
-    - String ``'data.xlsx'`` is loaded via :py:func:`gramex.cache.open` into ``{data: ...}`` if
-        ``_default_key == 'url'``
-    - String ``'data[0]'`` is evaluated via :py:func:`gramex.transforms.build_transform` into
-        ``{data: ...}``` if ``_default_key == 'function'``
-    - String ``anything``` raises an Exception if ``_default_key`` is None
-    - Dict ``{url: ...}`` is loaded with :py:func:`gramex.data.filter` into ``{data: ...}``
-    - Dict ``{function: ...}`` is evaluated via :py:func:`gramex.transforms.build_transform`
-        into ``{data: ...}``
-    - Dict ``{x: ..., y: ...}`` loads the respective datasets into ``x`` and ``y`` instead of
-        ``data``. Each dataset is processed using the above rules.
-    - Any other datatype passed is returned as is in ``{data: ...}``
+    `_conf` is processed as follows:
+
+    - String `'data.xlsx'` is loaded via [gramex.cache.open] into `{data: ...}` if
+        `_default_key == 'url'`
+    - String `'data[0]'` is evaluated via [gramex.transforms.build_transform] into
+        `{data: ...}` if `_default_key == 'function'`
+    - String `anything` raises an Exception if `_default_key` is None
+    - Dict `{url: ...}` is loaded with [gramex.data.filter] into `{data: ...}`
+    - Dict `{function: ...}` is evaluated via [gramex.transforms.build_transform]
+        into `{data: ...}`
+    - Dict `{x: ..., y: ...}` loads the respective datasets into `x` and `y` instead of
+        `data`. Each dataset is processed using the above rules.
+    - Any other datatype passed is returned as is in `{data: ...}`
 
     Any keyword arguments passed are also added to the resulting dataset, but overwritten only if
-    ``_conf`` loaded a dataset that's not ``None``.
+    `_conf` loaded a dataset that's not `None`.
     '''
 
     def str2conf(data, key):
@@ -257,9 +263,11 @@ def register_commands(register: Dict[str, str]) -> None:
     '''
     Register a new command to the command list.
 
-    :arg dict register: keys are the command name. Values are the Python expression to run to apply
-        the command. The expression can use 3 variables: ``shape`` (the Shape object to modify),
-        ``spec`` (the configuration passed to your command) and ``data``.
+    Parameters:
+
+        register: keys are the command name. Values are the Python expression to run to apply
+            the command. The expression can use 3 variables: `shape` (the Shape object to modify),
+            `spec` (the configuration passed to your command) and `data`.
     '''
     if not isinstance(register, dict):
         raise TypeError(f'register: must be a dict, not {type(register)}')
@@ -271,11 +279,14 @@ def register_commands(register: Dict[str, str]) -> None:
 
 def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> list:
     '''
-    Delete slides except those specified in ``only``.
+    Delete slides except those specified in `only`.
 
-    :arg Presentation prs: presentation to delete slides from
-    :arg int/list only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
-    :return: list of slides to process. These slides are also DELETED in the original prs
+    Parameters:
+        prs: presentation to delete slides from
+        only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
+
+    Returns:
+        list of slides to process. These slides are also DELETED in the original prs
     '''
     if only is None:
         return list(prs.slides)
@@ -295,13 +306,16 @@ def slide_filter(slides, rule: dict, data: dict):
     '''
     Filter slides. Return iterable of (index, slide) for only those slides matching numbers/titles.
 
-    :arg Slides slides: a Slides object (e.g. ``prs.slides``) to select slides from
-    :arg dict rule: a dict that may have a ``slide-number`` or ``slide-title`` key to filter by.
-        These can be expressions. ``slide-number`` is the slide number(s) to filter. 1 is the first
-        slide. ``[1, 3]`` is slides 1 & 3. ``slide-title`` has the slide title pattern(s) to filter
-        e.g. ``*Match*`` matches all slides with "match" anywhere in the title (case-insensitive).
-    :arg dict data: data context for the rule
-    :return: an iterable that yields (index, slide)
+    Parameters:
+        slides: a Slides object (e.g. `prs.slides`) to select slides from
+        rule: a dict that may have a `slide-number` or `slide-title` key to filter by.
+            These can be expressions. `slide-number` is the slide number(s) to filter. 1 is the 1st
+            slide. `[1, 3]` is slides 1 & 3. `slide-title` has the slide title pattern(s) to filter
+            e.g. `*Match*` matches all slides with "match" anywhere in the title (case-insensitive)
+        data: data context for the rule
+
+    Returns:
+        an iterable that yields (index, slide)
     '''
     numbers = commands.expr(rule.get('slide-number', []), data)
     titles = commands.expr(rule.get('slide-title', []), data)
@@ -319,15 +333,16 @@ def slide_filter(slides, rule: dict, data: dict):
         yield index, slide
 
 
-def copy_slide(prs, source, target_index):
+def copy_slide(prs: Presentation, source, target_index: int):
     '''
-    Copy ``source`` slide from presentatation ``prs`` to appear at ``target_index``. python-pptx
+    Copy `source` slide from presentatation `prs` to appear at `target_index`. python-pptx
     does not have this feature, so we tweak XML directly. Does not copy slides with diagrams or
     charts yet.
 
-    :arg Presentation prs: presentation to copy the slide in
-    :arg Slide source: slide to copy
-    :arg target_index: location to copy into. 0 makes it the first slide
+    Parameters:
+        Presentation prs: presentation to copy the slide in
+        Slide source: slide to copy
+        target_index: location to copy into. 0 makes it the first slide
     '''
     # Append slide with source's layout. Then delete shapes to get a blank slide
     dest = prs.slides.add_slide(source.slide_layout)
@@ -374,11 +389,12 @@ def transition(slide, spec: Union[str, dict], data: dict):
     Apply transition on slide based on spec. python-pptx does not have this feature, so we tweak
     XML directly.
 
-    :arg Slide slide: slide to apply the transition to
-    :arg dict/str spec: type of transition to apply. ``config.yaml`` lists transitions and options.
-        It can also be a dict specifying ``type`` (type of transition), ``duration`` (in seconds)
-        and ``advance`` (auto-advance after seconds)
-    :arg dict data: data context for the ``spec`` expression
+    Parameters:
+        slide: slide to apply the transition to
+        spec: type of transition to apply. `config.yaml` lists transitions and options.
+            It can also be a dict specifying `type` (type of transition), `duration` (in seconds)
+            and `advance` (auto-advance after seconds)
+        data: data context for the `spec` expression
     '''
     if spec is None:
         return
@@ -428,13 +444,16 @@ def transition(slide, spec: Union[str, dict], data: dict):
 
 def iterate_on(spec, data: dict):
     '''
-    ``clone:`` and ``copy:`` iterate on data to return a (key, val) pair. This method performs the
+    `clone:` and `copy:` iterate on data to return a (key, val) pair. This method performs the
     iteration for different data types and returns (key, val) consistently.
 
-    :arg expr spec: an expression to iterate on. It can be a dict, tuple, list, pd.Index,
-        pd.DataFrame, or pd.DataFrameGroupBy
-    :arg dict data: data context for the ``spec`` expression
-    :return: an iterable that yields (key, val) tuples
+    Parameters:
+        spec: an expression to iterate on. It can be a dict, tuple, list, pd.Index,
+            pd.DataFrame, or pd.DataFrameGroupBy
+        data: data context for the `spec` expression
+
+    Returns:
+        an iterable that yields (key, val) tuples
     '''
     val = commands.expr(spec, data)
     # {x: 1} -> (x, 1)
@@ -445,7 +464,7 @@ def iterate_on(spec, data: dict):
         return enumerate(val)
     # pd.Series({x: 1}) -> (x, 1)
     elif isinstance(val, pd.Series):
-        return val.iteritems()
+        return val.items()
     # pd.DataFrame([{x:1, y:2], {x:3, y:4}]) -> (0, {x: 1, y:2}), ...
     elif isinstance(val, pd.DataFrame):
         return val.iterrows()

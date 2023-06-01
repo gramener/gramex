@@ -70,7 +70,7 @@ function templatize(input) {
 }
 
 const browser_setup = async (args) => {
-  browser = await puppeteer.launch({ args: args });
+  browser = await puppeteer.launch({ headless: "new", args: args });
   browser.on("disconnected", () => {
     console.log("Reconnecting browser");
     browser.close();

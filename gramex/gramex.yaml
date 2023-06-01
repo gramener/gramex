@@ -103,6 +103,13 @@ handlers:
     default:
       _limit: 10000 # Limit entries by default
 
+  MessageHandler:
+    message_default:
+      POST:
+        id: base64.urlsafe_b64encode(uuid.uuid4().bytes).strip(b"=").decode('utf-8')
+        user: handler.current_user.get('id', None) if handler.current_user else None
+        timestamp: datetime.datetime.utcnow().isoformat()
+
 # The `log:` section defines the log handlers. It uses the same structure as the
 # Python logging schema.
 # https://docs.python.org/3/library/logging.config.html#logging-config-dictschema

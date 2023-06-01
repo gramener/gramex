@@ -36,8 +36,9 @@ Morsel._reserved.setdefault('samesite', 'SameSite')
 
 
 class BaseMixin:
-    '''Common utilities for all handlers. This is usde by [gramex.handlers.BaseHandler][] and
-    [gramex.handlers.BaseWebSocketHandler][].
+    '''Common utilities for all handlers. This is used by
+    [BaseHandler][gramex.handlers.BaseHandler] and
+    [BaseWebSocketHandler][gramex.handlers.BaseWebSocketHandler].
     '''
 
     @classmethod
@@ -144,7 +145,8 @@ class BaseMixin:
             raise ValueError(err)
         if caps:
             val = val.upper()
-        return set(val.replace(',', ' ').split())
+        # Return de-duplicated list. Avoid set(), use dict to preserve order
+        return list(dict.fromkeys(val.replace(',', ' ').split()))
 
     @classmethod
     def setup_httpmethods(cls, methods: Union[list, tuple, str]):
@@ -375,18 +377,35 @@ class BaseMixin:
         '''Initialize rate limiting checks'''
         if ratelimit is None:
             return
-        if ratelimit_app_conf is None:
+        if not ratelimit_app_conf:
             raise ValueError(f"url:{cls.name}.ratelimit: no app.ratelimit defined")
-        if 'keys' not in ratelimit:
-            raise ValueError(f'url:{cls.name}.ratelimit.keys: missing')
-        if 'limit' not in ratelimit:
-            raise ValueError(f'url:{cls.name}.ratelimit.limit: missing')
 
         # All ratelimit related info is stored in self._ratelimit
-        cls._ratelimit = AttrDict(key_fn=[])
+        cls._ratelimit = []
+        cls._on_init_methods.append(cls.check_ratelimit)
+        cls._on_finish_methods.append(cls.update_ratelimit)
 
-        # Default the pool name to `pattern:`
-        cls._ratelimit.pool = ratelimit.get('pool', cls.conf.pattern)
+        if isinstance(ratelimit, (list, tuple)):
+            for ratelimit_conf in ratelimit:
+                cls._setup_ratelimit(ratelimit_conf, ratelimit_app_conf)
+        else:
+            cls._setup_ratelimit(ratelimit, ratelimit_app_conf)
+
+    @classmethod
+    def _setup_ratelimit(cls, ratelimit, ratelimit_app_conf):
+        for key in ('keys', 'limit'):
+            if key not in ratelimit:
+                raise ValueError(f'url:{cls.name}.ratelimit.{key}: missing')
+
+        # All info for current ratelimit is in _ratelimit, which is added to cls._ratelimit
+        _ratelimit = AttrDict(
+            # Default the pool name to `pattern:`
+            pool=ratelimit.get('pool', cls.conf.pattern),
+            # Pick up the store location from the default app config
+            store=cls._get_store(ratelimit_app_conf),
+            key_fn=[],
+        )
+        cls._ratelimit.append(_ratelimit)
 
         # Convert keys: into list
         keys_spec = ratelimit['keys']
@@ -400,7 +419,7 @@ class BaseMixin:
         elif not isinstance(keys_spec, (list, tuple)):
             raise ValueError(f'url:{cls.name}.ratelimit.keys: needs dict list, not {keys_spec}')
 
-        # Pre-compile keys: into self._ratelimit.keys = [key_fn, key_fn, ...]
+        # Pre-compile keys: into _ratelimit.key_fn = [key_fn, key_fn, ...]
         #   key_fn['function'](self) will return nth key
         #   key_fn['expiry'](self) will return nth expiry (in seconds)
         predefined_keys = ratelimit_app_conf.get('keys', {})
@@ -418,7 +437,7 @@ class BaseMixin:
             # {function: ...} MUST be defined for a key. {expiry: ... } is optional
             if not isinstance(key_spec, dict) or 'function' not in key_spec:
                 raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} has no function:')
-            # Compile key/expiry functions into cls._ratelimit.keys[index]['function' / 'expiry']
+            # Compile key/expiry functions into _ratelimit.key_fn[index]['function' / 'expiry']
             key_fn = {}
             for fn in ('function', 'expiry'):
                 if fn in key_spec:
@@ -428,7 +447,7 @@ class BaseMixin:
                         filename=f'url:{cls.name}.ratelimit.keys[{index}].{fn}',
                         iter=False,
                     )
-            cls._ratelimit.key_fn.append(key_fn)
+            _ratelimit.key_fn.append(key_fn)
 
         # Ensure limit: is a number or a {function: ...}
         limit_spec = ratelimit['limit']
@@ -438,29 +457,23 @@ class BaseMixin:
             example = "{'function': number}"
             raise ValueError(f'url:{cls.name}.ratelimit.limit: needs {example}, not {limit_spec}')
 
-        # Pre-compile limit: into self._ratelimit.limit_fn
-        cls._ratelimit.limit_fn = build_transform(
+        # Pre-compile limit: into _ratelimit.limit_fn
+        _ratelimit.limit_fn = build_transform(
             limit_spec,
             vars={'handler': None},
             filename=f'url:{cls.name}.ratelimit.limit',
             iter=False,
         )
 
-        cls._ratelimit.store = cls._get_store(ratelimit_app_conf)
-        cls._on_init_methods.append(cls.check_ratelimit)
-        cls._on_finish_methods.append(cls.update_ratelimit)
-
     @classmethod
     def reset_ratelimit(cls, pool: str, keys: List[Any], value: int = 0) -> bool:
         '''Reset the rate limit usage for a specific pool.
 
         Examples:
-
             >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'])
             >>> reset_ratelimit('/api', ['2022-01-01', 'x@example.org'], 10)
 
         Parameters:
-
             pool: Rate limit pool to use. This is the url's `pattern:` unless you specified a
                 `kwargs.ratelimit.pool:`
             keys: specific instance to reset. If your `ratelimit.keys` is `[daily, user.id]`,
@@ -479,30 +492,34 @@ class BaseMixin:
     @classmethod
     def setup_redirect(cls, redirect):
         '''
-        Any handler can have a ``redirect:`` kwarg that looks like this::
+        Any handler can have a `redirect:` kwarg that looks like this:
 
-            redirect:
-                query: next         # If the URL has a ?next=..., redirect to that page next
-                header: X-Next      # Else if the header has an X-Next=... redirect to that
-                url: ...            # Else redirect to this URL
+        ```yaml
+        redirect:
+            query: next         # If the URL has a ?next=..., redirect to that page next
+            header: X-Next      # Else if the header has an X-Next=... redirect to that
+            url: ...            # Else redirect to this URL
+        ```
 
         Only these 3 keys are allowed. All are optional, and checked in the
-        order specified. So, for example::
+        order specified. So, for example:
 
-            redirect:
-                header: X-Next      # Checks the X-Next header first
-                query: next         # If it's missing, uses the ?next=
+        ```yaml
+        redirect:
+            header: X-Next      # Checks the X-Next header first
+            query: next         # If it's missing, uses the ?next=
+        ```
 
-        You can also specify a string for redirect. ``redirect: ...`` is the same
-        as ``redirect: {url: ...}``.
+        You can also specify a string for redirect. `redirect: ...` is the same
+        as `redirect: {url: ...}`.
 
-        When any BaseHandler subclass calls ``self.save_redirect_page()``, it
-        stores the redirect URL in ``session['_next_url']``. The URL is
+        When any BaseHandler subclass calls `self.save_redirect_page()`, it
+        stores the redirect URL in `session['_next_url']`. The URL is
         calculated relative to the handler's URL.
 
-        After that, when the subclass calls ``self.redirect_next()``, it
-        redirects to ``session['_next_url']`` and clears the value. (If the
-        ``_next_url`` was not stored, we redirect to the home page ``/``.)
+        After that, when the subclass calls `self.redirect_next()`, it
+        redirects to `session['_next_url']` and clears the value. (If the
+        `_next_url` was not stored, we redirect to the home page `/`.)
 
         Only some handlers implement redirection. But they all implement it in
         this same consistent way.
@@ -611,18 +628,20 @@ class BaseMixin:
     @classmethod
     def setup_error(cls, error):
         '''
-        Sample configuration::
+        Sample configuration:
 
-            error:
-                404:
-                    path: template.json         # Use a template
-                    autoescape: false           # with no autoescape
-                    whitespace: single          # as a single line
-                    headers:
-                        Content-Type: application/json
-                500:
-                    function: module.fn
-                    args: [=status_code, =kwargs, =handler]
+        ```yaml
+        error:
+            404:
+                path: template.json         # Use a template
+                autoescape: false           # with no autoescape
+                whitespace: single          # as a single line
+                headers:
+                    Content-Type: application/json
+            500:
+                function: module.fn
+                args: [=status_code, =kwargs, =handler]
+        ```
         '''
         if not error:
             return
@@ -672,10 +691,12 @@ class BaseMixin:
     @classmethod
     def setup_xsrf(cls, xsrf_cookies):
         '''
-        Sample configuration::
+        Sample configuration:
 
-            xsrf_cookies: false         # Disables xsrf_cookies
-            xsrf_cookies: true          # or anything other than false keeps it enabled
+        ```yaml
+        xsrf_cookies: false         # Disables xsrf_cookies
+        xsrf_cookies: true          # or anything other than false keeps it enabled
+        ```
         '''
         cls.check_xsrf_cookie = cls.noop if xsrf_cookies is False else cls.xsrf_ajax
 
@@ -711,9 +732,9 @@ class BaseMixin:
     def save_redirect_page(self):
         '''
         Loop through all redirect: methods and save the first available redirect
-        page against the session. Defaults to previously set value, else ``/``.
+        page against the session. Defaults to previously set value, else `/`.
 
-        See :py:func:`setup_redirect`
+        See [setup_redirect][gramex.handlers.BaseMixin.setup_redirect].
         '''
         for method in self.redirects:
             next_url = method(self)
@@ -724,10 +745,10 @@ class BaseMixin:
 
     def redirect_next(self):
         '''
-        Redirect the user ``session['_next_url']``. If it does not exist,
+        Redirect the user `session['_next_url']`. If it does not exist,
         set it up first. Then redirect.
 
-        See :py:func:`setup_redirect`
+        See [setup_redirect][gramex.handlers.BaseMixin.setup_redirect].
         '''
         if '_next_url' not in self.session:
             self.save_redirect_page()
@@ -782,7 +803,8 @@ class BaseMixin:
                 return
             except Exception:
                 app_log.exception(f'url:{self.name}.error.{status_code} raised an exception')
-        # HTTP 429 error code reports ratelimits
+        # HTTP 429 error code reports ratelimits. Set the headers if ratelimit is set.
+        # Note: Previous headers are cleared, so we need to explicitly write them here.
         if status_code == TOO_MANY_REQUESTS and hasattr(self, '_ratelimit'):
             self.set_ratelimit_headers()
         # If error was not written, use the default error
@@ -792,8 +814,8 @@ class BaseMixin:
     def session(self):
         '''
         By default, session is not implemented. You need to specify a
-        ``session:`` section in ``gramex.yaml`` to activate it. It is replaced by
-        the ``get_session`` method as a property.
+        `session:` section in `gramex.yaml` to activate it. It is replaced by
+        the `get_session` method as a property.
         '''
         raise NotImplementedError('Specify a session: section in gramex.yaml')
 
@@ -834,15 +856,15 @@ class BaseMixin:
 
         Sessions use these pre-defined timing keys (values are timestamps):
 
-        - ``_t`` is the expiry time of the session
-        - ``_l`` is the last time the user accessed a page. Updated by
-          :py:func:`BaseHandler.set_last_visited`
-        - ``_i`` is the inactive expiry duration in seconds, i.e. if ``now > _l +
-          _i``, the session has expired.
+        - `_t` is the expiry time of the session
+        - `_l` is the last time the user accessed a page. Updated by
+          [setup_redirect][gramex.handlers.BaseMixin.set_last_visited]
+        - `_i` is the inactive expiry duration in seconds, i.e. if `now > _l +
+          _i`, the session has expired.
 
-        ``new=`` creates a new session to avoid session fixation.
+        `new=` creates a new session to avoid session fixation.
         https://www.owasp.org/index.php/Session_fixation.
-        :py:func:`gramex.handlers.authhandler.AuthHandler.set_user` uses it.
+        [`set_user()`][gramex.handlers.AuthHandler.set_user] uses it.
         When the user logs in:
 
         - If no old session exists, it returns a new session object.
@@ -896,7 +918,7 @@ class BaseMixin:
         size: int = None,
         type: str = 'OTP',
     ) -> str:
-        '''Return one-time password valid for ``expire`` seconds.
+        '''Return one-time password valid for `expire` seconds.
 
         The OTP is used as the X-Gramex-OTP header or in `?gramex-otp=` on any request.
         This overrides the user with the passed `user` object for that session.
@@ -1023,7 +1045,7 @@ class BaseMixin:
 
         - `session._l` is the last time the user accessed a page.
         - `session._i` is the seconds of inactivity after which the session expires.
-        - If `session._i` is set (we track inactive expiry), we set ``session._l` to now.
+        - If `session._i` is set (we track inactive expiry), we set `session._l` to now.
         '''
         # Called by BaseHandler.prepare() when any user accesses a page.
         # For efficiency reasons, don't call get_session every time. Check
@@ -1035,43 +1057,78 @@ class BaseMixin:
 
     def check_ratelimit(self):
         '''Raise HTTP 429 if usage exceeds rate limit. Set X-Ratelimit-* HTTP headers'''
-        ratelimit = self._ratelimit
-        # Get the rate limit key, limit and expiry
-        ratelimit.key = json.dumps(
-            [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
-        )
-        ratelimit.limit = ratelimit.limit_fn(self)
-        expiries = [key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn]
-        # If no expiry is specified, store for 100 years
-        ratelimit.expiry = min(expiries + [3155760000])
+        for ratelimit in self._ratelimit:
+            # Get the rate limit key, limit and expiry
+            ratelimit.key = json.dumps(
+                [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
+            )
+            ratelimit.limit = ratelimit.limit_fn(self)
+            expiries = [
+                key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn
+            ]
+            # If no expiry is specified, store for 100 years
+            ratelimit.expiry = min(expiries + [3155760000])
 
-        # Ensure usage does not hit limit
-        ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
-        if ratelimit.usage >= ratelimit.limit:
-            raise HTTPError(TOO_MANY_REQUESTS, f'{ratelimit.key} hit rate limit {ratelimit.limit}')
+            # Ensure usage does not hit limit
+            ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
+            if ratelimit.usage >= ratelimit.limit:
+                raise HTTPError(
+                    TOO_MANY_REQUESTS,
+                    f'{ratelimit.pool}: {ratelimit.key} hit rate limit {ratelimit.limit}',
+                )
         self.set_ratelimit_headers()
 
     def update_ratelimit(self):
         '''If request succeeds, increase rate limit usage count by 1'''
-        ratelimit = self._ratelimit
-        # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
         # If response is a HTTP error, don't count towards rate limit
-        if 'key' not in ratelimit or self.get_status() >= 400:
+        if self.get_status() >= 400:
             return
-        # Increment the rate limit by 1
-        usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
-        usage_obj['n'] += 1
-        usage_obj['_t'] = time.time() + ratelimit.expiry
-        ratelimit.store.dump(ratelimit.key, usage_obj)
+        for ratelimit in self._ratelimit:
+            # If check_ratelimit failed (e.g. invalid function) and didn't set a key, skip update
+            if 'key' not in ratelimit:
+                return
+            # Increment the rate limit by 1
+            usage_obj = ratelimit.store.load(ratelimit.key, {'n': 0})
+            usage_obj['n'] += 1
+            usage_obj['_t'] = time.time() + ratelimit.expiry
+            ratelimit.store.dump(ratelimit.key, usage_obj)
+
+    def get_ratelimit(self):
+        '''Get the rate limit with the least remaining usage for the current request.
+
+        If there are multiple rate limits, it picks the one with least remaining usage and
+        returns an AttrDict with these keys:
+
+        - `limit`: the limit on the rate limit (e.g. 3)
+        - `usage`: the usage so far (BEFORE current request, e.g. 0, 1, 2, 3, ...)
+        - `remaining`: the remaining requests (AFTER current request, e.g. 2, 1, 0, 0, ...)
+        - `expiry`: seconds to expiry for this rate limit
+        '''
+        ratelimit = min(self._ratelimit, key=lambda r: r.limit - r.usage)
+        return AttrDict(
+            limit=ratelimit.limit,
+            usage=ratelimit.usage,
+            # ratelimit.usage goes 0, 1, 2, ...
+            # If limit is 3, remaining goes 2, 1, 0, ... -- use (limit - usage - 1)
+            # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
+            remaining=max(ratelimit.limit - ratelimit.usage - 1, 0),
+            expiry=ratelimit.expiry,
+        )
 
     def set_ratelimit_headers(self):
-        ratelimit = self._ratelimit
-        # ratelimit.usage goes 0, 1, 2, ...
-        # If limit is 3, remaining goes 3, 2, 1, ... -- use (limit - usage - 1)
-        # But when usage hits 3, don't show remaining = -1. Show remaining = 0 using max()
-        remaining = max(ratelimit.limit - ratelimit.usage - 1, 0)
+        '''Sets the headers from the [Ratelimit HTTP headers draft][1].
+
+        - `X-Ratelimit-Limit` is the rate limit
+        - `X-Ratelimit-Remaining` has the remaining requests
+        - `X-Ratelimit-Reset` has seconds after which the rate limit resets
+        - `Retry-After` is same as X-Ratelimit-Reset, but is set only if the limit is exceeded
+
+        [1]: https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html
+        '''
+        # Pick the rate limit with the lowest remaining count
+        ratelimit = self.get_ratelimit()
         self.set_header('X-Ratelimit-Limit', str(ratelimit.limit))
-        self.set_header('X-Ratelimit-Remaining', str(remaining))
+        self.set_header('X-Ratelimit-Remaining', str(ratelimit.remaining))
         self.set_header('X-RateLimit-Reset', str(ratelimit.expiry))
         if ratelimit.usage >= ratelimit.limit:
             self.set_header('Retry-After', str(ratelimit.expiry))
@@ -1118,15 +1175,15 @@ class BaseHandler(RequestHandler, BaseMixin):
     def get_arg(self, name, default=..., first=False):
         '''
         Returns the value of the argument with the given name. Similar to
-        ``.get_argument`` but uses ``self.args`` instead.
+        `.get_argument` but uses `self.args` instead.
 
         If default is not provided, the argument is considered to be
         required, and we raise a `MissingArgumentError` if it is missing.
 
-        If the argument is repeated, we return the last value. If ``first=True``
+        If the argument is repeated, we return the last value. If `first=True`
         is passed, we return the first value.
 
-        ``self.args`` is always UTF-8 decoded unicode. Whitespaces are stripped.
+        `self.args` is always UTF-8 decoded unicode. Whitespaces are stripped.
         '''
         if name not in self.args:
             if default is ...:
@@ -1164,7 +1221,7 @@ class BaseHandler(RequestHandler, BaseMixin):
             callback(self)
 
     def get_current_user(self):
-        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        '''Return the `user` key from the session as an AttrDict if it exists.'''
         result = self.session.get('user')
         return AttrDict(result) if isinstance(result, dict) else result
 
@@ -1213,50 +1270,64 @@ class BaseHandler(RequestHandler, BaseMixin):
 
     def argparse(self, *args, **kwargs):
         '''
-        Parse URL query parameters and return an AttrDict. For example::
+        Parse URL query parameters and return an AttrDict. For example:
 
-            args = handler.argparse('x', 'y')
-            args.x      # is the last value of ?x=value
-            args.y      # is the last value of ?y=value
+        ```python
+        args = handler.argparse('x', 'y')
+        args.x      # is the last value of ?x=value
+        args.y      # is the last value of ?y=value
+        ```
 
-        A missing ``?x=`` or ``?y=`` raises a HTTP 400 error mentioning the
+        A missing `?x=` or `?y=` raises a HTTP 400 error mentioning the
         missing key.
 
-        For optional arguments, use::
+        For optional arguments, use:
 
-            args = handler.argparse(z={'default': ''})
-            args.z      # returns '' if ?z= is missing
+        ```python
+        args = handler.argparse(z={'default': ''})
+        args.z      # returns '' if ?z= is missing
+        ```
 
-        You can convert the value to a type::
+        You can convert the value to a type:
 
-            args = handler.argparse(limit={'type': int, 'default': 100})
-            args.limit      # returns ?limit= as an integer
+        ```python
+        args = handler.argparse(limit={'type': int, 'default': 100})
+        args.limit      # returns ?limit= as an integer
+        ```
 
         You can restrict the choice of values. If the query parameter is not in
-        choices, we raise a HTTP 400 error mentioning the invalid key & value::
+        choices, we raise a HTTP 400 error mentioning the invalid key & value:
 
-            args = handler.argparse(gender={'choices': ['M', 'F']})
-            args.gender      # returns ?gender= which will be 'M' or 'F'
+        ```python
+        args = handler.argparse(gender={'choices': ['M', 'F']})
+        args.gender      # returns ?gender= which will be 'M' or 'F'
+        ```
 
-        You can retrieve multiple values as a list::
+        You can retrieve multiple values as a list:
 
-            args = handler.argparse(cols={'nargs': '*', 'default': []})
-            args.cols       # returns an array with all ?col= values
+        ```python
+        args = handler.argparse(cols={'nargs': '*', 'default': []})
+        args.cols       # returns an array with all ?col= values
+        ```
 
-        ``type:`` conversion and ``choices:`` apply to each value in the list.
+        `type:` conversion and `choices:` apply to each value in the list.
 
-        To return all arguments as a list, pass ``list`` as the first parameter::
+        To return all arguments as a list, pass `list` as the first parameter:
 
-            args = handler.argparse(list, 'x', 'y')
-            args.x      # ?x=1 sets args.x to ['1'], not '1'
-            args.y      # Similarly for ?y=1
+        ```python
+        args = handler.argparse(list, 'x', 'y')
+        args.x      # ?x=1 sets args.x to ['1'], not '1'
+        args.y      # Similarly for ?y=1
+        ```
 
-        To handle unicode arguments and return all arguments as ``str`` or
-        ``unicode`` or ``bytes``, pass the type as the first parameter::
+        To handle unicode arguments and return all arguments as `str` or
+        `unicode` or `bytes`, pass the type as the first parameter:
 
-            args = handler.argparse(str, 'x', 'y')
-            args = handler.argparse(bytes, 'x', 'y')
-            args = handler.argparse(unicode, 'x', 'y')
+        ```python
+        args = handler.argparse(str, 'x', 'y')
+        args = handler.argparse(bytes, 'x', 'y')
+        args = handler.argparse(unicode, 'x', 'y')
+        ```
 
         By default, all arguments are added as str in PY3 and unicode in PY2.
 
@@ -1271,17 +1342,19 @@ class BaseHandler(RequestHandler, BaseMixin):
         - type: Python type to which the parameter should be converted (e.g. `int`)
         - choices: A container of the allowable values for the argument (after type conversion)
 
-        You can combine all these options. For example::
+        You can combine all these options. For example:
 
-            args = handler.argparse(
-                'name',                         # Raise error if ?name= is missing
-                department={'name': 'dept'},    # ?dept= is mapped to args.department
-                org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
-                age={'type': int},              # Convert ?age= to an integer
-                married={'type': bool},         # Convert ?married to a boolean
-                alias={'nargs': '*'},           # Convert all ?alias= to a list
-                gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
-            )
+        ```python
+        args = handler.argparse(
+            'name',                         # Raise error if ?name= is missing
+            department={'name': 'dept'},    # ?dept= is mapped to args.department
+            org={'default': 'Gramener'},    # If ?org= is missing, defaults to Gramener
+            age={'type': int},              # Convert ?age= to an integer
+            married={'type': bool},         # Convert ?married to a boolean
+            alias={'nargs': '*'},           # Convert all ?alias= to a list
+            gender={'choices': ['M', 'F']}, # Raise error if gender is not M or F
+        )
+        ```
         '''
         result = AttrDict()
 
@@ -1380,7 +1453,7 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
             callback(self)
 
     def get_current_user(self):
-        '''Return the ``user`` key from the session as an AttrDict if it exists.'''
+        '''Return the `user` key from the session as an AttrDict if it exists.'''
         result = self.session.get('user')
         return AttrDict(result) if isinstance(result, dict) else result
 

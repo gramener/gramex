@@ -890,7 +890,7 @@ def save_user_config(appname, value):
 def get_app_config(appname, kwargs):
     '''
     Get the stored configuration for appname, and override it with kwargs.
-    ``.target`` defaults to $GRAMEXDATA/apps/<appname>.
+    `.target` defaults to $GRAMEXDATA/apps/<appname>.
     '''
     apps_config['cmd'] = {appname: kwargs}
     app_config = AttrDict((+apps_config).get(appname, {}))

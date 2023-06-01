@@ -20,28 +20,29 @@ def get_redis(path: str, **kwargs):
 
 
 class RedisCache:
-    '''
-    LRU Cache that stores data in a Redis database. Typical usage::
+    def __init__(self, path: str = None, maxsize: int = None, *args, **kwargs):
+        '''
+        LRU Cache that stores data in a Redis database.
 
-        >>> store = RedisCache('localhost:6379:1:password=x:...', 500000) # host:port:db:params
-        >>> value = store.get(key)
-        >>> store.set(key, value, expire)
+        Example:
 
-    The path in the constructor contains parameters separated by colon (:):
+            >>> store = RedisCache('localhost:6379:1:password=x:...', 500000) # host:port:db:params
+            >>> value = store.get(key)
+            >>> store.set(key, value, expire)
 
-    - `host`: the Redis server location (default: localhost)
-    - `port`: the Redis server port (default: 6379)
-    - `db`: the Redis server DB number (default: 0)
-    - zero or more parameters passed to StrictRedis (e.g. password=abc)
+        The path in the constructor contains parameters separated by colon (:):
 
-    `maxsize` defines the maximum limit of cache. This will set maxmemory for the redis instance
-    and not specific to a db. If it's false-y (None, 0, etc.) no limit is set.
+        - `host`: the Redis server location (default: localhost)
+        - `port`: the Redis server port (default: 6379)
+        - `db`: the Redis server DB number (default: 0)
+        - zero or more parameters passed to StrictRedis (e.g. password=abc)
 
-    Both Keys and Values are stored as pickle dump.
-    This is an approximate LRU implementation. Read more here.(https://redis.io/topics/lru-cache)
-    '''
+        `maxsize` is the maximum limit of cache. This will set maxmemory for the redis instance
+        and not specific to a db. If it's false-y (None, 0, etc.) no limit is set.
 
-    def __init__(self, path=None, maxsize=None, *args, **kwargs):
+        Both Keys and Values are stored as pickle dump.
+        This is an approximate LRU implementation. [Read more](https://redis.io/topics/lru-cache)
+        '''
         self.store = get_redis(path, decode_responses=False)
         self.size = 0
         if maxsize:

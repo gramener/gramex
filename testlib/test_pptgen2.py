@@ -201,7 +201,7 @@ class TestPPTGen(TestCase):
         eq_(shape.rotation, 45)
 
     def test_only(self, slides=[2, 4]):
-        # Delete slides except those specified in ``only``
+        # Delete slides except those specified in `only`
         with assert_raises(TypeError):
             pptgen(source=self.input, only={})
         with assert_raises(TypeError):
@@ -1021,7 +1021,7 @@ class TestPPTGen(TestCase):
             for i, (index, row) in enumerate(data.iterrows()):
                 # Row height is the same as in the source table (or its last row)
                 eq_(table.rows[i].height, src_table.rows[min(i, maxrow)].height)
-                for j, (column, val) in enumerate(row.iteritems()):
+                for j, (column, val) in enumerate(row.items()):
                     # Unspecified col width is the same as in the source table (or its last col)
                     if column in {'sales', 'growth'}:
                         eq_(table.columns[j].width, src_table.columns[min(j, maxcol)].width)

@@ -161,6 +161,14 @@ class SMTPMailer:
         server.quit()
         app_log.info(f'Email sent via {self.client["host"]} ({self.email}) to {", ".join(to)}')
 
+    def mail_log(self, **kwargs):
+        '''Same as mail() but logs the exception. Useful with running in a thread'''
+        try:
+            self.mail(**kwargs)
+        except Exception:
+            app_log.exception(f'SMTP failed: {kwargs}')
+            raise
+
 
 def recipients(**kwargs):
     # Return all recipients from to/cc/bcc fields.

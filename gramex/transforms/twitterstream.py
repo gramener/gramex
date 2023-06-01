@@ -21,8 +21,9 @@ from gramex.http import (
 
 class TwitterStream:
     '''
-    Starts a Twitter Streaming client. Sample usage::
+    Starts a Twitter Streaming client.
 
+    Examples:
         >>> from gramex.transforms.twitterstream import TwitterStream
         >>> stream = TwitterStream(
         ...     track='modi,mms',
@@ -33,11 +34,11 @@ class TwitterStream:
         ...     access_secret='...',
         ...     flush=True)
 
-    This saves all tweets mentioning ``modi`` or ``mms`` in ``save-as-file.json``
+    This saves all tweets mentioning `modi` or `mms` in `save-as-file.json`
     with each line representing a tweet in JSN format.
 
-    If ``flush=True``, the file is flushed on every tweet. If ``flush=<number>``,
-    the file is flushed every ``<number>`` seconds. If ``flush=False`` (default),
+    If `flush=True`, the file is flushed on every tweet. If `flush=<number>`,
+    the file is flushed every `<number>` seconds. If `flush=False` (default),
     the file is flushed only when the file or app is closed.
 
     This function runs forever, so run it in a separate thread.
@@ -225,14 +226,14 @@ class StreamWriter:
         '''
         Create and rotate file streams.
 
-        The ``path`` format string determines the filename. For example,
-        ``tweets.{:%Y-%m-%d}.jsonl`` creates a filename based on the current
-        date, e.g. ``tweets.2016-12-31.jsonl``. When rotating, if the new
+        The `path` format string determines the filename. For example,
+        `tweets.{:%Y-%m-%d}.jsonl` creates a filename based on the current
+        date, e.g. `tweets.2016-12-31.jsonl`. When rotating, if the new
         filename is the same as the old, the file continues. If it's a different
         file, the old file is closed and the new file is created.
 
         The rotation frequency is based on the crontab entries in the config,
-        i.e. based on ``hours``, ``days``, ``weeks``, etc. It defaults to every
+        i.e. based on `hours`, `days`, `weeks`, etc. It defaults to every
         minute.
         '''
         # First, flush the stream to ensure that data is not lost.

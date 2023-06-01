@@ -1,9 +1,9 @@
 '''
 The CacheFile object exposes a get, wrap and close interface to handlers.
 
-- ``.get()`` reads all data against the key
-- ``.wrap(handler)`` is used to wrap the ``.write()`` method to append into a
-  write queue, and the ``.on_finish()`` method to save the result.
+- `.get()` reads all data against the key
+- `.wrap(handler)` is used to wrap the `.write()` method to append into a
+  write queue, and the `.on_finish()` method to save the result.
 
 Each type of store has a separate CacheFile. (MemoryCacheFile, DiskCacheFile,
 etc.) The parent CacheFile implements the no-caching behaviour.

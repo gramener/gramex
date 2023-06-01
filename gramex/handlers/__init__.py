@@ -4,7 +4,7 @@ from .basehandler import BaseMixin, BaseHandler, BaseWebSocketHandler, SetupFail
 from .functionhandler import FunctionHandler
 from .websockethandler import WebSocketHandler
 from .filehandler import FileHandler
-from .authhandler import GoogleAuth, SimpleAuth, LogoutHandler
+from .authhandler import AuthHandler, GoogleAuth, SimpleAuth, LogoutHandler
 from .processhandler import ProcessHandler
 from .jsonhandler import JSONHandler
 from .socialhandler import TwitterRESTHandler, FacebookGraphHandler
@@ -19,12 +19,12 @@ from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
 from .openapihandler import OpenAPIHandler
-from .commenthandler import CommentHandler
+from .messagehandler import MessageHandler
 
 # Aliases
 Comic = ComicHandler
 Command = ProcessHandler
-Comment = CommentHandler
+Message = CommentHandler = MessageHandler
 Data = FormHandler
 Facebook = FacebookGraphHandler
 File = DirectoryHandler = FileHandler
@@ -43,13 +43,13 @@ Websocket = WebSocketHandler
 
 
 __all__ = [
+    'AuthHandler',
     'BaseHandler',
     'BaseWebSocketHandler',
     'BaseMixin',
     'Capture',
     'CaptureHandler',
     'Command',
-    'Comment',
     'CommentHandler',
     'Comic',
     'ComicHandler',
@@ -68,6 +68,8 @@ __all__ = [
     'JSON',
     'JSONHandler',
     'LogoutHandler',
+    'Message',
+    'MessageHandler',
     'ModelHandler',
     'ML',
     'MLHandler',

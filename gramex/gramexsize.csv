@@ -25,7 +25,7 @@ gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
 gramex.config.*,*,158
 gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,348
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
-gramex.install.*,TODO - Gramex app installation & management,162
+gramex.install.*,TODO - Gramex app installation & management,164
 gramex.license.*,TODO - Gramex enterprise license management,9
 gramex.migrate.*,url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,3
 gramex.ml.Classifier.*,url.*.handler=ModelHandler,15
@@ -106,7 +106,7 @@ gramex.handlers.basehandler.BaseMixin.set_last_visited,url.*.kwargs.auth,3
 gramex.handlers.basehandler.BaseMixin.check_ratelimit,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseMixin.update_ratelimit,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseMixin.set_ratelimit_headers,url.*.kwargs.ratelimit,2
-gramex.handlers.basehandler.BaseHandler.initialize,url,8
+gramex.handlers.basehandler.BaseHandler.initialize,url,3
 gramex.handlers.basehandler.BaseHandler.get_arg,url,3
 gramex.handlers.basehandler.BaseHandler.prepare,url,2
 gramex.handlers.basehandler.BaseHandler.set_default_headers,url,1
@@ -116,7 +116,7 @@ gramex.handlers.basehandler.BaseHandler.log_exception,url,1
 gramex.handlers.basehandler.BaseHandler.authorize,url.*.kwargs.auth,10
 gramex.handlers.basehandler.BaseHandler.argparse,url.*.handler=CaptureHandler|MLHandler|ModelHandler|OpenAPIHandler,26
 gramex.handlers.basehandler.BaseHandler.create_template_loader,url.*.kwargs.template,1
-gramex.handlers.basehandler.BaseWebSocketHandler.*,url.*.handler=WebSocketHandler|Websocket,13
+gramex.handlers.basehandler.BaseWebSocketHandler.*,url.*.handler=WebSocketHandler|Websocket,11
 gramex.handlers.basehandler.SetupFailedHandler.get,url,1
 gramex.handlers.basehandler.check_membership,url.*.kwargs.auth.membership,4
 gramex.handlers.basehandler._check_condition,url.*.kwargs.auth.membership,6
@@ -144,7 +144,7 @@ gramex.handlers.websockethandler.*,url.*.handler=WebSocketHandler|Websocket,7
 gramex.handlers.__init__.*,url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,4
 gramex.pptgen.*,url.*.handler=PPTXHandler,363
 gramex.pptgen2.*,url.*.handler=PPTXHandler,244
-gramex.services.emailer.*,email,31
+gramex.services.emailer.*,email,34
 gramex.services.rediscache.*,cache.*.type=redis,23
 gramex.services.scheduler.*,schedule,26
 gramex.services.sms.*,sms,10
@@ -176,7 +176,7 @@ gramex.services.__init__.storelocations,storelocations,2
 gramex.services.__init__._storelocations_purge,storelocations,1
 gramex.services.__init__.GramexApp.log_request,log,4
 gramex.services.__init__.GramexApp.clear_handlers,app,1
-gramex.services.__init__.create_alert,alert,52
+gramex.services.__init__.create_alert,alert,36
 gramex.services.__init__._markdown_convert,alert,2
 gramex.services.__init__._tmpl,alert,2
 gramex.services.__init__._stop_all_tasks,schedule,2
