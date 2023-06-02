@@ -17,6 +17,9 @@ tests/uploads/
 tests/drive/
 tests/watcher.txt
 
+pytest/*.db
+
+
 # Don't commit data files, except what's required for testing or by Gramex apps
 *.csv
 *.xls*

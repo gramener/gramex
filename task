@@ -27,8 +27,21 @@ lint () {
 }
 
 test () {
-  pytest
   nosetests
+  _pytest
+}
+
+_pytest () {
+  # Start Gramex
+  PORT=${GRAMEX_PORT:-9999}
+  cd pytest
+  gramex --listen.port=$PORT &
+  PID=$!
+  GRAMEX_PORT=$PORT pytest
+  PYTEST_EXIT_CODE=$?
+  # Kill gramex
+  kill $PID
+  # TODO: let the main for loop know the PYTEST_EXIT_CODE
 }
 
 stats () {

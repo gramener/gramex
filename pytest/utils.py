@@ -2,10 +2,23 @@
 Test utilities to create and drop databases.
 '''
 import os
+import requests
 import sqlalchemy as sa
+import time
 from pytest import skip
 
 folder = os.path.dirname(os.path.abspath(__file__))
+
+
+def is_gramex_running(port=9999):
+    for x in range(100):
+        try:
+            r = requests.get(f'http://localhost:{port}', timeout=60)
+            if r.status_code == 200:
+                return True
+        except requests.exceptions.ConnectionError:
+            time.sleep(0.01)
+    return False
 
 
 def mysql_create_db(server, database, **tables):

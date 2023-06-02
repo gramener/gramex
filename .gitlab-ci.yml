@@ -24,6 +24,12 @@ validate:
   image: gramener/builderrors
   script: builderrors
 
+test:
+  only: [sa-pytest0]
+  script:
+    - pip install -e . --config-settings editable_mode=strict
+    - bash task _pytest
+
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
   only: [master, release]
