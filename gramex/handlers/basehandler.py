@@ -69,7 +69,7 @@ class BaseMixin:
 
         cls.setup_transform(transform)
         cls.setup_redirect(redirect)
-        # Note: call setup_session before setup_auth to ensure that
+        # Note: call setup_session before setup_auth to ensure that .session is available.
         # This also ensures we override_user before auth
         cls.setup_session(conf.app.get('session'))
         cls.setup_ratelimit(ratelimit, conf.app.get('ratelimit'))
@@ -1062,6 +1062,7 @@ class BaseMixin:
             ratelimit.key = json.dumps(
                 [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
             )
+            # Note: if ratelimit_fn() returns a non-int, check_ratelimit will fail. Let it fail.
             ratelimit.limit = ratelimit.limit_fn(self)
             expiries = [
                 key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn

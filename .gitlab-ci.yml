@@ -27,7 +27,7 @@ validate:
 test:
   only: [sa-pytest]
   script:
-    - pip install -e . --config-settings editable_mode=strict
+    - pip install -e .
     - bash task _pytest
 
 # Deploy the master / release branches on gramener.com
