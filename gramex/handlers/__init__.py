@@ -14,7 +14,6 @@ from .formhandler import FormHandler
 from .pptxhandler import PPTXHandler
 from .proxyhandler import ProxyHandler
 from .modelhandler import ModelHandler
-from .mlhandler import MLHandler, MLPredictor
 from .filterhandler import FilterHandler
 from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
@@ -31,7 +30,6 @@ File = DirectoryHandler = FileHandler
 Filter = FilterHandler
 Function = FunctionHandler
 JSON = JSONHandler
-ML = MLHandler
 OpenAPI = OpenAPIHandler
 Proxy = ProxyHandler
 Screenshot = CaptureHandler
@@ -71,9 +69,6 @@ __all__ = [
     'Message',
     'MessageHandler',
     'ModelHandler',
-    'ML',
-    'MLHandler',
-    'MLPredictor',
     'OpenAPI',
     'OpenAPIHandler',
     'PPTXHandler',
@@ -92,6 +87,17 @@ __all__ = [
     'Websocket',
     'WebSocketHandler',
 ]
+
+
+# MLHandler requires optional dependencies scikit-learn and statsmodels.
+# If they're not installed, ignore the import error and skip MLHandler.
+try:
+    from .mlhandler import MLHandler, MLPredictor
+
+    ML = MLHandler
+    __all__ += ['ML', 'MLHandler', 'MLPredictor']
+except ImportError:
+    pass
 
 try:
     # If Gramex enterprise is available, import all handlers

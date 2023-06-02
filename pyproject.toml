@@ -102,6 +102,7 @@ full = [
     "pymysql",  # for MySQL connections
     "scipy",  # for gramex.topcause
     "spacy",  # for gramex.transformers
+    "scikit-learn",  # for gramex.handlers.mlhandler
     "statsmodels",  # for gramex.ml_api
     "transformers",  # for gramex.transformers
     "xlrd",  # for gramex.cache.open .XLS support (not .xlsx)
