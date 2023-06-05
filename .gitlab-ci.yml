@@ -18,15 +18,20 @@ validate:
   script: builderrors
 
 test:
-  # TODO: Create a gramener/gramex-test with Conda, Node, required dependencies for faster testing.
-  image: continuumio/miniconda3
+  # Image created by pkg/docker-gramex-pytest/
+  image:
+    name: gramener/gramex-pytest:latest
+    pull_policy: always
+
   # Documentation on starting services:
   #   http://doc.gitlab.com/ce/ci/services/postgres.html
   #   http://doc.gitlab.com/ce/ci/services/mysql.html
-  # services:
-  #   - postgres:latest
-  #   - mysql:latest
-  #   - redis:latest
+  services:
+    - postgres:latest
+    - mysql:latest
+    - redis:latest
+    # TODO: elasticsearch
+    # TODO: mongo
   only: [sa-pytest]
   script:
     - pip install -e .[test]

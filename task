@@ -96,12 +96,14 @@ builddocker () {
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh
+  VERSION=$VERSION bash pkg/docker-gramex-pytest/setup.sh
 }
 pushdocker () {
   docker login                # log in as sanand0 / pratapvardhan
   docker push gramener/gramex-base:$VERSION
   docker push gramener/gramex-base:latest
   docker push gramener/gramex:$VERSION
+  docker push gramener/gramex-pytest:$VERSION
   docker push gramener/gramex:latest
 }
 

@@ -1,3 +1,4 @@
+# ----- START LAYER COMMON WITH @gramener/gramex-base -----
 # Pick a secure Linux image that we can run Miniconda on. Just "FROM alpine" doesn't run Miniconda
 # Don't use frolvlad/alpine-miniconda3 since we want a non-root user
 FROM frolvlad/alpine-glibc:alpine-3.17
@@ -49,29 +50,32 @@ RUN \
     # Create an /app directory where app can be mounted
     doas mkdir /app && \
     doas chown "$USER:wheel" /app
+# ----- END LAYER COMMON WITH @gramener/gramex-base -----
 
-# Install Gramex AND Gramex Enterprise at the specific version.
-# Gramex Enterprise is not released every time Gramex is released. Versions may be missing.
-# So instead of ==$VERSION, we use <=$VERSION.
+# ----- START LAYER COMMON WITH @gramener/gramex -----
+
+# Puppeteer shouldn't download Chromium, but use the Alpine Chromium apk instead
+# https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-on-alpine
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium-browser"
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+# Add ~/.npm-packages as the path for `npm install --global`
+# https://github.com/sindresorhus/guides/blob/main/npm-global-without-sudo.md
+ENV PATH="${PATH}:${HOME_DIR}/.npm-packages/bin"
+
 RUN \
-    pip install "gramex<=$VERSION" "gramexenterprise<=$VERSION" && \
-    pip cache purge && \
-    # Accept the Gramex Enterprise license
-    gramex license accept
-
+    # Install nodejs and npm.
+    doas apk add --no-cache nodejs npm \
+        # icu-data-full is required for comicgen -> fontkit to run TextDecoder('ascii')
+        #   https://build.alpinelinux.org/buildlogs/build-edge-x86/main/nodejs/nodejs-16.18.0-r1.log
+        icu-data-full \
+        # Install dependencies for Chromium on Alpine
+        chromium nss freetype harfbuzz ca-certificates ttf-freefont && \
+    # Allow `npm install -g` to work without sudo by installing to ~/.npm-packages
+    mkdir -p ~/.npm-packages && \
+    npm config set prefix "${HOME_DIR}/.npm-packages"
 
 # Run in empty (mountable) app directory. Mount via `docker run -v ${pwd}:/app`
 WORKDIR /app
 
-# Expose port 9988 by default. Map to host port 80 via `docker run -p 80:9988`
-EXPOSE 9988
-
-# Add environment variables for Dockerfiles to reference
-ENV CONDA_DIR="$CONDA_DIR"
-ENV HOME_DIR="$HOME_DIR"
-
-# Ensure Gramex is in the PATH, so we can just run "gramex"
+# Ensure Conda is in the PATH
 ENV PATH="${CONDA_DIR}/bin:${PATH}"
-
-# Use CMD instead of ENTRYPOINT. Override via `docker run -it /bin/sh -l`
-CMD gramex
