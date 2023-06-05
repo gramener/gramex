@@ -103,8 +103,9 @@ pushdocker () {
   docker push gramener/gramex-base:$VERSION
   docker push gramener/gramex-base:latest
   docker push gramener/gramex:$VERSION
-  docker push gramener/gramex-pytest:$VERSION
   docker push gramener/gramex:latest
+  docker push gramener/gramex-pytest:$VERSION
+  docker push gramener/gramex-pytest:latest
 }
 
 # Run all commands from the same folder as this script

@@ -146,7 +146,7 @@ test = [
     "mccabe",  # for pkg/usage/pycomplexity.py
     "nose",  # for all test cases
     "pdfminer.six",  # for test_capturehandler
-    "psycopg2 >= 2.7.1",  # for PostgreSQL tests
+    "psycopg2-binary",  # for PostgreSQL tests
     "pymongo",  # for MongoDB tests
     "pymysql",  # for MySQL tests
     "pytest",  # for newer test cases
