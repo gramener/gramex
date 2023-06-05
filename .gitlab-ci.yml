@@ -18,6 +18,7 @@ validate:
   script: builderrors
 
 test:
+  # TODO: Create a gramener/gramex-test with Conda, Node, required dependencies for faster testing.
   image: continuumio/miniconda3
   # Documentation on starting services:
   #   http://doc.gitlab.com/ce/ci/services/postgres.html
@@ -29,6 +30,7 @@ test:
   only: [sa-pytest]
   script:
     - pip install -e .[test]
+    - gramex license accept
     - bash task _pytest
 
 # Deploy the master / release branches on gramener.com

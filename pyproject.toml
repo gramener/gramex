@@ -37,6 +37,7 @@ dependencies = [
     # It's OK to specify minimum versions, i.e. >=.
     # But avoid <= or == without a strong reason. Makes it hard to mix with other libraries.
     "astor",  # for gramex.transforms.build_transform
+    "blinker",  # for MessageHandler
     "cachetools>=3.0.0",  # for services.cache for memory cache
     "colorlog>=2.7.0",  # for Coloured log files
     "cron-descriptor",  # for gramex.apps.admin2.gramexadmin admin/schedule to pretty-print
@@ -145,8 +146,7 @@ test = [
     "mccabe",  # for pkg/usage/pycomplexity.py
     "nose",  # for all test cases
     "pdfminer.six",  # for test_capturehandler
-    # TODO: Remove this once we add PostGres service
-    # "psycopg2 >= 2.7.1",  # for PostgreSQL tests
+    "psycopg2 >= 2.7.1",  # for PostgreSQL tests
     "pymongo",  # for MongoDB tests
     "pymysql",  # for MySQL tests
     "pytest",  # for newer test cases
