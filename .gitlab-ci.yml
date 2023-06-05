@@ -1,11 +1,3 @@
-# Documentation on starting services:
-#   http://doc.gitlab.com/ce/ci/services/postgres.html
-#   http://doc.gitlab.com/ce/ci/services/mysql.html
-# services:
-#   - postgres:latest
-#   - mysql:latest
-#   - redis:latest
-
 variables:
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
@@ -26,14 +18,17 @@ validate:
   script: builderrors
 
 test:
+  image: continuumio/miniconda3
+  # Documentation on starting services:
+  #   http://doc.gitlab.com/ce/ci/services/postgres.html
+  #   http://doc.gitlab.com/ce/ci/services/mysql.html
+  # services:
+  #   - postgres:latest
+  #   - mysql:latest
+  #   - redis:latest
   only: [sa-pytest]
   script:
-    # TODO: Upgrade the docker image to use the latest pip
-    - /opt/conda/bin/python -m pip install --upgrade pip
-    - pip install -e .
-    - cat gramex/handlers/__init__.py
-    - pwd
-    - which gramex
+    - pip install -e .[test]
     - bash task _pytest
 
 # Deploy the master / release branches on gramener.com
