@@ -1,7 +1,5 @@
-# Expose VERSION build args in environment. Build with `docker build --build-arg VERSION=1.x.x`
+# .gitlab-ci.yml runs pytest using this Dockerfile. It just pre-installs Gramex test dependencies.
 ARG VERSION
 
-# Build on top of Gramex
 FROM gramener/gramex:$VERSION
-
 RUN pip install gramex[test]

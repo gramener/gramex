@@ -63,7 +63,6 @@ dependencies = [
     "pyyaml>=5.1",  # for parsing YAML files for config
     "redis>=2.10.0",  # for RedisStore
     "requests",  # for all HTTP requests
-    "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
     "seaborn",  # OPT: gramex.data.download()
     "six",  # for gramex.yaml backward compatibility
     "sqlalchemy<2",  # for gramex.data.filter()
@@ -103,7 +102,7 @@ full = [
     "pymysql",  # for MySQL connections
     "scipy",  # for gramex.topcause
     "spacy",  # for gramex.transformers
-    "scikit-learn",  # for gramex.handlers.mlhandler
+    "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
     "statsmodels",  # for gramex.ml_api
     "transformers",  # for gramex.transformers
     "xlrd",  # for gramex.cache.open .XLS support (not .xlsx)

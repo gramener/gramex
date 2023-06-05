@@ -17,12 +17,12 @@ validate:
   image: gramener/builderrors
   script: builderrors
 
+# Run Gramex test cases
 test:
-  # Image created by pkg/docker-gramex-pytest/
-  image:
-    name: gramener/gramex-pytest:latest
-    pull_policy: always
-
+  # Run test on master / release, but also on any branch marked tst or test
+  only: [master, release, /t*st/]
+  # We use a special image pkg/docker-gramex-pytest/
+  image: gramener/gramex-pytest:latest
   # Documentation on starting services:
   #   http://doc.gitlab.com/ce/ci/services/postgres.html
   #   http://doc.gitlab.com/ce/ci/services/mysql.html
@@ -32,13 +32,12 @@ test:
     - redis:latest
     # TODO: elasticsearch
     # TODO: mongo
-  only: [sa-pytest]
   script:
     - pip install -e .[test] --config-settings editable_mode=strict
     - gramex license accept
     # TODO: Remove in next release, since this line is moved into gramener/gramex Dockerfile
     - mkdir /home/gramex/.npm-packages/lib/
-    - sh task _pytest
+    - sh task pytest/run.sh
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
