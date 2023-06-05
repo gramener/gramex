@@ -46,19 +46,16 @@ RUN \
     find "$CONDA_DIR" -follow -type f \( -iname '*.a' -o -iname '*.pyc' -o -iname '*.js.map' \) -delete && \
     # Don't auto-update conda whenever user installs a package. Only on `conda update conda`
     conda config --set auto_update_conda False && \
-    # Create an /app directory where app can be mounted
-    doas mkdir /app && \
-    doas chown "$USER:wheel" /app
-
-# Install Gramex AND Gramex Enterprise at the specific version.
-# Gramex Enterprise is not released every time Gramex is released. Versions may be missing.
-# So instead of ==$VERSION, we use <=$VERSION.
-RUN \
+    # Install Gramex AND Gramex Enterprise at the specific version.
+    # Gramex Enterprise is not released every time Gramex is released. Versions may be missing.
+    # So instead of ==$VERSION, we use <=$VERSION.
     pip install "gramex<=$VERSION" "gramexenterprise<=$VERSION" && \
     pip cache purge && \
     # Accept the Gramex Enterprise license
-    gramex license accept
-
+    gramex license accept && \
+    # Create an /app directory where app can be mounted
+    doas mkdir /app && \
+    doas chown "$USER:wheel" /app
 
 # Run in empty (mountable) app directory. Mount via `docker run -v ${pwd}:/app`
 WORKDIR /app

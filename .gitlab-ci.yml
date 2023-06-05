@@ -36,7 +36,7 @@ test:
   script:
     - pip install -e .[test]
     - gramex license accept
-    - bash task _pytest
+    - sh task _pytest
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
