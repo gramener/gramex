@@ -37,7 +37,7 @@ test:
     - gramex license accept
     # TODO: Remove in next release, since this line is moved into gramener/gramex Dockerfile
     - mkdir /home/gramex/.npm-packages/lib/
-    - sh task pytest/run.sh
+    - sh pytest/run.sh
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
