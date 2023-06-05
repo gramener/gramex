@@ -592,7 +592,7 @@ def complexity(args, kwargs) -> dict:
     # Calculate JS complexity
     # B602:subprocess_popen_with_shell_equals_true and
     # B607:start_process_with_partial_path are safe to skip since this is a Gramex internal cmd
-    cmd = ['npx', '@gramex/escomplexity', '--yes']
+    cmd = ['npx', '--yes', '@gramex/escomplexity']
     output = check_output(cmd, cwd=project_path, shell=True)  # nosec
     es_complexity = int(output.decode('utf-8').split('\n')[-2].strip())
     return pd.DataFrame(
