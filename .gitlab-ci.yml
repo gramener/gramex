@@ -1,10 +1,10 @@
 # Documentation on starting services:
 #   http://doc.gitlab.com/ce/ci/services/postgres.html
 #   http://doc.gitlab.com/ce/ci/services/mysql.html
-services:
-  - postgres:latest
-  - mysql:latest
-  - redis:latest
+# services:
+#   - postgres:latest
+#   - mysql:latest
+#   - redis:latest
 
 variables:
   POSTGRES_DB: postgres
@@ -32,6 +32,8 @@ test:
     - /opt/conda/bin/python -m pip install --upgrade pip
     - pip install -e .
     - cat gramex/handlers/__init__.py
+    - pwd
+    - which gramex
     - bash task _pytest
 
 # Deploy the master / release branches on gramener.com
