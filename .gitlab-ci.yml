@@ -20,7 +20,7 @@ validate:
 test:
   # Image created by pkg/docker-gramex-pytest/
   image:
-    name: gramener/gramex:latest
+    name: gramener/gramex-pytest:latest
     pull_policy: always
 
   # Documentation on starting services:
@@ -37,7 +37,7 @@ test:
     - pip install -e .[test] --config-settings editable_mode=strict
     - gramex license accept
     # TODO: Remove in next release, since this line is moved into gramener/gramex Dockerfile
-    - mkdir ~/.npm-packages/lib/
+    - mkdir /home/gramex/.npm-packages/lib/
     - sh task _pytest
 
 # Deploy the master / release branches on gramener.com
