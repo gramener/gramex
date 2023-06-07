@@ -9,6 +9,7 @@ MS,FormHandler,4
 MS,FunctionHandler,0
 MS,AuthHandlers,0
 MS,JSONHandler,0
+MS,MessageHandler,0
 MS,MLHandler,0
 MS,MLPredictor,0
 MS,OpenAPIHandler,0
@@ -37,3 +38,8 @@ SVC,Logging,1
 SVC,Alert,0
 SVC,Watch,0
 SVC,SMS,0
+SVC,Store locations,1
+APP,Log viewer,0
+APP,Admin,0
+APP,Language tool,0
+

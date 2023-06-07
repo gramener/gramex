@@ -19,8 +19,8 @@ RUN \
         icu-data-full \
         # Install dependencies for Chromium on Alpine
         chromium nss freetype harfbuzz ca-certificates ttf-freefont && \
-    # Allow `npm install -g` to work without sudo by installing to ~/.npm-packages
-    mkdir -p ~/.npm-packages && \
+    # Allow `npm install -g` to work without sudo by installing to ~/.npm-packages/lib/
+    mkdir -p ~/.npm-packages/lib/ && \
     npm config set prefix "${HOME_DIR}/.npm-packages" && \
     # Activate conda env to run Gramex
     source ~/.profile && \

@@ -107,7 +107,7 @@ def test_features_empty():
 def test_features(root):
     actual = features([root], {"format": "csv"})
     expected = gramex.cache.open(os.path.join(root, "expected.csv"), "text")
-    assert expected == actual
+    assert expected.strip() == actual.strip()
 
 
 @pytest.mark.parametrize("root", glob(os.path.join(folder, "complexity_*")))

@@ -1,0 +1,9 @@
+url:
+  messagehandler/simple:
+    pattern: /messagehandler/simple
+    handler: MessageHandler
+    kwargs:
+      url: sqlite:///$YAMLPATH/messages.db
+      table: simple
+      columns:
+        body: TEXT

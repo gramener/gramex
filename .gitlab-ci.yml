@@ -1,11 +1,3 @@
-# Documentation on starting services:
-#   http://doc.gitlab.com/ce/ci/services/postgres.html
-#   http://doc.gitlab.com/ce/ci/services/mysql.html
-services:
-  - postgres:latest
-  - mysql:latest
-  - redis:latest
-
 variables:
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
@@ -21,8 +13,31 @@ variables:
   REDIS_SERVER: redis
 
 validate:
+  only: [master, release]
   image: gramener/builderrors
   script: builderrors
+
+# Run Gramex test cases
+test:
+  # Run test on master / release, but also on any branch marked tst or test
+  only: [master, release, /t*st/]
+  # We use a special image pkg/docker-gramex-pytest/
+  image: gramener/gramex-pytest:latest
+  # Documentation on starting services:
+  #   http://doc.gitlab.com/ce/ci/services/postgres.html
+  #   http://doc.gitlab.com/ce/ci/services/mysql.html
+  services:
+    - postgres:latest
+    - mysql:latest
+    - redis:latest
+    # TODO: elasticsearch
+    # TODO: mongo
+  script:
+    - pip install -e .[test] --config-settings editable_mode=strict
+    - gramex license accept
+    # TODO: Remove in next release, since this line is moved into gramener/gramex Dockerfile
+    - mkdir /home/gramex/.npm-packages/lib/
+    - sh pytest/run.sh
 
 # Deploy the master / release branches on gramener.com
 deploy-gramener:

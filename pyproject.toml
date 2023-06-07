@@ -37,6 +37,7 @@ dependencies = [
     # It's OK to specify minimum versions, i.e. >=.
     # But avoid <= or == without a strong reason. Makes it hard to mix with other libraries.
     "astor",  # for gramex.transforms.build_transform
+    "blinker",  # for MessageHandler
     "cachetools>=3.0.0",  # for services.cache for memory cache
     "colorlog>=2.7.0",  # for Coloured log files
     "cron-descriptor",  # for gramex.apps.admin2.gramexadmin admin/schedule to pretty-print
@@ -62,7 +63,6 @@ dependencies = [
     "pyyaml>=5.1",  # for parsing YAML files for config
     "redis>=2.10.0",  # for RedisStore
     "requests",  # for all HTTP requests
-    "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
     "seaborn",  # OPT: gramex.data.download()
     "six",  # for gramex.yaml backward compatibility
     "sqlalchemy<2",  # for gramex.data.filter()
@@ -102,6 +102,7 @@ full = [
     "pymysql",  # for MySQL connections
     "scipy",  # for gramex.topcause
     "spacy",  # for gramex.transformers
+    "scikit-learn",  # for MLHandler, gramex.ml. TODO: version >=0.23.2,<1.0
     "statsmodels",  # for gramex.ml_api
     "transformers",  # for gramex.transformers
     "xlrd",  # for gramex.cache.open .XLS support (not .xlsx)
@@ -144,7 +145,7 @@ test = [
     "mccabe",  # for pkg/usage/pycomplexity.py
     "nose",  # for all test cases
     "pdfminer.six",  # for test_capturehandler
-    "psycopg2 >= 2.7.1",  # for PostgreSQL tests
+    "psycopg2-binary",  # for PostgreSQL tests
     "pymongo",  # for MongoDB tests
     "pymysql",  # for MySQL tests
     "pytest",  # for newer test cases

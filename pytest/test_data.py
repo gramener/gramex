@@ -6,7 +6,7 @@ from itertools import product
 from contextlib import contextmanager
 from pandas.testing import assert_frame_equal as afe
 
-import dbutils  # noqa
+import utils  # noqa
 
 folder = os.path.dirname(os.path.abspath(__file__))
 sales_file = os.path.join(folder, '..', 'tests', 'sales.xlsx')
@@ -21,28 +21,28 @@ def dataframe():
 
 @contextmanager
 def sqlite():
-    url = dbutils.sqlite_create_db('test_delete.db', sales=sales_data, dates=dates_data)
+    url = utils.sqlite_create_db('test_delete.db', sales=sales_data, dates=dates_data)
     yield {'url': url, 'table': 'sales'}
-    dbutils.sqlite_drop_db('test_delete.db')
+    utils.sqlite_drop_db('test_delete.db')
 
 
 @contextmanager
 def mysql():
     server = os.environ.get('MYSQL_SERVER', 'localhost')
-    url = dbutils.mysql_create_db(server, 'test_filter', sales=sales_data, dates=dates_data)
+    url = utils.mysql_create_db(server, 'test_filter', sales=sales_data, dates=dates_data)
     yield {'url': url, 'table': 'sales'}
-    dbutils.mysql_drop_db(server, 'test_filter')
+    utils.mysql_drop_db(server, 'test_filter')
 
 
 @contextmanager
 def postgres():
     server = os.environ.get('POSTGRES_SERVER', 'localhost')
-    url = dbutils.postgres_create_db(server, 'test_filter', sales=sales_data, dates=dates_data)
+    url = utils.postgres_create_db(server, 'test_filter', sales=sales_data, dates=dates_data)
     # Postgres needs a "ping" to connect to the database. So run a query and fetch 1 row.
     # Maybe related to https://stackoverflow.com/a/42546718/100904
     gramex.data.filter(url=url, table='sales', args={'_limit': [1]})
     yield {'url': url, 'table': 'sales'}
-    dbutils.postgres_drop_db(server, 'test_filter')
+    utils.postgres_drop_db(server, 'test_filter')
 
 
 db_setups = [dataframe, sqlite, mysql, postgres]

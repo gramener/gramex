@@ -27,8 +27,8 @@ lint () {
 }
 
 test () {
-  pytest
   nosetests
+  pytest/run.sh
 }
 
 stats () {
@@ -83,6 +83,7 @@ builddocker () {
   VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex/setup.sh
   VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh
+  VERSION=$VERSION bash pkg/docker-gramex-pytest/setup.sh
 }
 pushdocker () {
   docker login                # log in as sanand0 / pratapvardhan
@@ -90,6 +91,8 @@ pushdocker () {
   docker push gramener/gramex-base:latest
   docker push gramener/gramex:$VERSION
   docker push gramener/gramex:latest
+  docker push gramener/gramex-pytest:$VERSION
+  docker push gramener/gramex-pytest:latest
 }
 
 # Run all commands from the same folder as this script

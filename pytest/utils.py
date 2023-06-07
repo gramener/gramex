@@ -2,10 +2,27 @@
 Test utilities to create and drop databases.
 '''
 import os
+import requests
 import sqlalchemy as sa
+import time
 from pytest import skip
 
 folder = os.path.dirname(os.path.abspath(__file__))
+
+
+def is_gramex_running(port=9999):
+    '''Wait for Gramex to start on port. Return True if it does, False if not'''
+    # Normally, we just need to wait for requests.get('localhost:9999').
+    # But if Tornado binds to the port but hasn't started, requests returns an error.
+    # So we wait for 1 second (100 times with a 0.01s delay) until Tornado starts.
+    for x in range(100):
+        try:
+            r = requests.get(f'http://localhost:{port}', timeout=60)
+            if r.status_code == 200:
+                return True
+        except requests.exceptions.ConnectionError:
+            time.sleep(0.01)
+    return False
 
 
 def mysql_create_db(server, database, **tables):
