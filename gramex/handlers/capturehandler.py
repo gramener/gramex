@@ -312,7 +312,7 @@ class CaptureHandler(BaseHandler):
         }
 
     @tornado.gen.coroutine
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         args = self.argparse(
             url={'default': self.request.headers.get('Referer', None)},
             ext={'choices': self.ext, 'default': 'pdf'},

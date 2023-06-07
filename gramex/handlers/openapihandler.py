@@ -112,7 +112,7 @@ class OpenAPIHandler(BaseHandler):
         get_spec['responses'] = deepcopy(config.responses)
         return spec
 
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         kwargs = self.conf.get('kwargs', {})
         # TODO: Set header only if not already set in the configuration.
         # This can be handled in gramex/gramex.yaml as a default configuration.

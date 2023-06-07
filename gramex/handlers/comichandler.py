@@ -12,7 +12,7 @@ _info = {}
 
 class ComicHandler(BaseHandler):
     @coroutine
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         if 'node' not in _info:
             _info['node'] = Node(port=9967, cwd=os.path.join(variables['GRAMEXAPPS'], 'ui'))
         node = _info['node']

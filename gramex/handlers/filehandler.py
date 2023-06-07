@@ -161,14 +161,14 @@ class FileHandler(BaseHandler):
         return result
 
     @tornado.gen.coroutine
-    def head(self, *args, **kwargs):
-        kwargs['include_body'] = False
-        yield self.get(*args, **kwargs)
+    def head(self, *path_args, **path_kwargs):
+        path_kwargs['include_body'] = False
+        yield self.get(*path_args, **path_kwargs)
 
     @tornado.gen.coroutine
-    def get(self, *args, **kwargs):
-        self.include_body = kwargs.pop('include_body', True)
-        path = urljoin('/', args[0] if len(args) else '').lstrip('/')
+    def get(self, *path_args, **path_kwargs):
+        self.include_body = path_kwargs.pop('include_body', True)
+        path = urljoin('/', path_args[0] if len(path_args) else '').lstrip('/')
         if isinstance(self.root, list):
             # Concatenate multiple files and serve them one after another
             for path_item in self.root:
@@ -187,7 +187,7 @@ class FileHandler(BaseHandler):
                     break
             else:
                 raise HTTPError(NOT_FOUND, f'{self.request.path} matches no path key')
-        elif not args:
+        elif not path_args:
             # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
         else:

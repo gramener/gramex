@@ -45,7 +45,7 @@ class ModelHandler(BaseHandler):
         if len(self.path_args) > 1 and self.path_args[1] == 'data':
             return True
 
-    def get(self, *path_args):
+    def get(self, *path_args, **path_kwargs):
         '''
         Request sent to model/name with no args returns model information,
         (that can be changed via PUT/POST).
@@ -125,7 +125,7 @@ class ModelHandler(BaseHandler):
                 return
             self._predict(model)
 
-    def delete(self, *path_args):
+    def delete(self, *path_args, **path_kwargs):
         '''
         Request to /model/name/ will delete the trained model.
         Request to /model/name/data needs id and will delete rows from the training data.

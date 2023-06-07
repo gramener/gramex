@@ -248,7 +248,7 @@ class AuthHandler(BaseHandler):
 
 
 class LogoutHandler(AuthHandler):
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         self.save_redirect_page()
         for callback in self.actions:
             callback(self)
@@ -263,7 +263,7 @@ class LogoutHandler(AuthHandler):
 
 class GoogleAuth(AuthHandler, GoogleOAuth2Mixin):
     @coroutine
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         self.settings[self._OAUTH_SETTINGS_KEY] = {
             'key': self.kwargs['key'],
             'secret': self.kwargs['secret'],
@@ -406,12 +406,12 @@ class SimpleAuth(AuthHandler):
         cls.password.setdefault('arg', 'password')
 
     @coroutine
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         self.save_redirect_page()
         self.render_template(self.template, error=None)
 
     @coroutine
-    def post(self):
+    def post(self, *path_args, **path_kwargs):
         user = self.get_arg(self.user.arg, None)
         password = self.get_arg(self.password.arg, None)
         info = self.credentials.get(user)

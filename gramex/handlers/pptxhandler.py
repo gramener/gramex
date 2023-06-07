@@ -5,7 +5,7 @@ _mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentati
 
 
 class PPTXHandler(BaseHandler):
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         # Load correct version of pptgen based on version:
         kwargs = dict(self.kwargs)
         version = kwargs.pop('version', None)

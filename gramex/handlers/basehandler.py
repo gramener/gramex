@@ -368,6 +368,7 @@ class BaseMixin:
         if 'cookiepath' in session_conf:
             cls._session_cookie['path'] = session_conf['cookiepath']
         cls._on_init_methods.append(cls.override_user)
+        cls._on_init_methods.append(cls.add_roles)
         cls._on_finish_methods.append(cls.set_last_visited)
         # Ensure that session is saved AFTER we set last visited
         cls._on_finish_methods.append(cls.save_session)
@@ -1156,6 +1157,36 @@ class BaseMixin:
         if self._set_xsrf:
             self.xsrf_token
 
+    def add_roles(self, roles_key='roles', permissions_key='permissions'):
+        '''Add roles and permissions to the current user'''
+        user = self.session.get('user')
+        if not isinstance(user, dict):
+            return
+        id = user['id']
+        args = {}
+
+        def update(key, value):
+            if value is None:
+                args[key + '!'] = []
+            else:
+                args[key] = value
+
+        # TODO: How do we specify the app in a URL-specific way? Is it required?
+        update('app', gramex.config.variables.get('APPNAME', None))
+        # TODO: Can we specify the namespace and project in args instead of path_kwargs? Required?
+        update('namespace', self.path_kwargs.get('namespace', None))
+        update('project', self.path_kwargs.get('project', None))
+
+        stores = gramex.service.storelocations
+
+        def query(store, key, **kwargs):
+            return gramex.data.filter(**stores[store], args={**args, **kwargs})[key].tolist()
+
+        roles = user[roles_key] = query('roles', 'role', user=['id'])
+        perms = query('permissions', 'permission', role=roles)
+        perms += query('user_permissions', 'permission', user=[id])
+        user[permissions_key] = list(set(perms))
+
 
 class BaseHandler(RequestHandler, BaseMixin):
     '''
@@ -1443,10 +1474,10 @@ class BaseWebSocketHandler(WebSocketHandler, BaseMixin):
         self.initialize_handler()
 
     @tornado.gen.coroutine
-    def get(self, *args, **kwargs):
+    def get(self, *path_args, **path_kwargs):
         for method in self._on_init_methods:
             method(self)
-        yield super(BaseWebSocketHandler, self).get(*args, **kwargs)
+        yield super(BaseWebSocketHandler, self).get(*path_args, **path_kwargs)
 
     def on_close(self):
         # Loop through class-level callbacks
@@ -1476,7 +1507,7 @@ class SetupFailedHandler(RequestHandler, BaseMixin):
     up a handler, it replaces it with this handler.
     '''
 
-    def get(self):
+    def get(self, *path_args, **path_kwargs):
         six.reraise(*self.exc_info)
 
 

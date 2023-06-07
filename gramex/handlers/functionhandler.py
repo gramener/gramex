@@ -32,7 +32,7 @@ class FunctionHandler(BaseHandler):
             cls.options = cls.get
 
     @tornado.gen.coroutine
-    def get(self, *path_args):
+    def get(self, *path_args, **path_kwargs):
         if self.redirects:
             self.save_redirect_page()
 

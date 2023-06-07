@@ -209,7 +209,7 @@ class UploadHandler(BaseHandler):
         self.write(json.dumps(self.uploader.info(), indent=2))
 
     @tornado.gen.coroutine
-    def post(self, *args, **kwargs):
+    def post(self, *path_args, **path_kwargs):
         if self.redirects:
             self.save_redirect_page()
         upload = yield gramex.service.threadpool.submit(self.uploader.addfiles, self)

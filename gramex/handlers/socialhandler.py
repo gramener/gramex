@@ -165,7 +165,7 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
         cls.setup_social('user.twitter', **kwargs)
 
     @tornado.gen.coroutine
-    def get(self, path=None):
+    def get(self, path=None, **path_kwargs):
         path = self.kwargs.get('path', path)
         if not path and self.request.method == 'GET':
             yield self.login()
@@ -244,7 +244,7 @@ class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
         cls.setup_social('user.facebook', **kwargs)
 
     @tornado.gen.coroutine
-    def get(self, path=None):
+    def get(self, path=None, **path_kwargs):
         path = self.kwargs.get('path', path)
         if not path and self.request.method == 'GET':
             yield self.login()

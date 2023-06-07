@@ -2222,6 +2222,16 @@ url:
         sheet_name: userinfo
         id: userid
 
+  auth/roles:
+    pattern: /auth/roles
+    handler: SimpleAuth
+    kwargs:
+      template: $YAMLPATH/auth.html
+      credentials:
+        alpha: alpha
+        beta: beta
+        gamma: gamma
+
   auth/rules:
     pattern: /auth/rulesdb
     handler: SimpleAuth
@@ -2950,3 +2960,9 @@ storelocations:
       uri: TEXT
       user: TEXT
       request.method: TEXT
+  roles:
+    url: sqlite:///$YAMLPATH/roles.db
+  permissions:
+    url: sqlite:///$YAMLPATH/roles.db
+  user_permissions:
+    url: sqlite:///$YAMLPATH/roles.db

@@ -106,7 +106,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
             super(ProxyHandler, self).authorize()
 
     @tornado.gen.coroutine
-    def get(self, *path_args):
+    def get(self, *path_args, **path_kwargs):
         ws = self.request.headers.get('Upgrade', '') == 'websocket'
         if ws:
             return WebSocketHandler.get(self)

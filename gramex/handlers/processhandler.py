@@ -104,7 +104,7 @@ class ProcessHandler(BaseHandler):
         self.stream_stderr = self.stream_callbacks(stderr, name='stderr')
 
     @tornado.gen.coroutine
-    def get(self, *path_args):
+    def get(self, *path_args, **path_kwargs):
         if self.redirects:
             self.save_redirect_page()
         for header_name, header_value in self.headers.items():

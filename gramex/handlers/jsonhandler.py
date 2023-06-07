@@ -107,12 +107,12 @@ class JSONHandler(BaseHandler):
         super(JSONHandler, self).initialize(**kwargs)
         self.set_header('Content-Type', 'application/json')
 
-    def get(self, jsonpath):
+    def get(self, jsonpath, *path_args, **path_kwargs):
         '''Return the JSON data at jsonpath. Return null for invalid paths.'''
         parent, key, data = self.jsonwalk(jsonpath, create=False)
         self.write(json.dumps(data, **self.json_kwargs))
 
-    def post(self, jsonpath):
+    def post(self, jsonpath, *path_args, **path_kwargs):
         '''Add data as a new unique key under jsonpath. Return {name: new_key}'''
         parent, key, data = self.jsonwalk(jsonpath, create=True)
         if self.request.body:
@@ -125,7 +125,7 @@ class JSONHandler(BaseHandler):
         else:
             self.write(json.dumps(None))
 
-    def put(self, jsonpath):
+    def put(self, jsonpath, *path_args, **path_kwargs):
         '''Set JSON data at jsonpath. Return the data provided'''
         parent, key, data = self.jsonwalk(jsonpath, create=True)
         if self.request.body:
@@ -135,7 +135,7 @@ class JSONHandler(BaseHandler):
         else:
             self.write(json.dumps(None))
 
-    def patch(self, jsonpath):
+    def patch(self, jsonpath, *path_args, **path_kwargs):
         '''Update JSON data at jsonpath. Return the data provided'''
         parent, key, data = self.jsonwalk(jsonpath)
         if data is not None:
@@ -144,7 +144,7 @@ class JSONHandler(BaseHandler):
             self.changed = True
         self.write(json.dumps(data, **self.json_kwargs))
 
-    def delete(self, jsonpath):
+    def delete(self, jsonpath, *path_args, **path_kwargs):
         '''Delete data at jsonpath. Return null'''
         parent, key, data = self.jsonwalk(jsonpath)
         if data is not None:
