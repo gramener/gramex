@@ -2222,16 +2222,6 @@ url:
         sheet_name: userinfo
         id: userid
 
-  auth/roles:
-    pattern: /auth/roles
-    handler: SimpleAuth
-    kwargs:
-      template: $YAMLPATH/auth.html
-      credentials:
-        alpha: alpha
-        beta: beta
-        gamma: gamma
-
   auth/rules:
     pattern: /auth/rulesdb
     handler: SimpleAuth

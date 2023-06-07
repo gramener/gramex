@@ -1,4 +1,10 @@
 url:
+  auth/user:
+    pattern: /auth/user
+    handler: FunctionHandler
+    kwargs:
+      function: handler.current_user
+
   messagehandler/simple:
     pattern: /messagehandler/simple
     handler: MessageHandler
@@ -7,3 +13,11 @@ url:
       table: simple
       columns:
         body: TEXT
+
+storelocations:
+  roles:
+    url: sqlite:///$YAMLPATH/roles.db
+  permissions:
+    url: sqlite:///$YAMLPATH/roles.db
+  user_permissions:
+    url: sqlite:///$YAMLPATH/roles.db
