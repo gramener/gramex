@@ -96,8 +96,10 @@ try:
 
     ML = MLHandler
     __all__ += ['ML', 'MLHandler', 'MLPredictor']
-except ImportError:
-    pass
+except ImportError as e:
+    from gramex.config import app_log
+
+    app_log.warning('url: MLHandler/MLPredictor dependency missing. %s', e)
 
 try:
     # If Gramex enterprise is available, import all handlers
