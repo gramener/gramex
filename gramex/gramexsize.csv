@@ -74,7 +74,7 @@ gramex.handlers.basehandler.BaseMixin.setup_transform,url.*.kwargs.session,2
 gramex.handlers.basehandler.BaseMixin._purge_keys,url.*.kwargs.auth,7
 gramex.handlers.basehandler.BaseMixin._get_store,url.*.kwargs.cache,2
 gramex.handlers.basehandler.BaseMixin.setup_session,url.*.kwargs.session,3
-gramex.handlers.basehandler.BaseMixin.setup_ratelimit,url.*.kwargs.ratelimit,18
+gramex.handlers.basehandler.BaseMixin.setup_ratelimit,url.*.kwargs.ratelimit,5
 gramex.handlers.basehandler.BaseMixin.reset_ratelimit,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseMixin.setup_redirect,url.*.kwargs.redirect,13
 gramex.handlers.basehandler.BaseMixin.setup_auth,url.*.kwargs.auth,8
@@ -103,8 +103,8 @@ gramex.handlers.basehandler.BaseMixin.apikey,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.revoke_apikey,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.override_user,url.*.kwargs.auth,7
 gramex.handlers.basehandler.BaseMixin.set_last_visited,url.*.kwargs.auth,3
-gramex.handlers.basehandler.BaseMixin.check_ratelimit,url.*.kwargs.ratelimit,2
-gramex.handlers.basehandler.BaseMixin.update_ratelimit,url.*.kwargs.ratelimit,2
+gramex.handlers.basehandler.BaseMixin.check_ratelimit,url.*.kwargs.ratelimit,3
+gramex.handlers.basehandler.BaseMixin.update_ratelimit,url.*.kwargs.ratelimit,4
 gramex.handlers.basehandler.BaseMixin.set_ratelimit_headers,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseHandler.initialize,url,3
 gramex.handlers.basehandler.BaseHandler.get_arg,url,3
@@ -141,7 +141,7 @@ gramex.handlers.socialhandler.TwitterRESTHandler.*,url.*.handler=TwitterRESTHand
 gramex.handlers.socialhandler.FacebookGraphHandler.*,url.*.handler=FacebookGraphHandler|Facebook,6
 gramex.handlers.uploadhandler.*,url.*.handler=UploadHandler|Upload,44
 gramex.handlers.websockethandler.*,url.*.handler=WebSocketHandler|Websocket,7
-gramex.handlers.__init__.*,url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,4
+gramex.handlers.__init__.*,url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,7
 gramex.pptgen.*,url.*.handler=PPTXHandler,363
 gramex.pptgen2.*,url.*.handler=PPTXHandler,244
 gramex.services.emailer.*,email,34
