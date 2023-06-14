@@ -253,13 +253,17 @@ def set_session(handler, **kwargs):
 
 
 def otp(handler):
-    expire = int(handler.get_argument('expire', '0'))
-    return json.dumps(handler.otp(expire=expire))
+    kwargs = {'expire': int(handler.get_argument('expire', '0'))}
+    if 'extra' in handler.args:
+        kwargs['extra'] = handler.get_argument('extra')
+    return json.dumps(handler.otp(**kwargs))
 
 
 def apikey(handler):
-    user = {key: val[-1] for key, val in handler.args.items()}
-    return json.dumps(handler.apikey(user=user or None))
+    kwargs = {'user': {key: val[-1] for key, val in handler.args.items()} or None}
+    if 'extra' in handler.args:
+        kwargs['extra'] = handler.get_argument('extra')
+    return json.dumps(handler.apikey(**kwargs))
 
 
 def revoke(handler):
