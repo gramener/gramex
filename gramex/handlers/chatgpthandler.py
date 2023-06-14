@@ -15,6 +15,7 @@ class ChatGPTHandler(BaseWebSocketHandler):
         handler: ChatGPTHandler
         kwargs:
           key: ...
+          max_history: ...
           default:
             model: gpt-3.5-turbo
             temperature: 1
@@ -46,6 +47,7 @@ class ChatGPTHandler(BaseWebSocketHandler):
         cls,
         key: str = '',
         url: str = 'https://api.openai.com/v1/chat/completions',
+        max_history: int = None,
         # See https://platform.openai.com/docs/models/model-endpoint-compatibility
         open: Union[Callable, str] = None,
         prepare: Union[Callable, str] = None,
@@ -56,6 +58,7 @@ class ChatGPTHandler(BaseWebSocketHandler):
 
         cls.url = url
         cls.headers = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
+        cls.max_history = max_history
         cls.info = {'open': open, 'prepare': prepare, 'modify': modify}
         cls.default = {}
         for k, v in cls.api_params.items():
@@ -88,6 +91,8 @@ class ChatGPTHandler(BaseWebSocketHandler):
         if callable(self.info['prepare']):
             self.info['prepare'](msg=message, handler=self)
 
+        if self.max_history is not None:
+            self.params['messages'] = self.params['messages'][-self.max_history * 2 :]
         self.params['messages'].append({'role': 'user', 'content': message})
         kwargs = {}
         if self.params['stream']:
