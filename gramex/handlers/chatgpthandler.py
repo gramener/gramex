@@ -1,8 +1,9 @@
 import json
 from .basehandler import BaseWebSocketHandler
+from gramex.transforms import build_transform
 from tornado.gen import coroutine
 from tornado.httpclient import AsyncHTTPClient
-from typing import Dict, Any
+from typing import Callable, Union
 
 
 class ChatGPTHandler(BaseWebSocketHandler):
@@ -21,29 +22,72 @@ class ChatGPTHandler(BaseWebSocketHandler):
     ```
     '''
 
+    function_vars = {
+        'open': {'params': None, 'handler': None},
+        'prepare': {'msg': None, 'handler': None},
+        'modify': {'msg': None, 'handler': None},
+    }
+    api_params = {
+        'model': 'gpt-3.5-turbo',
+        'temperature': None,
+        'top_p': None,
+        'n': None,
+        'stream': {'function': '"stream" in handler.args'},
+        'stop': None,
+        'max_tokens': None,
+        'frequency_penalty': None,
+        'presence_penalty': None,
+        'logit_bias': None,
+        'user': None,
+    }
+
     @classmethod
     def setup(
         cls,
         key: str = '',
         url: str = 'https://api.openai.com/v1/chat/completions',
-        default: Dict[str, Any] = None,
+        # See https://platform.openai.com/docs/models/model-endpoint-compatibility
+        open: Union[Callable, str] = None,
+        prepare: Union[Callable, str] = None,
+        modify: Union[Callable, str] = None,
         **kwargs,
     ):
         super(BaseWebSocketHandler, cls).setup(**kwargs)
 
         cls.url = url
-        cls.default = default or {}
         cls.headers = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
-        cls.http = AsyncHTTPClient()
+        cls.info = {'open': open, 'prepare': prepare, 'modify': modify}
+        cls.default = {}
+        for k, v in cls.api_params.items():
+            v = kwargs.pop(k, v)
+            if isinstance(v, dict) and 'function' in v:
+                cls.default[k] = build_transform(
+                    v, filename=f'url:{cls.name}.{k}', vars={'handler': None}, iter=False
+                )
+            elif v is not None:
+                cls.default[k] = v
+        for k, v in cls.info.items():
+            if v:
+                cls.info[k] = build_transform(
+                    {'function': v},
+                    filename=f'url:{cls.name}.{k}',
+                    vars=cls.function_vars[k],
+                    iter=False,
+                )
 
     def open(self):
-        self.params = dict(self.default)
-        self.params.setdefault('model', 'gpt-3.5-turbo')
+        self.http = AsyncHTTPClient()
+        self.params = {k: v(self) if callable(v) else v for k, v in self.default.items()}
         self.params.setdefault('messages', [])
-        self.params.setdefault('stream', 'stream' in self.args)
+        if callable(self.info['open']):
+            self.info['open'](self.params, self)
 
     @coroutine
     def on_message(self, message: str):
+        # Call prepare before updating the database
+        if callable(self.info['prepare']):
+            self.info['prepare'](msg=message, handler=self)
+
         self.params['messages'].append({'role': 'user', 'content': message})
         kwargs = {}
         if self.params['stream']:
@@ -51,7 +95,7 @@ class ChatGPTHandler(BaseWebSocketHandler):
             self.chunks, self.tokens = [], []
         try:
             r = yield self.http.fetch(
-                'https://api.openai.com/v1/chat/completions',
+                self.url,
                 method='POST',
                 request_timeout=0,  # no timeout
                 body=json.dumps(self.params),
@@ -70,10 +114,16 @@ class ChatGPTHandler(BaseWebSocketHandler):
             self.write_message('[ERROR]\n' + '\n'.join(f'{k}: {v}' for k, v in error.items()))
             self.write_message('')
         # If streaming is enabled, ignore the empty r.body. self.on_chunk will handle it
+        # If streaming is disabled, return the entire response
         elif r.body:
             data = json.loads(r.body)
             # TODO: Handle multiple responses in data['choices'], i.e. n > 1, properly
             content = data['choices'][0]['message']['content']
+            # Call modify(data). Use the return value (if any) as the content
+            if callable(self.info['modify']):
+                result = self.info['modify'](msg=data, handler=self)
+                if result is not None:
+                    content = result
             self.params['messages'].append({'role': 'assistant', 'content': content})
             self.write_message(content)
             self.write_message('')
