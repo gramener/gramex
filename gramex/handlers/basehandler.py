@@ -9,7 +9,7 @@ import traceback
 import tornado.gen
 import gramex
 import gramex.cache
-from typing import Union, Optional, List, Any
+from typing import Union, Optional, List, Dict, Any
 from binascii import b2a_base64
 from fnmatch import fnmatch
 from http.cookies import Morsel
@@ -917,6 +917,7 @@ class BaseMixin:
         user: Union[str, dict] = None,
         size: int = None,
         type: str = 'OTP',
+        **kwargs: Dict[str, Any],
     ) -> str:
         '''Return one-time password valid for `expire` seconds.
 
@@ -930,16 +931,18 @@ class BaseMixin:
             size: Length of the OTP in characters. `None` means a full hash string
             type: Identifier for type of OTP. `OTP` for OTPs. Use `Key` for API keys. Auth handlers
                 use their class names, e.g. `DBAuth`, `SMSAuth`, `EMailAuth`.
+            kwargs: Additional columns to add (if they exist)
 
         Returns:
             Generated OTP
 
-        Internally, this stores it in `storelocations.otp` database in a table with 4 keys:
+        Internally, this stores it in `storelocations.otp` database in a table with 4+ keys:
 
         1. `token`: Generated OTP with `size` characters
         2. `user`: The passed `user` string or dict, JSON-encoded
         3. `type`: The passed `type` string, stored as is
         4. `expire`: The expiry time in seconds since epoch
+        5. Any additional columns passed in `kwargs`, if they exist
         '''
         user = self.current_user if user is None else user
         if not user:
@@ -954,6 +957,7 @@ class BaseMixin:
                 'user': [json.dumps(user)],
                 'type': [type],
                 'expire': [time.time() + expire],
+                **{key: [val] for key, val in kwargs.items()},
             },
         )
         return otp
@@ -977,23 +981,36 @@ class BaseMixin:
             gramex.data.delete(
                 **gramex.service.storelocations.otp, id=['token'], args={'token': [key]}
             )
-        if row['expire'] > time.time():
-            row['user'] = json.loads(row['user'])
-            return row
-        else:
+        # Skip expired tokens
+        if row['expire'] <= time.time():
             return None
+        # Return the user column parsed as JSON.
+        # Add custom keys from the table to the user object.
+        row['user'] = json.loads(row['user'])
+        custom_keys = [key for key in row if key not in {'user', 'token', 'expire'}]
+        if isinstance(row, dict):
+            row['user'].update({key: row[key] for key in custom_keys})
+        else:
+            app_log.warning('Cannot add custom keys to non-dict "user" in: %r', row)
+        return row
 
     def revoke_otp(self, key: str) -> Union[str, dict, None]:
         '''Revoke an OTP. Returns the user object from [gramex.handlers.BaseMixin.get_otp][].'''
         return self.get_otp(key, revoke=True)
 
-    def apikey(self, expire: float = 1e9, user: Union[str, dict] = None, size: int = None) -> str:
+    def apikey(
+        self,
+        expire: float = 1e9,
+        user: Union[str, dict] = None,
+        size: int = None,
+        **kwargs: Dict[str, Any],
+    ) -> str:
         '''Return API Key. Usage is same as [gramex.handlers.BaseMixin.otp][]
 
         The API key is used as the X-Gramex-Key header or in `?gramex-key=` on any request.
         This overrides the user with the passed `user` object for that session.
         '''
-        return self.otp(expire=expire, user=user, size=size, type='Key')
+        return self.otp(expire=expire, user=user, size=size, type='Key', **kwargs)
 
     def revoke_apikey(self, key: str) -> Union[str, dict, None]:
         '''Revoke API Key. Returns the user object from [gramex.handlers.BaseMixin.get_otp][].'''
