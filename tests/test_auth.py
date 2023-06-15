@@ -310,21 +310,21 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         self.session = requests.Session()
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         otp1 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
-        otp2 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
+        otp2 = self.session.get(server.base_url + '/auth/otp?expire=10&extra=ok').json()
         otp_dead = self.session.get(server.base_url + '/auth/otp?expire=0').json()
         in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
         session_data = self.get_session(headers={'X-Gramex-OTP': otp1})
-        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha', 'extra': None}, session_data['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
         session_data = self.session.get(
             server.base_url + '/auth/session', params={'gramex-otp': otp2}
         ).json()
-        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha', 'extra': 'ok'}, session_data['user'])
 
         self.session = requests.Session()
         for otp in [otp1, otp2, otp_dead, 'nan']:
@@ -342,9 +342,9 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         eq_(r.status_code, 400)
 
     def test_apikey(self):
-        # Get an API key as the user "alpha"
+        # Get an API key as the user "beta"
         self.session = requests.Session()
-        self.login_ok('alpha', 'alpha', check_next='/dir/index/')
+        self.login_ok('beta', 'beta', check_next='/dir/index/')
         apikey = self.session.get(server.base_url + '/auth/apikey').json()
 
         def check_key(user, **kwargs):
@@ -359,18 +359,18 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             in_(user, self.get_session()['user'])
 
         # A new session is not logged in by default, but setting ?gramex-key logs user in
-        check_key({'user': 'alpha', 'id': 'alpha'}, params={'gramex-key': apikey})
+        check_key({'user': 'beta', 'id': 'beta', 'extra': None}, params={'gramex-key': apikey})
         # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
-        check_key({'user': 'alpha', 'id': 'alpha'}, headers={'X-Gramex-Key': apikey})
+        check_key({'user': 'beta', 'id': 'beta', 'extra': None}, headers={'X-Gramex-Key': apikey})
 
         # Get an API key as the user "new"
         self.session = requests.Session()
-        apikey = self.session.get(server.base_url + '/auth/apikey?user=new&role=x').json()
+        apikey = self.session.get(server.base_url + '/auth/apikey?user=new&role=x&extra=ok').json()
 
         # A new session is not logged in by default, but setting ?gramex-key logs user in
-        check_key({'user': 'new', 'role': 'x'}, params={'gramex-key': apikey})
+        check_key({'user': 'new', 'role': 'x', 'extra': 'ok'}, params={'gramex-key': apikey})
         # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
-        check_key({'user': 'new', 'role': 'x'}, headers={'X-Gramex-Key': apikey})
+        check_key({'user': 'new', 'role': 'x', 'extra': 'ok'}, headers={'X-Gramex-Key': apikey})
 
         # Revoke an API key
         self.session.get(server.base_url + f'/auth/revoke?key={apikey}')

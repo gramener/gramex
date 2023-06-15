@@ -365,9 +365,9 @@ storelocations:
     url: sqlite:///$GRAMEXDATA/auth.recover.db
     table: users
     columns:
+      token: {type: TEXT, primary_key: true}
       user: TEXT
       type: TEXT
-      token: TEXT
       expire: REAL # Seconds since epoch
   # Store pipeline execution runs. See gramex/transforms/transforms.py
   pipeline:
