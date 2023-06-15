@@ -368,6 +368,7 @@ class BaseMixin:
         if 'cookiepath' in session_conf:
             cls._session_cookie['path'] = session_conf['cookiepath']
         cls._on_init_methods.append(cls.override_user)
+        cls._on_init_methods.append(cls.add_roles)
         cls._on_finish_methods.append(cls.set_last_visited)
         # Ensure that session is saved AFTER we set last visited
         cls._on_finish_methods.append(cls.save_session)
@@ -1156,6 +1157,27 @@ class BaseMixin:
         if self._set_xsrf:
             self.xsrf_token
 
+    def add_roles(self, roles_key='roles', permissions_key='permissions'):
+        '''Add roles and permissions to the current user'''
+        user = self.session.get('user')
+        if not isinstance(user, dict):
+            return
+        id = user['id']
+        args = {}
+        _set_arg(args, 'app', gramex.config.variables.get('APPNAME', None))
+        _set_arg(args, 'namespace', self.path_kwargs.get('namespace', None))
+        _set_arg(args, 'project', self.path_kwargs.get('project', None))
+        roles = user[roles_key] = gramex.data.filter(
+            **gramex.service.storelocations.roles, args={**args, 'user': [id]}
+        )['role'].tolist()
+        perms = gramex.data.filter(
+            **gramex.service.storelocations.permissions, args={**args, 'role': roles}
+        )['permission'].tolist()
+        perms += gramex.data.filter(
+            **gramex.service.storelocations.user_permissions, args={**args, 'user': [id]}
+        )['permission'].tolist()
+        user[permissions_key] = list(set(perms))
+
 
 class BaseHandler(RequestHandler, BaseMixin):
     '''
@@ -1525,3 +1547,10 @@ def _check_condition(condition, user):
         elif node not in values:
             return False
     return True
+
+
+def _set_arg(args, key, value):
+    if value is None:
+        args[key + '!'] = []
+    else:
+        args[key] = value

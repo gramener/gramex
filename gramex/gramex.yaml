@@ -378,7 +378,33 @@ storelocations:
       start: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       end: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       error: TEXT # Error stage + traceback
-
+  permissions:
+    url: sqlite:///$GRAMEXDATA/roles.db
+    table: permissions
+    columns:
+      app: TEXT
+      namespace: TEXT
+      project: TEXT
+      role: TEXT
+      permission: TEXT
+  roles:
+    url: sqlite:///$GRAMEXDATA/roles.db
+    table: roles
+    columns:
+      app: TEXT
+      namespace: TEXT
+      project: TEXT
+      user: TEXT
+      role: TEXT
+  user_permissions:
+    url: sqlite:///$GRAMEXDATA/roles.db
+    table: user_permissions
+    columns:
+      app: TEXT
+      namespace: TEXT
+      project: TEXT
+      user: TEXT
+      permission: TEXT
 # The `schedule:` section defines when specific code is to run.
 schedule:
   # Every day and on startup, check if Gramex needs to be updated

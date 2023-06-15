@@ -15,7 +15,7 @@ import gramex
 import gramex.config
 import gramex.cache
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
-from . import TestGramex, server, tempfiles, dbutils, in_
+from . import TestGramex, server, tempfiles, dbutils, in_, remove_if_possible
 
 folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -577,6 +577,74 @@ class TestLookup(AuthBase):
         self.login_ok('beta', 'beta', check_next='/')
         session = self.session.get(server.base_url + '/auth/session').json()
         eq_(session['user']['gender'], 'female')
+
+
+class TestRoles(AuthBase):
+    @classmethod
+    def setUpClass(cls):
+        AuthBase.setUpClass()
+        cls.url = server.base_url + '/auth/roles'
+        cls.roles_db = tempfiles.roles_db = os.path.join(folder, 'roles.db')
+        remove_if_possible(cls.roles_db)
+
+    def test_roles(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], [])
+        eq_(session['user']['permissions'], [])
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], [])
+        eq_(session['user']['permissions'], [])
+
+        gramex.data.insert(
+            url=f'sqlite:///{self.roles_db}',
+            table='roles',
+            args={
+                'app': [None, None, None, None],
+                'namespace': [None, None, None, None],
+                'project': [None, None, None, None],
+                'user': ['alpha', 'alpha', 'beta', 'gamma'],
+                'role': ['junior', 'senior', 'lead', 'junior'],
+            },
+        )
+        gramex.data.insert(
+            url=f'sqlite:///{self.roles_db}',
+            table='permissions',
+            args={
+                'app': [None, None, None, None, None, None],
+                'namespace': [None, None, None, None, None, None],
+                'project': [None, None, None, None, None, None],
+                'role': ['junior', 'senior', 'senior', 'lead', 'lead', 'lead'],
+                'permission': ['read', 'read', 'write', 'read', 'write', 'delete']
+            },
+        )
+        gramex.data.insert(
+            url=f'sqlite:///{self.roles_db}',
+            table='user_permissions',
+            args={
+                'app': [None, None, None],
+                'namespace': [None, None, None],
+                'project': [None, None, None],
+                'user': ['gamma', 'gamma', 'gamma'],
+                'permission': ['read', 'write', 'delete']
+            },
+        )
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], ['junior', 'senior'])
+        eq_(sorted(session['user']['permissions']), sorted(['read', 'write']))
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], ['lead'])
+        eq_(sorted(session['user']['permissions']), sorted(['read', 'write', 'delete']))
+
+        self.login_ok('gamma', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['roles'], ['junior'])
+        eq_(sorted(session['user']['permissions']), sorted(['read', 'write', 'delete']))
 
 
 class TestRules(AuthBase):
