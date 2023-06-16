@@ -1173,6 +1173,13 @@ class BaseMixin:
         if self._set_xsrf:
             self.xsrf_token
 
+    def update_body_args(self):
+        '''Update self.args with JSON body if Content-Type is application/json'''
+        if self.request.body:
+            content_type = self.request.headers.get('Content-Type', '')
+            if content_type == 'application/json':
+                self.args.update(json.loads(self.request.body))
+
 
 class BaseHandler(RequestHandler, BaseMixin):
     '''

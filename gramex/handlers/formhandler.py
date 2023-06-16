@@ -111,12 +111,12 @@ class FormHandler(BaseHandler):
                         iter=False,
                     )
 
+    def prepare(self):
+        self.update_body_args()
+        super(FormHandler, self).prepare()
+
     def _options(self, dataset, args, path_args, path_kwargs, key):
         """For each dataset, prepare the arguments."""
-        if self.request.body:
-            content_type = self.request.headers.get('Content-Type', '')
-            if content_type == 'application/json':
-                args.update(json.loads(self.request.body))
         filter_kwargs = AttrDict(dataset)
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
