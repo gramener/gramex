@@ -156,13 +156,13 @@ class TestDriveHandler(TestGramex):
             eq_(data.user_id.iloc[index], 'X')
             eq_(data.user_role.iloc[index], 'Y')
 
-        # DELETE ?id=... deletes the specified file
+        # DELETE ?id=... deletes the specified file via URL params or body
         data = gramex.data.filter(self.con, table='drive')
         indices = (0, 3, 6)
         for index in indices:
             r = requests.delete(self.url, params={'id': [data.id.iloc[index]]})
             file = data.file.iloc[index].encode('unicode-escape').decode()
-            eq_(r.headers['Paths-Exist'], '{"%s": false}' % file)
+            eq_(r.headers.get('Paths-Exist', ''), '{"%s": false}' % file)
         data2 = gramex.data.filter(self.con, table='drive')
         eq_(len(data2), len(data) - len(indices))
         for index in indices:
@@ -170,6 +170,32 @@ class TestDriveHandler(TestGramex):
             ok_(data.id.iloc[index] not in data2.id.values)
             # File is removed from the file system
             ok_(not os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        # Other indices are not deleted
+        for index in range(len(data)):
+            if index not in indices:
+                ok_(data.id.iloc[index] in data2.id.values)
+                ok_(os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        new_indices = (1, 2)
+        for index in new_indices:
+            r = requests.delete(
+                self.url,
+                headers={'Content-Type': 'application/json'},
+                data=json.dumps({'id': [int(data.id.iloc[index])]}),
+            )
+            file = data.file.iloc[index].encode('unicode-escape').decode()
+            eq_(r.headers.get('Paths-Exist', ''), '{"%s": false}' % file)
+        data2 = gramex.data.filter(self.con, table='drive')
+        eq_(len(data2), len(data) - len(indices) - len(new_indices))
+        for index in indices + new_indices:
+            # Entry is removed from the database
+            ok_(data.id.iloc[index] not in data2.id.values)
+            # File is removed from the file system
+            ok_(not os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        # Other indices are not deleted
+        for index in range(len(data)):
+            if index not in indices + new_indices:
+                ok_(data.id.iloc[index] in data2.id.values)
+                ok_(os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
 
         # DELETE without ?id= does not delete
         r = requests.delete(self.url)
