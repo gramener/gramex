@@ -287,8 +287,6 @@ ts = partial(
         'charset': 'utf8',
         'global-name': '',
         'keep-names': 'false',
-        'drop:debugger': 'false',
-        'drop:console': 'false',
     },
     cmd='node $exe {OPTIONS} --allow-overwrite --sourcemap --outdir=$targetDir $filename',
 )
