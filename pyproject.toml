@@ -93,6 +93,9 @@ include = ["gramex*"]
 # pytest/complexity_error/invalid.py has non-parseable Python code
 force-exclude = "complexity_error"
 
+[tool.pytest.ini_options]
+testpaths = "pytest"
+
 [project.optional-dependencies]
 # pip install "gramex[full]" for better debugging and ML support
 full = [

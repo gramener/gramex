@@ -1190,23 +1190,6 @@ class BaseMixin:
             if content_type == 'application/json':
                 self.args.update(json.loads(self.request.body))
 
-
-class BaseHandler(RequestHandler, BaseMixin):
-    '''
-    BaseHandler provides auth, caching and other services common to all request
-    handlers. All RequestHandlers must inherit from BaseHandler.
-    '''
-
-    def initialize(self, **kwargs):
-        self.initialize_handler()
-
-        # Set the method to the ?x-http-method-overrride argument or the
-        # X-HTTP-Method-Override header if they exist
-        if 'x-http-method-override' in self.args:
-            self.request.method = self.args.pop('x-http-method-override')[0].upper()
-        elif 'X-HTTP-Method-Override' in self.request.headers:
-            self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
-
     def get_arg(self, name, default=..., first=False):
         '''
         Returns the value of the argument with the given name. Similar to
@@ -1225,6 +1208,23 @@ class BaseHandler(RequestHandler, BaseMixin):
                 raise MissingArgumentError(name)
             return default
         return self.args[name][0 if first else -1]
+
+
+class BaseHandler(RequestHandler, BaseMixin):
+    '''
+    BaseHandler provides auth, caching and other services common to all request
+    handlers. All RequestHandlers must inherit from BaseHandler.
+    '''
+
+    def initialize(self, **kwargs):
+        self.initialize_handler()
+
+        # Set the method to the ?x-http-method-overrride argument or the
+        # X-HTTP-Method-Override header if they exist
+        if 'x-http-method-override' in self.args:
+            self.request.method = self.args.pop('x-http-method-override')[0].upper()
+        elif 'X-HTTP-Method-Override' in self.request.headers:
+            self.request.method = self.request.headers['X-HTTP-Method-Override'].upper()
 
     def prepare(self):
         # If X-Request-URI is specified, use it. Else, when redirecting use RELATIVE URL. That

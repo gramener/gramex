@@ -1,0 +1,20 @@
+errors:
+    no-api-key:
+        message: No API key
+        type: invalid_request_error
+    wrong-api-key:
+        message: Wrong API key
+        type: invalid_request_error
+    invalid-key:
+        message: ""
+        type: invalid_request_error
+        code: invalid_api_key
+    invalid-json:
+        message: We could not parse the JSON body of your request
+        type: invalid_request_error
+    no-messages:
+        message: "'messages' is a required property"
+        type: invalid_request_error
+    invalid-argument:
+        message: "Unrecognized request argument supplied"
+        type: invalid_request_error

@@ -19,8 +19,10 @@ from .drivehandler import DriveHandler
 from .comichandler import ComicHandler
 from .openapihandler import OpenAPIHandler
 from .messagehandler import MessageHandler
+from .chatgpthandler import ChatGPTHandler
 
 # Aliases
+ChatGPT = ChatGPTHandler
 Comic = ComicHandler
 Command = ProcessHandler
 Message = CommentHandler = MessageHandler
@@ -47,6 +49,8 @@ __all__ = [
     'BaseMixin',
     'Capture',
     'CaptureHandler',
+    'ChatGPT',
+    'ChatGPTHandler',
     'Command',
     'CommentHandler',
     'Comic',

@@ -8,26 +8,33 @@ import time
 from pytest import skip
 
 folder = os.path.dirname(os.path.abspath(__file__))
+info = {}
 
 
-def is_gramex_running(port=9999):
-    '''Wait for Gramex to start on port. Return True if it does, False if not'''
+def gramex_port():
+    '''Wait for Gramex to start on $GRAMEX_PORT. Return port number if it does, else None'''
+    port = os.environ.get('GRAMEX_PORT', '9999')
+    if 'gramex_started' in info:
+        return port
     # Normally, we just need to wait for requests.get('localhost:9999').
     # But if Tornado binds to the port but hasn't started, requests returns an error.
     # So we wait for 1 second (100 times with a 0.01s delay) until Tornado starts.
-    for x in range(100):
+    for x in range(10):
         try:
-            r = requests.get(f'http://localhost:{port}', timeout=60)
+            r = requests.get(f'http://localhost:{port}', timeout=0.1)
             if r.status_code == 200:
-                return True
+                info['gramex_started'] = True
+                return port
         except requests.exceptions.ConnectionError:
             time.sleep(0.01)
-    return False
+    return None
 
 
 def mysql_create_db(server, database, **tables):
     url = 'mysql+pymysql://root@%s/' % server
-    engine = sa.create_engine(url + '?charset=utf8', encoding='utf-8')
+    engine = sa.create_engine(
+        f'{url}?charset=utf8', encoding='utf-8', connect_args={'connect_timeout': 1}
+    )
     try:
         engine.connect()
     except sa.exc.OperationalError:
@@ -51,7 +58,7 @@ def mysql_drop_db(server, database):
 
 def postgres_create_db(server, database, **tables):
     url = 'postgresql://postgres@%s/' % server
-    engine = sa.create_engine(url, encoding='utf-8')
+    engine = sa.create_engine(url, encoding='utf-8', connect_args={'connect_timeout': 0.5})
     try:
         conn = engine.connect()
     except sa.exc.OperationalError:

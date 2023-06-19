@@ -1,3 +1,7 @@
+variables:
+  GRAMEX_PORT:
+    default: 9999
+
 url:
   messagehandler/simple:
     pattern: /messagehandler/simple
@@ -7,3 +11,63 @@ url:
       table: simple
       columns:
         body: TEXT
+
+  mockgpt/chat:
+    pattern: /mockgpt/chat
+    handler: mockgpt.ChatHandler
+    kwargs:
+      xsrf_cookies: false
+
+  chatgpthandler/no-key:
+    pattern: /chatgpthandler/no-key
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      model: gpt-3.5-turbo
+  chatgpthandler/wrong-key:
+    pattern: /chatgpthandler/wrong-key
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: WRONG-KEY
+  chatgpthandler/string-key:
+    pattern: /chatgpthandler/string-key
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: TEST-KEY
+  chatgpthandler/http-error:
+    pattern: /chatgpthandler/http-error
+    handler: ChatGPTHandler
+    kwargs:
+      # Pick a random port that's unlikely to be used
+      url: http://localhost:62392/
+  chatgpthandler/arg-key:
+    pattern: /chatgpthandler/arg-key
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: {function: "handler.get_argument('key', '')"}
+  chatgpthandler/history:
+    pattern: /chatgpthandler/history
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: TEST-KEY
+      max_history: {function: "int(handler.get_arg('max')) if 'max' in handler.args else None"}
+  chatgpthandler/stream:
+    pattern: /chatgpthandler/stream
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: TEST-KEY
+      stream: true
+  chatgpthandler/transforms:
+    pattern: /chatgpthandler/transforms
+    handler: ChatGPTHandler
+    kwargs:
+      url: http://localhost:$GRAMEX_PORT/mockgpt/chat
+      key: TEST-KEY
+      open: "params['messages'].append({'role': 'user', 'content': 'INIT'})"
+      prepare: "'pre:' + message"
+      modify: "data['choices'][0]['message']['content'] + ':post'"
