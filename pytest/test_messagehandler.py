@@ -4,13 +4,13 @@ import os
 import pytest
 import time
 from websocket import create_connection
-from utils import is_gramex_running
+from utils import gramex_port
 
-GRAMEX_PORT = os.environ.get('GRAMEX_PORT', '9999')
 DELAY = 0.01
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'messages.db')
 
-if not is_gramex_running(GRAMEX_PORT):
+GRAMEX_PORT = gramex_port()
+if not gramex_port():
     pytest.skip(f'gramex is not running on port {GRAMEX_PORT}', allow_module_level=True)
 
 
