@@ -316,23 +316,6 @@ app:
     # Flush every 30 seconds. Clear expired sessions every hour
     flush: 30
     purge: 3600
-    # These can be used in keys as pre-defined functions
-    keys:
-      hourly:
-        function: "pd.Timestamp.utcnow().strftime('%Y-%m-%d %H')"
-        expiry: "int((pd.Timestamp.utcnow().ceil(freq='H') - pd.Timestamp.utcnow()).total_seconds())"
-      daily:
-        function: "pd.Timestamp.utcnow().strftime('%Y-%m-%d')"
-        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=1) - pd.Timestamp.utcnow()).total_seconds())"
-      weekly:
-        function: "pd.Timestamp.utcnow().strftime('%Y %U')"
-        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=7) - pd.Timestamp.utcnow()).total_seconds())"
-      monthly:
-        function: "pd.Timestamp.utcnow().strftime('%Y-%m')"
-        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.offsets.MonthBegin() - pd.Timestamp.utcnow()).total_seconds())"
-      yearly:
-        function: "pd.Timestamp.utcnow().strftime('%Y')"
-        expiry: "int((pd.Timestamp.utcnow().normalize() + pd.offsets.YearBegin() - pd.Timestamp.utcnow()).total_seconds())"
 
 # The storelocations: section defines where Gramex stores its data.
 storelocations:

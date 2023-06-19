@@ -847,3 +847,27 @@ def build_log_info(keys: List, *vars: List):
     # B102:exec_used is safe here since the code is constructed entirely in this function
     exec(code, context)  # nosec B102
     return context['fn']
+
+
+def time_key(format, offset=None, freq=None):
+    import pandas as pd
+
+    result = {'function': lambda *args, **kwargs: pd.Timestamp.utcnow().strftime(format)}
+
+    if freq is not None:
+
+        def expiry(*args, **kwargs):
+            now = pd.Timestamp.utcnow()
+            return int((now.ceil(freq=freq) - now).total_seconds())
+
+    elif offset is not None:
+        offset_method = getattr(pd.offsets, offset)
+
+        def expiry(*args, **kwargs):
+            now = pd.Timestamp.utcnow()
+            return int((now + offset_method(normalize=True) - now).total_seconds())
+
+    if offset is not None or freq is not None:
+        result['expiry'] = expiry
+
+    return result

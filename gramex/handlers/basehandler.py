@@ -19,7 +19,7 @@ from tornado.web import RequestHandler, HTTPError, MissingArgumentError, decode_
 from tornado.websocket import WebSocketHandler
 from gramex import conf, __version__
 from gramex.config import merge, objectpath, app_log
-from gramex.transforms import build_transform, build_log_info, handler_expr
+from gramex.transforms import build_transform, build_log_info, handler_expr, time_key
 from gramex.transforms.template import CacheLoader
 from gramex.http import UNAUTHORIZED, FORBIDDEN, BAD_REQUEST, METHOD_NOT_ALLOWED, TOO_MANY_REQUESTS
 from gramex.cache import get_store
@@ -373,7 +373,9 @@ class BaseMixin:
         cls._on_finish_methods.append(cls.save_session)
 
     @classmethod
-    def setup_ratelimit(cls, ratelimit: Union[dict, None], ratelimit_app_conf: Union[dict, None]):
+    def setup_ratelimit(
+        cls, ratelimit: Union[Dict, List[Dict], None], ratelimit_app_conf: Union[dict, None]
+    ):
         '''Initialize rate limiting checks'''
         if ratelimit is None:
             return
@@ -385,11 +387,8 @@ class BaseMixin:
         cls._on_init_methods.append(cls.check_ratelimit)
         cls._on_finish_methods.append(cls.update_ratelimit)
 
-        if isinstance(ratelimit, (list, tuple)):
-            for ratelimit_conf in ratelimit:
-                cls._setup_ratelimit(ratelimit_conf, ratelimit_app_conf)
-        else:
-            cls._setup_ratelimit(ratelimit, ratelimit_app_conf)
+        for ratelimit_conf in ratelimit if isinstance(ratelimit, (list, tuple)) else [ratelimit]:
+            cls._setup_ratelimit(ratelimit_conf, ratelimit_app_conf)
 
     @classmethod
     def _setup_ratelimit(cls, ratelimit, ratelimit_app_conf):
@@ -422,32 +421,35 @@ class BaseMixin:
         # Pre-compile keys: into _ratelimit.key_fn = [key_fn, key_fn, ...]
         #   key_fn['function'](self) will return nth key
         #   key_fn['expiry'](self) will return nth expiry (in seconds)
-        predefined_keys = ratelimit_app_conf.get('keys', {})
         for index, key_spec in enumerate(keys_spec):
             if isinstance(key_spec, str):
                 # Look up string keys like daily to predefined_keys.
-                if key_spec in predefined_keys:
-                    key_spec = predefined_keys[key_spec]
+                if key_spec in _PREDEFINED_KEYS:
+                    key_spec = _PREDEFINED_KEYS[key_spec]
                 # Or construct functions for `user.id`, etc
                 else:
                     try:
                         key_spec = {'function': handler_expr(key_spec)}
                     except ValueError:
                         raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} is unknown')
-            # {function: ...} MUST be defined for a key. {expiry: ... } is optional
-            if not isinstance(key_spec, dict) or 'function' not in key_spec:
-                raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} has no function:')
-            # Compile key/expiry functions into _ratelimit.key_fn[index]['function' / 'expiry']
-            key_fn = {}
-            for fn in ('function', 'expiry'):
-                if fn in key_spec:
-                    key_fn[fn] = build_transform(
-                        {'function': key_spec[fn]},
-                        vars={'handler': None},
-                        filename=f'url:{cls.name}.ratelimit.keys[{index}].{fn}',
-                        iter=False,
-                    )
-            _ratelimit.key_fn.append(key_fn)
+            # {function: ...} or {key: ...} MUST be defined for a key. {expiry: ... } is optional
+            if isinstance(key_spec, dict) and ('function' in key_spec or 'key' in key_spec):
+                # Compile key/expiry functions into _ratelimit.key_fn[index]['function' / 'expiry']
+                key_fn = {}
+                for fn in ('function', 'expiry', 'key'):
+                    if fn in key_spec:
+                        if callable(key_spec[fn]):
+                            key_fn[fn] = key_spec[fn]
+                        else:
+                            key_fn[fn] = build_transform(
+                                {'function': key_spec[fn]},
+                                vars={'handler': None},
+                                filename=f'url:{cls.name}.ratelimit.keys[{index}].{fn}',
+                                iter=False,
+                            )
+                _ratelimit.key_fn.append(key_fn)
+            else:
+                raise ValueError(f'url:{cls.name}.ratelimit.keys: {key_spec} has no function/key:')
 
         # Ensure limit: is a number or a {function: ...}
         limit_spec = ratelimit['limit']
@@ -1075,17 +1077,25 @@ class BaseMixin:
     def check_ratelimit(self):
         '''Raise HTTP 429 if usage exceeds rate limit. Set X-Ratelimit-* HTTP headers'''
         for ratelimit in self._ratelimit:
+            # If no expiry is specified, store for 100 years
+            expiries = [3155760000]
             # Get the rate limit key, limit and expiry
-            ratelimit.key = json.dumps(
-                [ratelimit.pool] + [key_fn['function'](self) for key_fn in ratelimit.key_fn]
-            )
+            keys = [ratelimit.pool]
+            for key_fn in ratelimit.key_fn:
+                if 'key' in key_fn:
+                    predefined_key = key_fn['key'](self)
+                    if predefined_key in _PREDEFINED_KEYS:
+                        keys.append(_PREDEFINED_KEYS[predefined_key]['function'](self))
+                        expiries.append(_PREDEFINED_KEYS[predefined_key]['expiry'](self))
+                if 'function' in key_fn:
+                    keys.append(key_fn['function'](self))
+                if 'expiry' in key_fn:
+                    expiries.append(key_fn['expiry'](self))
+
+            ratelimit.key = json.dumps(keys)
             # Note: if ratelimit_fn() returns a non-int, check_ratelimit will fail. Let it fail.
             ratelimit.limit = ratelimit.limit_fn(self)
-            expiries = [
-                key_fn['expiry'](self) for key_fn in ratelimit.key_fn if 'expiry' in key_fn
-            ]
-            # If no expiry is specified, store for 100 years
-            ratelimit.expiry = min(expiries + [3155760000])
+            ratelimit.expiry = min(expiries)
 
             # Ensure usage does not hit limit
             ratelimit.usage = ratelimit.store.load(ratelimit.key, {'n': 0}).get('n', 0)
@@ -1549,3 +1559,12 @@ def _check_condition(condition, user):
         elif node not in values:
             return False
     return True
+
+
+_PREDEFINED_KEYS = {
+    "hourly": time_key('%Y-%m-%d %H', freq='H'),
+    "daily": time_key('%Y-%m-%d', offset='DateOffset'),
+    "weekly": time_key('%Y %U', offset='Week'),
+    "monthly": time_key('%Y-%m', offset='MonthBegin'),
+    "yearly": time_key('%Y', offset='YearBegin'),
+}

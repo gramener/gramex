@@ -271,10 +271,10 @@ class TestRateLimit(TestGramex):
         # ratelimit.keys dicts need a function:
         with assert_raises(ValueError) as cm:
             setup({'keys': {'x': 0}, 'limit': 5}, gramex.conf.app.ratelimit)
-        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function:")
+        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function/key:")
         with assert_raises(ValueError) as cm:
             setup({'keys': [{'x': 0}], 'limit': 5}, gramex.conf.app.ratelimit)
-        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function:")
+        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function/key:")
 
         # ratelimit.keys can be a predefined key string
         for key in ('hourly', 'daily', 'weekly', 'monthly', 'yearly', 'user'):
@@ -282,6 +282,9 @@ class TestRateLimit(TestGramex):
 
         # ratelimit.keys can be a dict with a function. Defines a single key
         ok_(setup({'keys': {'function': '0'}, 'limit': 5}, gramex.conf.app.ratelimit))
+
+        # ratelimit.keys can be a dict with a key
+        ok_(setup({'keys': {'key': 'daily'}, 'limit': 5}, gramex.conf.app.ratelimit))
 
         # ratelimit.keys can be a comma-separated string
         cls = setup({'keys': 'daily, user', 'limit': 5}, gramex.conf.app.ratelimit)
@@ -337,7 +340,7 @@ class TestRateLimit(TestGramex):
         with assert_raises(ValueError) as cm:
             setup([{'keys': 'daily', 'limit': 10}, {'keys': 'weekly'}], gramex.conf.app.ratelimit)
 
-    def check_rate(self, url, user, limit, remaining, code=OK):
+    def check_rate(self, url, user, limit, remaining, code=OK, expiry='daily'):
         # If user= is specified, send an {'id': user} object via headers
         headers = {}
         if user is not None:
@@ -352,8 +355,8 @@ class TestRateLimit(TestGramex):
             eq_(r.headers['X-Ratelimit-Remaining'], str(remaining))
             # Check expiry time to plus/minus 2 seconds.
             # NOTE: This test may fail if running exactly at UTC midnight
-            eod = pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=1)
-            expiry = int((eod - pd.Timestamp.utcnow()).total_seconds())
+            if expiry in gramex.handlers.basehandler._PREDEFINED_KEYS:
+                expiry = gramex.handlers.basehandler._PREDEFINED_KEYS[expiry]['expiry']()
             ok_(expiry - 2 <= int(r.headers['X-Ratelimit-Reset']) <= expiry + 2)
             # Retry-After header should be sent only for
             if code == TOO_MANY_REQUESTS:
@@ -389,6 +392,18 @@ class TestRateLimit(TestGramex):
         self.check_rate('/ratelimit/a', 'beta', 3, 2)
         self.check_rate('/ratelimit/b', 'alpha', 3, 1)
         self.check_rate('/ratelimit/b', 'beta', 3, 1)
+
+    def test_ratelimit_key_function(self):
+        self.check('/ratelimit/reset3')
+        self.check('/ratelimit/reset3?user=alpha')
+        self.check('/ratelimit/reset3?user=beta')
+        # alpha has a 4 daily limit. Others (including beta): 3 hourly
+        self.check_rate('/ratelimit/key', 'alpha', 4, 3, expiry='daily')
+        self.check_rate('/ratelimit/key', 'alpha', 4, 2, expiry='daily')
+        self.check_rate('/ratelimit/key', 'beta', 3, 2, expiry='hourly')
+        self.check_rate('/ratelimit/key', 'beta', 3, 1, expiry='hourly')
+        self.check_rate('/ratelimit/key', None, 3, 2, expiry='hourly')
+        self.check_rate('/ratelimit/key', None, 3, 1, expiry='hourly')
 
     def test_multiple_ratelimit(self):
         self.check('/ratelimit/reset')
