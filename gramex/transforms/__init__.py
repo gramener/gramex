@@ -3,7 +3,7 @@
 from .auth import ensure_single_session
 from .template import template, sass, scss, ts, vue
 from .transforms import build_transform, build_pipeline, build_log_info, condition, flattener, once
-from .transforms import handler, handler_expr, Header
+from .transforms import handler, handler_expr, time_key, Header
 
 # Import common libraries with their popular abbreviations.
 # This lets build_transform() to use, for e.g., `pd.concat()` instead of `pandas.concat()`.
@@ -25,6 +25,7 @@ __all__ = [
     'once',
     'handler',
     'handler_expr',
+    'time_key',
     'Header',
     'pd',
     'np',
