@@ -24,7 +24,7 @@ ui_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = _join(ui_dir, 'config.yaml')
 cache_dir = _join(variables['GRAMEXDATA'], 'apps', 'ui')
 sass_bin = _join(ui_dir, 'node_modules', 'sass', 'sass.js')
-ts_path = _join(ui_dir, 'node_modules', 'typescript', 'bin', 'tsc')
+ts_path = _join(ui_dir, 'node_modules', 'esbuild', 'bin', 'esbuild')
 vue_path = _join(ui_dir, 'node_modules', '@vue', 'cli-service', 'bin', 'vue-cli-service')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
@@ -224,20 +224,25 @@ def sass2(
 
 @coroutine
 def jscompiler(
-    handler: gramex.handlers.FileHandler, path: str, target_ext: str, exe: str, cmd: str
+    handler: gramex.handlers.FileHandler,
+    path: str,
+    target_ext: str,
+    exe: str,
+    cmd: str,
+    options: dict = {},
 ) -> bytes:
     '''Compile a file (Vue, TypeScript), etc into a JS file using Node.js
 
     Examples:
         >>> jscompiler(
-        ...     handler, path='x.ts', target_ext='.js', exe='/path/to/tsc',
+        ...     handler, path='x.ts', target_ext='.js', exe='/path/to/esbuild',
         ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
 
     Parameters:
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
         path: absolute path of input file to compile into JavaScript
         target_ext: extension of output file (e.g. `.js`, `.min.js`)
-        exe: path to the compiler's JS executable (e.g. `/path/to/tsc`)
+        exe: path to the compiler's JS executable (e.g. `/path/to/esbuild`)
         cmd: command line to run. This substitutes 3 variables:
             - `$exe` for the `exe` parameter
             - `$filename` for the absolute path to the input file
@@ -250,7 +255,8 @@ def jscompiler(
     # Create cache key based on state = path. Output to <cache-key>.js
     path = os.path.normpath(path).replace('\\', '/')
     ext = os.path.splitext(path)[-1]
-    cache_key = _get_cache_key([path])
+    options = ' '.join(f'--{key}={handler.get_arg(key, val)}' for key, val in options.items())
+    cache_key = _get_cache_key([path, options])
     target_dir = _join(cache_dir, f'{ext}-{cache_key}')
     target = os.path.join(target_dir, os.path.basename(path[: -len(ext)] + target_ext))
 
@@ -258,7 +264,7 @@ def jscompiler(
     if not os.path.exists(target) or os.stat(path).st_mtime > os.stat(target).st_mtime:
         cwd, filename = os.path.split(path)
         subs = {'exe': exe, 'filename': filename, 'targetDir': target_dir}
-        cmd = [string.Template(x).substitute(subs) for x in cmd.split()]
+        cmd = [string.Template(x).substitute(subs) for x in cmd.format(OPTIONS=options).split()]
         app_log.debug(f'Compiling .{ext}: {" ".join(cmd)}')
         proc = yield gramex.service.threadpool.submit(
             subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8'
@@ -273,13 +279,25 @@ ts = partial(
     jscompiler,
     target_ext='.js',
     exe=ts_path,
-    cmd='node --unhandled-rejections=strict $exe $filename --outDir $targetDir --sourceMap',
+    options={
+        'format': 'iife',
+        'bundle': 'true',
+        'minify': 'true',
+        'target': 'esnext',
+        'charset': 'utf8',
+        'global-name': '',
+        'keep-names': 'false',
+        'drop:debugger': 'false',
+        'drop:console': 'false',
+    },
+    cmd='node $exe {OPTIONS} --allow-overwrite --sourcemap --outdir=$targetDir $filename',
 )
 vue = partial(
     jscompiler,
     target_ext='.min.js',
     exe=vue_path,
-    cmd='node --unhandled-rejections=strict $exe build --target wc $filename --dest $targetDir',
+    options={'target': 'wc'},
+    cmd='node --unhandled-rejections=strict $exe build {OPTIONS} $filename --dest $targetDir',
 )
 
 

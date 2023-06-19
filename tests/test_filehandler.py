@@ -206,11 +206,11 @@ class TestFileHandler(TestGramex):
     def test_ts(self):
         for dir in ('/dir/transform-ts', '/dir/ts-file'):
             for name in ('a', 'b'):
-                url = f'{dir}/{name}.ts'
+                url = f'{dir}/{name}.ts?minify=false&bundle=true'
                 text = self.check(
                     url, timeout=30, headers={'Content-Type': 'text/javascript'}
                 ).text
-                # TypeScript transpiles into ES3 by default, converting const to var.
+                # esbuild --minify=false --bundle=true converts const to var
                 # So check for 'var a =' in output, though source uses 'const a ='
                 ok_(f'var {name} = ' in text, f'{url}: has correct content')
                 self.check_sourcemap(url, text)
