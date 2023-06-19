@@ -74,7 +74,7 @@ gramex.handlers.basehandler.BaseMixin.setup_transform,url.*.kwargs.session,2
 gramex.handlers.basehandler.BaseMixin._purge_keys,url.*.kwargs.auth,7
 gramex.handlers.basehandler.BaseMixin._get_store,url.*.kwargs.cache,2
 gramex.handlers.basehandler.BaseMixin.setup_session,url.*.kwargs.session,3
-gramex.handlers.basehandler.BaseMixin.setup_ratelimit,url.*.kwargs.ratelimit,5
+gramex.handlers.basehandler.BaseMixin.setup_ratelimit,url.*.kwargs.ratelimit,4
 gramex.handlers.basehandler.BaseMixin.reset_ratelimit,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseMixin.setup_redirect,url.*.kwargs.redirect,13
 gramex.handlers.basehandler.BaseMixin.setup_auth,url.*.kwargs.auth,8
@@ -97,17 +97,16 @@ gramex.handlers.basehandler.BaseMixin._set_new_session_id,url.*.kwargs.auth,4
 gramex.handlers.basehandler.BaseMixin.get_session,url.*.kwargs.auth,6
 gramex.handlers.basehandler.BaseMixin.save_session,url.*.kwargs.auth,2
 gramex.handlers.basehandler.BaseMixin.otp,url.*.kwargs.auth,2
-gramex.handlers.basehandler.BaseMixin.get_otp,url.*.kwargs.auth,4
+gramex.handlers.basehandler.BaseMixin.get_otp,url.*.kwargs.auth,5
 gramex.handlers.basehandler.BaseMixin.revoke_otp,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.apikey,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.revoke_apikey,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.override_user,url.*.kwargs.auth,7
 gramex.handlers.basehandler.BaseMixin.set_last_visited,url.*.kwargs.auth,3
-gramex.handlers.basehandler.BaseMixin.check_ratelimit,url.*.kwargs.ratelimit,3
+gramex.handlers.basehandler.BaseMixin.check_ratelimit,url.*.kwargs.ratelimit,8
 gramex.handlers.basehandler.BaseMixin.update_ratelimit,url.*.kwargs.ratelimit,4
 gramex.handlers.basehandler.BaseMixin.set_ratelimit_headers,url.*.kwargs.ratelimit,2
 gramex.handlers.basehandler.BaseHandler.initialize,url,3
-gramex.handlers.basehandler.BaseHandler.get_arg,url,3
 gramex.handlers.basehandler.BaseHandler.prepare,url,2
 gramex.handlers.basehandler.BaseHandler.set_default_headers,url,1
 gramex.handlers.basehandler.BaseHandler.on_finish,url,2
@@ -125,7 +124,7 @@ gramex.handlers.comichandler.*,url.*.handler=ComicHandler|Comic,6
 gramex.handlers.drivehandler.*,url.*.handler=DriveHandler|Storage,36
 gramex.handlers.filehandler.*,url.*.handler=FileHandler|DirectoryHandler|File,59
 gramex.handlers.filterhandler.*,url.*.handler=FilterHandler|Filter,1
-gramex.handlers.formhandler.*,url.*.handler=FormHandler|Data,63
+gramex.handlers.formhandler.*,url.*.handler=FormHandler|Data,62
 gramex.handlers.functionhandler.*,url.*.handler=FunctionHandler|Function,14
 gramex.handlers.jsonhandler.*,url.*.handler=JSONHandler|JSON,31
 gramex.handlers.mlhandler.get_model,url.*.handler=MLHandler|ML,6

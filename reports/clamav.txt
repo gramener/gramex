@@ -26,7 +26,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\gramexadmin.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\schedule.js: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\admin2\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\capture.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\chromecapture.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\capture\index.html: OK
@@ -83,7 +82,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\logviewer\package.json: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\logviewer\render.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\logviewer\script.js: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\logviewer\__init__.py: Empty file
-C:\site\gramener.com\viz\async-gramex\gramex\apps\logviewer\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\mail\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\mail\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\mail\mailapp.py: OK
@@ -239,7 +237,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\apps\update\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\update\gramexupdate.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\update\index.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\apps\update\README.md: OK
-C:\site\gramener.com\viz\async-gramex\gramex\apps\update\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\apps\__init__.py: Empty file
 C:\site\gramener.com\viz\async-gramex\gramex\apps.yaml: OK
 C:\site\gramener.com\viz\async-gramex\gramex\cache.py: OK
@@ -262,6 +259,7 @@ C:\site\gramener.com\viz\async-gramex\gramex\handlers\auth.template.html: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\authhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\basehandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\capturehandler.py: OK
+C:\site\gramener.com\viz\async-gramex\gramex\handlers\chatgpthandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\comichandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\drivehandler.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\handlers\filehandler.py: OK
@@ -312,7 +310,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\services\ttlcache.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\services\urlcache.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\services\watcher.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\services\__init__.py: OK
-C:\site\gramener.com\viz\async-gramex\gramex\services\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\gramex\sm_api.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\topcause.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\transformers.py: OK
@@ -324,7 +321,6 @@ C:\site\gramener.com\viz\async-gramex\gramex\transforms\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\winservice.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\__init__.py: OK
 C:\site\gramener.com\viz\async-gramex\gramex\__main__.py: OK
-C:\site\gramener.com\viz\async-gramex\gramex\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\LICENSE: OK
 C:\site\gramener.com\viz\async-gramex\MANIFEST.in: OK
 C:\site\gramener.com\viz\async-gramex\mkdocs: Excluded
@@ -366,8 +362,10 @@ C:\site\gramener.com\viz\async-gramex\pytest\features_basic\expected.csv: OK
 C:\site\gramener.com\viz\async-gramex\pytest\features_basic\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pytest\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pytest\messages.db: OK
-C:\site\gramener.com\viz\async-gramex\pytest\roles.db: OK
+C:\site\gramener.com\viz\async-gramex\pytest\mockgpt.py: OK
+C:\site\gramener.com\viz\async-gramex\pytest\mockgpt.yaml: OK
 C:\site\gramener.com\viz\async-gramex\pytest\run.sh: OK
+C:\site\gramener.com\viz\async-gramex\pytest\test_chatgpthandler.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_cli.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_data.py: OK
 C:\site\gramener.com\viz\async-gramex\pytest\test_json.py: OK
@@ -456,17 +454,12 @@ C:\site\gramener.com\viz\async-gramex\testlib\test_store.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_transforms.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\test_watch.py: OK
 C:\site\gramener.com\viz\async-gramex\testlib\__init__.py: OK
-C:\site\gramener.com\viz\async-gramex\testlib\__pycache__: Excluded
-C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db: OK
-C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-shm: OK
-C:\site\gramener.com\viz\async-gramex\tests\.cache-url\cache.db-wal: Empty file
 C:\site\gramener.com\viz\async-gramex\tests\.secrets.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\.snyk: OK
 C:\site\gramener.com\viz\async-gramex\tests\403-template.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\actors.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\auth2.html: OK
-C:\site\gramener.com\viz\async-gramex\tests\authtemplate.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\circles.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\dbutils.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\dir\.allow: Empty file
@@ -551,8 +544,6 @@ C:\site\gramener.com\viz\async-gramex\tests\gramextest.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\index.template.html: OK
 C:\site\gramener.com\viz\async-gramex\tests\install-test-flat.zip: OK
 C:\site\gramener.com\viz\async-gramex\tests\install-test.zip: OK
-C:\site\gramener.com\viz\async-gramex\tests\login.csv: OK
-C:\site\gramener.com\viz\async-gramex\tests\login.xlsx: OK
 C:\site\gramener.com\viz\async-gramex\tests\lookup.xlsx: OK
 C:\site\gramener.com\viz\async-gramex\tests\openapiresponse.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\otp.db: OK
@@ -572,7 +563,6 @@ C:\site\gramener.com\viz\async-gramex\tests\sass\vars.scss: OK
 C:\site\gramener.com\viz\async-gramex\tests\server.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\subapp\gramex.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\subapp\subapp.py: OK
-C:\site\gramener.com\viz\async-gramex\tests\subapp\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\tests\subprocess_check.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\template-alert.md: OK
 C:\site\gramener.com\viz\async-gramex\tests\template-alert.txt: OK
@@ -588,7 +578,6 @@ C:\site\gramener.com\viz\async-gramex\tests\test_capturehandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_comichandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_drivehandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_filehandler.py: OK
-C:\site\gramener.com\viz\async-gramex\tests\test_filter.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_filterhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_formhandler.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\test_functionhandler.py: OK
@@ -625,7 +614,6 @@ C:\site\gramener.com\viz\async-gramex\tests\titanic\model.pkl: OK
 C:\site\gramener.com\viz\async-gramex\tests\titanic.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\a.ts: OK
 C:\site\gramener.com\viz\async-gramex\tests\ts\b.ts: OK
-C:\site\gramener.com\viz\async-gramex\tests\uploads\.meta.db: OK
 C:\site\gramener.com\viz\async-gramex\tests\userdata.csv: OK
 C:\site\gramener.com\viz\async-gramex\tests\utils.py: OK
 C:\site\gramener.com\viz\async-gramex\tests\vega-lite.yaml: OK
@@ -633,19 +621,17 @@ C:\site\gramener.com\viz\async-gramex\tests\vega.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\vegam.yaml: OK
 C:\site\gramener.com\viz\async-gramex\tests\vue\comp-a.vue: OK
 C:\site\gramener.com\viz\async-gramex\tests\vue\comp-b.vue: OK
-C:\site\gramener.com\viz\async-gramex\tests\vue\node_modules: Excluded
 C:\site\gramener.com\viz\async-gramex\tests\__init__.py: OK
-C:\site\gramener.com\viz\async-gramex\tests\__pycache__: Excluded
 C:\site\gramener.com\viz\async-gramex\TODO.md: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8668608
+Known viruses: 8669262
 Engine version: 0.105.1
-Scanned directories: 101
-Scanned files: 604
+Scanned directories: 98
+Scanned files: 600
 Infected files: 0
-Data scanned: 9.77 MB
-Data read: 4.79 MB (ratio 2.04:1)
-Time: 33.743 sec (0 m 33 s)
-Start Date: 2023:06:08 17:15:43
-End Date:   2023:06:08 17:16:17
+Data scanned: 9.76 MB
+Data read: 4.72 MB (ratio 2.07:1)
+Time: 25.033 sec (0 m 25 s)
+Start Date: 2023:06:19 21:56:54
+End Date:   2023:06:19 21:57:19

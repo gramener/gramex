@@ -47,14 +47,17 @@ url:
     handler: ChatGPTHandler
     kwargs:
       url: http://localhost:$GRAMEX_PORT/mockgpt/chat
-      key: {function: "handler.get_argument('key', '')"}
+      key: { function: "handler.get_argument('key', '')" }
   chatgpthandler/history:
     pattern: /chatgpthandler/history
     handler: ChatGPTHandler
     kwargs:
       url: http://localhost:$GRAMEX_PORT/mockgpt/chat
       key: TEST-KEY
-      max_history: {function: "int(handler.get_arg('max')) if 'max' in handler.args else None"}
+      max_history:
+        {
+          function: "int(handler.get_arg('max')) if 'max' in handler.args else None",
+        }
   chatgpthandler/stream:
     pattern: /chatgpthandler/stream
     handler: ChatGPTHandler

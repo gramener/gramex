@@ -348,7 +348,7 @@ storelocations:
     url: sqlite:///$GRAMEXDATA/auth.recover.db
     table: users
     columns:
-      token: {type: TEXT, primary_key: true}
+      token: { type: TEXT, primary_key: true }
       user: TEXT
       type: TEXT
       expire: REAL # Seconds since epoch

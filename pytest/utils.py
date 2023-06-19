@@ -18,15 +18,15 @@ def gramex_port():
         return port
     # Normally, we just need to wait for requests.get('localhost:9999').
     # But if Tornado binds to the port but hasn't started, requests returns an error.
-    # So we wait for 1 second (100 times with a 0.01s delay) until Tornado starts.
+    # So we wait for 1 second (10 times with a 0.1s delay) until Tornado starts.
     for x in range(10):
         try:
-            r = requests.get(f'http://localhost:{port}', timeout=0.1)
+            r = requests.get(f'http://localhost:{port}')
             if r.status_code == 200:
                 info['gramex_started'] = True
                 return port
         except requests.exceptions.ConnectionError:
-            time.sleep(0.01)
+            time.sleep(0.1)
     return None
 
 

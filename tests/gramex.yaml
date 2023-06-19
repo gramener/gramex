@@ -213,7 +213,6 @@ url:
       function: >
         handler.reset_ratelimit('pool2', [os.environ.get('HOME', ''), pd.Timestamp.utcnow().strftime('%Y-%m-%d')], 0)
 
-
   ratelimit/key:
     pattern: /ratelimit/key
     handler: FunctionHandler
