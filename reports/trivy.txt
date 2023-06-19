@@ -1,38 +1,18 @@
 
-gramener/gramex:1.91.0 (alpine 3.17.3)
+gramener/gramex:1.91.1 (alpine 3.17.4)
 ======================================
-Total: 4 (UNKNOWN: 0, LOW: 0, MEDIUM: 2, HIGH: 2, CRITICAL: 0)
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
 
-┌────────────┬───────────────┬──────────┬───────────────────┬───────────────┬────────────────────────────────────────────────────────────┐
-│  Library   │ Vulnerability │ Severity │ Installed Version │ Fixed Version │                           Title                            │
-├────────────┼───────────────┼──────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────────────┤
-│ libcrypto3 │ CVE-2023-2650 │ HIGH     │ 3.0.8-r3          │ 3.0.9-r0      │ Possible DoS translating ASN.1 object identifiers          │
-│            │               │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-2650                  │
-│            ├───────────────┼──────────┤                   ├───────────────┼────────────────────────────────────────────────────────────┤
-│            │ CVE-2023-1255 │ MEDIUM   │                   │ 3.0.8-r4      │ Input buffer over-read in AES-XTS implementation on 64 bit │
-│            │               │          │                   │               │ ARM                                                        │
-│            │               │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-1255                  │
-├────────────┼───────────────┼──────────┤                   ├───────────────┼────────────────────────────────────────────────────────────┤
-│ libssl3    │ CVE-2023-2650 │ HIGH     │                   │ 3.0.9-r0      │ Possible DoS translating ASN.1 object identifiers          │
-│            │               │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-2650                  │
-│            ├───────────────┼──────────┤                   ├───────────────┼────────────────────────────────────────────────────────────┤
-│            │ CVE-2023-1255 │ MEDIUM   │                   │ 3.0.8-r4      │ Input buffer over-read in AES-XTS implementation on 64 bit │
-│            │               │          │                   │               │ ARM                                                        │
-│            │               │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-1255                  │
-└────────────┴───────────────┴──────────┴───────────────────┴───────────────┴────────────────────────────────────────────────────────────┘
 
 Python (python-pkg)
 ===================
-Total: 3 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 1, CRITICAL: 0)
+Total: 2 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 0, CRITICAL: 0)
 
 ┌─────────────────────────┬─────────────────────┬──────────┬───────────────────┬───────────────┬────────────────────────────────────────────────────┐
 │         Library         │    Vulnerability    │ Severity │ Installed Version │ Fixed Version │                       Title                        │
 ├─────────────────────────┼─────────────────────┼──────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────┤
 │ cryptography (METADATA) │ GHSA-5cpq-8wj7-hf2v │ LOW      │ 39.0.1            │ 41.0.0        │ Vulnerable OpenSSL included in cryptography wheels │
 │                         │                     │          │                   │               │ https://github.com/advisories/GHSA-5cpq-8wj7-hf2v  │
-├─────────────────────────┼─────────────────────┼──────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────┤
-│ redis (METADATA)        │ CVE-2023-31655      │ HIGH     │ 4.5.5             │               │ contain a segmentation violation in redisraft.c    │
-│                         │                     │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-31655         │
 ├─────────────────────────┼─────────────────────┼──────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────┤
 │ requests (METADATA)     │ CVE-2023-32681      │ MEDIUM   │ 2.29.0            │ 2.31.0        │ Unintended leak of Proxy-Authorization header      │
 │                         │                     │          │                   │               │ https://avd.aquasec.com/nvd/cve-2023-32681         │

@@ -405,7 +405,6 @@ url:
       index: true # Display directory indices
       sass: ["*.scss", "*.sass"] # Handle SASS files
       ts: ["*.ts"] # Handle TypeScript files
-      vue: ["*.vue"] # Handle Vue files
       template: # Handle template files
         - "*.template.html"
         - "*.tmpl.html"
