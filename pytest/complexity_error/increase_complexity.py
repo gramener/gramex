@@ -1,41 +1,84 @@
-"""_summary_
-this file will be considered in complexity calculation
-"""
-
-
-def lcs(x, y):
-    m = len(x)
-    n = len(y)
-    lcs = [[0] * (n + 1) for i in range(m + 1)]
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if x[i - 1] == y[j - 1]:
-                lcs[i][j] = lcs[i - 1][j - 1] + 1
-            else:
-                lcs[i][j] = max(lcs[i - 1][j], lcs[i][j - 1])
-    return lcs[m][n]
-
-
-# Complexity: O(n log n) in worst case
-def merge_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    mid = len(arr) // 2
-    left = merge_sort(arr[:mid])
-    right = merge_sort(arr[mid:])
-    return merge(left, right)
-
-
-def merge(left, right):
-    result = []
-    i, j = 0, 0
-    while i < len(left) and j < len(right):
-        if left[i] <= right[j]:
-            result.append(left[i])
-            i += 1
-        else:
-            result.append(right[j])
-            j += 1
-    result += left[i:]
-    result += right[j:]
-    return result
+def high_complexity(a):
+    '''This is an unused function with high cyclomatic complexity. Used as a test case.'''
+    if a == 1:
+        return 1
+    elif a == 2:
+        return 2
+    elif a == 3:
+        return 3
+    elif a == 4:
+        return 4
+    elif a == 5:
+        return 5
+    elif a == 6:
+        return 6
+    elif a == 7:
+        return 7
+    elif a == 8:
+        return 8
+    elif a == 9:
+        return 9
+    elif a == 10:
+        return 10
+    elif a == 11:
+        return 11
+    elif a == 12:
+        return 12
+    elif a == 13:
+        return 13
+    elif a == 14:
+        return 14
+    elif a == 15:
+        return 15
+    elif a == 16:
+        return 16
+    elif a == 17:
+        return 17
+    elif a == 18:
+        return 18
+    elif a == 19:
+        return 19
+    elif a == 20:
+        return 20
+    elif a == 21:
+        return 21
+    elif a == 22:
+        return 22
+    elif a == 23:
+        return 23
+    elif a == 24:
+        return 24
+    elif a == 25:
+        return 25
+    elif a == 26:
+        return 26
+    elif a == 27:
+        return 27
+    elif a == 28:
+        return 28
+    elif a == 29:
+        return 29
+    elif a == 30:
+        return 30
+    elif a == 31:
+        return 31
+    elif a == 32:
+        return 32
+    elif a == 33:
+        return 33
+    elif a == 34:
+        return 34
+    elif a == 35:
+        return 35
+    elif a == 36:
+        return 36
+    elif a == 37:
+        return 37
+    elif a == 38:
+        return 38
+    elif a == 39:
+        return 39
+    elif a == 40:
+        return 40
+    elif a == 41:
+        return 41
