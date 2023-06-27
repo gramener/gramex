@@ -1,7 +1,7 @@
 '''Utility functions for actions or conversions'''
 
 from .auth import ensure_single_session
-from .template import template, sass, scss, ts, vue
+from .template import template, sass, scss, ts
 from .transforms import build_transform, build_pipeline, build_log_info, condition, flattener, once
 from .transforms import handler, handler_expr, time_key, Header
 
@@ -18,7 +18,6 @@ __all__ = [
     'sass',
     'scss',
     'ts',
-    'vue',
     'ensure_single_session',
     'condition',
     'flattener',

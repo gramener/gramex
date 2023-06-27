@@ -80,27 +80,6 @@ def ts(content, handler):
     return result.decode('utf-8')
 
 
-@tornado.gen.coroutine
-def vue(content, handler):
-    '''Renders a Vue file as JS web component via @vue/cli in a FileHandler.
-
-    This can be used as a keyword argument to FileHandler:
-
-    ```yaml
-    pattern: /file.vue
-    handler: FileHandler
-    kwargs:
-        ...
-        template: '*.vue'
-    ```
-    '''
-    from gramex.apps.ui import vue
-
-    # Ignore the content provided. vue needs the file actually located at handler.path.
-    result = yield vue(handler, handler.path)
-    return result.decode('utf-8')
-
-
 class CacheLoader(tornado.template.Loader):
     # Like tornado.template.Loader, but caching only until underlying file is changed.
     # Used internally by BaseHandler to override the Tornado default template loader.

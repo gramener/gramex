@@ -25,7 +25,6 @@ config_file = _join(ui_dir, 'config.yaml')
 cache_dir = _join(variables['GRAMEXDATA'], 'apps', 'ui')
 sass_bin = _join(ui_dir, 'node_modules', 'sass', 'sass.js')
 ts_path = _join(ui_dir, 'node_modules', 'esbuild', 'bin', 'esbuild')
-vue_path = _join(ui_dir, 'node_modules', '@vue', 'cli-service', 'bin', 'vue-cli-service')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
 
@@ -231,7 +230,7 @@ def jscompiler(
     cmd: str,
     options: dict = {},
 ) -> bytes:
-    '''Compile a file (Vue, TypeScript), etc into a JS file using Node.js
+    '''Compile a file (e.g. TypeScript) into a JS file using Node.js
 
     Examples:
         >>> jscompiler(
@@ -290,13 +289,6 @@ ts = partial(
     },
     cmd='node $exe {OPTIONS} --allow-overwrite --sourcemap --outdir=$targetDir $filename',
 )
-vue = partial(
-    jscompiler,
-    target_ext='.min.js',
-    exe=vue_path,
-    options={'target': 'wc'},
-    cmd='node --unhandled-rejections=strict $exe build {OPTIONS} $filename --dest $targetDir',
-)
 
 
 def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> bytes:
@@ -313,7 +305,7 @@ def _sourcemap(handler: gramex.handlers.FileHandler, target: str, mime: str) -> 
     Returns:
         source map or target file contents
 
-    This is used by FileHandlers compiling Vue, TS, SASS, etc.
+    This is used by FileHandlers compiling TS, SASS, etc.
 
     If the URL has a ?_map, it serves `{target}.map` as a JSON file.
     Else it serves the `{target}` as `mime` type,

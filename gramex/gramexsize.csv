@@ -188,7 +188,6 @@ gramex.transforms.auth.ensure_single_session,url.*.handlers.kwargs.action.functi
 gramex.transforms.template.template,url.*.kwargs.template,4
 gramex.transforms.template.scss,url.*.kwargs.scss,1
 gramex.transforms.template.ts,url.*.kwargs.ts,1
-gramex.transforms.template.vue,url.*.kwargs.vue,1
 gramex.transforms.template.CacheLoader.*,url.*.kwargs.template,3
 gramex.transforms.transforms.identity,TODO - if any PY code uses @handler,1
 gramex.transforms.transforms._arg_repr,TODO - same as build_transform (maybe always),4

@@ -6,6 +6,6 @@ ignore:
   # Since this is not part of Gramex and is only used in the build process, it's acceptable.
   SNYK-JS-WORDWRAP-3149973:
     - '*':
-        reason: No fix available. Await @vue/cli-service upgrade
+        reason: No fix available. Await eslint upgrade
         expires: 2023-06-30T00:00:00.000Z
         created: 2023-04-10T00:00:00.000Z

@@ -191,18 +191,6 @@ class TestFileHandler(TestGramex):
         # TODO: Invalid file should generate a compilation failure
         # TODO: Changing file should recompile
 
-    def test_vue(self):
-        for dir in ('/dir/transform-vue', '/dir/vue-file'):
-            for name in ('a', 'b'):
-                url = f'{dir}/comp-{name}.vue'
-                text = self.check(
-                    url, timeout=30, headers={'Content-Type': 'text/javascript'}
-                ).text
-                ok_(f'Component: {name}' in text, f'{url}: has component name')
-                self.check_sourcemap(url, text)
-        # TODO: Invalid file should generate a compilation failure
-        # TODO: Changing file should recompile
-
     def test_ts(self):
         for dir in ('/dir/transform-ts', '/dir/ts-file'):
             for name in ('a', 'b'):

@@ -201,7 +201,6 @@ code2yaml:
   gramex.transforms.template.template: url.*.kwargs.template
   gramex.transforms.template.scss: url.*.kwargs.scss
   gramex.transforms.template.ts: url.*.kwargs.ts
-  gramex.transforms.template.vue: url.*.kwargs.vue
   gramex.transforms.template.CacheLoader.*: url.*.kwargs.template
   gramex.transforms.transforms.identity: TODO - if any PY code uses @handler
   gramex.transforms.transforms._arg_repr: TODO - same as build_transform (maybe always)
