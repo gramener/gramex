@@ -11,7 +11,7 @@ from gramex.config import merge
 from gramex.transforms.transforms import typelist, Header
 from gramex.handlers import BaseHandler
 
-config = gramex.cache.open('openapiconfig.yaml', 'config', rel=True)
+config = gramex.cache.open('openapiconfig.yaml', rel=True)
 
 
 def url_name(pattern):
@@ -61,7 +61,7 @@ class OpenAPIHandler(BaseHandler):
                 conf['schema']['items'] = {'type': cls.types.get(typ, 'string')}
             else:
                 conf['schema']['type'] = cls.types.get(typ, 'string')
-        spec['responses'] = deepcopy(config.responses)
+        spec['responses'] = deepcopy(config['responses'])
         return spec
 
     def formhandler_spec(self, cls, summary):
@@ -94,22 +94,26 @@ class OpenAPIHandler(BaseHandler):
             cols, sorts = [], []
             for col in dataset.get('columns', []):
                 if isinstance(col, dict):
-                    add(config.formhandler.col, name=col['name'], schema={'type': col['type']})
+                    add(
+                        config['formhandler']['col'],
+                        name=col['name'],
+                        schema={'type': col['type']},
+                    )
                     cols.append(col['name'])
                     sorts.append(col['name'])
                     sorts.append('-' + col['name'])
                 else:
-                    add(config.formhandler.col, name=col)
+                    add(config['formhandler']['col'], name=col)
                     cols.append(col)
                     sorts.append(col)
                     sorts.append('-' + col)
-            add(config.formhandler._sort, schema={'items': {'enum': sorts}})
-            add(config.formhandler._c, schema={'items': {'enum': cols}})
-            add(config.formhandler._offset)
-            add(config.formhandler._limit)
-            add(config.formhandler._meta)
+            add(config['formhandler']['_sort'], schema={'items': {'enum': sorts}})
+            add(config['formhandler']['_c'], schema={'items': {'enum': cols}})
+            add(config['formhandler']['_offset'])
+            add(config['formhandler']['_limit'])
+            add(config['formhandler']['_meta'])
         # TODO: If ID is present, allow GET, POST, DELETE. Else only GET
-        get_spec['responses'] = deepcopy(config.responses)
+        get_spec['responses'] = deepcopy(config['responses'])
         return spec
 
     def get(self):
