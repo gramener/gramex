@@ -400,9 +400,15 @@ def cache(conf: dict) -> None:
         if config.get('default'):
             for key in ['_OPEN_CACHE', '_QUERY_CACHE']:
                 old_cache = getattr(gramex.cache, key, {})
-                info.cache[name].update(old_cache)
-                setattr(gramex.cache, key, info.cache[name])
+                # Migrate cache and clear it
+                for k in old_cache.keys():
+                    try:
+                        info.cache[name].set(k, old_cache.get(k, None))
+                    except Exception:
+                        # Don't f-string the `k` into the message. It might contain a %s
+                        app_log.exception(f"cache:{name} can't migrate %r", k)
                 old_cache.clear()
+                setattr(gramex.cache, key, info.cache[name])
 
 
 def eventlog(conf: dict) -> None:

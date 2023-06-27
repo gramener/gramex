@@ -99,3 +99,6 @@ class RedisCache:
     def flush(self):
         '''Delete all keys in the current database'''
         self.store.execute_command('FLUSHDB')
+
+    def clear(self):
+        self.flush()
