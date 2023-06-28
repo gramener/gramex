@@ -990,7 +990,7 @@ class BaseMixin:
         # Add custom keys from the table to the user object.
         row['user'] = json.loads(row['user'])
         custom_keys = [key for key in row if key not in {'user', 'token', 'expire'}]
-        if isinstance(row, dict):
+        if isinstance(row['user'], dict):
             row['user'].update({key: row[key] for key in custom_keys})
         else:
             app_log.warning('Cannot add custom keys to non-dict "user" in: %r', row)
