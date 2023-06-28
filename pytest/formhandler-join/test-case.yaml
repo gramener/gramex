@@ -1,0 +1,32 @@
+kwargs:
+  url: ""
+  table: sales
+  join:
+    products:
+      type: inner
+      column:
+        products.id: sales.product_id
+    customers:
+      type: left
+      column:
+        sales.customer_id: customers.id
+expected: >
+  SELECT
+    sales.id              AS sales_id,
+    sales.customer_id     AS sales_customer_id,
+    sales.product_id      AS sales_product_id,
+    sales.sale_date       AS sales_sale_date,
+    sales.amount          AS sales_amount,
+    sales.city            AS sales_city,
+    products.id           AS sales_id,
+    products.name         AS sales_name,
+    products.price        AS sales_price,
+    products.manufacturer AS sales_manufacturer,
+    customers.id          AS sales_id,
+    customers.name        AS sales_name,
+    customers.city        AS sales_city
+  FROM sales
+    JOIN products ON products.id==sales.product_id
+    LEFT OUTER JOIN customers ON sales.customer_id==customers.id
+formatting:
+  sales_sale_date: to_datetime

@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+
+  postgres:
+    image: postgres:13.2
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432:5432
+    expose:
+      - 5432

@@ -1,0 +1,28 @@
+kwargs:
+  url: ""
+  table: sales
+  join:
+    products:
+      type: inner
+      column:
+        products.id: sales.product_id
+    customers:
+      type: left
+      column:
+        sales.customer_id: customers.id
+args:
+  _c:
+  - "id|count"
+  _by:
+  - "customer_id"
+  customer_id>:
+  - '3'
+expected: >
+  SELECT 
+    customers.id AS customer_id,
+    count(customers.id) as 'id|count'
+  FROM sales
+    JOIN products ON products.id = sales.product_id
+    LEFT OUTER JOIN customers ON sales.customer_id = customers.id
+  WHERE customers.id > 3
+    GROUP BY customers.id

@@ -59,6 +59,7 @@ def filter(
     args: dict = {},
     meta: dict = {},
     engine: str = None,
+    join: str = None,
     table: str = None,
     ext: str = None,
     id: List[str] = None,
@@ -271,6 +272,7 @@ def filter(
             argstype=argstype,
             id=id,
             table=table,
+            join=join,
             columns=columns,
             ext=ext,
             query=query,
@@ -313,7 +315,7 @@ def filter(
                 data = gramex.cache.query(table, engine, [table])
                 return _filter_frame(transform(data), meta, controls, args, argstype)
             else:
-                return _filter_db(engine, table, meta, controls, args, argstype)
+                return _filter_db(engine, table, meta, controls, args, argstype, join=join)
         else:
             raise ValueError('No table: or query: specified')
     else:
@@ -1686,6 +1688,7 @@ def _filter_db(
     argstype: Dict[str, dict] = {},
     source: str = 'select',
     id: List[str] = None,
+    join: dict = None,
 ):
     '''
     Parameters:
@@ -1698,16 +1701,76 @@ def _filter_db(
         argstype: optional dict that specifies `args` type and behavior.
         id: list of keys specific to data using which values can be updated
     '''
+
+    def get_joins(table, join):
+        if not join:
+            return table.columns, sa.select([table])
+
+        cols = {}
+        labels = []
+        label_texts = []
+        for c in table.columns:
+            cols[c.name] = c
+            labels.append(c.label(c.name))
+            label_texts.append(f"{table.name}.{c.name}")
+
+        # Identify all tables and columns required
+        tables_map = {}
+        for t in join.keys():
+            tables_map[t] = tbl = get_table(engine, t)
+            for c in tbl.columns:
+                lbl = f'{t}_{c.name}'
+                cols[lbl] = c
+                labels.append(c.label(lbl))
+                label_texts.append(f'{t}.{c.name}')
+
+        query = sa.select()
+        # Establish an explicit left side by setting the main table as the base
+        query = query.select_from(table)
+
+        for t, extras in join.items():
+            join_attr = [tables_map[t]]
+            if 'column' in extras:
+                conditions = []
+                for k, v in extras['column'].items():
+                    invalidColumns = []
+                    if k not in label_texts:
+                        invalidColumns.append(k)
+                    if v not in label_texts:
+                        invalidColumns.append(v)
+                    if len(invalidColumns) > 0:
+                        app_log.warning(f'invalid column(s): {", ". join(invalidColumns)}')
+                        continue
+
+                    conditions.append(f'{k}={v}')
+                    labels = [
+                        l
+                        for l in labels
+                        if l.name not in [k.replace('.', '_'), v.replace('.', '_')]
+                    ]
+
+                condition = sa.text(' AND '.join(conditions))
+                join_attr.append(condition)
+
+            query = query.join(
+                *join_attr,
+                isouter='type' in extras and extras['type'].lower() in ['left', 'outer'],
+            )
+
+        query = query.with_only_columns(labels)
+        return cols, query
+
     table = get_table(engine, table)
     cols = table.columns
     colslist = cols.keys()
-
     if source == 'delete':
         query = sa.delete(table)
     elif source == 'update':
         query = sa.update(table)
     else:
-        query = sa.select([table])
+        cols, query = get_joins(table, join)
+        colslist = list(cols.keys())
+
     cols_for_update = {}
     cols_having = []
     for key, vals in args.items():

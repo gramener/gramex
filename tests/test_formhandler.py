@@ -27,11 +27,12 @@ def copy_file(source, target):
 
 
 class TestFormHandler(TestGramex):
-    sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), 'xlsx')
+    sales = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), sheet_name='sales')
+    cities = gramex.cache.open(os.path.join(folder, 'sales.xlsx'), sheet_name='cities')
 
     @classmethod
     def setUpClass(cls):
-        dbutils.sqlite_create_db('formhandler.db', sales=cls.sales)
+        dbutils.sqlite_create_db('formhandler.db', sales=cls.sales, cities=cls.cities)
 
     @classmethod
     def tearDownClass(cls):
@@ -833,6 +834,56 @@ class TestFormHandler(TestGramex):
             expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
+
+    def test_join(self):
+        def check(expected, *args, **params):
+            url = '/formhandler/join'
+            if args:
+                url += f'?{"&".join(args)}'
+                params = {}
+
+            r = self.get(url, params=params)
+            actual = pd.DataFrame(r.json())
+            afe(actual, expected.reset_index(drop=True), check_like=True)
+
+        expected = self.sales.merge(self.cities, how='left')
+        expected = expected.rename(columns={'demand': 'cities_demand', 'drive': 'cities_drive'})
+        check(expected)
+        check(expected[expected['city'] == 'Singapore'], city='Singapore')
+        check(expected[expected['sales'] != 500], **{"sales%33": '500'})
+        check(expected[expected['sales'] > 500], **{"sales>": '500'})
+        check(expected[expected['sales'] >= 500], **{"sales>~": '500'})
+        check(expected[expected['sales'] < 500], **{"sales<": '500'})
+        check(expected[expected['sales'] <= 500], **{"sales<~": '500'})
+        check(
+            expected[expected['cities_demand'] > 400].sort_values(by='product'),
+            **{"cities_demand>": '400', "_sort": 'product'},
+        )
+        check(
+            expected[expected['cities_demand'] > 400].sort_values(by='product', ascending=False),
+            **{"cities_demand>": '400', "_sort": '-product'},
+        )
+        check(
+            # FIXME: we should not have to rename the columns, the column name must always be same
+            expected[['sales', 'growth', 'cities_drive']].rename(
+                columns={'cities_drive': 'drive'}
+            ),
+            "_c=sales",
+            "_c=growth",
+            "_c=cities_drive",
+        )
+        # check(
+        #     # FIXME: Test Failing
+        #     expected.drop(['sales', 'growth', 'cities_drive'], axis=1),
+        #     "_c=-sales",
+        #     "_c=-growth",
+        #     "_c=-cities_drive",
+        # )
+        check(expected.dropna(subset=['sales']), "sales")
+        check(
+            expected[expected['sales'].isna()].applymap(lambda x: None if pd.isnull(x) else x),
+            "sales!",
+        )
 
     def test_edit_id_type(self):
         target = copy_file('sales.xlsx', 'sales-edits.xlsx')

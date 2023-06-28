@@ -1231,6 +1231,18 @@ url:
       formats:
         json:
           date_format: iso
+  formhandler/join:
+    pattern: /formhandler/join
+    handler: FormHandler
+    kwargs:
+      url: sqlite:///formhandler.db
+      table: sales
+      join:
+        cities:
+          type: left
+          column:
+            sales.city: cities.city
+            sales.nonexistent: cities.nonexistent
   formhandler/dir:
     pattern: /formhandler/dir
     handler: FormHandler
