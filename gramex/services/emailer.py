@@ -139,8 +139,13 @@ class SMTPMailer:
         '''
         sender = kwargs.get('sender', self.email)
         # SES allows restricting the From: address. https://amzn.to/2Kqwh2y
+        # SES uses an IAM ID for login (self.email), but restricts sender -- so from= is required
         # Mailgun suggests From: be the same as Sender: http://bit.ly/2tGS5wt
-        kwargs.setdefault('from', sender)
+        # If mail(from=) is specified, use that as the sender. Else use email: from the service
+        if kwargs.get('from', None):
+            sender = kwargs['from']
+        else:
+            kwargs['from'] = sender
         # Identify recipients from to/cc/bcc fields.
         # Note: We MUST explicitly add EVERY recipient (to/cc/bcc) in sendmail(recipients=)
         to = recipients(**kwargs)
