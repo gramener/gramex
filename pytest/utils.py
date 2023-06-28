@@ -1,6 +1,7 @@
 '''
 Test utilities to create and drop databases.
 '''
+import contextlib
 import os
 import requests
 import sqlalchemy as sa
@@ -28,6 +29,17 @@ def gramex_port():
         except requests.exceptions.ConnectionError:
             time.sleep(0.1)
     return None
+
+
+def remove_if_possible(target):
+    '''
+    os.remove(file).
+    But ignore Windows antivirus software preventing deletion
+    '''
+    if not os.path.exists(target):
+        return
+    with contextlib.suppress(PermissionError):
+        os.remove(target)
 
 
 def mysql_create_db(server, database, **tables):

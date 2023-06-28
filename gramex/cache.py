@@ -219,6 +219,7 @@ def read_excel(
     table: str = None,
     name: str = None,
     range: str = None,
+    links: Union[Dict[str, str], bool] = None,
     header: Union[None, int, List[int]] = ...,
     **kwargs: dict,
 ) -> pd.DataFrame:
@@ -240,6 +241,9 @@ def read_excel(
         range: Cell range to load from sheet, e.g. `'A1:C10'`
         header: Row (0-indexed) to use for the column labels. A list of integers is combined into
             a MultiIndex. Use None if there is no header.
+        links: optional dictionary to extract hyperlinks from column names into a new column, e.g.
+            `{'issue': 'issue_link'}` extracts the URL from the `issue` column into `issue_link`.
+            Set to True to extract all available hyperlinks into a new column `{col}_link`.
         **kwargs: If neither `table`, nor `name`, nor `range` is specified, loads entire
             sheet via `pd.read_excel`, passing the remaining kwargs.
 
@@ -248,7 +252,7 @@ def read_excel(
 
     Note: `table` takes priority over `name` takes priority over `range`.
     '''
-    if not any((range, name, table)):
+    if not any((range, name, table, links)):
         # Pandas defaults to xlrd, but we prefer openpyxl
         kwargs.setdefault('engine', 'openpyxl')
         return pd.read_excel(
@@ -279,25 +283,53 @@ def read_excel(
         # Excel may store this as =Table[[#All],[Col1]:[Col5]], which isn't a valid range.
         # Currently, we ignore that, and assumed that the name is like Sheet1!A1:C10
         range = defined_name.attr_text.split('!')[-1]
+    elif not range:
+        range = ws.dimensions
 
-    vals = ws[range]
-    if isinstance(vals, tuple):
-        data = pd.DataFrame([[cell.value for cell in row] for row in vals])
-    else:
-        data = pd.DataFrame([[vals.value]])
+    # If range is a single cell, ws[range] returns the value. cells ensures it's a 2D tuple
+    cells = ws[range] if isinstance(ws[range], tuple) else ((ws[range],),)
+    data = pd.DataFrame([[cell.value for cell in row] for row in cells])
     # Header defaults to 0 if undefined. If it's not None, apply the header
     header = 0 if header is ... else header
     if header is not None:
-        data = (
-            data.T.set_index(header)
-            .T.reset_index(  # Set header rows as column names
-                drop=True
-            )  # Drop index with "holes" where headers were
-            .rename_axis(  # Column name has header index (e.g. 0). Drop it
-                [None] * len(header) if isinstance(header, (list, tuple)) else None, axis=1
+        # Set header rows as column names
+        data = data.T.set_index(header).T
+        # The index will now have numbers 0 .. n SKIPPING for headers. Fix that
+        data = data.reset_index(drop=True)
+        # Column name has header index (e.g. 0). Drop it
+        cols = [None] * len(header) if isinstance(header, (list, tuple)) else None
+        data = data.rename_axis(cols, axis=1)
+    # Convert data types
+    data = data.infer_objects()
+    # Add link columns
+    header_set = set(header) if isinstance(header, (list, tuple)) else {header}
+    if isinstance(links, dict):
+        for col_name, col_link in (links or {}).items():
+            if col_name not in data.columns:
+                app_log.warning('gramex.cache.open: column %s not found in %s', col_name, io)
+                continue
+            col = data.columns.get_loc(col_name)
+            data[col_link] = [
+                getattr(row[col].hyperlink, 'target', None)
+                for i, row in enumerate(cells)
+                if i not in header_set
+            ]
+    elif links is True:
+        for col_name in data.columns:
+            col = data.columns.get_loc(col_name)
+            col_link = (
+                tuple(f'{c}_link' for c in data.columns[col])
+                if isinstance(header, (list, tuple)) and len(header) > 1
+                else f'{col_name}_link'
             )
-        )
-    return data.infer_objects()  # Convert data types
+            links = [
+                getattr(row[col].hyperlink, 'target', None)
+                for i, row in enumerate(cells)
+                if i not in header_set
+            ]
+            if any(links):
+                data[col_link] = links
+    return data
 
 
 def save(
