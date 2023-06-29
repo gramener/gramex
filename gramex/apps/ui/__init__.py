@@ -5,7 +5,6 @@ import os
 import gramex
 import gramex.cache
 import gramex.handlers
-import string
 
 # B404:import_subprocess only for JS compilation
 import subprocess  # nosec B404
@@ -235,7 +234,7 @@ def jscompiler(
     Examples:
         >>> jscompiler(
         ...     handler, path='x.ts', target_ext='.js', exe='/path/to/esbuild',
-        ...     cmd='node $exe $filename --outDir $targetDir --sourceMap')
+        ...     cmd='npx {exe} {filename} --outdir {targetDir} --sourceMap')
 
     Parameters:
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
@@ -262,11 +261,10 @@ def jscompiler(
     # Recompile if output target is missing, or path has been updated
     if not os.path.exists(target) or os.stat(path).st_mtime > os.stat(target).st_mtime:
         cwd, filename = os.path.split(path)
-        subs = {'exe': exe, 'filename': filename, 'targetDir': target_dir}
-        cmd = [string.Template(x).substitute(subs) for x in cmd.format(OPTIONS=options).split()]
-        app_log.debug(f'Compiling .{ext}: {" ".join(cmd)}')
+        cmd = cmd.format(exe=exe, filename=filename, target_dir=target_dir, options=options)
+        app_log.debug(f'Compiling {ext}: {cmd}')
         proc = yield gramex.service.threadpool.submit(
-            subprocess.run, cmd, cwd=cwd, capture_output=True, encoding='utf-8'
+            subprocess.run, cmd, shell=True, cwd=cwd, capture_output=True, encoding='utf-8'
         )
         if proc.returncode:
             raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}\n{proc.stdout}')
@@ -287,7 +285,7 @@ ts = partial(
         'global-name': '',
         'keep-names': 'false',
     },
-    cmd='node $exe {OPTIONS} --allow-overwrite --sourcemap --outdir=$targetDir $filename',
+    cmd='npx {exe} {options} --allow-overwrite --sourcemap --outdir="{target_dir}" "{filename}"',
 )
 
 
