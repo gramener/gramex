@@ -23,9 +23,18 @@ ui_dir = os.path.dirname(os.path.abspath(__file__))
 config_file = _join(ui_dir, 'config.yaml')
 cache_dir = _join(variables['GRAMEXDATA'], 'apps', 'ui')
 sass_bin = _join(ui_dir, 'node_modules', 'sass', 'sass.js')
-ts_path = _join(ui_dir, 'node_modules', 'esbuild', 'bin', 'esbuild')
 if not os.path.exists(cache_dir):
     os.makedirs(cache_dir)
+
+esbuild_path = _join(ui_dir, 'node_modules', 'esbuild', 'bin', 'esbuild')
+# if esbuild is a shell script, run the base script
+esbuild_cmd = [esbuild_path]
+try:
+    with open(esbuild_path, 'rb') as handle:
+        if handle.read(2) == b'#!':
+            esbuild_cmd = ['node', esbuild_path]
+except OSError:
+    pass
 
 
 def cdn_redirect(handler, folder_map={}):
@@ -225,7 +234,6 @@ def jscompiler(
     handler: gramex.handlers.FileHandler,
     path: str,
     target_ext: str,
-    exe: str,
     cmd: str,
     options: dict = {},
 ) -> bytes:
@@ -234,13 +242,12 @@ def jscompiler(
     Examples:
         >>> jscompiler(
         ...     handler, path='x.ts', target_ext='.js', exe='/path/to/esbuild',
-        ...     cmd='npx {exe} {filename} --outdir {targetDir} --sourceMap')
+        ...     cmd=lambda filename, target_dir, options: ...)
 
     Parameters:
         handler: the[FileHandler][gramex.handlers.FileHandler] serving this file
         path: absolute path of input file to compile into JavaScript
         target_ext: extension of output file (e.g. `.js`, `.min.js`)
-        exe: path to the compiler's JS executable (e.g. `/path/to/esbuild`)
         cmd: command line to run. This substitutes 3 variables:
             - `$exe` for the `exe` parameter
             - `$filename` for the absolute path to the input file
@@ -253,18 +260,22 @@ def jscompiler(
     # Create cache key based on state = path. Output to <cache-key>.js
     path = os.path.normpath(path).replace('\\', '/')
     ext = os.path.splitext(path)[-1]
-    options = ' '.join(f'--{key}={handler.get_arg(key, val)}' for key, val in options.items())
-    cache_key = _get_cache_key([path, options])
+    options = [f'--{key}={handler.get_arg(key, val)}' for key, val in options.items()]
+    cache_key = _get_cache_key([path] + options)
     target_dir = _join(cache_dir, f'{ext}-{cache_key}')
     target = os.path.join(target_dir, os.path.basename(path[: -len(ext)] + target_ext))
 
     # Recompile if output target is missing, or path has been updated
     if not os.path.exists(target) or os.stat(path).st_mtime > os.stat(target).st_mtime:
         cwd, filename = os.path.split(path)
-        cmd = cmd.format(exe=exe, filename=filename, target_dir=target_dir, options=options)
-        app_log.debug(f'Compiling {ext}: {cmd}')
+        cmd_to_run = cmd(filename=filename, target_dir=target_dir, options=options)
+        app_log.debug(f'Compiling {ext}: {cmd_to_run}')
         proc = yield gramex.service.threadpool.submit(
-            subprocess.run, cmd, shell=True, cwd=cwd, capture_output=True, encoding='utf-8'
+            subprocess.run,
+            cmd_to_run,
+            cwd=cwd,
+            capture_output=True,
+            encoding='utf-8',
         )
         if proc.returncode:
             raise RuntimeError(f'.{ext} compilation failure:\n{proc.stderr}\n{proc.stdout}')
@@ -275,7 +286,6 @@ def jscompiler(
 ts = partial(
     jscompiler,
     target_ext='.js',
-    exe=ts_path,
     options={
         'format': 'iife',
         'bundle': 'true',
@@ -285,7 +295,14 @@ ts = partial(
         'global-name': '',
         'keep-names': 'false',
     },
-    cmd='npx {exe} {options} --allow-overwrite --sourcemap --outdir="{target_dir}" "{filename}"',
+    cmd=lambda options, filename, target_dir: [
+        *esbuild_cmd,
+        *options,
+        '--allow-overwrite',
+        '--sourcemap',
+        f'--outdir={target_dir}',
+        filename,
+    ],
 )
 
 
