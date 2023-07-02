@@ -197,7 +197,7 @@ class AuthHandler(BaseHandler):
 
         # Apply rules to the user
         for _, rule in self.rules.iterrows():
-            if fnmatch(user.get(rule['selector'], ''), rule['pattern']):
+            if fnmatch(user.get(rule['selector'], '') or '', rule['pattern']):
                 user[rule['field']] = rule['value']
 
         # Run post-login events (e.g. ensure_single_session) specified in config

@@ -1,66 +1,10 @@
-/viz/async-gramex/gramex/apps/capture
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/capture
 found 0 vulnerabilities
-/viz/async-gramex/gramex/apps/logviewer
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/logviewer
 found 0 vulnerabilities
-/viz/async-gramex/gramex/apps/pynode
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/pynode
 found 0 vulnerabilities
-/viz/async-gramex/gramex/apps/ui
-# npm audit report
-
-semver  <7.5.2
-Severity: moderate
-semver vulnerable to Regular Expression Denial of Service - https://github.com/advisories/GHSA-c2qf-rxjj-qqgw
-fix available via `npm audit fix`
-node_modules/cross-spawn/node_modules/semver
-node_modules/normalize-package-data/node_modules/semver
-node_modules/semver
-  @babel/core  *
-  Depends on vulnerable versions of @babel/helper-compilation-targets
-  Depends on vulnerable versions of semver
-  node_modules/@babel/core
-    @babel/helper-compilation-targets  *
-    Depends on vulnerable versions of @babel/core
-    Depends on vulnerable versions of semver
-    node_modules/@babel/helper-compilation-targets
-      @vue/cli-service  >=3.6.0
-      Depends on vulnerable versions of @babel/helper-compilation-targets
-      Depends on vulnerable versions of @vue/cli-plugin-router
-      Depends on vulnerable versions of @vue/cli-shared-utils
-      Depends on vulnerable versions of clipboardy
-      Depends on vulnerable versions of is-file-esm
-      node_modules/@vue/cli-service
-  cross-spawn  6.0.0 - 6.0.5
-  Depends on vulnerable versions of semver
-  node_modules/cross-spawn
-    execa  0.10.0 - 2.0.5
-    Depends on vulnerable versions of cross-spawn
-    node_modules/execa
-      @vue/cli-shared-utils  *
-      Depends on vulnerable versions of execa
-      Depends on vulnerable versions of read-pkg
-      node_modules/@vue/cli-shared-utils
-        @vue/cli-plugin-router  >=4.2.0
-        Depends on vulnerable versions of @vue/cli-shared-utils
-        node_modules/@vue/cli-plugin-router
-      clipboardy  2.0.0 - 2.3.0
-      Depends on vulnerable versions of execa
-      node_modules/clipboardy
-  normalize-package-data  <=2.5.0
-  Depends on vulnerable versions of semver
-  node_modules/normalize-package-data
-    read-pkg  <=5.2.0
-    Depends on vulnerable versions of normalize-package-data
-    node_modules/read-pkg
-      read-pkg-up  <=7.0.1
-      Depends on vulnerable versions of read-pkg
-      node_modules/read-pkg-up
-        is-file-esm  *
-        Depends on vulnerable versions of read-pkg-up
-        node_modules/is-file-esm
-
-13 moderate severity vulnerabilities
-
-To address all issues, run:
-  npm audit fix
-/viz/async-gramex/gramex/apps/uifactory
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/ui
+found 0 vulnerabilities
+/cygdrive/c/site/gramener.com/viz/async-gramex/gramex/apps/uifactory
 found 0 vulnerabilities

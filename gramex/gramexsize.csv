@@ -1,7 +1,7 @@
 codepath,yamlpath,complexity
 gramex.cache._delete_temp_files,*,3
 gramex.cache.open,*,13
-gramex.cache.*,cache,49
+gramex.cache.*,cache,55
 gramex.cache.save,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,4
 gramex.cache.query,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,9
 gramex.cache.stat,*,2
@@ -53,7 +53,7 @@ gramex.apps.admin2.*,import.*.path=$GRAMEXAPPS/admin2/gramex.yaml,53
 gramex.apps.filemanager.*,import.*.path=$GRAMEXAPPS/filemanager/gramex.yaml,7
 gramex.apps.logviewer.*,import.*.path=$GRAMEXAPPS/logviewer/gramex.yaml,61
 gramex.apps.mail.*,import.*.path=$GRAMEXAPPS/mail/gramex.yaml,2
-gramex.apps.ui.*,import.*.path=$GRAMEXAPPS/ui/gramex.yaml,28
+gramex.apps.ui.*,import.*.path=$GRAMEXAPPS/ui/gramex.yaml,32
 gramex.apps.uifactory.*,import.*.path=$GRAMEXAPPS/uifactory/gramex.yaml,21
 gramex.apps.update.*,import.*.path=$GRAMEXAPPS/update/gramex.yaml,14
 gramex.handlers.authhandler.AuthHandler.*,url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,35
@@ -143,8 +143,8 @@ gramex.handlers.websockethandler.*,url.*.handler=WebSocketHandler|Websocket,7
 gramex.handlers.__init__.*,url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,7
 gramex.pptgen.*,url.*.handler=PPTXHandler,363
 gramex.pptgen2.*,url.*.handler=PPTXHandler,244
-gramex.services.emailer.*,email,34
-gramex.services.rediscache.*,cache.*.type=redis,23
+gramex.services.emailer.*,email,35
+gramex.services.rediscache.*,cache.*.type=redis,24
 gramex.services.scheduler.*,schedule,26
 gramex.services.sms.*,sms,10
 gramex.services.ttlcache.*,cache.*.type=memory,46
@@ -163,7 +163,7 @@ gramex.services.__init__.threadpool,threadpool,2
 gramex.services.__init__.url,url,16
 gramex.services.__init__.mime,mime,2
 gramex.services.__init__.watch,watch,9
-gramex.services.__init__.cache,cache,10
+gramex.services.__init__.cache,cache,13
 gramex.services.__init__.eventlog,eventlog,6
 gramex.services.__init__.email,email,3
 gramex.services.__init__.sms,sms,6
