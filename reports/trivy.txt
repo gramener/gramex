@@ -1,5 +1,5 @@
 
-gramener/gramex:1.91.1 (alpine 3.17.4)
+gramener/gramex:1.92.0 (alpine 3.17.4)
 ======================================
 Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
 
