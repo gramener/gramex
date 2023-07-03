@@ -64,6 +64,7 @@ dependencies = [
     "redis>=2.10.0",  # for RedisStore
     "requests",  # for all HTTP requests
     "seaborn",  # OPT: gramex.data.download()
+    "sentry",  # for sentry service
     "six",  # for gramex.yaml backward compatibility
     "sqlalchemy<2",  # for gramex.data.filter()
     "sqlitedict>=1.5.0",  # for SQLiteStore
