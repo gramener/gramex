@@ -987,11 +987,12 @@ class BaseMixin:
         if row['expire'] <= time.time():
             return None
         # Return the user column parsed as JSON.
-        # Add custom keys from the table to the user object.
+        # Add custom keys from the table to the user object. Don't overwrite NULL values.
         row['user'] = json.loads(row['user'])
         custom_keys = [key for key in row if key not in {'user', 'token', 'expire'}]
         if isinstance(row['user'], dict):
-            row['user'].update({key: row[key] for key in custom_keys})
+            for key in custom_keys:
+                row['user'][key] = row['user'].get(key, None) if row[key] is None else row[key]
         else:
             app_log.warning('Cannot add custom keys to non-dict "user" in: %r', row)
         return row
