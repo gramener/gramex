@@ -36,7 +36,7 @@ function initiate_copy(base, form_id, template) {
             $(".toast-body").html("Copy successful. Redirecting to new form.");
           else
             $(".toast-body").html(
-              "Selected form is now a template. Refreshing the list."
+              "Selected form is now a template. Refreshing the list.",
             );
           $(".toast").toast("show");
           setTimeout(function () {

@@ -112,10 +112,10 @@ async function render(q) {
     // If displayHeaderFooter, headerTemplate and footerTemplate MUST BOTH be present
     pdf_options.displayHeaderFooter = true;
     pdf_options.headerTemplate = template_wrap(
-      q.headerTemplate || templatize(q.header || "")
+      q.headerTemplate || templatize(q.header || ""),
     );
     pdf_options.footerTemplate = template_wrap(
-      q.footerTemplate || templatize(q.footer || "")
+      q.footerTemplate || templatize(q.footer || ""),
     );
     // Increase default margin if header / footer is present
     if (q.header || q.headerTemplate)
@@ -126,7 +126,7 @@ async function render(q) {
   // Default to 1cm margin if none was specified
   _.each(
     margin_keys,
-    (key) => (pdf_options.margin[key] = pdf_options.margin[key] || "1cm")
+    (key) => (pdf_options.margin[key] = pdf_options.margin[key] || "1cm"),
   );
   let args = [
     "--no-sandbox",
@@ -144,7 +144,7 @@ async function render(q) {
 
   page
     .on("console", (message) =>
-      console.log(`${message.type().toUpperCase()} ${message.text()}`)
+      console.log(`${message.type().toUpperCase()} ${message.text()}`),
     )
     .on("pageerror", (error) => console.log(`ERROR: ${error.message}`))
     .on("response", (response) => {
@@ -152,11 +152,11 @@ async function render(q) {
         console.log(
           `HTTP ${response.status()}: ${response
             .request()
-            .method()} ${response.url()}`
+            .method()} ${response.url()}`,
         );
     })
     .on("requestfailed", (request) =>
-      console.log(`${request.failure().errorText}: ${request.url()}`)
+      console.log(`${request.failure().errorText}: ${request.url()}`),
     );
 
   // Clear past cookies
@@ -231,7 +231,7 @@ async function render(q) {
         q.title_size,
         q.x,
         q.y,
-        q.dpi
+        q.dpi,
       ).entries();
       for (const [index, [selector, title, title_size, x, y, dpi]] of pages) {
         options.path = target.replace(/\.pptx$/, "." + index + ".png");
@@ -285,7 +285,7 @@ function webapp(req, res) {
   let q = Object.assign(
     { ext: "pdf", media: "screen", cookie: req.headers.cookie },
     req.query,
-    req.body
+    req.body,
   );
   if (!q.url) return res.sendFile(homepage);
   if (!q.ext.match(/pdf|png|jpg|jpeg|pptx/i))
@@ -296,7 +296,7 @@ function webapp(req, res) {
       if (fs.existsSync(info.path)) {
         res.setHeader(
           "Content-Disposition",
-          "attachment; filename=" + info.file
+          "attachment; filename=" + info.file,
         );
         res.sendFile(info.path, (err) => {
           if (err) console.error("Error sending file", err);

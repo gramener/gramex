@@ -8,7 +8,7 @@ import escomplexModule from "typhonjs-escomplex-module";
 export async function* esComplexity(
   dir = test_path,
   ignores = ["/node_modules/", "/site-packages/"],
-  exts = ["js", "mjs", "ts"]
+  exts = ["js", "mjs", "ts"],
 ) {
   let totalSize = 0;
   let totalComplexity = 0;
@@ -72,7 +72,7 @@ import { pathToFileURL } from "url";
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   // If project is not defined in the command line, use the current directory
   for await (const { complexity, path, type, error } of esComplexity(
-    process.argv[2] || "."
+    process.argv[2] || ".",
   ))
     if (type == "error") console.error(path, error);
     else if (type == "estimate")

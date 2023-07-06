@@ -138,35 +138,38 @@ function render(q, callback) {
   // Open the page
   console.log("Opening", q.url);
   page.open(q.url, function (status) {
-    setTimeout(function () {
-      error.status = status;
-      if (status == "fail") return callback();
-      // If a selector is specified (for images), set the clipRect.
-      if (q.selector) {
-        var clipRect = page.evaluate(function (selector) {
-          var query = document.querySelector(selector);
-          if (query) return query.getBoundingClientRect();
-        }, decodeURIComponent(q.selector));
-        if (clipRect) {
-          page.clipRect = {
-            top: clipRect.top,
-            left: clipRect.left,
-            width: clipRect.width,
-            height: clipRect.height,
-          };
+    setTimeout(
+      function () {
+        error.status = status;
+        if (status == "fail") return callback();
+        // If a selector is specified (for images), set the clipRect.
+        if (q.selector) {
+          var clipRect = page.evaluate(function (selector) {
+            var query = document.querySelector(selector);
+            if (query) return query.getBoundingClientRect();
+          }, decodeURIComponent(q.selector));
+          if (clipRect) {
+            page.clipRect = {
+              top: clipRect.top,
+              left: clipRect.left,
+              width: clipRect.width,
+              height: clipRect.height,
+            };
+          }
         }
-      }
-      if (q.js) {
-        var js = decodeURIComponent(q.js);
-        if (q.js.match(/^http/)) page.includeJs(js, save);
-        else {
-          fs.write("inject.js", js, "w");
-          if (!page.injectJs("inject.js")) console.log("Failed to inject JS");
-          save();
-          fs.remove("inject.js");
-        }
-      } else save();
-    }, parseFloat(q.delay || 0));
+        if (q.js) {
+          var js = decodeURIComponent(q.js);
+          if (q.js.match(/^http/)) page.includeJs(js, save);
+          else {
+            fs.write("inject.js", js, "w");
+            if (!page.injectJs("inject.js")) console.log("Failed to inject JS");
+            save();
+            fs.remove("inject.js");
+          }
+        } else save();
+      },
+      parseFloat(q.delay || 0),
+    );
   });
 }
 
@@ -190,7 +193,7 @@ function webapp(request, response) {
       ? "/?" + request.post
       : phantom_version >= "2.0.1"
       ? decodeURIComponent(request.url)
-      : request.url
+      : request.url,
   ).queryKey;
   /* eslint-enable indent */
   if (!q.url) {
@@ -254,7 +257,7 @@ function main() {
         "capture.js:",
         version,
         "port:",
-        port
+        port,
       );
     } else {
       console.log("Could not bind to port", port);

@@ -18,7 +18,7 @@
       height +
       'px">' +
       loading +
-      "</div>"
+      "</div>",
   );
   document.addEventListener("DOMContentLoaded", function () {
     var container = document.getElementById(id);

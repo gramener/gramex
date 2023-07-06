@@ -53,7 +53,7 @@ function update_existing_form(form_details, $icon) {
     },
     error: function () {
       $(".toast-body").html(
-        "Unable to update the form. Please try again later."
+        "Unable to update the form. Please try again later.",
       );
       $(".toast").toast("show");
     },
@@ -75,16 +75,16 @@ function create_new_form(form_details, $icon) {
       form_details.id = response.data.inserted[0].id;
       $(".post-publish").removeClass("d-none");
       $(".form-preview-link").html(
-        `<a class="btn btn-info" href="form/${form_details.id}" target="_blank">Preview</a>`
+        `<a class="btn btn-info" href="form/${form_details.id}" target="_blank">Preview</a>`,
       );
       $(".form-view-link").html(
-        `<a class="btn btn-success" href="view/${form_details.id}" target="_blank">View</a>`
+        `<a class="btn btn-success" href="view/${form_details.id}" target="_blank">View</a>`,
       );
       window.location.href = `create?id=${form_details.id}`;
     },
     error: function () {
       $(".toast-body").html(
-        "Unable to publish the form. Please try again later."
+        "Unable to publish the form. Please try again later.",
       );
       $(".toast").toast("show");
     },
@@ -115,7 +115,7 @@ $("body")
   .on("click", "#publish-form", function () {
     let _values = {};
     let $icon = $(
-      '<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>'
+      '<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>',
     ).appendTo(this);
     let _md = {
       name: $("#form-name").val() || "Untitled",
@@ -123,12 +123,11 @@ $("body")
       description: $("#form-description").val().trim() || "Form description",
     };
 
-    $(".edit-properties > input, .edit-properties > input").each(function (
-      ind,
-      item
-    ) {
-      _values[item.id] = item.value;
-    });
+    $(".edit-properties > input, .edit-properties > input").each(
+      function (ind, item) {
+        _values[item.id] = item.value;
+      },
+    );
     $(".user-form > *").removeClass("highlight");
     $(".edit-properties").empty();
 

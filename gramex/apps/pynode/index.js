@@ -21,7 +21,7 @@ function send_error(error, ws) {
         stack: error.stack,
       },
       result: null,
-    })
+    }),
   );
 }
 
@@ -51,7 +51,7 @@ function execute(ws, code, args, values) {
       JSON.stringify({
         error: null,
         result: typeof result == "undefined" ? null : result,
-      })
+      }),
     );
   } catch (e) {
     send_error(e, ws);
@@ -71,7 +71,7 @@ function main() {
 
   // Print a message indicating versions. pynode.py EXPLICITLY checks for this message.
   console.log(
-    `node.js: ${process.version} pynode: ${package.version} port: ${port} pid: ${process.pid} cwd: ${cwd}`
+    `node.js: ${process.version} pynode: ${package.version} port: ${port} pid: ${process.pid} cwd: ${cwd}`,
   );
 
   // Set up the websocket server
@@ -125,12 +125,12 @@ function main() {
             name: "Unsupported argument",
             message: "path= is not yet supported",
           },
-          ws
+          ws,
         );
       else
         send_error(
           { name: "Missing arguments", message: "Need code= or path=" },
-          ws
+          ws,
         );
     });
   });

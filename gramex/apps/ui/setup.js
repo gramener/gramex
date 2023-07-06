@@ -17,7 +17,7 @@ const bootswatch_root = path.join(
   __dirname,
   "node_modules",
   "bootswatch",
-  "dist"
+  "dist",
 );
 const bootswatch_target = mkdir(theme_dir, "bootswatch");
 fs.readdirSync(bootswatch_root).forEach(function (theme) {
@@ -28,7 +28,7 @@ fs.readdirSync(bootswatch_root).forEach(function (theme) {
 @import "node_modules/bootswatch/dist/${theme}/variables";
 @import "gramexui";
 @import "node_modules/bootswatch/dist/${theme}/bootswatch";
-`
+`,
   );
   themes.push(`bootswatch/${theme}`);
 });
@@ -53,7 +53,7 @@ fs.readdirSync(themes_guide_root).forEach(function (dir) {
         .readFileSync(theme_file, "utf8")
         .replace('@import "bootstrap";', '@import "gramexui";')
         // Themes Guide disables grid classes. But we want to use them, so kill this line
-        .replace("$enable-grid-classes:false;\n", "") + "\n"
+        .replace("$enable-grid-classes:false;\n", "") + "\n",
     );
     themes.push(`themes-guide/${dir}`);
   }
@@ -63,7 +63,7 @@ execSync("rm -rf bootstrap-themes", { cwd: tmp });
 // Save list of themes
 fs.writeFileSync(
   "theme/themes.json",
-  JSON.stringify({ themes: themes }) + "\n"
+  JSON.stringify({ themes: themes }) + "\n",
 );
 
 // Utility functions

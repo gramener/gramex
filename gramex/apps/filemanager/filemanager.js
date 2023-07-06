@@ -33,7 +33,7 @@
           el,
           el.dataset.src,
           true,
-          renderTable.bind(this, el, opts)
+          renderTable.bind(this, el, opts),
         );
         // Attach a dropzone to the whole element
         attach_dropzone(
@@ -41,7 +41,7 @@
           el,
           el.dataset.src,
           false,
-          renderTable.bind(this, el, opts)
+          renderTable.bind(this, el, opts),
         );
       })
       .formhandler(opts);

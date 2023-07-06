@@ -37,7 +37,7 @@ $("body")
   .on("submit", "form.analytics", function (e) {
     e.preventDefault();
     let $icon = $(
-      '<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>'
+      '<i class="fa fa-spinner fa-2x fa-fw align-middle"></i>',
     ).appendTo(this);
     let field_vals = {};
     // $.each($('form').serializeArray(), function() { _vals[this.name] = this.value })
@@ -63,7 +63,7 @@ $("body")
 
     $.ajax(
       `../analytics/?db=${form_id}&form_id=${form_id}&response=${encodeURIComponent(
-        JSON.stringify(field_vals_obj)
+        JSON.stringify(field_vals_obj),
       )}`,
       {
         method: "POST",
@@ -77,7 +77,7 @@ $("body")
         complete: function () {
           $icon.fadeOut();
         },
-      }
+      },
     );
   })
   .on("click", "[data-formaction]", function () {

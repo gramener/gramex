@@ -19,7 +19,7 @@ describe("Calculate complexity of each folder", () => {
           delete result.error;
         }
         const expected = JSON.parse(
-          readFileSync(join(__dirname, dir, "expected.json"))
+          readFileSync(join(__dirname, dir, "expected.json")),
         );
         expect(actual).toStrictEqual(expected);
       });
