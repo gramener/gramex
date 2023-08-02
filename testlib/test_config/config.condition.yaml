@@ -68,7 +68,7 @@ errors remove the line:
 
 modules are available:
   actual:
-    a if isinstance("x", six.string_types): 1
+    a if isinstance("x", str): 1
     b if sys.platform: 1
     c if datetime.MINYEAR: 1
     d if socket.gethostname(): 1

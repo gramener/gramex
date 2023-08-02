@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+# Print each command as it is run
+set -x
+
+clean () {
+  # Remove unnecessary / temporary files
+  rm -rf build/ dist/ .eggs/
+  rm -rf tests/uploads/ tests/htmlcov/ tests/.cache-url
+  rm -f .coverage
+  find . \( -name '*.egg-info' -o -name '*.egg' -o -name '*.pyc' -o -name '*.pyo' -o -name '__pycache__' \) -exec rm -fr {} +
+}
+
+reformat () {
+  git ls-files | grep -E '\.py$' | grep -v pytest.complexity_error.invalid.py | xargs black --skip-string-normalization --line-length=99
+  git ls-files | grep -E '\.(js|jsx|ts|css|scss|sass|yaml|yml|md)$' | xargs -n100 npx prettier --write
+}
+
+lint () {
+  # Python lint with flake8
+  command -v flake8 2>/dev/null 2>&1 || pip install flake8 pep8-naming flake8-blind-except flake8-print flake8-debugger
+  flake8 gramex testlib tests pytest
+
+  # Python security check with bandit
+  command -v bandit 2>/dev/null 2>&1 || pip install bandit
+  bandit . --recursive --quiet
+}
+
+test () {
+  nosetests
+  pytest/run.sh
+}
+
+stats () {
+  # Get complexity of each part of Gramex and Gramex Enterprise. Save in gramex/
+  python pkg/usage/gramexsize.py . ../gramexenterprise/ | tr -d '\r' > gramex/gramexsize.csv
+
+  # Count number of lines of code
+  PYLOC=`find gramex -name '*.py' ! -path '*/node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  JSLOC=`find gramex -name '*.js' ! -path '*/node_modules/*' | grep '\.js$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  TESTLOC=`find tests testlib pytest -name '*.py' ! -path '*node_modules/*' | grep '\.py$' | xargs wc -l | tail -1 | sed 's/[^0-9]//g'`
+  printf "type,loc\nPython,$PYLOC\nJavaScript,$JSLOC\nTests,$TESTLOC\n" | tee reports/loc.csv
+}
+
+docs () {
+  (cd mkdocs; mkdocs build)
+}
+pushdocs () {
+  # Requires pip install -e . --config-settings editable_mode=strict
+  rsync -avzP mkdocs/api ubuntu@gramener.com:/mnt/gramener/apps/guide/
+}
+
+pushpypi () {
+  clean
+  pip install --upgrade build twine
+  python -m build .
+  # twine does not work behind self-signed VPN certificates
+  # Note: if this fails, add '-p PASSWORD'
+  twine upload -u gramener dist/*
+}
+
+pushcoverage () {
+  rsync -avzP tests/htmlcov/ ubuntu@gramener.com:/mnt/gramener/demo.gramener.com/gramextestcoverage/
+}
+
+update () {
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$0" && npm update && npm audit fix'
+}
+
+security () {
+  # Run all security tests
+  bandit gramex --aggregate vuln --recursive --exclude '*/node_modules/*' > reports/bandit.txt
+  freshclam
+  clamscan --recursive --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=mkdocs --exclude-dir=.eggs --exclude-dir=node_modules > reports/clamav.txt
+  find gramex/apps/ -maxdepth 2 -name package.json | xargs dirname | xargs -L1 bash -c 'cd "$0" && npm audit --parseable || true' > reports/npm-audit.txt
+  syft gramex > reports/syft.txt
+  snyk test --dev --all-projects --skip-unresolved > reports/snyk.txt || true
+}
+
+# Usage: VERSION=1.xx.0 bash task builddocker pushdocker
+builddocker () {
+  docker pull frolvlad/alpine-glibc:alpine-3.17
+  VERSION=$VERSION bash pkg/docker-gramex-base/setup.sh
+  VERSION=$VERSION bash pkg/docker-gramex/setup.sh
+  VERSION=$VERSION bash pkg/docker-gramex-test/setup.sh
+  VERSION=$VERSION bash pkg/docker-gramex-pytest/setup.sh
+}
+pushdocker () {
+  docker login                # log in as sanand0 / pratapvardhan
+  docker push gramener/gramex-base:$VERSION
+  docker push gramener/gramex-base:latest
+  docker push gramener/gramex:$VERSION
+  docker push gramener/gramex:latest
+  docker push gramener/gramex-pytest:$VERSION
+  docker push gramener/gramex-pytest:latest
+}
+
+# Run all commands from the same folder as this script
+cd "$(dirname "$0")"
+# Run all commands
+for cmd in "$@"
+do
+  "$cmd"
+done

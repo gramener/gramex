@@ -1,9 +1,9 @@
 import json
 import gramex.cache
 import pandas as pd
-from . import TestGramex
 from gramex.http import FOUND
-from pandas.util.testing import assert_frame_equal as afe
+from nose.tools import eq_
+from . import TestGramex, afe
 
 
 class TestFunctionHandler(TestGramex):
@@ -18,9 +18,11 @@ class TestFunctionHandler(TestGramex):
 
         self.check('/func/handler', text='{"args": ["Handler"], "kwargs": {}', **etag)
         self.check('/func/handler-null', text='{"args": [], "kwargs": {}', **etag)
-        self.check('/func/composite',
-                   text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}',
-                   **etag)
+        self.check(
+            '/func/composite',
+            text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}',
+            **etag
+        )
 
         text = '{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}'
         self.check('/func/compositenested', text=text, **etag)
@@ -35,10 +37,16 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/async/args', text=text, **etag)
         self.check('/func/async/args-split', text=text, **etag)
         self.check('/func/async/http', text='{"args": [["1", "2"]], "kwargs": {}}', **etag)
-        self.check('/func/async/http2',
-                   text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}', **etag)
-        self.check('/func/async/calc',
-                   text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]', **etag)
+        self.check(
+            '/func/async/http2',
+            text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}',
+            **etag
+        )
+        self.check(
+            '/func/async/calc',
+            text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]',
+            **etag
+        )
 
     def test_json(self):
         self.check('/func/numpytypes')
@@ -72,10 +80,25 @@ class TestFunctionHandler(TestGramex):
         self.check('/func/methods', method='get', code=405)
         self.check('/func/methods', method='delete', code=405)
         for method in ['post', 'put']:
-            r = self.get('/func/methods', method=method,
-                         headers={'NEXT': '/abc'}, allow_redirects=False)
+            r = self.get(
+                '/func/methods', method=method, headers={'NEXT': '/abc'}, allow_redirects=False
+            )
             self.assertEqual(r.status_code, FOUND)
             self.assertEqual(r.headers.get('Location'), '/abc')
+
+    def test_pipelines(self):
+        self.check('/func/pipeline', text='--/func/pipeline--/func/pipeline')
+        import gramex.data
+        from gramex.services import info
+
+        execs = gramex.data.filter(
+            **info.storelocations.pipeline, args={'_sort': ['-start'], '_limit': ['1']}
+        )
+        eq_(execs['name'].iloc[0], 'url:func/pipeline')
+        eq_(execs['error'].iloc[0], None)
+
+        self.check('/func/pipeline-number', text='2')
+        self.check('/func/pipeline-iterable', text='[3,"x",false]')
 
 
 class TestWrapper(TestGramex):
@@ -106,43 +129,89 @@ class TestWrapper(TestGramex):
         # Note: datetimes must be quoted, since they'll be read as JSON usually.
         self.check(
             '/func/nativetypes?a=3&b=1.5&c=false&d=d&e=null&f=3&g=1.5&h=h&i=',
-            text=''.join(['3', '1.5', 'false', 'd', '', '3', '1.5', 'h', 'false',
-                          '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
+            text=''.join(
+                [
+                    '3',
+                    '1.5',
+                    'false',
+                    'd',
+                    '',
+                    '3',
+                    '1.5',
+                    'h',
+                    'false',
+                    '"2020-01-01T00:00:00+00:00"',
+                    '{"a":3,"b":1.5}',
+                    '[3,1.5]',
+                ]
+            ),
+        )
         self.check('/func/greet', text='Hello, Stranger!')
         self.check('/func/greet?name=gramex', text='Hello, gramex!')
         self.check('/func/multilist?items=1&items=2&items=3&start=1', text='7.0')
         sales = self.check('/func/sales').json()
         afe(pd.DataFrame(sales), gramex.cache.open('sales.xlsx', rel=True))
-        self.check('/func/content/003.json',
-                   text='{"x":3}',
-                   headers={'Content-Type': 'application/json'})
-        self.check('/func/content/003.txt',
-                   text='x=3',
-                   headers={'Content-Type': 'text/plain'})
+        self.check(
+            '/func/content/003.json', text='{"x":3}', headers={'Content-Type': 'application/json'}
+        )
+        self.check('/func/content/003.txt', text='x=3', headers={'Content-Type': 'text/plain'})
 
     def test_add_handler_post(self):
         self.check(
-            '/func/name_age', method='post', data={'name': 'johndoe', 'age': '42'},
-            text='johndoe is 42 years old.')
+            '/func/name_age',
+            method='post',
+            data={'name': 'johndoe', 'age': '42'},
+            text='johndoe is 42 years old.',
+        )
         self.check(
-            '/func/name_age', method='post', data=json.dumps({'name': 'johndoe', 'age': '42'}),
+            '/func/name_age',
+            method='post',
+            data=json.dumps({'name': 'johndoe', 'age': '42'}),
             request_headers={'Content-Type': 'application/json'},
-            text='johndoe is 42 years old.')
+            text='johndoe is 42 years old.',
+        )
         # When type hints are violated:
-        self.check('/func/hints', method='post', data={'name': 'johndoe', 'age': '42.3'},
-                   code=500)
+        self.check('/func/hints', method='post', data={'name': 'johndoe', 'age': '42.3'}, code=500)
         # Check typecasting
         self.check(
-            '/func/nativetypes', method='post',
-            data=json.dumps({'a': 3, 'b': 1.5, 'c': False, 'd': 'd', 'e': None, 'f': 3,
-                             'g': 1.5, 'h': 'h', 'i': False}),
+            '/func/nativetypes',
+            method='post',
+            data=json.dumps(
+                {
+                    'a': 3,
+                    'b': 1.5,
+                    'c': False,
+                    'd': 'd',
+                    'e': None,
+                    'f': 3,
+                    'g': 1.5,
+                    'h': 'h',
+                    'i': False,
+                }
+            ),
             request_headers={'Content-Type': 'application/json'},
-            text=''.join(['3', '1.5', 'false', 'd', '', '3', '1.5', 'h', 'false',
-                          '"2020-01-01T00:00:00+00:00"', '{"a":3,"b":1.5}', '[3,1.5]']))
+            text=''.join(
+                [
+                    '3',
+                    '1.5',
+                    'false',
+                    'd',
+                    '',
+                    '3',
+                    '1.5',
+                    'h',
+                    'false',
+                    '"2020-01-01T00:00:00+00:00"',
+                    '{"a":3,"b":1.5}',
+                    '[3,1.5]',
+                ]
+            ),
+        )
         self.check('/func/greet', text='Hello, Stranger!')
         # Check if POSTing url params and path args works
-        self.check('/func/name_age?name=johndoe&age=42', method='post',
-                   text='johndoe is 42 years old.')
+        self.check(
+            '/func/name_age?name=johndoe&age=42', method='post', text='johndoe is 42 years old.'
+        )
         self.check('/func/name_age/johndoe/age/42', text='johndoe is 42 years old.')
 
     def test_add_handler_delete(self):

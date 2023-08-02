@@ -1,8 +1,8 @@
 '''
-pptgen2.pptgen() modifies slides using commands (in ``__init__.py``). This file maps the commands
-and their functions in ``cmdlist``.
+pptgen2.pptgen() modifies slides using commands (in `__init__.py`). This file maps the commands
+and their functions in `cmdlist`.
 
-Each command accepts ``(shape, spec, data)`` and modifies shape based on spec(ification) and data.
+Each command accepts `(shape, spec, data)` and modifies shape based on spec(ification) and data.
 '''
 
 import copy
@@ -11,6 +11,7 @@ import io
 import matplotlib.cm
 import matplotlib.colors
 import os
+import numpy as np
 import pandas as pd
 import pptx
 import pptx.util
@@ -18,10 +19,12 @@ import re
 import requests
 from PIL import Image
 from functools import partial
+from gramex import console
 from gramex.config import app_log, objectpath
 from gramex.transforms import build_transform
-# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.html import fragments_fromstring, builder, HtmlElement    # nosec: lxml is safe
+
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml.html import fragments_fromstring, builder, HtmlElement  # nosec B410
 from orderedattrdict import AttrDict
 from pptx.chart import data as pptxchartdata
 from pptx.dml.color import RGBColor
@@ -75,16 +78,24 @@ def assign(convert, path: str):
 
 # Length utilities
 # ---------------------------------------------------------------------
-length_unit = pptx.util.Inches          # The default length unit is inches. This is exposed
-_length_expr = re.compile(r'''          # A length expression can be:ex
-    ([\d\.]+)                           #   Any integer or floating point (without + or -)
+length_unit = pptx.util.Inches  # The default length unit is inches. This is exposed
+_length_expr = re.compile(
+    r'''          # A length expression can be:ex
+    ((?:[+-]?)[\d\.]+)                  #   Any integer or floating point (with + or -)
     \s*                                 #   optionally followed by spaces
     ("|in|inch|inches|cm|mm|pt|cp|centipoint|centipoints|emu|)  # and a unit that may be blank
     $                                   # with nothing after that
-''', re.VERBOSE)
+''',
+    re.VERBOSE,
+)
 # Standardize the aliases into pptx.util attributes
-length_alias = {'"': 'inches', 'in': 'inches', 'inch': 'inches',
-                'centipoint': 'centipoints', 'cp': 'centipoints'}
+length_alias = {
+    '"': 'inches',
+    'in': 'inches',
+    'inch': 'inches',
+    'centipoint': 'centipoints',
+    'cp': 'centipoints',
+}
 
 
 def length_class(unit_str: str):
@@ -95,7 +106,7 @@ def length_class(unit_str: str):
     elif not unit:
         return length_unit
     else:
-        raise ValueError('Invalid unit: %s' % unit_str)
+        raise ValueError(f'Invalid unit: {unit_str}')
 
 
 def length(val: Union[str, int, float]) -> pptx.util.Length:
@@ -104,7 +115,7 @@ def length(val: Union[str, int, float]) -> pptx.util.Length:
         match = _length_expr.match(val)
         if match:
             return length_class(match.group(2))(float(match.group(1)))
-    elif isinstance(val, (int, float, pd.np.number)):
+    elif isinstance(val, (int, float, np.number)):
         return length_unit(val)
     raise ValueError('Invalid length: %r' % val)
 
@@ -113,25 +124,28 @@ def length(val: Union[str, int, float]) -> pptx.util.Length:
 # ---------------------------------------------------------------------
 color_map = matplotlib.colors.get_named_colors_mapping()
 # Theme colors can start with any of these
-theme_color = re.compile(r'''
+theme_color = re.compile(
+    r'''
     (ACCENT|BACKGROUND|DARK|LIGHT|TEXT|HYPERLINK|FOLLOWED_HYPERLINK)
     _?(\d*)             # followed by _1, _2, etc (or 1, 2, etc.)
     (\+\d+|\-\d+)?      # There MAY be a +30 or -40 after that to adjust brightness%
-''', re.VERBOSE)
+''',
+    re.VERBOSE,
+)
 
 
 def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     '''
     Set the FillFormat color to value specified as a:
 
-    - a named color, like ``black``
-    - a hex value, like ``#f80`` or ``#ff8800``
-    - an RGB value, like ``rgb(255, 255, 0)`` or ``rgb(1, 0.5, 0.1)``
-    - a tuple or list of RGB values, like ``(255, 255, 0)`` or ``[255, 255, 0]``
-    - a theme color, like ``ACCENT_1``, ``ACCENT_2``, ``BACKGROUND_1``, ``DARK_1``, ``LIGHT_2``
-    - a theme color with a brightness modifier, like ``ACCENT_1+40``, which is 40% brighter than
-      Accent 1, or ``ACCENT_2-20`` which is 20% darker than Accent 2
-    - ``'none'`` clears the color, i.e. makes it transparent
+    - a named color, like `black`
+    - a hex value, like `#f80` or `#ff8800`
+    - an RGB value, like `rgb(255, 255, 0)` or `rgb(1, 0.5, 0.1)`
+    - a tuple or list of RGB values, like `(255, 255, 0)` or `[255, 255, 0]`
+    - a theme color, like `ACCENT_1`, `ACCENT_2`, `BACKGROUND_1`, `DARK_1`, `LIGHT_2`
+    - a theme color with a brightness modifier, like `ACCENT_1+40`, which is 40% brighter than
+      Accent 1, or `ACCENT_2-20` which is 20% darker than Accent 2
+    - `'none'` clears the color, i.e. makes it transparent
     '''
     fill.solid()
     if val == 'none':
@@ -139,7 +153,7 @@ def fill_color(fill: FillFormat, val: Union[str, tuple, list, None]) -> None:
     elif isinstance(val, (list, tuple)):
         val = val[:3]
         if any(isinstance(v, float) for v in val) and all(0 <= v <= 1 for v in val):
-            fill.fore_color.rgb = RGBColor(*(int(v * 256 if v < 1 else 255) for v in val))  # noqa
+            fill.fore_color.rgb = RGBColor(*(int(v * 256 if v < 1 else 255) for v in val))
         else:
             fill.fore_color.rgb = RGBColor(*val)
     elif isinstance(val, str):
@@ -169,7 +183,7 @@ def fill_opacity(fill: FillFormat, val: Union[int, float, None]) -> None:
     if fill.type != MSO_FILL.SOLID:
         raise ValueError('Cannot set opacity: %r on non-solid fill type %r' % (val, fill.type))
     for tag in ('hslClr', 'sysClr', 'srgbClr', 'prstClr', 'scrgbClr', 'schemeClr'):
-        color = fill._xPr.find('.//' + qn('a:%s' % tag))
+        color = fill._xPr.find('.//' + qn(f'a:{tag}'))
         if color is not None:
             alpha = color.find(qn('a:alpha'))
             if alpha is None:
@@ -195,7 +209,7 @@ def alignment(enum, val: str) -> EnumValue:
     alignment = getattr(enum, val.upper(), None)
     if alignment is not None:
         return alignment
-    raise ValueError('Invalid alignment: %s' % val)
+    raise ValueError(f'Invalid alignment: {val}')
 
 
 # Basic command methods
@@ -209,7 +223,7 @@ def name(shape, spec, data: dict):
 def print_command(shape, spec, data: dict):
     spec = spec if isinstance(spec, (list, tuple)) else [spec]
     for item in spec:
-        print('    %s: %s' % (item, expr(item, data)))      # noqa
+        console(f'    {item}: {expr(item, data)}')
 
 
 # Position & style commands
@@ -296,9 +310,9 @@ def get_or_add_link(shape, type, event):
     # parent is the container inside which we insert the link. Can be p:cNvPr or a:rPr
     parent = el.find('.//' + conf['link-attrs'][type]['tag'], _nsmap)
     # Create link if required. (Else preserve all attributes one existing link, like tooltip)
-    link = parent.find(qn('a:%s' % event))
+    link = parent.find(qn(f'a:{event}'))
     if link is None:
-        link = OxmlElement('a:%s' % event)
+        link = OxmlElement(f'a:{event}')
         parent.insert(0, link)
     return link
 
@@ -308,23 +322,23 @@ def set_link(type, event, prs, slide, shape, val):
         return
     link = get_or_add_link(shape, type, event)
     # Set link's r:id= and action= based on the type of the link
-    if val in conf['link-action']:                  # it's a ppaction://
+    if val in conf['link-action']:  # it's a ppaction://
         rid = link.get(qn('r:id'), None)
         if rid in slide.part.rels:
             slide.part.drop_rel(rid)
         link.set(qn('r:id'), '')
         link.set('action', conf['link-action'][val])
-    elif isinstance(val, int) or val.isdigit():     # it's a slide
+    elif isinstance(val, int) or val.isdigit():  # it's a slide
         slide_part = prs.slides[int(val) - 1].part
         link.set(qn('r:id'), slide.part.relate_to(slide_part, RT.SLIDE, False))
         link.set('action', 'ppaction://hlinksldjump')
-    elif urlparse(val).netloc:                      # it's a URL
+    elif urlparse(val).netloc:  # it's a URL
         link.set(qn('r:id'), slide.part.relate_to(val, RT.HYPERLINK, True))
         link.attrib.pop('action', '')
-    elif os.path.splitext(val)[-1].lower() in conf['link-ppt-files']:   # it's a PPT
+    elif os.path.splitext(val)[-1].lower() in conf['link-ppt-files']:  # it's a PPT
         link.set(qn('r:id'), slide.part.relate_to(val, RT.HYPERLINK, True))
         link.set('action', 'ppaction://hlinkpres?slideindex=1&slidetitle=')
-    else:                                           # it's a file
+    else:  # it's a file
         link.set(qn('r:id'), slide.part.relate_to(val, RT.HYPERLINK, True))
         link.set('action', 'ppaction://hlinkfile')
     return link
@@ -381,16 +395,26 @@ def baseline(run, val, data):
     if isinstance(val, str):
         val = val.strip().lower()
         # See https://github.com/scanny/python-pptx/pull/601 for unit values
-        val = (0.3 if val.startswith('sup') else    # noqa
-               -0.25 if val.startswith('sub') else  # noqa
-               ST_Percentage._convert_from_percent_literal(val))
+        val = (
+            0.3
+            if val.startswith('sup')
+            else -0.25
+            if val.startswith('sub')
+            else ST_Percentage._convert_from_percent_literal(val)
+        )
     run.font._rPr.set('baseline', ST_Percentage.convert_to_xml(val))
 
 
 def strike(run, val, data):
-    val = ('sngStrike' if val.startswith('s') else
-           'dblStrike' if val.startswith('d') else
-           'noStrike' if val.startswith('n') else val)
+    val = (
+        'sngStrike'
+        if val.startswith('s')
+        else 'dblStrike'
+        if val.startswith('d')
+        else 'noStrike'
+        if val.startswith('n')
+        else val
+    )
     run.font._rPr.set('strike', val)
 
 
@@ -399,7 +423,7 @@ def get_text_frame(shape):
     try:
         return shape.text_frame
     except AttributeError:
-        raise ValueError('Cannot set text on shape %s that has no text frame' % shape.name)
+        raise ValueError(f'Cannot set text on shape {shape.name} that has no text frame')
 
 
 para_methods = {
@@ -462,7 +486,7 @@ def text(shape, spec, data):
             # Ensure that all runs have the same color, font, etc as the first run (if any)
             r.font._rPr.attrib.update(run_defaults)
             # Set specified run attributes
-            r.text = run.text
+            r.text = run.text or ''
             for attr, val in run.attrib.items():
                 if attr in run_methods:
                     run_methods[attr](r, val, data)
@@ -484,7 +508,11 @@ def replace(shape, spec, data):
             for old, tree in spec.items():
                 match = old.search(r.text)
                 if match:
-                    original_r, prefix, suffix = r._r, r.text[:match.start()], r.text[match.end():]
+                    original_r, prefix, suffix = (
+                        r._r,
+                        r.text[: match.start()],
+                        r.text[match.end() :],
+                    )
                     if prefix:
                         r.text = prefix
                         r = insert_run_after(r, p, original_r)
@@ -517,6 +545,7 @@ def set_text(attr, on_run, shape, spec, data):
 
 # Image commands
 # ---------------------------------------------------------------------
+
 
 def image(shape, spec, data: dict):
     val = expr(spec, data)
@@ -589,14 +618,15 @@ table_cell_commands = {
     'align': table_align,
     # TODO: table borders
     'vertical-align': partial(
-        table_assign, partial(alignment, MSO_VERTICAL_ANCHOR), 'vertical_anchor'),
+        table_assign, partial(alignment, MSO_VERTICAL_ANCHOR), 'vertical_anchor'
+    ),
     'margin-left': partial(table_assign, length, 'margin_left'),
     'margin-right': partial(table_assign, length, 'margin_right'),
     'margin-top': partial(table_assign, length, 'margin_top'),
     'margin-bottom': partial(table_assign, length, 'margin_bottom'),
     # TODO: width: column-wise width
     'bold': partial(set_text, 'bold', False),
-    'color': partial(set_text, 'color', True),     # PPT needs colors on runs too, not only paras
+    'color': partial(set_text, 'color', True),  # PPT needs colors on runs too, not only paras
     'font-name': partial(set_text, 'font-name', False),
     'font-size': partial(set_text, 'font-size', False),
     'italic': partial(set_text, 'italic', False),
@@ -609,7 +639,7 @@ table_col_commands = {
 
 def table(shape, spec, data: dict):
     if not shape.has_table:
-        raise ValueError('Cannot run table commands on shape %s that is not a table' % shape.name)
+        raise ValueError(f'Cannot run table commands on shape {shape.name} that is not a table')
     table = shape.table
 
     # Set or get table first/last row/col attributes
@@ -622,7 +652,7 @@ def table(shape, spec, data: dict):
     # table data must be a DataFrame if specified. Else, create a DataFrame from existing text
     table_data = expr(spec.get('data', None), data)
     if table_data is not None and not isinstance(table_data, pd.DataFrame):
-        raise ValueError('data on table %s must be a DataFrame, not %r' % (shape.name, table_data))
+        raise ValueError(f'data on table {shape.name} must be a DataFrame, not {table_data!r}')
     # Extract data from table text if no data is specified.
     if table_data is None:
         table_data = pd.DataFrame([[cell.text for cell in row.cells] for row in table.rows])
@@ -642,7 +672,7 @@ def table(shape, spec, data: dict):
     if table.first_row:
         header_columns = table_data.columns
         if isinstance(header_row, (list, tuple, pd.Index, pd.Series)):
-            header_columns = header_row[:len(table_data.columns)]
+            header_columns = header_row[: len(table_data.columns)]
         for j, column in enumerate(header_columns):
             text(table.cell(0, j), column, {'_expr_mode': False})
 
@@ -658,62 +688,98 @@ def table(shape, spec, data: dict):
         # The command spec can be an expression, or a dict of expressions for each column.
         # Always convert into a {column: expression}.
         # But carefully, handling {value: ...} in expr mode and {expr: ...} in literal mode
-        if (not isinstance(cmdspec, dict) or
-                (expr_mode and 'value' in cmdspec) or
-                (not expr_mode and 'expr' in cmdspec)):
+        if (
+            not isinstance(cmdspec, dict)
+            or (expr_mode and 'value' in cmdspec)
+            or (not expr_mode and 'expr' in cmdspec)
+        ):
             cmdspec = {column: cmdspec for column in table_data.columns}
         # Apply commands that run on each cell
         if key in table_cell_commands:
             for i, (index, row) in enumerate(table_data.iterrows()):
-                for j, (column, val) in enumerate(row.iteritems()):
+                for j, (column, val) in enumerate(row.items()):
                     data['cell'] = AttrDict(
-                        val=val, column=column, index=index, row=row, data=table_data,
-                        pos=AttrDict(row=i, column=j))
+                        val=val,
+                        column=column,
+                        index=index,
+                        row=row,
+                        data=table_data,
+                        pos=AttrDict(row=i, column=j),
+                    )
                     cell = table.cell(i + header_offset, j)
                     if column in cmdspec:
                         table_cell_commands[key](cell, cmdspec[column], data)
             for column in cmdspec:
                 if column not in columns:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
         # Apply commands that run on each column
         elif key in table_col_commands:
             for column, colspec in cmdspec.items():
                 if column in columns:
                     col_index = columns.index(column)
                     data['cell'] = AttrDict(
-                        val=column, column=column, index=None, row=table.columns, data=table_data,
-                        pos=AttrDict(row=-1, column=col_index))
+                        val=column,
+                        column=column,
+                        index=None,
+                        row=table.columns,
+                        data=table_data,
+                        pos=AttrDict(row=-1, column=col_index),
+                    )
                     table_col_commands[key](table, col_index, colspec, data)
                 else:
-                    app_log.warn('pptgen2: No column: %s in table: %s', column, shape.name)
+                    app_log.warn(f'pptgen2: No column: {column} in table: {shape.name}')
 
 
-def chart_data(shape, spec, data: dict):
+def chart(shape, spec, data: dict):
+    # Ensure that the chart is of a type we support
     if not hasattr(shape, 'chart'):
-        raise ValueError('Cannot set chart-data on shape: %s' % shape.name)
-    chartdata = pd.read_excel(io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
-                              index_col=0, engine='openpyxl')
-    val = expr(spec, {'chartdata': chartdata, **data})
-    if val is not None:
-        if not isinstance(val, pd.DataFrame):
-            raise ValueError('chart-data: must be a DataFrame, not %s' % val)
-        chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
-        if chart_tag not in conf['chart-type']:
-            raise ValueError('Shape %s: unsupported chart %s' % (shape.name, chart_tag))
+        raise ValueError(f'Cannot run chart: on non-chart shape: {shape.name}')
+    chart_tag = shape.chart.plots._plotArea.xCharts[0].tag
+    if chart_tag not in conf['chart-type']:
+        raise ValueError(f'Unsupported chart type {chart_tag} on shape: {shape.name}')
+
+    # Set the chart data
+    chart_data = expr(spec.get('data', None), data)
+    # If it's specified, it must be a DataFrame
+    if chart_data is not None and not isinstance(chart_data, pd.DataFrame):
+        raise ValueError(f'Chart data {chart_data:r} is not a DataFrame on shape: {shape.name}')
+    # If it's not specified, use the existing data
+    if chart_data is None:
+        chart_data = pd.read_excel(
+            io.BytesIO(shape.chart.part.chart_workbook.xlsx_part.blob),
+            index_col=0,
+            engine='openpyxl',
+        )
+    else:
         chart_type = conf['chart-type'][chart_tag]
         # Create a new instance of CategoryChartData(), XYChartData() or BubbleChartData()
         new_chart_data = getattr(pptxchartdata, chart_type + 'ChartData')()
-        new_chart_data.categories = val.index
+        new_chart_data.categories = chart_data.index
         if chart_type == 'Category':
-            for name, col in val.iteritems():
+            for name, col in chart_data.items():
                 new_chart_data.add_series(name, col.values)
         # TODO: This messes up the resulting Excel sheet, and is not extensible. Rewrite via lxml
         elif chart_type == 'Xy':
-            for name, col in val.iteritems():
+            for name, col in chart_data.items():
                 series = new_chart_data.add_series(name)
-                for index, v in col.iteritems():
+                for index, v in col.items():
                     series.add_data_point(index, v)
         shape.chart.replace_data(new_chart_data)
+
+    data = dict(**data, chartdata=chart_data)
+    for attrname, method in (
+        ('fill', partial(set_color, 'format.fill')),
+        ('stroke', partial(set_color, 'format.line.fill')),
+        ('text', lambda shape, spec, data: text(shape.data_label, spec, data)),
+    ):
+        val = expr(spec.get(attrname, None), data)
+        if val is not None:
+            for series in shape.chart.series:
+                if series.name in val.columns:
+                    vals = val[series.name].tolist()
+                    for point_index, point in enumerate(series.points):
+                        if point_index < len(vals) and vals[point_index] is not None:
+                            method(point, vals[point_index], data)
 
 
 cmdlist = {
@@ -749,11 +815,14 @@ cmdlist = {
     'image-height': image_height,
     # Link
     'link': lambda shape, spec, data: (
-        set_link('shape', 'hlinkClick', data['prs'], data['slide'], shape, expr(spec, data))),
+        set_link('shape', 'hlinkClick', data['prs'], data['slide'], shape, expr(spec, data))
+    ),
     'hover': lambda shape, spec, data: (
-        set_link('shape', 'hlinkHover', data['prs'], data['slide'], shape, expr(spec, data))),
+        set_link('shape', 'hlinkHover', data['prs'], data['slide'], shape, expr(spec, data))
+    ),
     'tooltip': lambda shape, spec, data: (
-        set_tooltip('shape', data['prs'], data['slide'], shape, expr(spec, data))),
+        set_tooltip('shape', data['prs'], data['slide'], shape, expr(spec, data))
+    ),
     # Text
     'replace': replace,
     'text': text,
@@ -765,11 +834,12 @@ cmdlist = {
     'underline': partial(set_text, 'underline', False),
     # Others
     'table': table,
-    'chart-data': chart_data,
+    'chart': chart,
+    'chart-data': lambda shape, spec, data: chart(shape, {'data': spec}, data),
     # Custom charts
-    # 'sankey': sankey,
-    # 'bullet': bullet,
-    # 'treemap': treemap,
-    # 'heatgrid': heatgrid,
-    # 'calendarmap': calendarmap,
+    #   sankey
+    #   bullet
+    #   treemap
+    #   heatgrid
+    #   calendarmap
 }

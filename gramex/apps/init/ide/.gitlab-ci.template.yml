@@ -1,0 +1,17 @@
+# See http://doc.gitlab.com/ce/ci/yaml/README.html
+
+# Check code quality
+validate:
+  image: gramener/builderrors
+  script: builderrors
+#
+# Sample script to deploy to UAT.gramener.com
+# deploy:
+#   stage: deploy
+#   script: deploy
+#   only: [master]
+#   variables:
+#     SERVER: ubuntu@uat.gramener.com
+#     URL: '{{ appname }}'
+#     SETUP: gramex setup .
+#     VERSION: py3v1

@@ -1,12 +1,18 @@
+import json
 import os
 import requests
+import pandas as pd
+import gramex
+import gramex.handlers
 from . import server
 from . import TestGramex
-from nose.tools import eq_, ok_
+from orderedattrdict import AttrDict
+from nose.tools import eq_, ok_, assert_raises
+from tornado.web import create_signed_value
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from gramex.services import info
-from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN
+from gramex.http import OK, NOT_FOUND, INTERNAL_SERVER_ERROR, FORBIDDEN, TOO_MANY_REQUESTS
 
 
 class TestURLPriority(TestGramex):
@@ -64,13 +70,19 @@ class TestXSRF(TestGramex):
         r = requests.post(server.base_url + '/xsrf/yes')
         eq_(r.status_code, FORBIDDEN)
 
-    def test_ajax(self):
+    def test_xsrf_ajax(self):
         # Requests sent with X-Requested-With should not need an XSRF cookie
-        r = requests.post(server.base_url + '/xsrf/yes', headers={
-            # Mangle case below to ensure Gramex handles it case-insensitively
-            'X-Requested-With': 'xMlHtTpReQuESt',
-        })
+        url = server.base_url + '/xsrf/yes'
+        # Mangle case below to ensure Gramex handles it case-insensitively
+        r = requests.post(url, headers={'X-Requested-With': 'xMlHtTpReQuESt'})
         eq_(r.status_code, OK)
+        # fetch() sends a Sec-Fetch-Mode: cors
+        r = requests.post(url, headers={'Sec-Fetch-Mode': 'cors'})
+        eq_(r.status_code, OK)
+        # <form> sends a Sec-Fetch-Mode of navigate in modern (desktop) browsers.
+        # Older browsers do not send it.
+        r = requests.post(url, headers={'Sec-Fetch-Mode': 'navigate'})
+        eq_(r.status_code, FORBIDDEN)
 
 
 class TestSetupErrors(TestGramex):
@@ -78,8 +90,11 @@ class TestSetupErrors(TestGramex):
         self.check('/invalid-handler', code=NOT_FOUND)
 
     def test_invalid_setup(self):
-        self.check('/invalid-setup', code=INTERNAL_SERVER_ERROR,
-                   text='url: invalid-setup: No function in conf {}')
+        self.check(
+            '/invalid-setup',
+            code=INTERNAL_SERVER_ERROR,
+            text='url:invalid-setup: needs "function:"',
+        )
 
     def test_invalid_function(self):
         self.check('/invalid-function', code=INTERNAL_SERVER_ERROR, text='nonexistent')
@@ -97,7 +112,7 @@ class TestErrorHandling(TestGramex):
             eq_(err.code, NOT_FOUND)
             text = err.read().decode('utf-8')
             ok_(' &quot;/error/404-escaped-&lt;script&gt;&quot;' in text)
-            ok_('\n' in text)   # error-404.json template has newlines
+            ok_('\n' in text)  # error-404.json template has newlines
         else:
             ok_(False, '/error/404-escaped-<script> should raise a 404')
 
@@ -109,7 +124,7 @@ class TestErrorHandling(TestGramex):
             eq_(err.code, NOT_FOUND)
             text = err.read().decode('utf-8')
             ok_(' "/error/404-template-<script>' in text)
-            ok_('\n' not in text)   # since whitespace=oneline
+            ok_('\n' not in text)  # since whitespace=oneline
         else:
             ok_(False, '/error/404-template-<script> should raise a 404')
 
@@ -178,17 +193,15 @@ class TestBaseHandler(TestGramex):
 class TestDefaultGramexYAML(TestGramex):
     def test_default_files(self):
         # Default gramex.yaml FileHandler exposes files in the current directory
-        self.check('/README.md', path='README.md', headers={
-            'Cache-Control': 'max-age=60'
-        })
-        self.check('/sample.png', path='sample.png', headers={
-            'Cache-Control': 'max-age=60'
-        })
+        self.check('/README.md', path='README.md', headers={'Cache-Control': 'max-age=60'})
+        self.check('/sample.png', path='sample.png', headers={'Cache-Control': 'max-age=60'})
 
     def test_favicon(self):
-        self.check('/favicon.ico', path='../gramex/favicon.ico', headers={
-            'Cache-Control': 'public, max-age=86400'
-        })
+        self.check(
+            '/favicon.ico',
+            path='../gramex/favicon.ico',
+            headers={'Cache-Control': 'public, max-age=86400'},
+        )
 
 
 class TestAlias(TestGramex):
@@ -206,6 +219,225 @@ class TestConfig(TestGramex):
         # gramex.appconfig should contain the current app configuration
         r = self.check('/appconfig').json()
         eq_(r['url']['appconfig']['pattern'], '/appconfig')
-        eq_(r['url']['appconfig']['kwargs']['headers'], {
-            'Content-Type': 'application/json'
-        })
+        eq_(r['url']['appconfig']['kwargs']['headers'], {'Content-Type': 'application/json'})
+
+
+class TestRateLimit(TestGramex):
+    def test_setup(self):
+        def setup(ratelimit=None, ratelimit_app_conf=None, base=gramex.handlers.BaseHandler):
+            '''Run setup_ratelimit() on a new subclass of cls'''
+            class_vars = {
+                'conf': AttrDict(pattern='/test'),
+                'name': 'test',
+                '_on_init_methods': [],
+                '_on_finish_methods': [],
+            }
+            handler = type(base.__name__, (base,), class_vars)
+            handler.setup_ratelimit(ratelimit, ratelimit_app_conf)
+            return handler
+
+        # ratelimit: is optional
+        setup(None, None)
+
+        # ratelimit: requires app.ratelimit
+        with assert_raises(ValueError) as cm:
+            setup({}, None)
+        eq_(cm.exception.args[0], "url:test.ratelimit: no app.ratelimit defined")
+
+        # ratelimit.keys required
+        with assert_raises(ValueError) as cm:
+            setup({}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], 'url:test.ratelimit.keys: missing')
+
+        # ratelimit.limit required
+        with assert_raises(ValueError) as cm:
+            setup({'keys': 'daily'}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], 'url:test.ratelimit.limit: missing')
+
+        # ratelimit.keys strings MUST be predefined
+        with assert_raises(ValueError) as cm:
+            setup({'keys': 'secondly', 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], 'url:test.ratelimit.keys: secondly is unknown')
+
+        # ratelimit.keys strings MUST be str/list
+        with assert_raises(ValueError) as cm:
+            setup({'keys': 0, 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], 'url:test.ratelimit.keys: needs dict list, not 0')
+
+        # ratelimit.keys: invalid function compilation directly raises exceptions, e.g. SyntaxError
+        with assert_raises(SyntaxError):
+            setup({'keys': [{'function': ';$@'}], 'limit': 5}, gramex.conf.app.ratelimit)
+
+        # ratelimit.keys dicts need a function:
+        with assert_raises(ValueError) as cm:
+            setup({'keys': {'x': 0}, 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function/key:")
+        with assert_raises(ValueError) as cm:
+            setup({'keys': [{'x': 0}], 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], "url:test.ratelimit.keys: {'x': 0} has no function/key:")
+
+        # ratelimit.keys can be a predefined key string
+        for key in ('hourly', 'daily', 'weekly', 'monthly', 'yearly', 'user'):
+            ok_(setup({'keys': key, 'limit': 5}, gramex.conf.app.ratelimit)._ratelimit[0].store)
+
+        # ratelimit.keys can be a dict with a function. Defines a single key
+        ok_(setup({'keys': {'function': '0'}, 'limit': 5}, gramex.conf.app.ratelimit))
+
+        # ratelimit.keys can be a dict with a key
+        ok_(setup({'keys': {'key': 'daily'}, 'limit': 5}, gramex.conf.app.ratelimit))
+
+        # ratelimit.keys can be a comma-separated string
+        cls = setup({'keys': 'daily, user', 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(len(cls._ratelimit[0].key_fn), 2)
+
+        # ratelimit.keys can be an array of strings
+        cls = setup({'keys': ['daily', 'user'], 'limit': 5}, gramex.conf.app.ratelimit)
+        eq_(len(cls._ratelimit[0].key_fn), 2)
+
+        # ratelimit.limit must be a number
+        with assert_raises(ValueError) as cm:
+            setup({'keys': 'daily', 'limit': 'x'}, gramex.conf.app.ratelimit)
+        eq_(cm.exception.args[0], "url:test.ratelimit.limit: needs {'function': number}, not x")
+
+        # ratelimit.limit can be a function
+        cls = setup({'keys': 'user', 'limit': {'function': '5'}}, gramex.conf.app.ratelimit)
+        eq_(cls._ratelimit[0].limit_fn(None), 5)
+
+        # EVERY handler supports rate-limiting via `ratelimit:`
+        for base in (
+            gramex.handlers.FunctionHandler,
+            gramex.handlers.FormHandler,
+            gramex.handlers.FileHandler,
+            gramex.handlers.DriveHandler,
+        ):
+            cls = setup({'keys': 'daily, user', 'limit': 5}, gramex.conf.app.ratelimit, base)
+            ok_(issubclass(cls, base))
+
+        # ratelimit.keys return the expected values
+        all_keys = ['hourly', 'daily', 'weekly', 'monthly', 'yearly', 'user']
+        cls = setup({'keys': all_keys, 'limit': 5}, gramex.conf.app.ratelimit)
+        key_fn = dict(zip(all_keys, cls._ratelimit[0].key_fn))
+        handler = AttrDict(current_user=AttrDict(id='a@b'))
+        eq_(key_fn['hourly']['function'](handler), pd.Timestamp.utcnow().strftime('%Y-%m-%d %H'))
+        eq_(key_fn['daily']['function'](handler), pd.Timestamp.utcnow().strftime('%Y-%m-%d'))
+        eq_(key_fn['weekly']['function'](handler), pd.Timestamp.utcnow().strftime('%Y %U'))
+        eq_(key_fn['monthly']['function'](handler), pd.Timestamp.utcnow().strftime('%Y-%m'))
+        eq_(key_fn['yearly']['function'](handler), pd.Timestamp.utcnow().strftime('%Y'))
+        eq_(key_fn['user']['function'](handler), 'a@b')
+
+        # Multiple pools are supported
+        cls = setup(
+            [{'keys': 'daily, user', 'limit': 5}, {'keys': 'daily', 'limit': 10}],
+            gramex.conf.app.ratelimit,
+        )
+        key_fn0, key_fn1 = cls._ratelimit[0].key_fn, cls._ratelimit[1].key_fn
+        eq_(key_fn0[0]['function'](handler), pd.Timestamp.utcnow().strftime('%Y-%m-%d'))
+        eq_(key_fn0[1]['function'](handler), 'a@b')
+        eq_(key_fn1[0]['function'](handler), pd.Timestamp.utcnow().strftime('%Y-%m-%d'))
+        eq_(len(key_fn1), 1)
+
+        # If any pool has an error, entire class is not set up
+        with assert_raises(ValueError) as cm:
+            setup([{'keys': 'daily', 'limit': 10}, {'keys': 'weekly'}], gramex.conf.app.ratelimit)
+
+    def check_rate(self, url, user, limit, remaining, code=OK, expiry='daily'):
+        # If user= is specified, send an {'id': user} object via headers
+        headers = {}
+        if user is not None:
+            cookie_secret = gramex.service.app.settings['cookie_secret']
+            sign = create_signed_value(cookie_secret, 'user', json.dumps({'id': user}))
+            headers['X-Gramex-User'] = sign
+
+        # Check the status code and X-Ratelimit-* headers
+        r = self.check(url, code=code, request_headers=headers)
+        if code in (OK, TOO_MANY_REQUESTS):
+            eq_(r.headers['X-Ratelimit-Limit'], str(limit))
+            eq_(r.headers['X-Ratelimit-Remaining'], str(remaining))
+            # Check expiry time to plus/minus 2 seconds.
+            # NOTE: This test may fail if running exactly at UTC midnight
+            if expiry in gramex.handlers.basehandler._PREDEFINED_KEYS:
+                expiry = gramex.handlers.basehandler._PREDEFINED_KEYS[expiry]['expiry']()
+            ok_(expiry - 2 <= int(r.headers['X-Ratelimit-Reset']) <= expiry + 2)
+            # Retry-After header should be sent only for
+            if code == TOO_MANY_REQUESTS:
+                eq_(r.headers['Retry-After'], r.headers['X-Ratelimit-Reset'])
+            else:
+                ok_('Retry-After' not in r.headers)
+        else:
+            # No headers sent for HTTP errors
+            ok_('X-Ratelimit-Limit' not in r.headers)
+            ok_('X-Ratelimit-Remaining' not in r.headers)
+            ok_('X-Ratelimit-Reset' not in r.headers)
+            ok_('Retry-After' not in r.headers)
+
+    def test_ratelimit(self):
+        # Reset usage count for all users before beginning the test
+        self.check('/ratelimit/reset')
+        self.check('/ratelimit/reset?user=alpha')
+        self.check('/ratelimit/reset?user=beta')
+
+        # All HTTP headers come through OK. First usage leaves us with 2 remaining
+        self.check_rate('/ratelimit/a', None, 3, 2)
+        # /ratelimit/b uses the same pool as /a
+        self.check_rate('/ratelimit/b', None, 3, 1)
+        # HTTP errors don't deduct from usage
+        self.check_rate('/ratelimit/a?n=0', None, 3, 1, INTERNAL_SERVER_ERROR)
+        self.check_rate('/ratelimit/b?n=0', None, 3, 1, INTERNAL_SERVER_ERROR)
+        # When usage exceeds, we get HTTP 429
+        self.check_rate('/ratelimit/a', None, 3, 0)
+        self.check_rate('/ratelimit/a', None, 3, 0, TOO_MANY_REQUESTS)
+        self.check_rate('/ratelimit/b', None, 3, 0, TOO_MANY_REQUESTS)
+        # Different users get a different limits
+        self.check_rate('/ratelimit/a', 'alpha', 3, 2)
+        self.check_rate('/ratelimit/a', 'beta', 3, 2)
+        self.check_rate('/ratelimit/b', 'alpha', 3, 1)
+        self.check_rate('/ratelimit/b', 'beta', 3, 1)
+
+    def test_ratelimit_key_function(self):
+        self.check('/ratelimit/reset3')
+        self.check('/ratelimit/reset3?user=alpha')
+        self.check('/ratelimit/reset3?user=beta')
+        # alpha has a 4 daily limit. Others (including beta): 3 hourly
+        self.check_rate('/ratelimit/key', 'alpha', 4, 3, expiry='daily')
+        self.check_rate('/ratelimit/key', 'alpha', 4, 2, expiry='daily')
+        self.check_rate('/ratelimit/key', 'beta', 3, 2, expiry='hourly')
+        self.check_rate('/ratelimit/key', 'beta', 3, 1, expiry='hourly')
+        self.check_rate('/ratelimit/key', None, 3, 2, expiry='hourly')
+        self.check_rate('/ratelimit/key', None, 3, 1, expiry='hourly')
+
+    def test_multiple_ratelimit(self):
+        self.check('/ratelimit/reset')
+        self.check('/ratelimit/reset?user=alpha')
+        self.check('/ratelimit/reset?user=beta')
+        self.check('/ratelimit/reset2')
+
+        # Pool: None: 0/3, alpha: 0/3, beta: 0/3, all: 0/4
+        self.check_rate('/ratelimit/ab', None, 3, 2)
+        # Pool: None: 1/3, alpha: 0/3, beta: 0/3, all: 1/4
+        self.check_rate('/ratelimit/ab', 'alpha', 3, 2)
+        # Pool: None: 1/3, alpha: 1/3, beta: 0/3, all: 2/4
+        self.check_rate('/ratelimit/ab', 'beta', 4, 1)
+        # Pool: None: 1/3, alpha: 1/3, beta: 1/3, all: 3/4
+        self.check_rate('/ratelimit/ab', None, 4, 0)
+        # Pool: None: 2/3, alpha: 1/3, beta: 1/3, all: 4/4
+        self.check_rate('/ratelimit/ab', 'alpha', 4, 0, TOO_MANY_REQUESTS)
+
+        # We can reset just a single pool
+        self.check('/ratelimit/reset2')
+        # Pool: None: 2/3, alpha: 2/3, beta: 1/3, all: 0/4
+        self.check_rate('/ratelimit/ab', 'beta', 3, 1)
+
+    def test_get_ratelimit(self):
+        self.check('/ratelimit/reset')
+
+        def check(limit, usage):
+            result = self.check('/ratelimit/info').json()
+            eq_(result['limit'], limit)
+            eq_(result['usage'], usage)
+            eq_(result['remaining'], max(limit - usage - 1, 0))
+            ok_(result['expiry'] < 86400)
+
+        check(limit=3, usage=0)
+        check(limit=3, usage=1)
+        check(limit=3, usage=2)
+        self.check('/ratelimit/info', code=TOO_MANY_REQUESTS)

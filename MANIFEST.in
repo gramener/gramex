@@ -1,36 +1,21 @@
 # Used for source distributions (python setup.py sdist)
 # https://docs.python.org/2/distutils/sourcedist.html
-# Include package specific files
-include gramex/gramex.yaml
-include gramex/deploy.yaml
-include gramex/apps.yaml
+
+include README.md
+include gramex/*.yaml
+include gramex/*.csv
 include gramex/favicon.ico
-include gramex/release.json
 include gramex/download.vega.js
 include gramex/handlers/*.html
+include gramex/handlers/*.yaml
 include gramex/pptgen/*.json
 include gramex/pptgen2/config.yaml
 
 # Include Gramex apps
 graft gramex/apps
 
-# Earlier, we excluded node_modules via the line below.
-# recursive-exclude gramex/apps/capture/node_modules *
-# But on Linux, when running pip install from the tarball, we must allow
-# puppeteer and other apps node_modules. So disabling the above line.
-
 # Include dependencies
 include .gitignore
-
-# Include core docs
-include README.rst
-
-# Include test cases
-graft tests
-graft testlib
-
-# Include documentation
-recursive-include docs *.rst conf.py Makefile make.bat
 
 # Exclude Python build files, binary databases
 global-exclude __pycache__

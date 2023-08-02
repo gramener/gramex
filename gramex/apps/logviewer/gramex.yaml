@@ -1,4 +1,5 @@
 # Configurable variables
+# LOGVIEWER_DB
 # LOGVIEWER_PATH_UI
 # LOGVIEWER_PATH_RENDER
 # $LOGVIEWER_FORMHANDLER_KWARGS
@@ -9,8 +10,11 @@
 # $LOGVIEWER_SCHEDULER_KWARGS
 
 variables:
+  LOGVIEWER_DB:
+    default:
+      url: sqlite:///$GRAMEXDATA/logs/logviewer.db
   LOGVIEWER_SCHEDULER_PORT:
-    default: ''
+    default: ""
   LOGVIEWER_PATH_UI:
     default: $YAMLPATH/config.yaml
   LOGVIEWER_PATH_RENDER:
@@ -56,73 +60,58 @@ url:
       import.merge: $LOGVIEWER_FORMHANDLER_KWARGS
       kwargs:
         queries:
-          filterstatus:
-            SELECT DISTINCT status
+          filterstatus: SELECT DISTINCT status
             FROM {table} {where}
             ORDER BY status
-          filterusers:
-            SELECT DISTINCT "user.id"
+          filterusers: SELECT DISTINCT "user.id"
             FROM {table}
             WHERE "user.id_1" == 1 {where}
             ORDER BY "user.id"
-          filteruri:
-            SELECT uri, SUM(duration_count) AS views
+          filteruri: SELECT uri, SUM(duration_count) AS views
             FROM {table}
             WHERE uri_1 == 1 {where}
             GROUP BY uri ORDER BY views DESC LIMIT 100
-          filterip:
-            SELECT DISTINCT ip
+          filterip: SELECT DISTINCT ip
             FROM {table} {where}
             ORDER BY ip
-          kpi-pageviews:
-            SELECT SUM(duration_count) AS value
+          kpi-pageviews: SELECT SUM(duration_count) AS value
             FROM {table}
             WHERE uri_1 == 1 {where}
-          kpi-sessions:
-            SELECT SUM(new_session_sum) AS value
+          kpi-sessions: SELECT SUM(new_session_sum) AS value
             FROM {table}
             WHERE "user.id_1" == 1 {where}
-          kpi-users:
-            SELECT COUNT(DISTINCT "user.id") AS value
+          kpi-users: SELECT COUNT(DISTINCT "user.id") AS value
             FROM {table}
             WHERE "user.id_1" == 1 {where}
           kpi-avgtimespent:
             SELECT SUM(session_time_sum)/SUM(new_session_sum) AS value
             FROM {table}
             WHERE "user.id_1" == 1 {where}
-          kpi-urls:
-            SELECT COUNT(DISTINCT uri) AS value
+          kpi-urls: SELECT COUNT(DISTINCT uri) AS value
             FROM {table}
             WHERE uri_1 == 1 {where}
-          kpi-avgloadtime:
-            SELECT SUM(duration_sum)/SUM(duration_count) AS value
+          kpi-avgloadtime: SELECT SUM(duration_sum)/SUM(duration_count) AS value
             FROM {table} {where}
-          toptenusers:
-            SELECT "user.id", SUM(duration_count) AS views
+          toptenusers: SELECT "user.id", SUM(duration_count) AS views
             FROM {table}
             WHERE "user.id_1" == 1 {where}
             GROUP BY "user.id"
             ORDER BY views DESC LIMIT 10
-          toptenip:
-            SELECT ip, SUM(duration_count) AS requests
+          toptenip: SELECT ip, SUM(duration_count) AS requests
             FROM {table} {where}
             GROUP BY ip ORDER BY requests DESC LIMIT 10
-          toptenstatus:
-            SELECT status, SUM(duration_count) AS requests
+          toptenstatus: SELECT status, SUM(duration_count) AS requests
             FROM {table} {where}
             GROUP BY status ORDER BY requests DESC LIMIT 10
-          toptenuri:
-            SELECT uri, SUM(duration_count) AS views
+          toptenuri: SELECT uri, SUM(duration_count) AS views
             FROM {table}
             WHERE uri_1 == 1 {where}
             GROUP BY uri ORDER BY views DESC LIMIT 10
-          pageviewstrend:
-            SELECT time, SUM(duration_count) AS pageviews
+          pageviewstrend: SELECT time, SUM(duration_count) AS pageviews
             FROM {table}
             WHERE uri_1 == 1 {where}
             GROUP BY time
-          sessionstrend:
-            SELECT time, SUM(new_session_sum) AS sessions
+          sessionstrend: SELECT time, SUM(new_session_sum) AS sessions
             FROM {table}
             WHERE "user.id_1" == 1 {where}
             GROUP BY time
@@ -146,45 +135,49 @@ url:
       import.merge: $LOGVIEWER_CAPTURE_KWARGS
 
 schedule:
-  apps/logviewer-$* if '--listen.port=' + LOGVIEWER_SCHEDULER_PORT in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
+  apps/logviewer-$* if f'--listen.port={LOGVIEWER_SCHEDULER_PORT}' in ''.join(sys.argv[1:]) or not LOGVIEWER_SCHEDULER_PORT:
     function: logviewer.summarize
     kwargs:
+      db: $LOGVIEWER_DB
+      custom_dims:
+        import.merge: $LOGVIEWER_CUSTOM_DIMENSIONS
       session_threshold: 15
       transforms:
-      - type: derive
-        expr:
-          col: status
-          op: REPLACE
-          value:
-            101: 101 Switching Protocols
-            200: 200 OK
-            301: 301 Moved Permanently
-            302: 302 Found
-            304: 304 Not Modified
-            400: 400 Bad Request
-            401: 401 Unauthorized
-            403: 403 Forbidden
-            404: 404 Not Found
-            405: 405 Method Not Allowed
-            422: 422 Unprocessable Entity
-            500: 500 Internal Server Error
-            502: 502 Bad Gateway
-            504: 504 Gateway Timeout
-            599: 599 Network Timeout
-        as: status
+        - type: derive
+          expr:
+            col: status
+            op: REPLACE
+            value:
+              101: 101 Switching Protocols
+              200: 200 OK
+              301: 301 Moved Permanently
+              302: 302 Found
+              304: 304 Not Modified
+              400: 400 Bad Request
+              401: 401 Unauthorized
+              403: 403 Forbidden
+              404: 404 Not Found
+              405: 405 Method Not Allowed
+              422: 422 Unprocessable Entity
+              500: 500 Internal Server Error
+              502: 502 Bad Gateway
+              504: 504 Gateway Timeout
+              599: 599 Network Timeout
+          as: status
       post_transforms:
-      - type: derive
-        expr:
-          col: user.id
-          op: NOTIN
-          value: ['-', 'dev']
-        as: user.id_1
-      - type: derive
-        expr:
-          col: uri
-          op: NOTCONTAINS
-          value: '\.js|\.css|\.ico|\.png|\.jpg|\.jpeg|\.gif|\.otf|\.woff.*|\.eot'
-        as: uri_1
+        - type: derive
+          expr:
+            col: user.id
+            op: NOTIN
+            value: ["-", "dev"]
+          as: user.id_1
+        - type: derive
+          expr:
+            col: uri
+            op: NOTCONTAINS
+            value: '\.js|\.css|\.ico|\.png|\.jpg|\.jpeg|\.gif|\.otf|\.woff.*|\.eot'
+          as: uri_1
+      # TODO: this may not work as logviewer.summarize() does not accept any kwargs!
       import.merge: $LOGVIEWER_SCHEDULER_KWARGS
     startup: true
     # Run at 6pm local time. In India, this is a bit after 0:00 UTC,

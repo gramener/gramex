@@ -3,38 +3,15 @@ import inspect
 import json
 import re
 import gramex
+import gramex.cache
+from copy import deepcopy
 from typing import get_type_hints
 from textwrap import dedent
 from gramex.config import merge
 from gramex.transforms.transforms import typelist, Header
 from gramex.handlers import BaseHandler
 
-error_codes = {
-    '200': {
-        'description': 'Successful Response',
-        'content': {'application/json': {}}
-    },
-    '400': {
-        'description': 'Bad request',
-        'content': {'text/html': {'example': 'Bad request'}}
-    },
-    '401': {
-        'description': 'Not authorized',
-        'content': {'text/html': {'example': 'Not authorized'}}
-    },
-    '403': {
-        'description': 'Forbidden',
-        'content': {'text/html': {'example': 'Forbidden'}}
-    },
-    '404': {
-        'description': 'Not found',
-        'content': {'text/html': {'example': 'Not found'}}
-    },
-    '500': {
-        'description': 'Internal server error',
-        'content': {'text/html': {'example': 'Internal server error'}}
-    },
-}
+config = gramex.cache.open('openapiconfig.yaml', rel=True)
 
 
 def url_name(pattern):
@@ -46,20 +23,14 @@ def url_name(pattern):
 
 
 class OpenAPIHandler(BaseHandler):
-    types = {
-        str: 'string',
-        int: 'integer',
-        float: 'number',
-        bool: 'boolean',
-        None: 'null'
-    }
+    types = {str: 'string', int: 'integer', float: 'number', bool: 'boolean', None: 'null'}
 
     @classmethod
     def function_spec(cls, function):
         params = []
         spec = {
             'description': dedent(getattr(function, '__doc__', '') or ''),
-            'parameters': params
+            'parameters': params,
         }
         # Get the function signature. But "function: str" fails with ValueError.
         # In such cases, skip the parameter configuration.
@@ -71,26 +42,78 @@ class OpenAPIHandler(BaseHandler):
         for name, param in signature.parameters.items():
             hint = hints.get(name, None)
             typ, is_list = typelist(hints[name]) if hint else (str, False)
-            config = {
+            conf = {
                 'in': 'header' if hint and hint is Header else 'query',
                 'name': name,
                 'description': getattr(param.annotation, '__metadata__', ('',))[0],
-                'schema': {}
+                'schema': {},
             }
-            params.append(config)
+            params.append(conf)
             # If default is not specific, parameter is required.
             if param.default is inspect.Parameter.empty:
-                config['required'] = True
+                conf['required'] = True
             else:
-                config['default'] = param.default
+                conf['schema']['default'] = param.default
             # JSON Schema uses {type: array, items: {type: integer}} for array of ints.
             # But a simple int is {type: integer}
             if is_list:
-                config['schema']['type'] = 'array'
-                config['schema']['items'] = {'type': cls.types.get(typ, 'string')}
+                conf['schema']['type'] = 'array'
+                conf['schema']['items'] = {'type': cls.types.get(typ, 'string')}
             else:
-                config['schema']['type'] = cls.types.get(typ, 'string'),
-        spec['responses'] = error_codes
+                conf['schema']['type'] = cls.types.get(typ, 'string')
+        spec['responses'] = deepcopy(config['responses'])
+        return spec
+
+    def formhandler_spec(self, cls, summary):
+        spec = {}
+        datasets = getattr(cls, 'datasets', {})
+        get_spec = spec['get'] = {
+            'summary': summary,
+            # TODO: Document type of data source
+            'description': f'Query data from {len(datasets)} data source(s)',
+        }
+        params = get_spec['parameters'] = []
+        for name, dataset in datasets.items():
+
+            def add(param, **keys):
+                param = merge({}, param)
+                params.append(
+                    merge(
+                        param,
+                        {
+                            'name': param['name'] if cls.single else f'{name}:{param["name"]}',
+                            **keys,
+                        },
+                    )
+                )
+
+            # For every column, add
+            #   ?_c=<col>
+            #   ?_sort=<col> and ?_sort=-<col>
+            #   ?<col>=
+            cols, sorts = [], []
+            for col in dataset.get('columns', []):
+                if isinstance(col, dict):
+                    add(
+                        config['formhandler']['col'],
+                        name=col['name'],
+                        schema={'type': col['type']},
+                    )
+                    cols.append(col['name'])
+                    sorts.append(col['name'])
+                    sorts.append('-' + col['name'])
+                else:
+                    add(config['formhandler']['col'], name=col)
+                    cols.append(col)
+                    sorts.append(col)
+                    sorts.append('-' + col)
+            add(config['formhandler']['_sort'], schema={'items': {'enum': sorts}})
+            add(config['formhandler']['_c'], schema={'items': {'enum': cols}})
+            add(config['formhandler']['_offset'])
+            add(config['formhandler']['_limit'])
+            add(config['formhandler']['_meta'])
+        # TODO: If ID is present, allow GET, POST, DELETE. Else only GET
+        get_spec['responses'] = deepcopy(config['responses'])
         return spec
 
     def get(self):
@@ -104,7 +127,7 @@ class OpenAPIHandler(BaseHandler):
             'openapi': '3.0.2',
             'info': kwargs.get('info', {}),
             'servers': kwargs.get('servers', {}),
-            'paths': {}
+            'paths': {},
         }
 
         key_patterns = kwargs.get('urls', ['*'])
@@ -115,35 +138,39 @@ class OpenAPIHandler(BaseHandler):
             key_end = key.split(':')[-1]
             if not any(fnmatch(key_end, pat) for pat in key_patterns):
                 continue
+            # Ignore invalid handlers
+            if key not in gramex.service.url or 'handler' not in config or 'pattern' not in config:
+                continue
             # Normalize the pattern, e.g. /./docs -> /docs
             pattern = config['pattern'].replace('/./', '/')
-            # Ignore invalid handlers
-            if key not in gramex.service.url or 'handler' not in config:
-                continue
+            summary = f'{url_name(pattern)}: {config["handler"]}'
             # TODO: Handle wildcards, e.g. /(.*) -> / with an arg
-            info = spec['paths'][pattern] = {
-                'get': {
-                    'summary': f'{url_name(pattern)}: {config["handler"]}'
-                },
-            }
+            info = spec['paths'][pattern] = {}
             cls = gramex.service.url[key].handler_class
-            if config['handler'] == 'FunctionHandler':
+            if issubclass(cls, gramex.handlers.FunctionHandler):
                 # Ignore functions with invalid setup
-                if hasattr(cls, 'info') and 'function' in cls.info:
-                    function = cls.info['function']
-                    function = function.__func__ or function
-                    if callable(function):
-                        fnspec = self.function_spec(function)
-                        fnspec['summary'] = f'{url_name(pattern)}: {config["handler"]}'
-                        default_methods = 'GET POST PUT DELETE PATCH OPTIONS'.split()
-                        for method in getattr(cls, '_http_methods', default_methods):
-                            info[method.lower()] = fnspec
-            # User's spec definition overrides our spec definition
+                if not hasattr(cls, 'info') or 'function' not in cls.info:
+                    continue
+                function = cls.info['function']
+                function = getattr(function, '__func__', None) or function
+                if callable(function):
+                    fnspec = self.function_spec(function)
+                    fnspec['summary'] = summary
+                    default_methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+                    for method in getattr(cls, '_http_methods', default_methods):
+                        info[method.lower()] = deepcopy(fnspec)
+            elif issubclass(cls, gramex.handlers.FormHandler):
+                info.update(self.formhandler_spec(cls, summary=summary))
+            else:
+                info['get'] = {'summary': summary}
+
             merge(info, cls.conf.get('openapi', {}), mode='overwrite')
 
         args = self.argparse(indent={'type': int, 'default': 0})
-        self.write(json.dumps(
-            spec,
-            indent=args.indent or None,
-            separators=(', ', ': ') if args.indent else (',', ':'),
-        ))
+        self.write(
+            json.dumps(
+                spec,
+                indent=args.indent or None,
+                separators=(', ', ': ') if args.indent else (',', ':'),
+            )
+        )

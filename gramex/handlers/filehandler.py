@@ -1,9 +1,11 @@
+import os
 import re
 import string
 import datetime
 import mimetypes
 import tornado.web
 import tornado.gen
+import gramex.cache
 from pathlib import Path
 from fnmatch import fnmatch
 from tornado.escape import utf8
@@ -17,7 +19,9 @@ from gramex import conf as gramex_conf
 from gramex.http import FORBIDDEN, NOT_FOUND
 
 # Directory indices are served using this template by default
-_default_index_template = Path(__file__).absolute().parent / 'filehandler.template.html'
+_folder = os.path.dirname(os.path.abspath(__file__))
+_default_index_template = os.path.join(_folder, 'filehandler.template.html')
+_tmpl_opener = gramex.cache.opener(string.Template, read=True, encoding='utf-8')
 
 
 def _match(path, pat):
@@ -27,105 +31,91 @@ def _match(path, pat):
     return fnmatch(str(path).lower(), '*/' + pat.lower())
 
 
-def read_template(path):
-    if not path.exists():
-        app_log.warning('Missing directory template "%s". Using "%s"' %
-                        (path, _default_index_template))
-        path = _default_index_template
-    with path.open(encoding='utf-8') as handle:
-        return string.Template(handle.read())
-
-
 class FileHandler(BaseHandler):
-    '''
-    Serves files with transformations. It accepts these parameters:
-
-    :arg string path: Can be one of these:
-
-        - The filename to serve. For all files matching the pattern, this
-          filename is returned.
-        - The root directory from which files are served. The first parameter of
-          the URL pattern is the file path under this directory. Relative paths
-          are specified from where gramex was run.
-        - A wildcard path where `*` is replaced by the URL pattern's first
-          `(..)` group.
-        - A list of files to serve. These files are concatenated and served one
-          after the other.
-        - A dict of {regex: path}. If the URL matches the regex, the path is
-          served. The path is string formatted using the regex capture groups
-
-    :arg string default_filename: If the URL maps to a directory, this filename
-        is displayed by default. For example, ``index.html`` or ``README.md``.
-        The default is ``None``, which displays all files in the directory.
-    :arg boolean index: If ``true``, shows a directory index. If ``false``,
-        raises a HTTP 404: Not Found error when users try to access a directory.
-    :arg list ignore: List of glob patterns to ignore. Even if the path matches
-        these, the files will not be served.
-    :arg list allow: List of glob patterns to allow. This overrides the ignore
-        patterns, so use with care.
-    :arg string index_template: The file to be used as the template for
-        displaying the index. If this file is missing, it defaults to Gramex's
-        default ``filehandler.template.html``. It can use these string
-        variables:
-
-        - ``$path`` - the directory name
-        - ``$body`` - an unordered list with all filenames as links
-    :arg dict headers: HTTP headers to set on the response.
-    :arg dict transform: Transformations that should be applied to the files.
-        The key matches one or more `glob patterns`_ separated by space/comma
-        (e.g. ``'*.md, 'data/**'``.) The value is a dict with the same
-        structure as :class:`FunctionHandler`, and accepts these keys:
-
-        ``function``
-            A string that resolves into any Python function or method (e.g.
-            ``markdown.markdown``). By default, it is called with the file
-            contents as ``function(content)`` and the result is rendered as-is
-            (hence must be a string.)
-
-        ``args``
-            optional positional arguments to be passed to the function. By
-            default, this is just ``['content']`` where ``content`` is the file
-            contents. You can also pass the handler via ``['handler']``, or both
-            of them in any order.
-
-        ``kwargs``:
-            an optional list of keyword arguments to be passed to the function.
-            A value with of ``handler`` and ``content`` is replaced with the
-            RequestHandler and file contents respectively.
-
-        ``encoding``
-            The encoding to load the file as. If you don't specify an encoding,
-            file contents are passed to ``function`` as a binary string.
-
-        ``headers``:
-            HTTP headers to set on the response.
-    :arg string template: ``template="*.html"`` renders all HTML files as Tornado templates.
-        ``template=True`` renders all files as Tornado templates (new in Gramex 1.14).
-    :arg string sass: ``sass="*.sass"`` renders all SASS files as CSS (new in Gramex 1.66).
-    :arg string scss: ``scss="*.scss"`` renders all SCSS files as CSS (new in Gramex 1.66).
-
-    .. _glob patterns: https://docs.python.org/3/library/pathlib.html#pathlib.Path.glob
-
-    FileHandler exposes these attributes:
-
-    - ``root``: Root path for this handler. Aligns with the ``path`` argument
-    - ``path``; Absolute path requested by the user, without adding a default filename
-    - ``file``: Absolute path served to the user, after adding a default filename
-    '''
-
     @classmethod
-    def setup(cls, path, default_filename=None, index=None, index_template=None,
-              headers={}, default={}, **kwargs):
+    def setup(
+        cls,
+        path: str,
+        default_filename: str = None,
+        index: bool = None,
+        index_template: str = None,
+        headers: dict = {},
+        default={},
+        **kwargs,
+    ):
+        '''
+        Serves files with transformations.
+
+        Parameters:
+
+            path: Can be one of these:
+
+                - The filename to serve. For all files matching the pattern, this
+                filename is returned.
+                - The root directory from which files are served. The first parameter of
+                the URL pattern is the file path under this directory. Relative paths
+                are specified from where gramex was run.
+                - A wildcard path where `*` is replaced by the URL pattern's first
+                `(..)` group.
+                - A list of files to serve. These files are concatenated and served one
+                after the other.
+                - A dict of {regex: path}. If the URL matches the regex, the path is
+                served. The path is string formatted using the regex capture groups
+
+            default_filename: If the URL maps to a directory, this filename
+                is displayed by default. For example, `index.html` or `README.md`.
+                It can be a list of default filenames tried in order, e.g.
+                `[index.template.html, index.html, README.md]`.
+                The default is `None`, which displays all files in the directory
+                using the `index_template` option.
+            index: If `true`, shows a directory index. If `false`,
+                raises a HTTP 404: Not Found error when users try to access a directory.
+            ignore: List of glob patterns to ignore. Even if the path matches
+                these, the files will not be served.
+            allow: List of glob patterns to allow. This overrides the ignore
+                patterns, so use with care.
+            index_template: The file to be used as the template for
+                displaying the index. If this file is missing, it defaults to Gramex's
+                default `filehandler.template.html`. It can use these string
+                variables:
+
+                - `$path` - the directory name
+                - `$body` - an unordered list with all filenames as links
+            headers: HTTP headers to set on the response.
+            transform: Transformations that should be applied to the files.
+                The key matches one or more `glob patterns` separated by space/comma
+                (e.g. `'*.md, 'data/**'`.) The value is a dict with the same
+                structure as [FunctionHandler][gramex.handlers.FunctionHandler], and accepts keys:
+
+                - `function`: The expression to return. E.g.: `function: method(content, handler)`.
+                    `content` has the file contents. `handler` has the FileHandler object
+                - `encoding`: Encoding to read the file with, e.g. `utf-8`. If `None` (default),
+                    file is read as bytes. Transform `function` MUST accept the content as bytes
+                - `headers`: HTTP headers to set on the response
+
+            template: `template="*.html"` renders all HTML files as Tornado templates.
+                `template=True` renders all files as Tornado templates (new in Gramex 1.14).
+            sass: `sass="*.sass"` renders all SASS files as CSS (new in Gramex 1.66).
+            scss: `scss="*.scss"` renders all SCSS files as CSS (new in Gramex 1.66).
+            ts: `ts="*.ts"` renders all TypeScript files as JS (new in Gramex 1.78).
+
+        FileHandler exposes these attributes:
+
+        - `root`: Root path for this handler. Aligns with the `path` argument
+        - `path`; Absolute path requested by the user, without adding a default filename
+        - `file`: Absolute path served to the user, after adding a default filename
+        '''
         # Convert template: '*.html' into transform: {'*.html': {function: template}}
         # Convert sass: ['*.scss', '*.sass'] into transform: {'*.scss': {function: sass}}
         # Do this before BaseHandler setup so that it can invoke the transforms required
-        for key in ('template', 'sass', 'scss', 'vue'):
+        for key in ('template', 'sass', 'scss', 'ts'):
             val = kwargs.pop(key, None)
             if val:
-                # template/sass: true is the same as template: '*'
+                # template/sass/...: true is the same as template: '*'
                 val = '*' if val is True else val if isinstance(val, (list, tuple)) else [val]
-                kwargs.setdefault('transform', AttrDict()).update({
-                    v: AttrDict(function=key) for v in val})
+                kwargs.setdefault('transform', AttrDict()).update(
+                    {v: AttrDict(function=key) for v in val}
+                )
         super(FileHandler, cls).setup(**kwargs)
 
         cls.root, cls.pattern = None, None
@@ -137,16 +127,23 @@ class FileHandler(BaseHandler):
             cls.pattern = path
         else:
             cls.root = Path(path).absolute()
-        cls.default_filename = default_filename
+        # Convert default_filename into a list
+        if not default_filename:
+            cls.default_filename = []
+        elif isinstance(default_filename, list):
+            cls.default_filename = default_filename
+        else:
+            cls.default_filename = [default_filename]
         cls.index = index
         cls.ignore = cls.set(cls.kwargs.ignore)
         cls.allow = cls.set(cls.kwargs.allow)
         cls.default = default
-        cls.index_template = read_template(
-            Path(index_template) if index_template is not None else _default_index_template)
+        cls.index_template = index_template or _default_index_template
         cls.headers = AttrDict(objectpath(gramex_conf, 'handlers.FileHandler.headers', {}))
         cls.headers.update(headers)
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @classmethod
     def set(cls, value):
@@ -154,12 +151,12 @@ class FileHandler(BaseHandler):
         Convert value to a set. If value is already a list, set, tuple, return as is.
         Ensure that the values are non-empty strings.
         '''
-        result = set(value) if isinstance(value, (list, tuple, set)) else set([value])
+        result = set(value) if isinstance(value, (list, tuple, set)) else {value}
         for pattern in result:
             if not pattern:
-                app_log.warning('%s: Ignoring empty pattern "%r"', cls.name, pattern)
+                app_log.warning(f'{cls.name}: Ignoring empty pattern "{pattern!r}"')
             elif not isinstance(pattern, (str, bytes)):
-                app_log.warning('%s: pattern "%r" is not a string. Ignoring.', cls.name, pattern)
+                app_log.warning(f'{cls.name}: pattern "{pattern!r}" is not a string. Ignoring.')
             result.add(pattern)
         return result
 
@@ -185,11 +182,11 @@ class FileHandler(BaseHandler):
                     q.update({k: v[0] for k, v in self.args.items() if len(v) > 0})
                     q.update(match.groupdict())
                     p = Path(filestr.format(*match.groups(), **q)).absolute()
-                    app_log.debug('%s: %s renders %s', self.name, self.request.path, p)
+                    app_log.debug(f'{self.name}: {self.request.path} renders {p}')
                     yield self._get_path(p)
                     break
             else:
-                raise HTTPError(NOT_FOUND, '%s matches no path key', self.request.path)
+                raise HTTPError(NOT_FOUND, f'{self.request.path} matches no path key')
         elif not args:
             # No group has been specified in the pattern. So just serve root
             yield self._get_path(self.root)
@@ -213,7 +210,7 @@ class FileHandler(BaseHandler):
                 for allow in self.allow:
                     if _match(path, allow):
                         return True
-                app_log.debug('%s: Disallow "%s". It matches "%s"', self.name, path, ignore)
+                app_log.debug(f'{self.name}: Disallow "{path}". It matches "{ignore}"')
                 return False
         return True
 
@@ -223,13 +220,17 @@ class FileHandler(BaseHandler):
         try:
             path = path.resolve()
         except OSError:
-            raise HTTPError(NOT_FOUND, '%s missing', path)
+            raise HTTPError(NOT_FOUND, f'{path} missing')
 
         self.path = path
         if self.path.is_dir():
-            self.file = self.path / self.default_filename if self.default_filename else self.path
+            self.file = self.path
+            for default_filename in self.default_filename:
+                self.file = self.path / default_filename
+                if self.file.exists():
+                    break
             if not (self.default_filename and self.file.exists()) and not self.index:
-                raise HTTPError(NOT_FOUND, '%s missing index', self.file)
+                raise HTTPError(NOT_FOUND, f'{self.file} missing index')
             # Ensure URL has a trailing '/' when displaying the index / default file
             if not self.request.path.endswith('/'):
                 p = urlsplit(self.xrequest_uri)
@@ -239,18 +240,22 @@ class FileHandler(BaseHandler):
         else:
             self.file = self.path
             if not self.file.exists():
-                raise HTTPError(NOT_FOUND, '%s missing', self.file)
+                raise HTTPError(NOT_FOUND, f'{self.file} missing')
             elif not self.file.is_file():
-                raise HTTPError(FORBIDDEN, '%s is not a file', self.path)
+                raise HTTPError(FORBIDDEN, f'{self.path} is not a file')
 
         if not self.allowed(self.file):
-            raise HTTPError(FORBIDDEN, '%s not permitted', self.file)
+            raise HTTPError(FORBIDDEN, f'{self.file} not allowed')
 
-        if self.path.is_dir() and self.index and not (
-                self.default_filename and self.file.exists()):
+        # Display the list of files for directories without a default file
+        if (
+            self.path.is_dir()
+            and self.index
+            and not (self.default_filename and self.file.exists())
+        ):
             self.set_header('Content-Type', 'text/html; charset=UTF-8')
             content = []
-            file_template = string.Template(u'<li><a href="$path">$name</a></li>')
+            file_template = string.Template('<li><a href="$path">$name</a></li>')
             for path in self.path.iterdir():
                 if path.is_symlink():
                     name_suffix, path_suffix = ' &#x25ba;', ''
@@ -258,18 +263,20 @@ class FileHandler(BaseHandler):
                     name_suffix = path_suffix = '/'
                 else:
                     name_suffix = path_suffix = ''
-                # On Windows, pathlib on Python 2.7 won't handle Unicode. Ignore such files.
-                # https://bitbucket.org/pitrou/pathlib/issues/25
-                try:
-                    path = str(path.relative_to(self.path))
-                    content.append(file_template.substitute(
+                path = str(path.relative_to(self.path))
+                content.append(
+                    file_template.substitute(
                         path=path + path_suffix,
                         name=path + name_suffix,
-                    ))
-                except UnicodeDecodeError:
-                    app_log.warning("FileHandler can't show unicode file {!r:s}".format(path))
-            content.append(u'</ul>')
-            self.content = self.index_template.substitute(path=self.path, body=''.join(content))
+                    )
+                )
+            content.append('</ul>')
+            try:
+                tmpl = gramex.cache.open(self.index_template, _tmpl_opener)
+            except OSError:
+                app_log.exception(f'{self.name}: index_template: {self.index_template} failed')
+                tmpl = gramex.cache.open(_default_index_template, _tmpl_opener)
+            self.content = tmpl.substitute(path=self.path, body=''.join(content))
 
         else:
             modified = self.file.stat().st_mtime

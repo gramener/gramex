@@ -3,10 +3,10 @@ from gramex.http import OK
 from gramex.config import app_log
 
 
-class Notifier(object):
+class Notifier:
     def send(self, to, subject, sender):
         '''
-        Send an SMS to the ``to`` mobile with ``subject`` as the contents. ``sender`` optional.
+        Send an SMS to the `to` mobile with `subject` as the contents. `sender` optional.
 
         Return API-specific response object.
         Raise Exception if API access fails. (This does not guarantee SMS delivery.)
@@ -15,15 +15,16 @@ class Notifier(object):
 
     def status(self, result):
         '''
-        Returns the delivery status of the SMS. The ``result`` is the output from ``.send()``.
+        Returns the delivery status of the SMS. The `result` is the output from `.send()`.
         '''
         raise NotImplementedError()
 
 
 class AmazonSNS(Notifier):
     '''
-    Send messages via AmazonSNS::
+    Send messages via AmazonSNS.
 
+    Examples:
         >>> notifier = AmazonSNS(
         ...     aws_access_key_id='...',
         ...     aws_secret_access_key='...',
@@ -35,14 +36,17 @@ class AmazonSNS(Notifier):
         ...     sender='gramex')
     '''
 
-    def __init__(self, aws_access_key_id, aws_secret_access_key,
-                 smstype='Transactional', **kwargs):
+    def __init__(
+        self, aws_access_key_id, aws_secret_access_key, smstype='Transactional', **kwargs
+    ):
         import boto3
+
         self.client = boto3.client(
             'sns',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
-            **kwargs)
+            **kwargs,
+        )
         self.smstype = smstype
 
     def send(self, to, subject, sender):
@@ -57,17 +61,18 @@ class AmazonSNS(Notifier):
                 'AWS.SNS.SMS.SMSType': {
                     'DataType': 'String',
                     'StringValue': self.smstype,
-                }
-            }
+                },
+            },
         )
-        app_log.info('SMS sent. SNS MessageId: %s', result['MessageId'])
+        app_log.info(f'SMS sent. SNS MessageId: {result["MessageId"]}')
         return result
 
 
 class Exotel(Notifier):
     '''
-    Send messages via Exotel::
+    Send messages via Exotel.
 
+    Examples:
         >>> notifier = Exotel(
         ...     sid='...',
         ...     token='...',
@@ -80,6 +85,7 @@ class Exotel(Notifier):
         ...     subject='This is the content of the message',
         ...     sender='gramex')
     '''
+
     def __init__(self, sid, token, key=None, domain=None, priority='high'):
         self.sid = sid
         self.token = token
@@ -92,17 +98,20 @@ class Exotel(Notifier):
 
     def _handle_response(self, r):
         if r.status_code != OK:
-            raise RuntimeError('Exotel API failed: %d %s' % (r.status_code, r.text))
+            raise RuntimeError(f'Exotel API failed: {r.status_code} {r.text}')
         result = r.json()
         return result['SMSMessage']
 
     def send(self, to, subject, sender=None):
-        r = requests.post(self.send_url, {
-            'From': sender or self.sid,
-            'To': to,
-            'Body': subject,
-            'Priority': self.priority,
-        })
+        r = requests.post(
+            self.send_url,
+            {
+                'From': sender or self.sid,
+                'To': to,
+                'Body': subject,
+                'Priority': self.priority,
+            },
+        )
         return self._handle_response(r)
 
     def status(self, result):

@@ -7,14 +7,13 @@ import requests
 import lxml.html
 import pandas as pd
 import sqlalchemy as sa
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, assert_not_equal as neq_
 from nose.plugins.skip import SkipTest
 from tornado.web import create_signed_value
 from urllib.parse import urlencode, urljoin
 import gramex
 import gramex.config
-from gramex.cache import SQLiteStore
-from gramex.handlers.authhandler import _user_info_path
+import gramex.cache
 from gramex.http import OK, UNAUTHORIZED, FORBIDDEN, BAD_REQUEST
 from . import TestGramex, server, tempfiles, dbutils, in_
 
@@ -64,6 +63,7 @@ class TestSession(TestGramex):
         cookie = r.headers['Set-Cookie'].lower()
         self.assertIn('sid2', cookies)
         self.assertIn('httponly', cookie)
+        self.assertIn('samesite=strict', cookie)
         self.assertIn('domain=.localhost.local', cookie)
         # HTTP requests should not have a secure flag
         # TODO: HTTPS requests SHOULD have a secure flag
@@ -71,6 +71,8 @@ class TestSession(TestGramex):
 
 
 class AuthBase(TestGramex):
+    check_userlog = True
+
     @classmethod
     def setUpClass(cls):
         cls.session = requests.Session()
@@ -88,26 +90,43 @@ class AuthBase(TestGramex):
             headers['Referer'] = referer
         return {'params': params, 'headers': headers}
 
-    def login(self, user, password, query_next=None, header_next=None, referer=None,
-              headers={}, post_args={}):
+    def login(
+        self,
+        user,
+        password,
+        query_next=None,
+        header_next=None,
+        referer=None,
+        headers={},
+        post_args={},
+    ):
         params = self.redirect_kwargs(query_next, header_next, referer=referer)
         r = self.session.get(self.url, **params)
         tree = self.check_css(r.text, ('h1', 'Auth'))
 
         # Create form submission data
-        data = {'user': user, 'password': password}
-        data['_xsrf'] = tree.xpath('.//input[@name="_xsrf"]')[0].get('value')
+        data = {
+            'user': user,
+            'password': password,
+            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+        }
         data.update(post_args)
 
         # Submitting the correct password redirects
         if headers is not None:
             params['headers'].update(headers)
-        return self.session.post(self.url, timeout=self.LOGIN_TIMEOUT,
-                                 data=data, headers=params['headers'])
+        return self.session.post(
+            self.url, timeout=self.LOGIN_TIMEOUT, data=data, headers=params['headers']
+        )
 
     def logout(self, query_next=None, header_next=None):
         url = server.base_url + '/auth/logout'
         return self.session.get(url, timeout=10, **self.redirect_kwargs(query_next, header_next))
+
+    def last_userlog(self):
+        query = 'SELECT * FROM userlog WHERE ROWID IN (SELECT max(ROWID) FROM userlog)'
+        row = gramex.data.filter(gramex.conf.storelocations.userlog.url, query=query).iloc[0]
+        return row.to_dict()
 
     def login_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
@@ -115,6 +134,14 @@ class AuthBase(TestGramex):
         eq_(r.status_code, OK)
         self.assertNotRegexpMatches(r.text, 'error code')
         eq_(r.url, urljoin(server.base_url, check_next))
+        if self.check_userlog:
+            expected = {
+                'event': 'login',
+                'uri': self.url[len(server.base_url) :],
+                'user': args[0],
+                'request.method': 'POST',
+            }
+            ok_(expected.items() <= self.last_userlog().items())
 
     def logout_ok(self, *args, **kwargs):
         check_next = kwargs.pop('check_next')
@@ -122,12 +149,17 @@ class AuthBase(TestGramex):
         r = self.logout(**kwargs)
         eq_(r.status_code, OK)
         eq_(r.url, urljoin(server.base_url, check_next))
+        if self.check_userlog:
+            expected = {'event': 'logout'}
+            ok_(expected.items() <= self.last_userlog().items())
 
     def unauthorized(self, *args, **kwargs):
         r = self.login(*args, **kwargs)
         eq_(r.status_code, UNAUTHORIZED)
         self.assertRegexpMatches(r.text, 'error code')
         eq_(r.url, self.url)
+        expected = {'event': 'fail'}
+        ok_(expected.items() <= self.last_userlog().items())
 
     def check_direct_post_redirect(self, *mapping):
         # If we call the POST method WITHOUT calling the GET, the redirect still works
@@ -141,7 +173,7 @@ class AuthBase(TestGramex):
             eq_(urljoin(server.base_url, r.headers['Location']), urljoin(server.base_url, url))
 
 
-class LoginMixin(object):
+class LoginMixin:
     def test_login(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         old_sid = self.session.cookies['sid2']
@@ -182,16 +214,19 @@ class LoginMixin(object):
             ({}, '/dir/index/'),
             ({'headers': {'NEXT': '/header'}}, '/header'),
             ({'data': {'next': '/query'}}, '/query'),
-            ({'headers': {'NEXT': '/header'}, 'data': {'next': '/query'}}, '/query'))
+            ({'headers': {'NEXT': '/header'}, 'data': {'next': '/query'}}, '/query'),
+        )
 
 
-class LoginFailureMixin(object):
+class LoginFailureMixin:
     def check_delay(self, start, min=None, max=None):
         t = time.time()
+        # Give a 0.1s buffer in case of timing delays
+        buffer = 0.1
         if min is not None and min > 0:
-            self.assertGreaterEqual(t - start, min)
+            self.assertGreaterEqual(t - start, min - buffer)
         if max is not None and max > 0:
-            self.assertLessEqual(t - start, max)
+            self.assertLessEqual(t - start, max + buffer)
         return t
 
     def test_slow_down_attacks(self, retries=3):
@@ -226,8 +261,10 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         cls.url = server.base_url + '/auth/simple'
 
     # Run additional tests for session and login features
-    def get_session(self, headers=None):
-        return self.session.get(server.base_url + '/auth/session', headers=headers).json()
+    def get_session(self, headers=None, params={}):
+        return self.session.get(
+            server.base_url + '/auth/session', headers=headers, params=params
+        ).json()
 
     def test_login_action(self):
         self.login('alpha', 'alpha')
@@ -235,8 +272,10 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
 
     def test_attributes(self):
         self.login('gamma', 'gamma')
-        in_({'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
-            self.get_session()['user'])
+        in_(
+            {'user': 'gamma', 'id': 'gamma', 'role': 'user', 'password': 'gamma'},
+            self.get_session()['user'],
+        )
 
     def test_logout_action(self):
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
@@ -271,20 +310,21 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
         self.session = requests.Session()
         self.login_ok('alpha', 'alpha', check_next='/dir/index/')
         otp1 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
-        otp2 = self.session.get(server.base_url + '/auth/otp?expire=10').json()
+        otp2 = self.session.get(server.base_url + '/auth/otp?expire=10&extra=ok').json()
         otp_dead = self.session.get(server.base_url + '/auth/otp?expire=0').json()
         in_({'user': 'alpha', 'id': 'alpha'}, self.get_session()['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
         session_data = self.get_session(headers={'X-Gramex-OTP': otp1})
-        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        in_({'user': 'alpha', 'id': 'alpha', 'extra': None}, session_data['user'])
 
         self.session = requests.Session()
         self.assertTrue('user' not in self.get_session())
-        session_data = self.session.get(server.base_url + '/auth/session',
-                                        params={'gramex-otp': otp2}).json()
-        in_({'user': 'alpha', 'id': 'alpha'}, session_data['user'])
+        session_data = self.session.get(
+            server.base_url + '/auth/session', params={'gramex-otp': otp2}
+        ).json()
+        in_({'user': 'alpha', 'id': 'alpha', 'extra': 'ok'}, session_data['user'])
 
         self.session = requests.Session()
         for otp in [otp1, otp2, otp_dead, 'nan']:
@@ -292,6 +332,53 @@ class TestSimpleAuth(AuthBase, LoginMixin, LoginFailureMixin):
             eq_(r.status_code, BAD_REQUEST)
             r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp})
             eq_(r.status_code, BAD_REQUEST)
+
+        # Revoke an OTP
+        self.session.get(server.base_url + f'/auth/revoke?otp={otp1}')
+        # Fetching the session info raises a HTTP 400 because of the invalid OTP
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-otp': otp1})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-OTP': otp1})
+        eq_(r.status_code, 400)
+
+    def test_apikey(self):
+        # Get an API key as the user "beta"
+        self.session = requests.Session()
+        self.login_ok('beta', 'beta', check_next='/dir/index/')
+        apikey = self.session.get(server.base_url + '/auth/apikey').json()
+
+        def check_key(user, **kwargs):
+            self.session = requests.Session()
+            # Initially, a session does not have a logged in user
+            self.assertTrue('user' not in self.get_session())
+            # But when we call self.get_session() with the specified params / headers
+            session_data = self.get_session(**kwargs)
+            # it should return the user object we expect
+            in_(user, session_data['user'])
+            # ... and it should log the user in with that user object for that session
+            in_(user, self.get_session()['user'])
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'beta', 'id': 'beta', 'extra': None}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'beta', 'id': 'beta', 'extra': None}, headers={'X-Gramex-Key': apikey})
+
+        # Get an API key as the user "new"
+        self.session = requests.Session()
+        apikey = self.session.get(server.base_url + '/auth/apikey?user=new&role=x&extra=ok').json()
+
+        # A new session is not logged in by default, but setting ?gramex-key logs user in
+        check_key({'user': 'new', 'role': 'x', 'extra': 'ok'}, params={'gramex-key': apikey})
+        # A new session is not logged in by default, but setting X-Gramex-Key: header logs user in
+        check_key({'user': 'new', 'role': 'x', 'extra': 'ok'}, headers={'X-Gramex-Key': apikey})
+
+        # Revoke an API key
+        self.session.get(server.base_url + f'/auth/revoke?key={apikey}')
+        # Fetching the session info raises a HTTP 400 because of the invalid key
+        r = self.session.get(server.base_url + '/auth/session', params={'gramex-key': apikey})
+        eq_(r.status_code, 400)
+        r = self.session.get(server.base_url + '/auth/session', headers={'X-Gramex-Key': apikey})
+        eq_(r.status_code, 400)
 
     def test_authorize(self):
         # If an Auth handler has an auth:, the auth: is ignored. Auth handlers are always open
@@ -394,7 +481,8 @@ class TestAuthRedirect(AuthBase):
             ({}, '/'),
             ({'headers': {'Referer': '/header'}}, '/header'),
             ({'data': {'next': '/query'}}, '/query'),
-            ({'headers': {'Referer': '/header'}, 'data': {'next': '/query'}}, '/query'))
+            ({'headers': {'Referer': '/header'}, 'data': {'next': '/query'}}, '/query'),
+        )
 
 
 class TestAuthTemplate(TestGramex):
@@ -427,20 +515,28 @@ class TestAuthActive(AuthBase):
 
     def test_active_status(self):
         # Check that a non-logged-in-user has not record or no active status
-        store = SQLiteStore(_user_info_path, table='user')
 
         # Log in. Then the user should have an active status
         self.login_ok('activeuser', 'activeuser1', check_next='/')
-        activeuser_info = store.load('activeuser')
+        value = gramex.data.filter(
+            **gramex.service.storelocations.user, args={'key': ['activeuser']}
+        ).value.iloc[0]
+        activeuser_info = json.loads(value, cls=gramex.config.CustomJSONDecoder)
         eq_(activeuser_info['active'], 'y')
 
         # Log out. Then the user should not have an active status
         self.logout_ok(check_next='/dir/index/')
-        activeuser_info = store.load('activeuser')
+        value = gramex.data.filter(
+            **gramex.service.storelocations.user, args={'key': ['activeuser']}
+        ).value.iloc[0]
+        activeuser_info = json.loads(value, cls=gramex.config.CustomJSONDecoder)
         eq_(activeuser_info['active'], '')
 
 
 class TestUserKey(AuthBase):
+    # When we chance the user key, we can't retrieve handler.current_user! So skip userlog check
+    check_userlog = False
+
     @classmethod
     def setUpClass(cls):
         AuthBase.setUpClass()
@@ -483,6 +579,73 @@ class TestLookup(AuthBase):
         eq_(session['user']['gender'], 'female')
 
 
+class TestRules(AuthBase):
+    url = server.base_url + '/auth/rulesdb'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+        eq_(session['user']['team'], 'Gramex')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('γ', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        # Check if the empty string match for Gamma works
+        eq_(session['user']['email'], 'gamma@null.com')
+
+        upass = {'γ': 'gamma'}
+        for user in ['alpha', 'beta', 'γ']:
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            # Check that no users have attributes defined in an unreachable rule
+            neq_(session['user']['email'], 'none@none.com')
+            # Check that everyone is team: Gramex
+            eq_(session['user']['team'], 'Gramex')
+
+
+class TestRulesFile(TestRules):
+    url = server.base_url + '/auth/rulesfile'
+
+    def test_default(self):
+        super(TestRulesFile, self).test_default()
+        upass = {'γ': 'gamma'}
+        expires_duration = 3.14
+        for user in ['alpha', 'beta', 'γ']:
+            self.login_ok(user, upass.get(user, user), check_next='/')
+            session = self.session.get(server.base_url + '/auth/session').json()
+            eq_(session['user']['cookie_expires'], expires_duration)
+            # Strip out the time zone (e.g. +05:30) before comparing expiry.
+            # Ensures tests will run in any country.
+            eq_(session['user']['expiry'][:19], '2050-12-31T00:00:00')
+
+
+class TestNoRules(AuthBase):
+    url = server.base_url + '/auth/norules'
+
+    def test_default(self):
+        self.login_ok('alpha', 'alpha', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'female')
+
+        self.login_ok('beta', 'beta', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['team'], 'ग्रामेक्स')
+
+        # When selector is a nonexistent attribute, nothing changes
+        self.login_ok('γ', 'gamma', check_next='/')
+        session = self.session.get(server.base_url + '/auth/session').json()
+        eq_(session['user']['gender'], 'male')
+        eq_(session['user']['empty'], '')
+
+
 class DBAuthBase(AuthBase):
     @staticmethod
     def create_database(url, table):
@@ -506,15 +669,15 @@ class DBAuthBase(AuthBase):
     def test_empty(self):
         # issue: 399 DBAuth shouldn't accept empty username or password
         falsy = ['', None, 'abc']
-        for (user, password) in [(x, y) for x in falsy for y in falsy]:
+        for user, password in [(x, y) for x in falsy for y in falsy]:
             r = self.login(user, password)
             # for valid but non-existent username, password
             if user and password:
                 eq_(r.status_code, UNAUTHORIZED)
-                eq_(r.reason, 'Cannot log in')
+                self.assertIn('Cannot log in', r.text)
                 continue
             eq_(r.status_code, BAD_REQUEST)
-            eq_(r.reason, 'User name or password is empty')
+            self.assertIn('User name or password is empty', r.text)
 
 
 class TestDBAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
@@ -547,10 +710,10 @@ class TestDBExcelAuth(DBAuthBase, LoginMixin, LoginFailureMixin):
     def create_database(url):
         writer = pd.ExcelWriter(url)
         dummy = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})
-        dummy.to_excel(writer, 'Sheet1', index=False)       # noqa - encoding not required
+        dummy.to_excel(writer, 'Sheet1', index=False)
         data = pd.read_csv(os.path.join(folder, 'userdata.csv'), encoding='cp1252')
         data['password'] = data['password'] + data['salt']
-        data.to_excel(writer, 'auth', index=False)          # noqa - encoding not required
+        data.to_excel(writer, 'auth', index=False)
         writer.save()
         tempfiles['dbexcel'] = url
 
@@ -587,42 +750,54 @@ class TestDBAuthSignup(DBAuthBase):
         tree = self.check_css(r.text, ('h1', 'Signup'))
 
         # POST an empty username. Raises HTTP 400: User invalid
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: '',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: '',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User cannot be empty')
+        self.assertIn('User cannot be empty', r.text)
 
         # POST an existing username. Raises HTTP 400: User exists
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: 'alpha',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: 'alpha',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, BAD_REQUEST)
-        eq_(r.reason, 'User exists')
+        self.assertIn('User exists', r.text)
 
         # POST a new username. That should send a email to our service
-        r = session.post(self.url + '?signup', data={
-            self.config.user.arg: 'newuser',
-            self.config.forgot.get('arg', 'email'): 'any@example.org',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?signup',
+            data={
+                self.config.user.arg: 'newuser',
+                self.config.forgot.get('arg', 'email'): 'any@example.org',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, OK)
         stubs = requests.get(server.base_url + '/email/stubs').json()
         ok_(len(stubs) > 0)
         mail = stubs[-1]
-        self.assertDictContainsSubset({
-            'host': gramex.conf.email.smtps_stub.host,
-            'email': gramex.conf.email.smtps_stub.email,
-            'password': gramex.conf.email.smtps_stub.password,
-            'from_addr': gramex.conf.email.smtps_stub.email,
-            'starttls': True,
-            'to_addrs': ['any@example.org'],
-            'quit': True,
-        }, mail)
+        self.assertDictContainsSubset(
+            {
+                'host': gramex.conf.email.smtps_stub.host,
+                'email': gramex.conf.email.smtps_stub.email,
+                'password': gramex.conf.email.smtps_stub.password,
+                'from_addr': gramex.conf.email.smtps_stub.email,
+                'starttls': True,
+                'to_addrs': ['any@example.org'],
+                'quit': True,
+            },
+            mail,
+        )
         obj = email.message_from_string(mail['msg'])
         msg = obj.get_payload(decode=True).decode('utf-8')
         ok_('auth/dbsignup?forgot=' in msg)
@@ -630,29 +805,31 @@ class TestDBAuthSignup(DBAuthBase):
 
         # Check that the user has been added to the users database
         user_engine = sa.create_engine(self.config.url)
-        users = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users = users.set_index(self.config.user.column)
         user = users.loc['newuser']
         eq_(user['email'], 'any@example.org')
 
+        # Check that the recovery database is at the custom location
+        ok_(gramex.service.storelocations.otp['url'].endswith('otp.db'))
         # Check that the user has been added to the recovery database
-        path = os.path.join(gramex.variables.GRAMEXDATA, 'auth.recover.db')
-        url = 'sqlite:///{}'.format(path)
-        recover_engine = sa.create_engine(url)
-        tokens = pd.read_sql('SELECT * FROM users', recover_engine).set_index('token')
-        eq_(tokens['user'][token], 'newuser')
-        eq_(tokens['email'][token], 'any@example.org')
+        tokens = gramex.data.filter(**gramex.service.storelocations.otp).set_index('token')
+        eq_(tokens['user'][token], json.dumps('newuser'))
+        eq_(tokens['type'][token], 'DBAuth')
 
         # Log in with the URL sent in the email. That should take us to the
         # change password page. Change the password
         r = session.get(self.url + '?forgot=' + token)
         tree = lxml.html.fromstring(r.text)
-        r = session.post(self.url + '?forgot=' + token, data={
-            'password': 'newpassword',
-            '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
-        })
+        r = session.post(
+            self.url + '?forgot=' + token,
+            data={
+                'password': 'newpassword',
+                '_xsrf': tree.xpath('.//input[@name="_xsrf"]')[0].get('value'),
+            },
+        )
         eq_(r.status_code, OK)
-        users2 = pd.read_sql('SELECT * FROM %s' % self.config.table, user_engine)
+        users2 = pd.read_sql(f'SELECT * FROM {self.config.table}', user_engine)
         users2 = users2.set_index(self.config.user.column)
         user2 = users2.loc['newuser']
         ok_(user2[self.config.password.column] != user[self.config.password.column])
@@ -671,8 +848,9 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
     def initialize(self, url, user='alpha', login_url='/login/', next_key='next'):
         self.session = requests.Session()
         r = self.session.get(server.base_url + url)
-        eq_(r.url, server.base_url + login_url + '?' + urlencode({
-            next_key: server.base_url + url}))
+        eq_(
+            r.url, server.base_url + login_url + '?' + urlencode({next_key: server.base_url + url})
+        )
         r = self.session.post(server.base_url + url)
         eq_(r.url, server.base_url + url)
         eq_(r.status_code, UNAUTHORIZED)
@@ -753,7 +931,11 @@ class TestAuthorize(DBAuthBase, LoginFailureMixin):
 
     def test_auth_template(self):
         self.initialize('/auth/unauthorized-template', user='alpha')
-        self.check('/auth/unauthorized-template', code=FORBIDDEN,
-                   text='403-template', session=self.session)
+        self.check(
+            '/auth/unauthorized-template',
+            code=FORBIDDEN,
+            text='403-template',
+            session=self.session,
+        )
         self.initialize('/auth/unauthorized-template', user='beta')
         self.check('/auth/unauthorized-template', path='dir/alpha.txt', session=self.session)

@@ -73,7 +73,7 @@ body {
     'DecisionTreeRegressor',
     'RandomForestRegressor',
     'MLPRegressor'] %}
-  {% set tcol = handler.get_opt('target_col', False) %}
+  {% set tcol = handler.store.load('target_col', False) %}
   {% set CLASSIFICTION_METRICS = {
     'Accuracy': 'accuracy',
     'Balanced Accuracy': 'balanced_accuracy',
@@ -103,7 +103,7 @@ body {
                 <label for="targetcol">Pick a Target Column:</label>
                 <select id="targetcol" class="form-control" name="target_col">
                   {% for col in columns %}
-                  {% set selected = "selected" if col == handler.get_opt('target_col') else "" %}
+                  {% set selected = "selected" if col == tcol else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
                   {% end %}
                 </select>
@@ -112,7 +112,7 @@ body {
                 <label for="exclude">Columns to Exclude:</label>
                 <select id="exclude" class="selectpicker form-control" multiple name="exclude">
                   {% for col in columns %}
-                  {% set selected = "selected" if col in handler.get_opt('exclude', []) else "" %}
+                  {% set selected = "selected" if col in handler.store.load('exclude', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
                   {% end %}
                 </select>
@@ -123,7 +123,7 @@ body {
                 <label for="cats">Categorical Columns:</label>
                 <select id="cats" class="selectpicker form-control" multiple name="cats">
                   {% for col in columns %}
-                  {% set selected = "selected" if col in handler.get_opt('cats', []) else "" %}
+                  {% set selected = "selected" if col in handler.store.load('cats', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
                   {% end %}
                 </select>
@@ -132,7 +132,7 @@ body {
                 <label for="nums">Numerical Columns:</label>
                 <select id="nums" class="selectpicker form-control" multiple name="nums">
                   {% for col in columns %}
-                  {% set selected = "selected" if col in handler.get_opt('nums', []) else "" %}
+                  {% set selected = "selected" if col in handler.store.load('nums', []) else "" %}
                   <option value="{{ col }}" {{ selected }}>{{ col }}</option>
                   {% end %}
                 </select>
@@ -142,12 +142,12 @@ body {
               <div class="col">
                 <label for="transform">Transform:</label>
                 <input class="form-control" id="transform" name="data.transform" type="text"
-                                                  value="{{ handler.get_opt('transform', '') }}">
+                                                  value="{{ handler.store.load('built_transform', '') }}">
               </div>
               <div class="col">
                 <label for="metric">Choose a Metric:</label>
                 <select id="metric" class="form-control selectpicker" name="metric">
-                {% if handler.get_opt('class') in CLASSIFICTION_MODELS %}
+                {% if handler.store.load('class') in CLASSIFICTION_MODELS %}
                   {% for i, (mname, metric) in enumerate(CLASSIFICTION_METRICS.items()) %}
                   {% set selected = "selected" if metric == "accuracy" else "" %}
                   <option value="{{ metric }}" {{ selected }}>{{ mname }}</option>
@@ -171,13 +171,13 @@ body {
                 <select id="modelchoice" class="form-control" name="class">
                   <optgroup label="Classification">
                     {% for model in CLASSIFICTION_MODELS %}
-                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    {% set selected = "selected" if model == handler.store.load('class') else "" %}
                     <option value="{{ model }}" class="text-dark" {{ selected }}>{{ model }}</option>
                     {% end %}
                   </optgroup>
                   <optgroup label="Regression">
                     {% for model in REGRESSION_MODELS %}
-                    {% set selected = "selected" if model == handler.get_opt('class') else "" %}
+                    {% set selected = "selected" if model == handler.store.load('class') else "" %}
                     <option value="{{ model }}" {{ selected }}>{{ model }}</option>
                     {% end %}
                   </optgroup>

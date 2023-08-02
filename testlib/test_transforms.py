@@ -5,10 +5,10 @@ import inspect
 import unittest
 from dis import dis
 from types import GeneratorType
-from tornado.gen import coroutine, Task
+from tornado.gen import coroutine, sleep
 from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
-from gramex.transforms import build_transform, flattener, badgerfish, template, once
+from gramex.transforms import build_transform, flattener, template, once
 from gramex.cache import reload_module
 from nose.tools import eq_, assert_raises
 
@@ -27,7 +27,8 @@ def remove(path):
 @coroutine
 def gen_str(val):
     '''Sample coroutine method'''
-    yield Task(str, val)
+    yield sleep(duration=0.01)
+    return val
 
 
 def eqfn(actual, expected):
@@ -38,12 +39,12 @@ def eqfn(actual, expected):
     actual, expected = a_code.co_code, e_code.co_code
     if actual != expected:
         # Print the disassembled code to make debugging easier
-        print('\nActual')           # noqa
+        print('\nActual')  # noqa
         dis(actual)
-        print(a_code.co_names)      # noqa
-        print('Expected')           # noqa
+        print(a_code.co_names)  # noqa
+        print('Expected')  # noqa
         dis(expected)
-        print(e_code.co_names)      # noqa
+        print(e_code.co_names)  # noqa
     eq_(actual, expected, '%s: code mismatch' % msg)
 
     src, tgt = a_code.co_argcount, e_code.co_argcount
@@ -54,20 +55,25 @@ def eqfn(actual, expected):
 
 class BuildTransform(unittest.TestCase):
     '''Test build_transform CODE output'''
-    dummy = os.path.join(folder, 'dummy.py')
-    files = set([dummy])
 
-    def check_transform(self, transform, yaml_code, vars=None, cache=True, iter=True, doc=None):
-        fn = build_transform(yaml_parse(yaml_code), vars=vars, cache=cache, iter=iter)
+    dummy = os.path.join(folder, 'dummy.py')
+    files = {dummy}
+
+    def check_transform(
+        self, transform, yaml_code, vars=None, kwargs=None, cache=True, iter=True, doc=None
+    ):
+        fn = build_transform(
+            yaml_parse(yaml_code), vars=vars, kwargs=kwargs, cache=cache, iter=iter
+        )
         eqfn(fn, transform)
         if doc is not None:
             eq_(fn.__doc__, doc)
         return fn
 
     def test_invalid_function_raises_error(self):
-        with assert_raises(KeyError):
+        with assert_raises(ValueError):
             build_transform({})
-        with assert_raises(KeyError):
+        with assert_raises(ValueError):
             build_transform({'function': ''})
         with assert_raises(ValueError):
             build_transform({'function': 'x = 1'})
@@ -79,24 +85,47 @@ class BuildTransform(unittest.TestCase):
     def test_expr(self):
         def transform(x=0):
             result = x + 1
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: x + 1', vars={'x': 0}, doc='x + 1')
 
         def transform(x=0):
             result = x + 1
             return result
+
         self.check_transform(transform, 'function: x + 1', vars={'x': 0}, iter=False, doc='x + 1')
 
         def transform():
             result = "abc"
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, '''function: '"abc"' ''', vars={}, doc='"abc"')
 
         def transform():
             import gramex.cache
             import pandas
+
             result = gramex.cache.open('x', pandas.read_csv).to_html()
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         # This is a complex function. It's not clear whether we should pick up the docs from
         # to_html() or gramex.cache.open(). Let the user specify the docs
         fn = 'function: gramex.cache.open("x", pandas.read_csv).to_html()'
@@ -104,169 +133,397 @@ class BuildTransform(unittest.TestCase):
 
         def transform(s=None):
             result = 1 if "windows" in s.lower() else 2 if "linux" in s.lower() else 0
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         fn = 'function: 1 if "windows" in s.lower() else 2 if "linux" in s.lower() else 0'
         self.check_transform(transform, fn, vars={'s': None})
 
         def transform(_val):
-            result = condition(1, 0, -1)    # noqa: this is in gramex.transforms
-            return result if isinstance(result, GeneratorType) else [result, ]
+            result = condition(1, 0, -1)  # noqa: this is in gramex.transforms
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: condition(1, 0, -1)')
 
         def transform(_val):
             result = str.upper(_val)
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: str.upper')
         self.check_transform(transform, 'function: str.upper(_val)', doc=str.upper.__doc__)
 
     def test_fn(self):
         def transform(_val):
             result = len(_val)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: len
-        ''')
+        ''',
+        )
 
     def test_fn_no_args(self):
         def transform():
             result = max(1, 2)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: max
             args: [1, 2]
-        ''', vars={})
+        ''',
+            vars={},
+        )
         self.check_transform(transform, 'function: max(1, 2)', vars={})
 
     def test_fn_args(self):
         def transform(_val):
             result = max(1, 2)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: max
             args: [1, 2]
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: max(1, 2)')
 
         def transform(_val):
             result = len('abc')
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: len
             args: abc
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: len("abc")')
 
         def transform(_val):
             result = range(10)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: range
             args: 10
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: range(10)')
 
     def test_fn_args_var(self):
         def transform(x=1, y=2):
             result = max(x, y, 3)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(
+            transform,
+            '''
             function: max
             args:
                 - =x
                 - =y
                 - 3
-        ''', vars=vars)
+        ''',
+            vars=vars,
+        )
         self.check_transform(transform, 'function: max(x, y, 3)', vars=vars)
 
         def transform(x=1, y=2):
             result = x
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: x', vars=vars)
 
         def transform(x=1, y=2):
             result = x.real
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: x.real', vars=vars)
 
         def transform(x=1, y=2):
             result = x.conjugate()
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: x.conjugate()', vars=vars)
 
         def transform(x=1, y=2):
             result = x.to_bytes(2, 'big')
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         self.check_transform(transform, 'function: x.to_bytes(2, "big")', vars=vars)
 
     def test_fn_kwargs(self):
         def transform(_val):
             result = dict(_val, a=1, b=2)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: dict
             kwargs: {a: 1, b: 2}
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: dict(_val, a=1, b=2)')
 
     def test_fn_kwargs_complex(self):
         def transform(_val):
             result = dict(_val, a=[1, 2], b=AttrDict([('b1', 'x'), ('b2', 'y')]))
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: dict
             kwargs:
                 a: [1, 2]
                 b:
                     b1: x
                     b2: y
-        ''')
-        self.check_transform(transform, '''
+        ''',
+        )
+        self.check_transform(
+            transform,
+            '''
             function: 'dict(_val, a=[1, 2], b=AttrDict([("b1", "x"), ("b2", "y")]))'
-        ''')
+        ''',
+        )
 
     def test_fn_kwargs_var(self):
         def transform(x=1, y=2):
             result = dict(x, y, a=x, b=y, c=3, d='=4')
-            return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(
+            transform,
+            '''
             function: dict
             kwargs: {a: =x, b: =y, c: 3, d: ==4}
-        ''', vars=vars)
+        ''',
+            vars=vars,
+        )
         self.check_transform(transform, 'function: dict(x, y, a=x, b=y, c=3, d="=4")', vars=vars)
 
     def test_fn_args_kwargs(self):
         def transform(_val):
             result = format(1, 2, a=3, b=4, c=5, d='=6')
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: format
             args: [1, 2]
             kwargs: {a: 3, b: 4, c: 5, d: ==6}
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: format(1, 2, a=3, b=4, c=5, d="=6")')
 
     def test_fn_args_kwargs_var(self):
         def transform(x=1, y=2):
             result = format(x, y, a=x, b=y, c=3)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        vars = AttrDict([('x', 1), ('y', 2)])
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(
+            transform,
+            '''
             function: format
             args: [=x, =y]
             kwargs: {a: =x, b: =y, c: =3}
-        ''', vars=vars)
+        ''',
+            vars=vars,
+        )
         self.check_transform(transform, 'function: format(x, y, a=x, b=y, c=3)', vars=vars)
+
+    def test_fn_var_kwargs(self):
+        def transform(**kwargs):
+            result = kwargs
+            return result
+
+        self.check_transform(transform, 'function: kwargs', vars={}, kwargs=True, iter=False)
+
+        def transform(**kw):
+            result = kw
+            return result
+
+        self.check_transform(transform, 'function: kw', vars={}, kwargs='kw', iter=False)
+
+        def transform(_val, **kwargs):
+            result = str(_val) + str(kwargs)
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(transform, 'function: str(_val) + str(kwargs)', kwargs=True)
+
+        def transform(x=1, y=2, **kw):
+            result = str([x, y]) + str(kw)
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(transform, 'function: str([x, y]) + str(kw)', vars=vars, kwargs='kw')
+
+        def transform(x=1, y=2):
+            result = str([x, y])
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        vars = {'x': 1, 'y': 2}
+        self.check_transform(transform, 'function: str([x, y])', vars=vars, kwargs=False)
 
     def test_coroutine(self):
         def transform(_val):
             import testlib.test_transforms
+
             result = testlib.test_transforms.gen_str(_val)
-            return result if isinstance(result, GeneratorType) else [result, ]
-        self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        self.check_transform(
+            transform,
+            '''
             function: testlib.test_transforms.gen_str
-        ''')
+        ''',
+        )
         self.check_transform(transform, 'function: testlib.test_transforms.gen_str(_val)')
 
     def test_cache_change(self):
@@ -276,14 +533,25 @@ class BuildTransform(unittest.TestCase):
 
         def transform(_val):
             import testlib.dummy
+
             reload_module(testlib.dummy)
             result = testlib.dummy.value()
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
 
-        fn = self.check_transform(transform, '''
+        fn = self.check_transform(
+            transform,
+            '''
             function: testlib.dummy.value
             args: []
-        ''', cache=False)
+        ''',
+            cache=False,
+        )
         eq_(fn(), [1])
         fn = self.check_transform(transform, 'function: testlib.dummy.value()', cache=False)
         eq_(fn(), [1])
@@ -318,26 +586,55 @@ class BuildTransform(unittest.TestCase):
     def test_import_levels(self):
         def transform(_val):
             result = str(_val)
-            return result if isinstance(result, GeneratorType) else [result, ]
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
         fn = self.check_transform(transform, 'function: str')
         eq_(fn(b'abc'), [str(b'abc')])
 
         def transform(content):
             result = str.__add__(content, '123')
-            return result if isinstance(result, GeneratorType) else [result, ]
-        fn = self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        fn = self.check_transform(
+            transform,
+            '''
             function: str.__add__
             args: [=content, '123']
-        ''', vars=AttrDict(content=None))
+        ''',
+            vars={'content': None},
+        )
         eq_(fn('abc'), ['abc123'])
 
         def transform(handler):
             result = str.endswith(handler.current_user.user, 'ta')
-            return result if isinstance(result, GeneratorType) else [result, ]
-        fn = self.check_transform(transform, '''
+            return (
+                result
+                if isinstance(result, GeneratorType)
+                else [
+                    result,
+                ]
+            )
+
+        fn = self.check_transform(
+            transform,
+            '''
             function: str.endswith
             args: [=handler.current_user.user, 'ta']
-        ''', vars=AttrDict(handler=None))
+        ''',
+            vars={'handler': None},
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -347,40 +644,56 @@ class BuildTransform(unittest.TestCase):
                 os.unlink(path)
 
 
-class Badgerfish(unittest.TestCase):
-    'Test gramex.transforms.badgerfish'
+class BuildPipelines(unittest.TestCase):
+    @staticmethod
+    def pipeline(stages, **kwargs):
+        kwargs.setdefault('iter', False)
+        kwargs.setdefault('kwargs', True)
+        return build_transform({'function': stages}, **kwargs)
 
-    def test_transform(self):
-        result = yield badgerfish('''
-        html:
-          "@lang": en
-          p: text
-          div:
-            p: text
-        ''')
-        eq_(
-            result,
-            '<!DOCTYPE html>\n<html lang="en"><p>text</p><div><p>text</p></div></html>')
+    def test_pipeline(self):
+        eq_(self.pipeline([{'function': True}])(), True)
+        eq_(self.pipeline([{'function': 0}])(), 0)
+        eq_(self.pipeline([{'function': '3 + 4'}, {'function': '4 + 5'}])(), 9)
+        pipeline = self.pipeline(
+            [{'function': 'x - y + kwargs.get("z", 0)'}], vars={'x': 0, 'y': 0}
+        )
+        eq_(pipeline(), 0)
+        eq_(pipeline(x=3, y=4), -1)
+        eq_(pipeline(x=3, y=4, z=2), 1)
+        pipeline = self.pipeline(
+            [
+                {'function': '3 + 4', 'name': 'x'},
+                {'function': '4 + 5', 'name': 'y'},
+                {'function': 'x + y + kwargs.get("z", 0)'},
+            ]
+        )
+        eq_(pipeline(z=10), 26)
 
-    def test_mapping(self):
-        result = yield badgerfish('''
-        html:
-          json:
-            x: 1
-            y: 2
-        ''', mapping={
-            'json': {
-                'function': 'json.dumps',
-                'kwargs': {'separators': [',', ':']},
-            }
-        })
-        eq_(
-            result,
-            '<!DOCTYPE html>\n<html><json>{"x":1,"y":2}</json></html>')
+    def test_exceptions(self):
+        # Pipelines must have at least 1 stage
+        with assert_raises(ValueError):
+            self.pipeline([])
+        # Each stage must have a function
+        with assert_raises(ValueError):
+            self.pipeline([{'name': 'x', 'function': 0}, {'name': 'y'}])
+        with assert_raises(SyntaxError):
+            self.pipeline([{'function': 'd$j'}])
+        pipeline = self.pipeline(
+            [
+                {'name': 'a', 'function': 0},
+                {'name': 'b', 'function': 1},
+                {'name': 'ratio', 'function': 'b / a'},
+                {'function': 'ratio * ratio'},
+            ]
+        )
+        with assert_raises(ZeroDivisionError):
+            pipeline()
 
 
 class Template(unittest.TestCase):
     'Test gramex.transforms.template'
+
     def check(self, content, expected, **kwargs):
         result = yield template(content, **kwargs)
         eq_(result, expected)
@@ -434,7 +747,7 @@ class Flattener(unittest.TestCase):
             'none-invalid': None,
             'float-invalid': 1.0,
             'dict-invalid': {},
-            'tuple-invalid': tuple(),
+            'tuple-invalid': (),
             'set-invalid': set(),
             'list-invalid': [],
         }

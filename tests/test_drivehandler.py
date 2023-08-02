@@ -8,12 +8,16 @@ from shutil import rmtree
 from mimetypes import guess_type
 from tornado.web import create_signed_value
 from gramex import conf
-from gramex.http import (OK, BAD_REQUEST, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE,
-                         UNSUPPORTED_MEDIA_TYPE)
+from gramex.http import (
+    OK,
+    BAD_REQUEST,
+    NOT_FOUND,
+    REQUEST_ENTITY_TOO_LARGE,
+    UNSUPPORTED_MEDIA_TYPE,
+)
 from gramex.install import _ensure_remove
 from nose.tools import eq_, ok_
-from pandas.util.testing import assert_frame_equal as afe
-from . import server, TestGramex
+from . import server, TestGramex, afe
 
 
 class TestDriveHandler(TestGramex):
@@ -29,7 +33,7 @@ class TestDriveHandler(TestGramex):
         for f in fileinfo:
             info = (f.get('name', f['file']), open(f['file'], 'rb'))
             if 'mime' in f:
-                info += (f['mime'], )
+                info += (f['mime'],)
             files.append(('file', info))
             for field in ('tag', 'cat'):
                 if field in f:
@@ -40,6 +44,9 @@ class TestDriveHandler(TestGramex):
             headers['X-Gramex-User'] = create_signed_value(secret, 'user', json.dumps(user))
         r = requests.post(self.url, files=files, data=data, headers=headers)
         eq_(r.status_code, code, '%s: code %d != %d' % (self.url, r.status_code, code))
+        if code is OK:
+            paths_exist = json.loads(r.headers['Paths-Exist'])
+            eq_(paths_exist, {f.get('name', os.path.basename(f['file'])): True for f in fileinfo})
         data = gramex.data.filter(self.con, table='drive')
         data = data.sort_values('id').tail(len(files))
         if not check:
@@ -76,57 +83,63 @@ class TestDriveHandler(TestGramex):
         for col in cols:
             ok_(col in data.columns, col)
 
-        self.check_upload(dict(file='userdata.csv'))
+        self.check_upload({'file': 'userdata.csv'})
         # If upload filehame has a path, only the basename is considered
         # Extension is stored in lowercase even if filename is in uppercase
-        self.check_upload(dict(file='dir/image.JPG'))
+        self.check_upload({'file': 'dir/image.JPG'})
 
         # If filename is repeated, it's extended randomly
-        data = self.check_upload(dict(file='userdata.csv'))
+        data = self.check_upload({'file': 'userdata.csv'})
         path = data.path.iloc[0]
         ok_(path != 'userdata.csv')
         ok_(path.startswith('userdata'))
         ok_(path.endswith('.csv'))
 
         # If filename has weird characters, it's hyphenated
-        data = self.check_upload(dict(file='userdata.csv', name='β x.csv'))
+        data = self.check_upload({'file': 'userdata.csv', 'name': 'β x.csv'})
         eq_(data.path.iloc[0], 'b-x.csv')
 
         # If content-type is available, it's used. Else it's guessed
-        data = self.check_upload(dict(file='userdata.csv', mime='text/plain'))
+        data = self.check_upload({'file': 'userdata.csv', 'mime': 'text/plain'})
         eq_(data.mime.iloc[0], 'text/plain')
-        data = self.check_upload(dict(file='userdata.csv'))
+        data = self.check_upload({'file': 'userdata.csv'})
         eq_(data.mime.iloc[0], guess_type('userdata.csv')[0])
 
         # Large files fail
-        self.check_upload(dict(file='gramex.yaml'), code=REQUEST_ENTITY_TOO_LARGE, check=False)
+        self.check_upload({'file': 'gramex.yaml'}, code=REQUEST_ENTITY_TOO_LARGE, check=False)
         # .yaml disallowed because of allow
-        self.check_upload(dict(file='gramextest.yaml'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
+        self.check_upload({'file': 'gramextest.yaml'}, code=UNSUPPORTED_MEDIA_TYPE, check=False)
         # .py disallowed because of exclude (though allow allows it)
-        self.check_upload(dict(file='server.py'), code=UNSUPPORTED_MEDIA_TYPE, check=False)
+        self.check_upload({'file': 'server.py'}, code=UNSUPPORTED_MEDIA_TYPE, check=False)
 
         # Multi-uploads are supported, with tags
-        self.check_upload(dict(file='userdata.csv', tag='t1'),
-                          dict(file='actors.csv', tag='t2'))
-        r = requests.post(self.url, files=(
-            ('file', ('x.csv', open('userdata.csv', 'rb'))),
-            ('file', ('y.csv', open('userdata.csv', 'rb'))),
-        ), data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']})
+        self.check_upload(
+            {'file': 'userdata.csv', 'tag': 't1'}, {'file': 'actors.csv', 'tag': 't2'}
+        )
+        r = requests.post(
+            self.url,
+            files=(
+                ('file', ('x.csv', open('userdata.csv', 'rb'))),
+                ('file', ('y.csv', open('userdata.csv', 'rb'))),
+            ),
+            data={'tag': ['t1'], 'cat': ['c1', 'c2', 'c3'], 'rand': ['x', 'y']},
+        )
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"x.csv": true, "y.csv": true}')
         data = gramex.data.filter(self.con, table='drive').sort_values('id').tail(2)
-        # If there are insufficient tags, they become empty strings
-        eq_(data.tag.tolist(), ['t1', ''])
+        # If there are insufficient tags, they become NULL
+        eq_(data.tag.tolist(), ['t1', None])
         # If there are more tags, they're truncated
         eq_(data.cat.tolist(), ['c1', 'c2'])
         # If there are irrelevant fields, they're ignored
         ok_('rand' not in data.columns)
 
         # ?id=..&_download downloads the file
-        data = self.check_upload(dict(file='dir/index.html'))
+        data = self.check_upload({'file': 'dir/index.html'})
         r = requests.get(self.url, params={'_download': '', 'id': data.id.iloc[0]})
         eq_(r.headers['Content-Disposition'], 'attachment; filename="index.html"')
         # TODO: FormHandler returns Content-Type using _format, so don't check for Content-Type
-        # eq_(r.headers['Content-Type'], 'text/html')
+        # Skip eq_(r.headers['Content-Type'], 'text/html')
         # Serves file with correct length despite unicode
         eq_(int(r.headers['Content-Length']), os.stat('dir/index.html').st_size)
         # If the ID is invalid, raises a NOT FOUND
@@ -138,16 +151,18 @@ class TestDriveHandler(TestGramex):
 
         # User attributes are captured on all files
         user = {'id': 'X', 'role': 'Y'}
-        data = self.check_upload(dict(file='userdata.csv'), dict(file='actors.csv'), user=user)
+        data = self.check_upload({'file': 'userdata.csv'}, {'file': 'actors.csv'}, user=user)
         for index in range(2):
             eq_(data.user_id.iloc[index], 'X')
             eq_(data.user_role.iloc[index], 'Y')
 
-        # DELETE ?id=... deletes the specified file
+        # DELETE ?id=... deletes the specified file via URL params or body
         data = gramex.data.filter(self.con, table='drive')
         indices = (0, 3, 6)
         for index in indices:
             r = requests.delete(self.url, params={'id': [data.id.iloc[index]]})
+            file = data.file.iloc[index].encode('unicode-escape').decode()
+            eq_(r.headers.get('Paths-Exist', ''), '{"%s": false}' % file)
         data2 = gramex.data.filter(self.con, table='drive')
         eq_(len(data2), len(data) - len(indices))
         for index in indices:
@@ -155,6 +170,32 @@ class TestDriveHandler(TestGramex):
             ok_(data.id.iloc[index] not in data2.id.values)
             # File is removed from the file system
             ok_(not os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        # Other indices are not deleted
+        for index in range(len(data)):
+            if index not in indices:
+                ok_(data.id.iloc[index] in data2.id.values)
+                ok_(os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        new_indices = (1, 2)
+        for index in new_indices:
+            r = requests.delete(
+                self.url,
+                headers={'Content-Type': 'application/json'},
+                data=json.dumps({'id': [int(data.id.iloc[index])]}),
+            )
+            file = data.file.iloc[index].encode('unicode-escape').decode()
+            eq_(r.headers.get('Paths-Exist', ''), '{"%s": false}' % file)
+        data2 = gramex.data.filter(self.con, table='drive')
+        eq_(len(data2), len(data) - len(indices) - len(new_indices))
+        for index in indices + new_indices:
+            # Entry is removed from the database
+            ok_(data.id.iloc[index] not in data2.id.values)
+            # File is removed from the file system
+            ok_(not os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
+        # Other indices are not deleted
+        for index in range(len(data)):
+            if index not in indices + new_indices:
+                ok_(data.id.iloc[index] in data2.id.values)
+                ok_(os.path.exists(os.path.join(self.kwargs.path, data.path.iloc[index])))
 
         # DELETE without ?id= does not delete
         r = requests.delete(self.url)
@@ -174,10 +215,11 @@ class TestDriveHandler(TestGramex):
             'size': 100,
             'date': 100,
             'user_id': 'A',
-            'user_role': 'B'
+            'user_role': 'B',
         }
         r = requests.put(self.url, params=params)
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"a.x": true}')
         data2 = gramex.data.filter(self.con, table='drive')
         new = data2[data2.id == data.id.iloc[0]].iloc[0]
         old = data[data.id == data.id.iloc[0]].iloc[0]
@@ -194,10 +236,14 @@ class TestDriveHandler(TestGramex):
         )
         secret = gramex.service.app.settings['cookie_secret']
         user = {'id': 'AB', 'role': 'CD'}
-        r = requests.put(self.url, params=params, files=files, headers={
-            'X-Gramex-User': create_signed_value(secret, 'user', json.dumps(user))
-        })
+        r = requests.put(
+            self.url,
+            params=params,
+            files=files,
+            headers={'X-Gramex-User': create_signed_value(secret, 'user', json.dumps(user))},
+        )
         eq_(r.status_code, OK)
+        eq_(r.headers['Paths-Exist'], '{"a.x": true}')
         data2 = gramex.data.filter(self.con, table='drive')
         new = data2[data2.id == data.id.iloc[1]].iloc[0]
         old = data[data.id == data.id.iloc[1]].iloc[0]
@@ -215,6 +261,7 @@ class TestDriveHandler(TestGramex):
         params['id'] = -1
         data = gramex.data.filter(self.con, table='drive')
         r = requests.put(self.url, params=params, files=files)
+        eq_(r.headers['Paths-Exist'], '{}')
         data2 = gramex.data.filter(self.con, table='drive')
         afe(data, data2)
 

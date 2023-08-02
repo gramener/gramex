@@ -1,29 +1,32 @@
 import os
-import six
 import json
 import inspect
 import threading
 import joblib
+import numpy as np
 import pandas as pd
 from tornado.gen import coroutine, Return, sleep
 from tornado.httpclient import AsyncHTTPClient
+from urllib.parse import urlencode
 from gramex.config import locate, app_log, merge, variables
 
 # Expose joblob.load via gramex.ml
-load = joblib.load                      # noqa
+load = joblib.load
 
 
-class Classifier(object):
-    '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
-    '''
-
+class Classifier:
     def __init__(self, **kwargs):
+        '''
+        Parameters:
+
+            data DataFrame: data to train / re-train the model with
+            model_class str: model class to use (default: `sklearn.naive_bayes.BernoulliNB`)
+            model_kwargs dict: kwargs to pass to model class constructor (defaults: `{}`)
+            output str: output column name (default: last column in training data)
+            input list: input column names (default: all columns except `output`)
+            labels list: list of possible output values (default: unique `output` in training)
+        '''
+
         vars(self).update(kwargs)
         self.model_class = kwargs.get('model_class', 'sklearn.naive_bayes.BernoulliNB')
         self.trained = False  # Boolean Flag
@@ -33,20 +36,25 @@ class Classifier(object):
 
     def update_params(self, params):
         model_keys = ('model_class', 'url', 'input', 'output', 'trained', 'query', 'model_kwargs')
-        model_params = {k: v[0] if isinstance(v, list) and k != 'input' else v
-                        for k, v in params.items() if k in model_keys}
+        model_params = {
+            k: v[0] if isinstance(v, list) and k != 'input' else v
+            for k, v in params.items()
+            if k in model_keys
+        }
         if model_params:
             self.trained = params.get('trained', False)
         vars(self).update(model_params)
 
-    def train(self, data):
+    def train(self, data: pd.DataFrame):
         '''
-        :arg data DataFrame: data to train / re-train the model with
-        :arg model_class str: model class to use (default: ``sklearn.naive_bayes.BernoulliNB``)
-        :arg model_kwargs dict: kwargs to pass to model class constructor (defaults: ``{}``)
-        :arg output str: output column name (default: last column in training data)
-        :arg input list: input column names (default: all columns except ``output``)
-        :arg labels list: list of possible output values (default: unique ``output`` in training)
+        Parameters:
+
+            data DataFrame: data to train / re-train the model with
+            model_class str: model class to use (default: `sklearn.naive_bayes.BernoulliNB`)
+            model_kwargs dict: kwargs to pass to model class constructor (defaults: `{}`)
+            output str: output column name (default: last column in training data)
+            input list: input column names (default: all columns except `output`)
+            labels list: list of possible output values (default: unique `output` in training)
 
         Notes:
         - If model has already been trained, extend the model. Else create it
@@ -63,6 +71,7 @@ class Classifier(object):
             x, y = data[self.input], data[self.output]
             # Transform the data
             from sklearn.preprocessing import StandardScaler
+
             self.scaler = StandardScaler()
             self.scaler.fit(x)
             # Train the classifier. Partially, if possible
@@ -72,8 +81,7 @@ class Classifier(object):
                 raise ValueError('{0} is not a correct model class'.format(self.model_class))
             if self.labels and hasattr(clf, 'partial_fit'):
                 try:
-                    clf.partial_fit(self.scaler.transform(x),
-                                    y, classes=self.labels)
+                    clf.partial_fit(self.scaler.transform(x), y, classes=self.labels)
                 except AttributeError:
                     raise ValueError('{0} does not support partial fit'.format(self.model_class))
             else:
@@ -126,17 +134,26 @@ def _conda_r_home():
     return None
 
 
-def r(code=None, path=None, rel=True, conda=True, convert=True,
-      repo='https://cran.r-project.org/', **kwargs):
+def r(
+    code: str = None,
+    path: str = None,
+    rel: bool = True,
+    conda: bool = True,
+    convert: bool = True,
+    repo: str = 'https://cran.r-project.org/',
+    **kwargs,
+):
     '''
     Runs the R script and returns the result.
 
-    :arg str code: R code to execute.
-    :arg str path: R script path. Cannot be used if code is specified
-    :arg bool rel: True treats path as relative to the caller function's file
-    :arg bool conda: True overrides R_HOME to use the Conda R
-    :arg bool convert: True converts R objects to Pandas and vice versa
-    :arg str repo: CRAN repo URL
+    Parameters:
+
+        code: R code to execute.
+        path: R script path. Cannot be used if code is specified
+        rel: True treats path as relative to the caller function's file
+        conda: True overrides R_HOME to use the Conda R
+        convert: True converts R objects to Pandas and vice versa
+        repo: CRAN repo URL
 
     All other keyword arguments as passed as parameters
     '''
@@ -187,27 +204,37 @@ def r(code=None, path=None, rel=True, conda=True, convert=True,
     return result
 
 
-def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
-               weight=None):
+def groupmeans(
+    data: pd.DataFrame,
+    groups: list,
+    numbers: list,
+    cutoff: float = 0.01,
+    quantile: float = 0.95,
+    minsize: int = None,
+    weight: str = None,
+):
     '''
     **DEPRECATED**. Use TopCause() instead.
 
     Yields the significant differences in average between every pair of
     groups and numbers.
 
-    :arg DataFrame data: pandas.DataFrame to analyze
-    :arg list groups: category column names to group data by
-    :arg list numbers: numeric column names in to summarize data by
-    :arg float cutoff: ignore anything with prob > cutoff.
-        cutoff=None ignores significance checks, speeding it up a LOT.
-    :arg float quantile: number that represents target improvement. Defaults to .95.
-        The ``diff`` returned is the % impact of everyone moving to the 95th
-        percentile
-    :arg int minsize: each group should contain at least minsize values.
-        If minsize=None, automatically set the minimum size to
-        1% of the dataset, or 10, whichever is larger.
+    Parameters:
+
+        data: pandas.DataFrame to analyze
+        groups: category column names to group data by
+        numbers: numeric column names in to summarize data by
+        cutoff: ignore anything with prob > cutoff.
+            cutoff=None ignores significance checks, speeding it up a LOT.
+        float quantile: number that represents target improvement. Defaults to .95.
+            The `diff` returned is the % impact of everyone moving to the 95th
+            percentile
+        int minsize: each group should contain at least minsize values.
+            If minsize=None, automatically set the minimum size to
+            1% of the dataset, or 10, whichever is larger.
     '''
     from scipy.stats.mstats import ttest_ind
+
     if minsize is None:
         minsize = max(len(data.index) // 100, 10)
 
@@ -237,19 +264,20 @@ def groupmeans(data, groups, numbers, cutoff=.01, quantile=.95, minsize=None,
             lo = data[number][grouped.groups[sorted_cats.index[0]]].values
             hi = data[number][grouped.groups[sorted_cats.index[-1]]].values
             _, prob = ttest_ind(
-                pd.np.ma.masked_array(lo, pd.np.isnan(lo)),
-                pd.np.ma.masked_array(hi, pd.np.isnan(hi))
+                np.ma.masked_array(lo, np.isnan(lo)), np.ma.masked_array(hi, np.isnan(hi))
             )
             if prob > cutoff:
                 continue
-            results.append({
-                'group': group,
-                'number': number,
-                'prob': prob,
-                'gain': sorted_cats.iloc[-1] / means[number] - 1,
-                'biggies': ave.loc[biggies][number].to_dict(),
-                'means': ave[[number, '#']].sort_values(number).to_dict(),
-            })
+            results.append(
+                {
+                    'group': group,
+                    'number': number,
+                    'prob': prob,
+                    'gain': sorted_cats.iloc[-1] / means[number] - 1,
+                    'biggies': ave.loc[biggies][number].to_dict(),
+                    'means': ave[[number, '#']].sort_values(number).to_dict(),
+                }
+            )
 
     results = pd.DataFrame(results)
     if len(results) > 0:
@@ -267,6 +295,7 @@ def weighted_avg(data, numeric_cols, weight):
 
 def _google_translate(q, source, target, key):
     import requests
+
     params = {'q': q, 'target': target, 'key': key}
     if source:
         params['source'] = source
@@ -280,55 +309,66 @@ def _google_translate(q, source, target, key):
     return {
         'q': q,
         't': [t['translatedText'] for t in response['data']['translations']],
-        'source': [t.get('detectedSourceLanguage', params.get('source', None))
-                   for t in response['data']['translations']],
+        'source': [
+            t.get('detectedSourceLanguage', params.get('source', None))
+            for t in response['data']['translations']
+        ],
         'target': [target] * len(q),
     }
 
 
-translate_api = {
-    'google': _google_translate
-}
+translate_api = {'google': _google_translate}
 # Prevent translate cache from being accessed concurrently across threads.
 # TODO: avoid threads and use Tornado ioloop/gen instead.
 _translate_cache_lock = threading.Lock()
 
 
-def translate(*q, **kwargs):
+def translate(
+    *q: str,
+    source: str = None,
+    target: str = None,
+    key: str = None,
+    cache: dict = None,
+    api: str = 'google',
+    **kwargs,
+):
     '''
-    Translate strings using the Google Translate API. Example::
+    Translate strings using the Google Translate API.
 
-        translate('Hello', 'World', source='en', target='de', key='...')
+    ```python
+    translate('Hello', 'World', source='en', target='de', key='...')
+    ```
 
-    returns a DataFrame::
+    returns a DataFrame
 
-        source  target  q       t
-        en      de      Hello   ...
-        en      de      World   ...
+    ```text
+    source  target  q       t
+    en      de      Hello   ...
+    en      de      World   ...
+    ```
 
-    The results can be cached via a ``cache={...}`` that has parameters for
-    :py:func:`gramex.data.filter`. Example::
+    The results can be cached via a `cache={...}` that has parameters for
+    [gramex.data.filter]. Example:
 
-        translate('Hello', key='...', cache={'url': 'translate.xlsx'})
+    ```python
+    translate('Hello', key='...', cache={'url': 'translate.xlsx'})
+    ```
 
-    :arg str q: one or more strings to translate
-    :arg str source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
-    :arg str target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
-    :arg str key: Google Translate API key
-    :arg dict cache: kwargs for :py:func:`gramex.data.filter`. Has keys such as
-        url (required), table (for databases), sheet_name (for Excel), etc.
+    Parameters:
+
+        q: one or more strings to translate
+        source: 2-letter source language (e.g. en, fr, es, hi, cn, etc).
+        target: 2-letter target language (e.g. en, fr, es, hi, cn, etc).
+        key: Google Translate API key
+        cache: kwargs for [gramex.data.filter]. Has keys such as
+            url (required), table (for databases), sheet_name (for Excel), etc.
 
     Reference: https://cloud.google.com/translate/docs/apis
     '''
     import gramex.data
-    source = kwargs.pop('source', None)
-    target = kwargs.pop('target', None)
-    key = kwargs.pop('key', None)
-    cache = kwargs.pop('cache', None)
-    api = kwargs.pop('api', 'google')
-    if cache is not None:
-        if not isinstance(cache, dict):
-            raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
+
+    if cache is not None and not isinstance(cache, dict):
+        raise ValueError('cache= must be a FormHandler dict config, not %r' % cache)
 
     # Store data in cache with fixed columns: source, target, q, t
     result = pd.DataFrame(columns=['source', 'target', 'q', 't'])
@@ -369,13 +409,13 @@ def translate(*q, **kwargs):
 @coroutine
 def translater(handler, source='en', target='nl', key=None, cache=None, api='google'):
     args = handler.argparse(
-        q={'nargs': '*', 'default': []},
-        source={'default': source},
-        target={'default': target}
+        q={'nargs': '*', 'default': []}, source={'default': source}, target={'default': target}
     )
     import gramex
+
     result = yield gramex.service.threadpool.submit(
-        translate, *args.q, source=args.source, target=args.target, key=key, cache=cache, api=api)
+        translate, *args.q, source=args.source, target=args.target, key=key, cache=cache, api=api
+    )
 
     # TODO: support gramex.data.download features
     handler.set_header('Content-Type', 'application/json; encoding="UTF-8"')
@@ -384,13 +424,14 @@ def translater(handler, source='en', target='nl', key=None, cache=None, api='goo
 
 _languagetool = {
     'defaults': {k: v for k, v in variables.items() if k.startswith('LT_')},
-    'installed': os.path.isdir(variables['LT_CWD'])
+    'installed': os.path.isdir(variables['LT_CWD']),
 }
 
 
 @coroutine
 def languagetool(handler, *args, **kwargs):
     import gramex
+
     merge(kwargs, _languagetool['defaults'], mode='setdefault')
     yield gramex.service.threadpool.submit(languagetool_download)
     if not handler:
@@ -412,7 +453,7 @@ def languagetool(handler, *args, **kwargs):
             correction = error['replacements'][0]['value']
             offset, limit = error['offset'], error['length']
             offset += d_offset
-            del corrected[offset:(offset + limit)]
+            del corrected[offset : (offset + limit)]
             for i, char in enumerate(correction):
                 corrected.insert(offset + i, char)
             d_offset += len(correction) - limit
@@ -434,7 +475,7 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
     '''
     client = AsyncHTTPClient()
     url = kwargs['LT_URL'].format(**kwargs)
-    query = six.moves.urllib_parse.urlencode({'language': lang, 'text': text})
+    query = urlencode({'language': lang, 'text': text})
     url = url + query
     tries = 2  # See: https://github.com/gramener/gramex/pull/125#discussion_r266200480
     while tries:
@@ -444,15 +485,19 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
         except ConnectionRefusedError:
             # Start languagetool
             from gramex.cache import daemon
+
             cmd = [p.format(**kwargs) for p in kwargs['LT_CMD']]
             app_log.info('Starting: %s', ' '.join(cmd))
             if 'proc' not in _languagetool:
                 import re
+
                 _languagetool['proc'] = daemon(
-                    cmd, cwd=kwargs['LT_CWD'],
+                    cmd,
+                    cwd=kwargs['LT_CWD'],
                     first_line=re.compile(r"Server started\s*$"),
-                    stream=True, timeout=5,
-                    buffer_size=512
+                    stream=True,
+                    timeout=5,
+                    buffer_size=512,
                 )
             try:
                 result = yield client.fetch(url)
@@ -466,14 +511,15 @@ def languagetoolrequest(text, lang='en-us', **kwargs):
 def languagetool_download():
     if _languagetool['installed']:
         return
-    import requests, zipfile, io        # noqa
+    import requests, zipfile, io  # noqa
+
     target = _languagetool['defaults']['LT_TARGET']
     if not os.path.isdir(target):
         os.makedirs(target)
     src = _languagetool['defaults']['LT_SRC'].format(**_languagetool['defaults'])
-    app_log.info('Downloading languagetools from %s', src)
+    app_log.info(f'Downloading languagetools from {src}')
     stream = io.BytesIO(requests.get(src).content)
-    app_log.info('Unzipping languagetools to %s', target)
+    app_log.info(f'Unzipping languagetools to {target}')
     zipfile.ZipFile(stream).extractall(target)
     _languagetool['installed'] = True
 
@@ -483,7 +529,7 @@ translator = translater
 
 
 try:
-    from .topcause import TopCause     # noqa -- F401 imported to expose
+    from .topcause import TopCause  # noqa -- F401 imported to expose
 except ImportError:
     app_log.info('gramex.ml.TopCause not imported. pip install sklearn')
     pass

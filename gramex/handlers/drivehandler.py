@@ -2,7 +2,6 @@ import os
 import time
 import tornado.gen
 import gramex.data
-import sqlalchemy as sa
 from string import ascii_lowercase, digits
 from random import choice
 from mimetypes import guess_type
@@ -14,23 +13,34 @@ from .formhandler import FormHandler
 
 class DriveHandler(FormHandler):
     '''
-    Lets users manage files. Here's a typical configuration::
+    Lets users manage files. Here's a typical configuration
 
-        path: $GRAMEXDATA/apps/appname/     # Save files here
-        user_fields: [id, role, hd]         # user attributes to store
-        tags: [tag]                         # <input name=""> to store
-        allow: [.doc, .docx]                # Only allow these files
-        ignore: [.pdf]                      # Don't allow these files
-        max_file_size: 100000               # Files must be smaller than this
-        redirect:                           # After uploading the file,
-            query: next                     #   ... redirect to ?next=
-            url: /$YAMLURL/                 #   ... else to this directory
+    ```yaml
+    path: $GRAMEXDATA/apps/appname/     # Save files here
+    user_fields: [id, role, hd]         # user attributes to store
+    tags: [tag]                         # <input name=""> to store
+    allow: [.doc, .docx]                # Only allow these files
+    ignore: [.pdf]                      # Don't allow these files
+    max_file_size: 100000               # Files must be smaller than this
+    redirect:                           # After uploading the file,
+        query: next                     #   ... redirect to ?next=
+        url: /$YAMLURL/                 #   ... else to this directory
+    ```
 
     File metadata is stored in <path>/.meta.db as SQLite
     '''
+
     @classmethod
-    def setup(cls, path, user_fields=None, tags=None, allow=None, ignore=None, max_file_size=None,
-              **kwargs):
+    def setup(
+        cls,
+        path,
+        user_fields=None,
+        tags=None,
+        allow=None,
+        ignore=None,
+        max_file_size=None,
+        **kwargs,
+    ):
         cls.path = path
         cls.user_fields = cls._ensure_type('user_fields', user_fields)
         cls.tags = cls._ensure_type('tags', tags)
@@ -47,30 +57,20 @@ class DriveHandler(FormHandler):
         super().setup(**kwargs)
 
         # Ensure all tags and user_fields are present in "drive" table
-        engine = sa.create_engine(url)
-        meta = sa.MetaData(bind=engine)
-        meta.reflect()
         cls._db_cols = {
-            'id': sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
-            'file': sa.Column('file', sa.Text),             # Original file name
-            'ext': sa.Column('ext', sa.Text),               # Original file extension
-            'path': sa.Column('path', sa.Text),             # Saved file relative path
-            'size': sa.Column('size', sa.Integer),          # File size
-            'mime': sa.Column('mime', sa.Text),             # MIME type
-            'date': sa.Column('date', sa.Integer),          # Uploaded date
+            'id': {'type': 'int', 'primary_key': True, 'autoincrement': True},
+            'file': {'type': 'text'},  # Original file name
+            'ext': {'type': 'text'},  # Original file extension
+            'path': {'type': 'text'},  # Saved file relative path
+            'size': {'type': 'int'},  # File size
+            'mime': {'type': 'text'},  # MIME type
+            'date': {'type': 'int'},  # Uploaded date
         }
         for s in cls.user_fields:
-            cls._db_cols['user_%s' % s] = sa.Column('user_%s' % s, sa.String)
+            cls._db_cols[f'user_{s}'] = {'type': 'text'}
         for s in cls.tags:
-            cls._db_cols.setdefault(s, sa.Column(s, sa.String))
-        if table in meta.tables:
-            with engine.connect() as conn:
-                with conn.begin():
-                    for col, coltype in cls._db_cols.items():
-                        if col not in meta.tables[table].columns:
-                            conn.execute('ALTER TABLE %s ADD COLUMN %s TEXT' % (table, col))
-        else:
-            sa.Table(table, meta, *cls._db_cols.values()).create(engine)
+            cls._db_cols.setdefault(s, {'type': 'text'})
+        gramex.data.alter(url, table, cls._db_cols)
 
         # If ?_download=...&id=..., then download the file via modify:
         def download_plugin(data, key, handler):
@@ -79,14 +79,13 @@ class DriveHandler(FormHandler):
             if len(ids) != 1 or '_download' not in handler.args:
                 return data
             if len(data) == 0:
-                raise HTTPError(NOT_FOUND, 'No file record with id=%s' % ids[0])
+                raise HTTPError(NOT_FOUND, f'No file record with id={ids[0]}')
             path = os.path.join(handler.path, data['path'][0])
             if not os.path.exists(path):
-                raise HTTPError(NOT_FOUND, 'Missing file for id=%s' % ids[0])
+                raise HTTPError(NOT_FOUND, f'Missing file for id={ids[0]}')
             handler.set_header('Content-Type', data['mime'][0])
             handler.set_header('Content-Length', os.stat(path).st_size)
-            handler.set_header(
-                'Content-Disposition', 'attachment; filename="%s"' % data['file'][0])
+            handler.set_header('Content-Disposition', f'attachment; filename="{data["file"][0]}"')
             with open(path, 'rb') as handle:
                 return handle.read()
 
@@ -94,12 +93,11 @@ class DriveHandler(FormHandler):
         cls.datasets['data']['modify'] = download_plugin
 
     def check_filelimits(self):
-        allow = set(ext.lower() for ext in self.allow)
-        ignore = set(ext.lower() for ext in self.ignore)
+        allow = {ext.lower() for ext in self.allow}
+        ignore = {ext.lower() for ext in self.ignore}
         for name, ext, size in zip(self.args['file'], self.args['ext'], self.args['size']):
             if self.max_file_size and size > self.max_file_size:
-                raise HTTPError(REQUEST_ENTITY_TOO_LARGE, '%s: %d > %d' % (
-                    name, size, self.max_file_size))
+                raise HTTPError(REQUEST_ENTITY_TOO_LARGE, f'{name}: {size} > {self.max_file_size}')
             if ext in ignore or (allow and ext not in allow):
                 raise HTTPError(UNSUPPORTED_MEDIA_TYPE, name)
 
@@ -109,17 +107,19 @@ class DriveHandler(FormHandler):
         user = self.current_user or {}
         uploads = self.request.files.get('file', [])
         n = len(uploads)
-        # Initialize all DB columns (except ID) to have the same number of rows as uploads
-        for key, col in list(self._db_cols.items())[1:]:
-            self.args[key] = self.args.get(key, []) + [col.type.python_type()] * n
+        # Initialize all DB columns (except ID) to have the same number of rows as uploads.
+        # Add `n` rows, and then clip to `n` rows. Effective way to pad AND trim.
+        for key in list(self._db_cols.keys())[1:]:
+            self.args[key] = self.args.get(key, []) + [''] * n
         for key in self.args:
             self.args[key] = self.args[key][:n]
         for i, upload in enumerate(uploads):
             file = os.path.basename(upload.get('filename', ''))
             ext = os.path.splitext(file)[1]
             path = slug.filename(file)
+            # B311:random random() is safe since it's for non-cryptographic use
             while os.path.exists(os.path.join(self.path, path)):
-                randomletter = choice(digits + ascii_lowercase)     # nosec: non-cryptographic
+                randomletter = choice(digits + ascii_lowercase)  # nosec B311
                 path = os.path.splitext(path)[0] + randomletter + ext
             self.args['file'][i] = file
             self.args['ext'][i] = ext.lower()
@@ -132,52 +132,58 @@ class DriveHandler(FormHandler):
                 self.args['mime'][i] = guess_type(file, strict=False)[0]
             # Append user attributes
             for s in self.user_fields:
-                self.args['user_%s' % s.replace('.', '_')][i] = objectpath(user, s)
+                self.args[f'user_{s.replace(".", "_")}'][i] = objectpath(user, s)
         self.check_filelimits()
+        self.files = self.args
         yield super().post(*path_args, **path_kwargs)
-        for upload, path in zip(uploads, self.args['path']):
-            with open(os.path.join(self.path, path), 'wb') as handle:
-                handle.write(upload['body'])
+
+    def pre_modify(self, **kwargs):
+        '''Called by FormHandler after updating the database, before modify. Save files here.
+
+        This allows the DriveHandler modify: action to access the files.
+        '''
+        # If POST or PUT, save all files
+        if self.request.method in {'POST', 'PUT'}:
+            uploads = self.request.files.get('file', [])
+            for upload, path in zip(uploads, self.files['path']):
+                with open(os.path.join(self.path, path), 'wb') as handle:
+                    handle.write(upload['body'])
+        elif self.request.method == 'DELETE':
+            for relpath in self.files['path']:
+                path = os.path.join(self.path, relpath)
+                if os.path.exists(path):
+                    os.remove(path)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):
         '''Deletes files from metadata DB and from file system'''
         conf = self.datasets.data
         files = gramex.data.filter(conf.url, table=conf.table, args=self.args)
-        result = yield super().delete(*path_args, **path_kwargs)
-        for index, row in files.iterrows():
-            path = os.path.join(self.path, row['path'])
-            if os.path.exists(path):
-                os.remove(path)
-        return result
+        self.files = files.to_dict(orient='list')
+        yield super().delete(*path_args, **path_kwargs)
 
     @tornado.gen.coroutine
     def put(self, *path_args, **path_kwargs):
         '''Update attributes and files'''
-        # PUT can update only 1 ID at a time. Use only the first upload, if any
         uploads = self.request.files.get('file', [])[:1]
         id = self.args.get('id', [-1])
         # User cannot change the path, size, date or user attributes
         for s in ('path', 'size', 'date'):
             self.args.pop(s, None)
         for s in self.user_fields:
-            self.args.pop('user_%s' % s, None)
+            self.args.pop(f'user_{s}', None)
         # These are updated only when a file is uploaded
         if len(uploads):
             user = self.current_user or {}
             self.args.setdefault('size', []).append(len(uploads[0]['body']))
             self.args.setdefault('date', []).append(int(time.time()))
             for s in self.user_fields:
-                self.args.setdefault('user_%s' % s.replace('.', '_'), []).append(
-                    objectpath(user, s))
-        conf = self.datasets.data
+                self.args.setdefault(f'user_{s.replace(".", "_")}', []).append(objectpath(user, s))
+        conf = self.datasets['data']
         files = gramex.data.filter(conf.url, table=conf.table, args={'id': id})
-        result = yield super().put(*path_args, **path_kwargs)
-        if len(uploads) and len(files):
-            path = os.path.join(self.path, files['path'].iloc[0])
-            with open(path, 'wb') as handle:
-                handle.write(uploads[0]['body'])
-        return result
+        self.files = files.to_dict(orient='list')
+        self.files.update(self.args)
+        yield super().put(*path_args, **path_kwargs)
 
     @classmethod
     def _ensure_type(cls, field, values):
@@ -189,4 +195,4 @@ class DriveHandler(FormHandler):
             return {values: 'str'}
         if not values:
             return {}
-        raise TypeError('%s: %s should be a dict, not %s' % (cls.name, field, values))
+        raise TypeError(f'{cls.name}: {field} should be a dict, not {values}')

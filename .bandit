@@ -1,0 +1,3 @@
+[bandit]
+; Only test the Gramex source folder, not test folders
+exclude = */tests/*,*/testlib/*,*/pytest/*,*/node_modules/*

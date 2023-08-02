@@ -1,9 +1,0 @@
-{
-  "scripts": {
-    "build": "rollup -c"
-  },
-  "dependencies": {
-    "rollup": "1",
-    "rollup-plugin-htmlparts": "1"
-  }
-}

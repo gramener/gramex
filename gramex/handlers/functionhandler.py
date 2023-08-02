@@ -8,32 +8,28 @@ from .basehandler import BaseHandler
 
 
 class FunctionHandler(BaseHandler):
-    '''
-    Renders the output of a function when the URL is called via GET or POST. It
-    accepts these parameters when initialized:
+    '''Renders the output of a function when the URL is called via GET or POST.
 
-    :arg string function: a string that resolves into any Python function or
-        method (e.g. ``str.lower``). By default, it is called as
-        ``function(handler)`` where handler is this RequestHandler, but you can
-        override ``args`` and ``kwargs`` below to replace it with other
-        parameters. The result is rendered as-is (and hence must be a string, or
-        a Future that resolves to a string.) You can also yield one or more
-        results. These are written immediately, in order.
-    :arg list args: positional arguments to be passed to the function.
-    :arg dict kwargs: keyword arguments to be passed to the function.
-    :arg dict headers: HTTP headers to set on the response.
-    :arg string redirect: URL to redirect to when the result is done. Used to
-        trigger calculations without displaying any output.
+    - `function`: A Python expression that can use `handler` as a variable.
+    - `headers`: HTTP headers to set on the response.
+    - `redirect`: URL to redirect to when done, e.g. for calculations without output.
+
+    The function result is converted to a string and rendered.
+    You can also yield one or more results. These are written immediately, in order.
     '''
+
     @classmethod
     def setup(cls, headers={}, **kwargs):
         super(FunctionHandler, cls).setup(**kwargs)
         # Don't use cls.info.function = build_transform(...) -- Python treats it as a method
         cls.info = {}
-        cls.info['function'] = build_transform(kwargs, vars={'handler': None},
-                                               filename='url: %s' % cls.name)
+        cls.info['function'] = build_transform(
+            kwargs, vars={'handler': None}, filename=f'url:{cls.name}'
+        )
         cls.headers = headers
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @tornado.gen.coroutine
     def get(self, *path_args):
@@ -41,7 +37,7 @@ class FunctionHandler(BaseHandler):
             self.save_redirect_page()
 
         if 'function' not in self.info:
-            raise ValueError('Invalid function definition in url:%s' % self.name)
+            raise ValueError(f'Invalid function definition in url:{self.name}')
         result = self.info['function'](handler=self)
         for header_name, header_value in self.headers.items():
             self.set_header(header_name, header_value)
@@ -72,16 +68,23 @@ class FunctionHandler(BaseHandler):
             # This includes JSON types, detected by isinstance(item, ...))
             # and numpy types, detected by cls in (...)
             # and anything with a to_dict, e.g. DataFrames
-            elif (isinstance(item, (int, float, bool, list, tuple, dict)) or
-                  cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str') or
-                  hasattr(item, 'to_dict')):
-                self.write(json.dumps(item, separators=(',', ':'), ensure_ascii=True,
-                                      cls=CustomJSONEncoder))
+            elif (
+                isinstance(item, (int, float, bool, list, tuple, dict))
+                or cls in ('datetime', 'int', 'intc', 'float', 'bool', 'ndarray', 'bytes', 'str')
+                or hasattr(item, 'to_dict')
+            ):
+                self.write(
+                    json.dumps(
+                        item, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+                    )
+                )
                 if multipart:
                     self.flush()
             else:
-                app_log.warning('url:%s: FunctionHandler can write scalars/list/dict, not %s: %s',
-                                self.name, type(item), repr(item))
+                app_log.warning(
+                    f'url:{self.name}: FunctionHandler can write scalars/list/dict, '
+                    f'not {type(item)}: {item!r}'
+                )
 
         if self.redirects:
             self.redirect_next()

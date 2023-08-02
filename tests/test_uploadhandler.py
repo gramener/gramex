@@ -1,3 +1,4 @@
+import contextlib
 import os
 import re
 import shutil
@@ -22,7 +23,7 @@ class TestUploadHandler(TestGramex):
 
     def check_upload(self, url, files, names=[], data={}, code=OK):
         r = requests.post(url, files=files, data=data)
-        eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
+        eq_(r.status_code, code, f'{url}: code {r.status_code} != {code}')
         json = r.json()
         meta = self.info.info()
         for index, name in enumerate(names):
@@ -47,7 +48,7 @@ class TestUploadHandler(TestGramex):
         ok_(os.path.isfile(os.path.join(self.path, '.meta.db')))
         eq_(requests.get(url).status_code, METHOD_NOT_ALLOWED)
         data = {'x': '1', 'y': 1}
-        up = lambda **kwargs: self.check_upload(url, **kwargs)      # noqa
+        up = lambda **kwargs: self.check_upload(url, **kwargs)  # noqa
         # Empty upload
         up(files={})
         # Single upload with data
@@ -57,8 +58,10 @@ class TestUploadHandler(TestGramex):
         # Second upload creates a copy of the file with a new filename
         up(files={'text': open('userdata.csv', 'rb')}, names=['userdata.1.csv'], data=data)
         # Multiple uploads
-        up(files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
-           names=['userdata.2.csv', 'actors.csv'])
+        up(
+            files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
+            names=['userdata.2.csv', 'actors.csv'],
+        )
         # Filename with no extension, hence no MIME type
         up(files={'unknown': ('file', open('actors.csv', 'rb'))}, names=['file'])
         # Save uploaded file as specific filename
@@ -66,8 +69,11 @@ class TestUploadHandler(TestGramex):
         # Save file under a sub-directory
         up(files={'text': open('actors.csv', 'rb')}, names=['高/α'], data={'save': '高/α'})
         # Multiple uploads with renames
-        up(files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
-           names=['β', 'γ'], data={'save': ['β', 'γ']})
+        up(
+            files={'image': open('userdata.csv', 'rb'), 'text': open('actors.csv', 'rb')},
+            names=['β', 'γ'],
+            data={'save': ['β', 'γ']},
+        )
         # Delete file
         up(files={}, data={'rm': 'file'})
 
@@ -75,8 +81,7 @@ class TestUploadHandler(TestGramex):
         for path in ['../actors.csv', '/actors.csv', '../upload/../β']:
             r = requests.post(url, files={'text': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
-            ok_('outside' in msg)
+            ok_('outside' in r.text)
 
     def test_upload_error(self):
         url = server.base_url + conf.url['upload-error'].pattern
@@ -87,13 +92,12 @@ class TestUploadHandler(TestGramex):
             eq_(r.status_code, FORBIDDEN)
             r = requests.post(url, files={'file': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, FORBIDDEN)
-            msg = r.reason.decode('utf-8') if isinstance(r.reason, bytes) else r.reason
-            ok_('file exists' in msg)
+            ok_('file exists' in r.text)
 
     def test_upload_overwrite(self):
         url = server.base_url + conf.url['upload-overwrite'].pattern
         base = conf.url['upload-overwrite'].kwargs.path
-        read = lambda f: gramex.cache.open(f, 'text', rel=True)     # noqa
+        read = lambda f: gramex.cache.open(f, 'text', rel=True)  # noqa
         for path in ['ζ', 'η']:
             r = requests.post(url, files={'file': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, OK)
@@ -105,7 +109,7 @@ class TestUploadHandler(TestGramex):
     def test_upload_backup(self):
         url = server.base_url + conf.url['upload-backup'].pattern
         base = conf.url['upload-backup'].kwargs.path
-        read = lambda f: gramex.cache.open(f, 'text', rel=True)     # noqa
+        read = lambda f: gramex.cache.open(f, 'text', rel=True)  # noqa
         for path in ['θ', 'λ']:
             r = requests.post(url, files={'file': open('actors.csv', 'rb')}, data={'save': path})
             eq_(r.status_code, OK)
@@ -133,8 +137,5 @@ class TestUploadHandler(TestGramex):
     def tearDownClass(cls):
         FileUpload(cls.path).store.close()
         if os.path.exists(cls.path):
-            try:
+            with contextlib.suppress(OSError):
                 shutil.rmtree(cls.path, onerror=_ensure_remove)
-            except OSError:
-                # .meta.db may be in use. Ignore it.
-                pass

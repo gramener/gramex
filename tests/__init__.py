@@ -1,11 +1,16 @@
+import contextlib
 import os
 import requests
 import shutil
 import unittest
-from lxml import etree      # nosec: lxml is safe   # noqa: F401 - other modules use this
+
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+# F401: we import here since other modules use this
+from lxml import etree  # noqa: F401    # nosec B410
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
+from pandas.testing import assert_frame_equal as afe  # noqa: F401 - other modules use this
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))
@@ -13,8 +18,6 @@ folder = os.path.dirname(os.path.abspath(__file__))
 
 def setUp():
     # Remove uploads folder before Gramex locks .meta.h5
-    # This may fail on Python 2.7 on Windows due to unicode characters.
-    # Delete tests/uploads/ manually in that case
     upload_path = os.path.join(folder, 'uploads')
     if os.path.exists(upload_path):
         shutil.rmtree(upload_path)
@@ -41,31 +44,53 @@ class TestGramex(unittest.TestCase):
         req = session or requests
         return getattr(req, method)(server.base_url + url, timeout=timeout, **kwargs)
 
-    def check(self, url, data=None, path=None, code=200, text=None, no_text=None,
-              request_headers=None, headers=None, session=None, method='get', timeout=10):
+    def check(
+        self,
+        url: str,
+        data: dict = None,
+        path: dict = None,
+        code: int = 200,
+        text: str = None,
+        no_text: str = None,
+        request_headers: dict = None,
+        headers: dict = None,
+        session: requests.Session = None,
+        method: str = 'get',
+        allow_redirects: bool = True,
+        timeout: int = 10,
+    ):
         '''
-        check(url) checks if the url returns the correct response. Parameters:
+        check(url) checks if the url returns the correct response.
 
-        :arg string url: Relative URL from test server base
-        :arg dict data: optional data= to pass to requests.get/post
-        :arg dict request_headers: options headers= to pass to requests.get/post
-        :arg string method: HTTP method (default: 'get', may be 'post', etc.)
-        :arg Session session: requests.Session object to use (default: ``requests``)
-        :arg int timeout: seconds to wait (default: 10)
+        Parameters:
 
-        :arg int code: returned status code must match this (default: 200)
-        :arg string text: returned body must contain this text
-        :arg string no_text: returned body must NOT contain this text
-        :arg string path: returned body must equal the contents of the file at this path
-        :arg dict headers: returned headers must contain these items. Value can be:
-            - None/False: the header SHOULD NOT exist
-            - True: the header SHOULD exist
-            - string: the header must equal this string
+            url: Relative URL from test server base
+            data: optional data= to pass to requests.get/post
+            request_headers: options headers= to pass to requests.get/post
+            method: HTTP method (default: 'get', may be 'post', etc.)
+            session: requests.Session object to use (default: `requests`)
+            timeout: seconds to wait (default: 10)
+
+            code: returned status code must match this (default: 200)
+            text: returned body must contain this text
+            no_text: returned body must NOT contain this text
+            path: returned body must equal the contents of the file at this path
+            headers: returned headers must contain these items. Value can be:
+                - None/False: the header SHOULD NOT exist
+                - True: the header SHOULD exist
+                - string: the header must equal this string
 
         If any of the checks do not match, raises an assertion error.
         '''
-        r = self.get(url, session=session, data=data, method=method, timeout=timeout,
-                     headers=request_headers)
+        r = self.get(
+            url,
+            session=session,
+            data=data,
+            method=method,
+            timeout=timeout,
+            headers=request_headers,
+            allow_redirects=allow_redirects,
+        )
         eq_(r.status_code, code, '%s: code %d != %d' % (url, r.status_code, code))
         if text is not None:
             self.assertIn(text, r.text, '%s: %s not in %s' % (url, text, r.text))
@@ -102,6 +127,7 @@ class TestGramex(unittest.TestCase):
         import re
         import lxml.html
         from lxml.cssselect import CSSSelector
+
         tree = lxml.html.fromstring(html)
 
         for selector in selectors:
@@ -129,7 +155,7 @@ class TestGramex(unittest.TestCase):
 
                 # Try substring search. Else try regexp search
                 regex = re.compile(v)
-                match = lambda x: x in actual or regex.search(x)        # noqa
+                match = lambda x: x in actual or regex.search(x)  # noqa
 
                 # First or specified selector should match v
                 if how == 'is' or isinstance(how, int):
@@ -156,7 +182,5 @@ def remove_if_possible(target):
     '''
     if not os.path.exists(target):
         return
-    try:
+    with contextlib.suppress(PermissionError):
         os.remove(target)
-    except PermissionError:
-        pass

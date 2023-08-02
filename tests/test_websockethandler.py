@@ -25,11 +25,14 @@ class TestWebSocketHandler(AuthBase):
             ws.send(msg)
             ws.close()
             time.sleep(self.delay)
-            eq_(self.check('/ws/info').json(), [
-                {'method': 'open'},
-                {'method': 'on_message', 'message': msg},
-                {'method': 'on_close'}
-            ])
+            eq_(
+                self.check('/ws/info').json(),
+                [
+                    {'method': 'open'},
+                    {'method': 'on_message', 'message': msg},
+                    {'method': 'on_close'},
+                ],
+            )
 
     def test_unauthorised(self):
         try:
@@ -42,9 +45,14 @@ class TestWebSocketHandler(AuthBase):
     def test_forbidden(self):
         self.login('beta', 'beta')
         try:
-            create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
-                'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
-            ])
+            create_connection(
+                base_url.replace('http://', 'ws://') + '/ws/auth',
+                header=[
+                    'Cookie: {}'.format(
+                        get_cookie_header(self.session.cookies, Request(url=base_url))
+                    )
+                ],
+            )
         except WebSocketException as exc:
             self.assertEqual(exc.status_code, FORBIDDEN)
         else:
@@ -53,14 +61,20 @@ class TestWebSocketHandler(AuthBase):
     def test_authorised_user(self):
         # Log in as user alpha. Authorised users should get access.
         self.login('alpha', 'alpha')
-        ws = create_connection(base_url.replace('http://', 'ws://') + '/ws/auth', header=[
-            'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
-        ])
+        ws = create_connection(
+            base_url.replace('http://', 'ws://') + '/ws/auth',
+            header=[
+                'Cookie: {}'.format(get_cookie_header(self.session.cookies, Request(url=base_url)))
+            ],
+        )
         ws.send(self.message)
         ws.close()
         time.sleep(self.delay)
-        eq_(self.check('/ws/info').json(), [
-            {'method': 'open'},
-            {'method': 'on_message', 'message': self.message},
-            {'method': 'on_close'}
-        ])
+        eq_(
+            self.check('/ws/info').json(),
+            [
+                {'method': 'open'},
+                {'method': 'on_message', 'message': self.message},
+                {'method': 'on_close'},
+            ],
+        )

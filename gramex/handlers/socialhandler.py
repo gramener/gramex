@@ -10,9 +10,7 @@ from tornado.httputil import url_concat, responses
 from .basehandler import BaseHandler
 from gramex.http import OK, BAD_REQUEST, CLIENT_TIMEOUT
 
-custom_responses = {
-    CLIENT_TIMEOUT: 'Client Timeout'
-}
+custom_responses = {CLIENT_TIMEOUT: 'Client Timeout'}
 store_cache = {}
 
 
@@ -22,7 +20,9 @@ class SocialHandler(BaseHandler):
         # Session key that stores the user info
         cls.user_info = user_info
         # Set up methods
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     @tornado.gen.coroutine
     def social_response(self, response):
@@ -52,7 +52,7 @@ class SocialHandler(BaseHandler):
 
     def run_transforms(self, content):
         result = json.loads(content.decode('utf-8'))
-        for name, transform in self.transform.items():
+        for transform in self.transform.values():
             for value in transform['function'](result):
                 result = value
             for header, header_value in transform.get('headers', {}).items():
@@ -62,10 +62,18 @@ class SocialHandler(BaseHandler):
     def write_error(self, status_code, **kwargs):
         '''Write error responses in JSON'''
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
-        self.finish(json.dumps({'errors': [{
-            'code': status_code,
-            'message': self._reason,
-        }]}))
+        self.finish(
+            json.dumps(
+                {
+                    'errors': [
+                        {
+                            'code': status_code,
+                            'message': self._reason,
+                        }
+                    ]
+                }
+            )
+        )
 
     def _get_store_key(self):
         '''
@@ -105,44 +113,48 @@ class SocialHandler(BaseHandler):
         If after all of this, we don't have a token, raise an exception.
         '''
         info = self.session.get(self.user_info, {})
-        token = self.kwargs.get(key, None)         # Get from config
+        token = self.kwargs.get(key, None)  # Get from config
         session_token = fetch(info, key, None)
-        if token == 'persist':                          # nosec: false positive
-            token = self.read_store().get(key, None)    # If persist, use store
-            if token is None and session_token:         # Or persist from session
+        # B105:hardcoded_password_string: 'persist' is not a password
+        if token == 'persist':  # nosec B105
+            token = self.read_store().get(key, None)  # If persist, use store
+            if token is None and session_token:  # Or persist from session
                 self.write_store(info)
         if token is None:
-            token = session_token                       # Use session token
-        if token is None:                               # Ensure token is present
-            raise HTTPError(BAD_REQUEST, reason='token %s missing' % key)
+            token = session_token  # Use session token
+        if token is None:  # Ensure token is present
+            raise HTTPError(BAD_REQUEST, f'token {key} missing')
         return token
 
 
 class TwitterRESTHandler(SocialHandler, TwitterMixin):
     '''
-    Proxy for the Twitter 1.1 REST API via these ``kwargs``::
+    Proxy for the Twitter 1.1 REST API via these `kwargs`:
 
-        pattern: /twitter/(.*)
-        handler: TwitterRESTHandler
-        kwargs:
-            key: your-consumer-key
-            secret: your-consumer-secret
-            access_key: your-access-key         # Optional -- picked up from session
-            access_secret: your-access-token    # Optional -- picked up from session
-            methods: [get, post]                # HTTP methods to use for the API
-            path: /search/tweets.json           # Freeze Twitter API request
+    ```yaml
+    pattern: /twitter/(.*)
+    handler: TwitterRESTHandler
+    kwargs:
+        key: your-consumer-key
+        secret: your-consumer-secret
+        access_key: your-access-key         # Optional -- picked up from session
+        access_secret: your-access-token    # Optional -- picked up from session
+        methods: [get, post]                # HTTP methods to use for the API
+        path: /search/tweets.json           # Freeze Twitter API request
+    ```
 
-    Now ``POST /twitter/search/tweets.json?q=gramener`` returns the same response
-    as the Twitter REST API ``/search/tweets.json``.
+    Now `POST /twitter/search/tweets.json?q=gramener` returns the same response
+    as the Twitter REST API `/search/tweets.json`.
 
-    If you only want to expose a specific API, specify a ``path:``. It overrides
+    If you only want to expose a specific API, specify a `path:`. It overrides
     the URL path. The query parameters will still work.
 
-    By default, ``methods`` is POST, and GET logs the user in, storing the access
-    token in the session for future use. But you can specify the ``access_...``
-    values and set ``methods`` to ``[get, post]`` to use both GET and POST
+    By default, `methods` is POST, and GET logs the user in, storing the access
+    token in the session for future use. But you can specify the `access_...`
+    values and set `methods` to `[get, post]` to use both GET and POST
     requests to proxy the API.
     '''
+
     @staticmethod
     def get_from_token(info, key, val):
         return info.get('access_token', {}).get(key.replace('access_', ''), val)
@@ -168,7 +180,8 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
             client_key=params['key'],
             client_secret=params['secret'],
             resource_owner_key=params['access_key'],
-            resource_owner_secret=params['access_secret'])
+            resource_owner_secret=params['access_secret'],
+        )
         endpoint = params.get('endpoint', 'https://api.twitter.com/1.1/')
         path = params.get('path', path)
         uri, headers, body = client.sign(url_concat(endpoint + path, args))
@@ -182,8 +195,9 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
     def login(self):
         if self.get_argument('oauth_token', None):
             info = self.session[self.user_info] = yield self.get_authenticated_user()
-            if (any(self.kwargs.get(key, None) == 'persist'
-                    for key in ('access_key', 'access_secret'))):
+            if any(
+                self.kwargs.get(key, None) == 'persist' for key in ('access_key', 'access_secret')
+            ):
                 self.write_store(info)
             self.redirect_next()
         else:
@@ -191,39 +205,39 @@ class TwitterRESTHandler(SocialHandler, TwitterMixin):
             yield self.authorize_redirect(callback_uri=self.xredirect_uri)
 
     def _oauth_consumer_token(self):
-        return dict(key=self.kwargs['key'],
-                    secret=self.kwargs['secret'])
+        return {'key': self.kwargs['key'], 'secret': self.kwargs['secret']}
 
 
 class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
     '''
-    Proxy for the Facebook Graph API via these ``kwargs``::
+    Proxy for the Facebook Graph API via these `kwargs`:
 
-        pattern: /facebook/(.*)
-        handler: FacebookGraphHandler
-        kwargs:
-            key: your-consumer-key
-            secret: your-consumer-secret
-            access_token: your-access-token     # Optional -- picked up from session
-            methods: [get, post]                # HTTP methods to use for the API
-            scope: user_posts,user_photos       # Permissions requested for the user
-            path: /me/feed                      # Freeze Facebook Graph API request
+    ```yaml
+    pattern: /facebook/(.*)
+    handler: FacebookGraphHandler
+    kwargs:
+        key: your-consumer-key
+        secret: your-consumer-secret
+        access_token: your-access-token     # Optional -- picked up from session
+        methods: [get, post]                # HTTP methods to use for the API
+        scope: user_posts,user_photos       # Permissions requested for the user
+        path: /me/feed                      # Freeze Facebook Graph API request
+    ```
 
-    Now ``POST /facebook/me`` returns the same response as the Facebook Graph API
-    ``/me``. To request specific access rights, specify the ``scope`` based on
-    `permissions`_ required by the `Graph API`_.
+    Now `POST /facebook/me` returns the same response as the Facebook Graph API
+    `/me`. To request specific access rights, specify the `scope` based on
+    [permissions](https://developers.facebook.com/docs/facebook-login/permissions) required by the
+    [Graph API](https://developers.facebook.com/docs/graph-api/reference).
 
-    If you only want to expose a specific API, specify a ``path:``. It overrides
+    If you only want to expose a specific API, specify a `path:`. It overrides
     the URL path. The query parameters will still work.
 
-    By default, ``methods`` is POST, and GET logs the user in, storing the access
-    token in the session for future use. But you can specify the ``access_token``
-    values and set ``methods`` to ``[get, post]`` to use both GET and POST
+    By default, `methods` is POST, and GET logs the user in, storing the access
+    token in the session for future use. But you can specify the `access_token`
+    values and set `methods` to `[get, post]` to use both GET and POST
     requests to proxy the API.
-
-    .. _permissions: https://developers.facebook.com/docs/facebook-login/permissions
-    .. _Graph API: https://developers.facebook.com/docs/graph-api/reference
     '''
+
     @classmethod
     def setup(cls, **kwargs):
         super(FacebookGraphHandler, cls).setup(**kwargs)
@@ -252,7 +266,8 @@ class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
                 redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
                 client_secret=self.kwargs['secret'],
-                code=self.get_argument('code'))
+                code=self.get_argument('code'),
+            )
             if self.kwargs.get('access_token', None) == 'persist':
                 self.write_store(info)
             self.redirect_next()
@@ -262,4 +277,5 @@ class FacebookGraphHandler(SocialHandler, FacebookGraphMixin):
             yield self.authorize_redirect(
                 redirect_uri=self.xredirect_uri,
                 client_id=self.kwargs['key'],
-                extra_params={'scope': scope})
+                extra_params={'scope': scope},
+            )

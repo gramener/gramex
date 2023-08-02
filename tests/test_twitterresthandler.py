@@ -8,7 +8,7 @@ threadpool = concurrent.futures.ThreadPoolExecutor(8)
 
 def async_fetch(name, path, method='post', url='/api/twitter/', **kwargs):
     future = threadpool.submit(getattr(requests, method), server.base_url + url + path, **kwargs)
-    setattr(future, 'name', name)
+    setattr(future, 'name', name)  # noqa: B010 future.name doesn't exist, so create it
     return future
 
 
@@ -22,11 +22,19 @@ class TestTwitterRESTHandler(TestGramex):
             'search-body': {'path': 'search/tweets.json', 'data': search},
             'show': {'path': 'users/show.json', 'data': tweets},
             'timeline': {'path': 'statuses/user_timeline.json', 'data': tweets},
-            'get-ok': {'method': 'get', 'url': '/api/twitter-get/', 'path': 'search/tweets.json',
-                       'data': search},
+            'get-ok': {
+                'method': 'get',
+                'url': '/api/twitter-get/',
+                'path': 'search/tweets.json',
+                'data': search,
+            },
             'get-redirect': {'method': 'get', 'path': 'search/tweets.json', 'data': search},
-            'post-fail': {'method': 'post', 'url': '/api/twitter-get/',
-                          'path': 'search/tweets.json', 'data': search},
+            'post-fail': {
+                'method': 'post',
+                'url': '/api/twitter-get/',
+                'path': 'search/tweets.json',
+                'data': search,
+            },
         }
         # Fetch the tweets upfront, asynchronously
         futures = [async_fetch(name, **kwargs) for name, kwargs in tests.items()]

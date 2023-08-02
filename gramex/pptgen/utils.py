@@ -3,13 +3,12 @@ import re
 import ast
 import copy
 import platform
-import six
-from six import iteritems
 import numpy as np
 import pandas as pd
-# lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml import objectify              # nosec: lxml is fixed
-from lxml.builder import ElementMaker   # nosec: lxml is fixed
+
+# B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
+from lxml import objectify  # nosec B410
+from lxml.builder import ElementMaker  # nosec B410
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.enum.base import EnumValue
@@ -19,17 +18,19 @@ from gramex.transforms import build_transform
 
 def is_slide_allowed(change, slide, number):
     '''
-    Given a change like one of the below::
+    Given a change like one of the below:
 
-        slide-number: 1
-        slide-number: [1, 2, 3]
-        slide-title: 'company'
-        slide-title: ['company', 'industry']
+    ```yaml
+    slide-number: 1
+    slide-number: [1, 2, 3]
+    slide-title: 'company'
+    slide-title: ['company', 'industry']
+    ```
 
     ... return True if:
 
-    1. ``number`` matches a slide-number
-    2. ``slide`` title matches a slide-title regex (case-insensitive)
+    1. `number` matches a slide-number
+    2. `slide` title matches a slide-title regex (case-insensitive)
 
     If none of these are specified, return True.
     '''
@@ -39,7 +40,7 @@ def is_slide_allowed(change, slide, number):
         slide_number = change['slide-number']
         if isinstance(slide_number, (list, dict)):
             match = match and number in slide_number
-        elif isinstance(slide_number, six.integer_types):
+        elif isinstance(slide_number, int):
             match = match and number == slide_number
 
     # Restrict to specific slide title(s), if specified
@@ -48,9 +49,8 @@ def is_slide_allowed(change, slide, number):
         title = slide.shapes.title
         title = title.text if title is not None else ''
         if isinstance(slide_title, (list, dict)):
-            match = match and any(
-                re.search(expr, title, re.IGNORECASE) for expr in slide_title)
-        elif isinstance(slide_title, six.string_types):
+            match = match and any(re.search(expr, title, re.IGNORECASE) for expr in slide_title)
+        elif isinstance(slide_title, str):
             match = match and re.search(slide_title, title, re.IGNORECASE)
     return match
 
@@ -59,12 +59,14 @@ def stack_elements(replica, shape, stack=False, margin=None):
     '''Function to extend elements horizontally or vertically.'''
     if not stack:
         return
-    config = {'vertical': {'axis': 'y', 'attr': 'height'},
-              'horizontal': {'axis': 'x', 'attr': 'width'}}
+    config = {
+        'vertical': {'axis': 'y', 'attr': 'height'},
+        'horizontal': {'axis': 'x', 'attr': 'width'},
+    }
     grp_sp = shape.element
     # Adding a 15% default margin between original and new object.
     default_margin = 0.15
-    margin = default_margin if not margin else margin
+    margin = margin if margin else default_margin
     for index in range(replica):
         # Adding a cloned object to shape
         extend_shape = copy.deepcopy(grp_sp)
@@ -80,7 +82,6 @@ def stack_elements(replica, shape, stack=False, margin=None):
         # Setting graphic position of newly created object to slide.
         setattr(extend_shape, axis, int(set_attr))
         # Adding newly created object to slide.
-        # grp_sp.addnext(extend_shape)
         grp_sp.addprevious(extend_shape)
     shape.element.delete()
 
@@ -120,8 +121,7 @@ def delete_run(run):
 
 def generate_slide(prs, source):
     '''Create a slide layout.'''
-    layout_items_count = [
-        len(layout.placeholders) for layout in prs.slide_layouts]
+    layout_items_count = [len(layout.placeholders) for layout in prs.slide_layouts]
     min_items = min(layout_items_count)
     blank_layout_id = layout_items_count.index(min_items)
     return prs.slide_layouts[blank_layout_id]
@@ -141,7 +141,7 @@ def add_new_slide(dest, source_slide):
     '''Function to add a new slide to presentation.'''
     if dest is None:
         return
-    for key, value in six.iteritems(source_slide.part.rels):
+    for value in source_slide.part.rels.values():
         # Make sure we don't copy a notesSlide relation as that won't exist
         if "notesSlide" in value.reltype:
             continue
@@ -158,10 +158,6 @@ def move_slide(presentation, old_index, new_index):
 
 def delete_slide(presentation, index):
     '''Delete a slide from Presentation.'''
-    # xml_slides = presentation.slides._sldIdLst
-    # slides = list(xml_slides)
-    # del presentation.slides[index]
-    # xml_slides.remove(slides[index])
     rid = presentation.slides._sldIdLst[index].rId
     presentation.part.drop_rel(rid)
     del presentation.slides._sldIdLst[index]
@@ -177,17 +173,15 @@ def manage_slides(prs, config):
     '''
     slide_numbers = config.pop('only', None)
     if slide_numbers:
-        if isinstance(slide_numbers, six.integer_types):
-            slide_numbers = set([int(slide_numbers) - 1])
+        if isinstance(slide_numbers, int):
+            slide_numbers = {int(slide_numbers) - 1}
         elif isinstance(slide_numbers, list):
-            slide_numbers = set([int(i) - 1 for i in slide_numbers])
+            slide_numbers = {int(i) - 1 for i in slide_numbers}
         else:
             raise ValueError('Slide numbers must be a list of integers or a single slide number.')
         slides = set(range(len(prs.slides)))
-        remove_status = 0
-        for slide_num in sorted(slides - slide_numbers):
+        for remove_status, slide_num in enumerate(sorted(slides - slide_numbers)):
             delete_slide(prs, slide_num - remove_status)
-            remove_status += 1
     return prs
 
 
@@ -213,19 +207,19 @@ def scale(series, lo=None, hi=None):
     The lowest value becomes 0, the highest value becomes 1, and all other
     values are proportionally multiplied and have a range between 0 and 1.
 
-    :arg Series series: Data to scale. Pandas Series, numpy array, list or iterable
-    :arg float lo: Value that becomes 0. Values lower than ``lo`` in ``series``
-        will be mapped to negative numbers.
-    :arg float hi: Value that becomes 1. Values higher than ``hi`` in ``series``
-        will be mapped to numbers greater than 1.
+    Parameters:
 
-    Examples::
+        series: Data to scale. Pandas Series, numpy array, list or iterable
+        lo: Value that becomes 0. Values lower than `lo` in `series`
+            will be mapped to negative numbers.
+        hi: Value that becomes 1. Values higher than `hi` in `series`
+            will be mapped to numbers greater than 1.
 
+    Examples:
         >>> stats.scale([1, 2, 3, 4, 5])
-        # array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
-
+        ... array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ])
         >>> stats.scale([1, 2, 3, 4, 5], lo=2, hi=4)
-        # array([-0.5,  0. ,  0.5,  1. ,  1.5])
+        ... array([-0.5,  0. ,  0.5,  1. ,  1.5])
     '''
     series = np.array(series, dtype=float)
     lo = np.nanmin(series) if lo is None or np.isnan(lo) else lo
@@ -235,20 +229,20 @@ def scale(series, lo=None, hi=None):
 
 def decimals(series):
     '''
-    Given a ``series`` of numbers, returns the number of decimals
+    Given a `series` of numbers, returns the number of decimals
     *just enough* to differentiate between most numbers.
 
-    :arg Series series: Pandas Series, numpy array, list or iterable.
-        Data to find the required decimal precision for
-    :return: The minimum number of decimals required to differentiate between
-        most numbers
+    Parameters:
+        series: Pandas Series, numpy array, list or iterable. Data to find decimal precision for
 
-    Examples::
+    Returns:
+        The minimum number of decimals required to differentiate between most numbers
 
-        stats.decimals([1, 2, 3])       # 0: All integers. No decimals needed
-        stats.decimals([.1, .2, .3])    # 1: 1 decimal is required
-        stats.decimals([.01, .02, .3])  # 2: 2 decimals are required
-        stats.decimals(.01)             # 2: Only 1 no. of 2 decimal precision
+    Examples:
+        >>> stats.decimals([1, 2, 3])       # 0: All integers. No decimals needed
+        >>> stats.decimals([.1, .2, .3])    # 1: 1 decimal is required
+        >>> stats.decimals([.01, .02, .3])  # 2: 2 decimals are required
+        >>> stats.decimals(.01)             # 2: Only 1 no. of 2 decimal precision
 
     Note: This function first calculates the smallest difference between any pair
     of numbers (ignoring floating-point errors). It then finds the log10 of that
@@ -259,7 +253,7 @@ def decimals(series):
     series = series.reshape((series.size,))
     diffs = np.diff(series[series.argsort()])
     inf_diff = 1e-10
-    min_float = .999999
+    min_float = 0.999999
     diffs = diffs[diffs > inf_diff]
     if len(diffs) > 0:
         smallest = np.nanmin(diffs.filled(np.Inf))
@@ -273,6 +267,7 @@ def convert_color_code(colorcode):
     '''Convert color code to valid PPTX color code.'''
     colorcode = colorcode.rsplit('#')[-1].lower()
     return colorcode + ('0' * (6 - len(colorcode)))
+
 
 # Custom Charts Functions below(Sankey, Treemap, Calendarmap).
 
@@ -307,7 +302,7 @@ def make_element():
     nsmap = {
         'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
         'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     }
     a = ElementMaker(namespace=nsmap['a'], nsmap=nsmap)
     p = ElementMaker(namespace=nsmap['p'], nsmap=nsmap)
@@ -373,27 +368,24 @@ def fill_color(**kwargs):
     srgbclr = srgbclr.rsplit('#')[-1].lower()
     srgbclr = srgbclr + ('0' * (6 - len(srgbclr)))
     if schemeclr:
-        s = '<a:schemeClr %s val="%s"/>' % (ns, schemeclr)
+        s = f'<a:schemeClr {ns} val="{schemeclr}"/>'
     elif srgbclr:
-        s = '<a:srgbClr %s val="%s"/>' % (ns, srgbclr)
+        s = f'<a:srgbClr {ns} val="{srgbclr}"/>'
     elif prstclr:
-        s = '<a:prstClr %s val="%s"/>' % (ns, prstclr)
+        s = f'<a:prstClr {ns} val="{prstclr}"/>'
     elif hslclr:
-        s = '<a:hslClr %s hue="%.0f" sat="%.2f%%" lum="%.2f%%"/>' % (
-            (ns,) + tuple(hslclr))
+        s = f'<a:hslClr {ns} hue="%.0f" sat="%.2f%%" lum="%.2f%%"/>' % tuple(hslclr)
     elif sysclr:
-        s = '<a:sysClr %s val="%s"/>' % (ns, sysclr)
+        s = f'<a:sysClr {ns} val="{sysclr}"/>'
     elif scrgbclr:
-        s = '<a:scrgbClr %s r="%.0f" g="%.0f" b="%.0f"/>' % ((ns,) + tuple(
-            scrgbclr))
-    color = objectify.fromstring(s)
-    return color
+        s = f'<a:scrgbClr {ns} r="%.0f" g="%.0f" b="%.0f"/>' % tuple(scrgbclr)
+    return objectify.fromstring(s)
 
 
 def xmlns(*prefixes):
     '''XML ns.'''
     elem_schema = make_element()
-    return ' '.join('xmlns:%s="%s"' % (pre, elem_schema['nsmap'][pre]) for pre in prefixes)
+    return ' '.join(f'xmlns:{pre}="{elem_schema["nsmap"][pre]}"' for pre in prefixes)
 
 
 def call(val, g, group, default):
@@ -405,16 +397,18 @@ def call(val, g, group, default):
 
 def cust_shape(x, y, w, h, _id):
     '''Custom shapes.'''
-    _cstmshape = '<p:sp ' + xmlns('p', 'a') + '>'
-    _cstmshape = _cstmshape + '''<p:nvSpPr>
-            <p:cNvPr id='%s' name='%s'/>
+    return objectify.fromstring(
+        f'''
+        <p:sp {xmlns("p", "a")}>
+          <p:nvSpPr>
+            <p:cNvPr id='{_id}' name='Freeform {_id}'/>
             <p:cNvSpPr/>
             <p:nvPr/>
           </p:nvSpPr>
           <p:spPr>
             <a:xfrm>
-              <a:off x='%s' y='%s'/>
-              <a:ext cx='%s' cy='%s'/>
+              <a:off x='{x}' y='{y}'/>
+              <a:ext cx='{w}' cy='{h}'/>
             </a:xfrm>
             <a:custGeom>
               <a:avLst/>
@@ -425,8 +419,7 @@ def cust_shape(x, y, w, h, _id):
             </a:custGeom>
           </p:spPr>
         </p:sp>'''
-    shp = _cstmshape % (_id, 'Freeform %d' % _id, x, y, w, h)
-    return objectify.fromstring(shp)
+    )
 
 
 def draw_sankey(data, spec):
@@ -445,16 +438,18 @@ def draw_sankey(data, spec):
     fill_color = spec.get('color')
 
     g = data.groupby(group)
-    frame = pd.DataFrame({
-        'size': g[group[0]].count() if size is None else g[size].sum(),
-        'seq': 0 if order is None else order(g),
-    })
+    frame = pd.DataFrame(
+        {
+            'size': g[group[0]].count() if size is None else g[size].sum(),
+            'seq': 0 if order is None else order(g),
+        }
+    )
     frame['width'] = frame['size'] / float(frame['size'].sum()) * width
     frame['fill'] = call(fill_color, g, group, default_color)
     result = call(text, g, group, '')
     frame['text'] = result
     # Add all attrs to the frame as well
-    for key, val in iteritems(attrs):
+    for key, val in attrs.items():
         frame[key] = call(val, g, group, None)
     if 'stroke' not in attrs:
         frame['stroke'] = default_stroke
@@ -472,9 +467,7 @@ def squarified(x, y, w, h, data):
     See <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.36.6685>
     Returns a numpy array with (x, y, w, h) for each item in data.
 
-    Examples::
-
-        # The result is a 2x2 numpy array::
+    Examples:
         >>> squarified(x=0, y=0, w=6, h=4, data=[6, 6, 4, 3, 2, 2, 1])
         array([[ 0.        ,  0.        ,  3.        ,  2.        ],
                [ 0.        ,  2.        ,  3.        ,  2.        ],
@@ -483,7 +476,6 @@ def squarified(x, y, w, h, data):
                [ 3.        ,  2.33333333,  1.2       ,  1.66666667],
                [ 4.2       ,  2.33333333,  1.2       ,  1.66666667],
                [ 5.4       ,  2.33333333,  0.6       ,  1.66666667]])
-
         >>> squarified(x=0, y=0, w=1, h=1, data=[np.nan, 0, 1, 2])
         array([[ 0.        ,  0.        ,  0.        ,  0.        ],
                [ 0.        ,  0.        ,  0.        ,  0.        ],
@@ -563,7 +555,7 @@ def squarified(x, y, w, h, data):
     return np.nan_to_num(result)
 
 
-class SubTreemap(object):
+class SubTreemap:
     '''
     Yield a hierarchical treemap at multiple levels.
 
@@ -597,10 +589,8 @@ class SubTreemap(object):
             summary = summary[summary[key] == filter[key]]
 
         # Aggregate by the key up to the current level
-        summary = summary.groupby(
-            self.args['keys'][:level + 1]
-        ).agg(self.args.get('values', {}))
-        for key in self.args['keys'][:level + 1]:
+        summary = summary.groupby(self.args['keys'][: level + 1]).agg(self.args.get('values', {}))
+        for key in self.args['keys'][: level + 1]:
             if hasattr(summary, 'reset_index'):
                 # Just pop the key out. .reset_index(key) should do this.
                 # But on Pandas 0.20.1, this fails
@@ -617,7 +607,7 @@ class SubTreemap(object):
 
         # Find the positions of each box at this level
         key = self.args['keys'][level]
-        rows = (summary.to_records() if hasattr(summary, 'to_records') else summary)
+        rows = summary.to_records() if hasattr(summary, 'to_records') else summary
 
         rects = squarified(x, y * aspect, width, height * aspect, self.args['size'](rows))
         for i2, (x2, y2, w2, h2) in enumerate(rects):
@@ -625,24 +615,24 @@ class SubTreemap(object):
             y2, h2 = y2 / aspect, h2 / aspect
             # Ignore invalid boxes generated by Squarified
             if (
-                np.isnan([x2, y2, w2, h2]).any() or
-                np.isinf([x2, y2, w2, h2]).any() or
-                w2 < 0 or h2 < 0
+                np.isnan([x2, y2, w2, h2]).any()
+                or np.isinf([x2, y2, w2, h2]).any()
+                or w2 < 0
+                or h2 < 0
             ):
                 continue
 
             # For each box, dive into the next level
             filter2 = dict(filter)
             filter2.update({key: v2[key]})
-            for output in self.draw(w2 - 2 * pad, h2 - 2 * pad, x=x2 + pad, y=y2 + pad,
-                                    filter=filter2, level=level + 1):
-                yield output
-
+            yield from self.draw(
+                w2 - 2 * pad, h2 - 2 * pad, x=x2 + pad, y=y2 + pad, filter=filter2, level=level + 1
+            )
             # Once we've finished yielding smaller boxes, yield the parent box
             yield x2, y2, w2, h2, (level, v2)
 
 
-class TableProperties():
+class TableProperties:
     '''Get/Set Table's properties.'''
 
     def extend_table(self, shape, data, total_rows, total_columns):

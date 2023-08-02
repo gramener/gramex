@@ -5,8 +5,8 @@ import-file:
   target:
     b: 2
     c:
-        xx: 3
-        yy: 4
+      xx: 3
+      yy: 4
     d: null
 
 # import: [file, file] imports both files
@@ -24,7 +24,7 @@ import-list:
 # import: '*.yaml' imports wildcard files
 import-wildcard:
   source:
-    import: 'dir1/config.*.yaml'
+    import: "dir1/config.*.yaml"
   target:
     # Ensure that the result is sorted by path, for stability.
     import: [dir1/config.a.yaml, dir1/config.b.yaml]
@@ -32,7 +32,7 @@ import-wildcard:
 # import: '**/*.yaml' recursively gets files
 import-glob:
   source:
-    import: 'dir1/**/config.*.yaml'
+    import: "dir1/**/config.*.yaml"
   target:
     import: [dir1/config.a.yaml, dir1/config.b.yaml, dir1/subdir/config.c.yaml]
 
@@ -54,7 +54,7 @@ import-dict-with-path:
 # import: [{path: file}, {path: file}] imports both files
 import-list-of-dict-with-path:
   source:
-    import: [{path: config.a.yaml}, {path: config.b.yaml}]
+    import: [{ path: config.a.yaml }, { path: config.b.yaml }]
   target:
     import: [config.a.yaml, config.b.yaml]
 
@@ -62,8 +62,8 @@ import-list-of-dict-with-path:
 import-dict-of-dict-with-path:
   source:
     import:
-      a: {path: config.a.yaml}
-      b: {path: config.b.yaml}
+      a: { path: config.a.yaml }
+      b: { path: config.b.yaml }
   target:
     import: [config.a.yaml, config.b.yaml]
 
@@ -82,7 +82,7 @@ import-without-vars:
   target:
     YAMLPATH: $YAMLPATH
     YAMLURL: $YAMLURL
-    CUSTOM: ''
+    CUSTOM: ""
 
 # Variables can be modified from the outside when importing
 import-vars:
@@ -91,28 +91,28 @@ import-vars:
       path: config.importvars.yaml
       YAMLPATH: custom-yamlpath
       YAMLURL: custom-yamlurl
-      CUSTOM: {x: 1, y: true}
+      CUSTOM: { x: 1, y: true }
   target:
     YAMLPATH: custom-yamlpath
     YAMLURL: custom-yamlurl
-    CUSTOM: {x: 1, y: true}
+    CUSTOM: { x: 1, y: true }
 
 # Imports allow name-spacing all keys
 import-namespace-star:
   source:
-    import: {sub: {path: config.b.yaml, namespace: '*'}}
+    import: { sub: { path: config.b.yaml, namespace: "*" } }
   target:
-    'sub:config.b.yaml:b': 2
-    'sub:config.b.yaml:c': {'xx': 3, 'yy': 4}
-    'sub:config.b.yaml:d': null
+    "sub:config.b.yaml:b": 2
+    "sub:config.b.yaml:c": { "xx": 3, "yy": 4 }
+    "sub:config.b.yaml:d": null
 
 # Imports allow name-spacing specific keys
 import-namespace-c:
   source:
-    import: {sub: {path: config.b.yaml, namespace: 'c'}}
+    import: { sub: { path: config.b.yaml, namespace: "c" } }
   target:
     b: 2
-    c: {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
+    c: { "sub:config.b.yaml:xx": 3, "sub:config.b.yaml:yy": 4 }
     d: null
 
 # Imports allow name-spacing specific keys when the path is a list
@@ -129,17 +129,18 @@ import-namespace-c-list:
     b: 200
     d: x
     c:
-        'sub:config.b.yaml:xx': 3
-        'sub:config.b.yaml:yy': 4
+      "sub:config.b.yaml:xx": 3
+      "sub:config.b.yaml:yy": 4
 
 # Imports allow name-spacing all AND specific keys. That's the same as name-spacing all keys
 import-namespace-star_c:
   source:
-    import:  {sub: {path: config.b.yaml, namespace: ['*', 'c']}}
+    import: { sub: { path: config.b.yaml, namespace: ["*", "c"] } }
   target:
-    'sub:config.b.yaml:b': 2
-    'sub:config.b.yaml:c': {'sub:config.b.yaml:xx': 3, 'sub:config.b.yaml:yy': 4}
-    'sub:config.b.yaml:d': null
+    "sub:config.b.yaml:b": 2
+    "sub:config.b.yaml:c":
+      { "sub:config.b.yaml:xx": 3, "sub:config.b.yaml:yy": 4 }
+    "sub:config.b.yaml:d": null
 
 # Namespacing works with variables
 import-namespace-vars:

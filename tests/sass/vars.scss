@@ -7,7 +7,6 @@ $color: black !default;
   color: $color;
 }
 
-//
 .google_font {
   after: "{{ google_fonts }}";
 }

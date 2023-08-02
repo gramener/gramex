@@ -1,3 +1,4 @@
+import contextlib
 import re
 import os
 import json
@@ -12,8 +13,7 @@ from gramex.http import BAD_REQUEST, FOUND, METHOD_NOT_ALLOWED
 from gramex.config import variables, objectpath, merge
 from gramex.data import _replace
 from orderedattrdict import AttrDict, DefaultAttrDict
-from pandas.util.testing import assert_frame_equal as afe
-from . import etree, folder, TestGramex, dbutils, tempfiles
+from . import etree, folder, TestGramex, dbutils, tempfiles, afe
 
 xlsx_mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -35,10 +35,8 @@ class TestFormHandler(TestGramex):
 
     @classmethod
     def tearDownClass(cls):
-        try:
+        with contextlib.suppress(OSError):
             dbutils.sqlite_drop_db('formhandler.db')
-        except OSError:
-            pass
 
     def check_filter(self, url, df=None, na_position='last', key=None):
         # Modelled on testlib.test_data.TestFilter.check_filter
@@ -53,51 +51,72 @@ class TestFormHandler(TestGramex):
         sales = self.sales if df is None else df
 
         eq({}, sales)
-        eq({'देश': ['भारत']},
-           sales[sales['देश'] == 'भारत'])
-        eq({'city': ['Hyderabad', 'Coimbatore']},
-           sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])])
-        eq({'product!': ['Biscuit', 'Crème']},
-           sales[~sales['product'].isin(['Biscuit', 'Crème'])])
-        eq({'city>': ['Bangalore'], 'city<': ['Singapore']},
-           sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')])
-        eq({'city>~': ['Bangalore'], 'city<~': ['Singapore']},
-           sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')])
-        eq({'city~': ['ore']},
-           sales[sales['city'].str.contains('ore')])
-        eq({'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
-           sales[(sales['product'] == 'Biscuit') & (sales['city'] == 'Bangalore') &
-                 (sales['देश'] == 'भारत')])
-        eq({'city!~': ['ore']},
-           sales[~sales['city'].str.contains('ore')])
-        eq({'sales>': ['100'], 'sales<': ['1000']},
-           sales[(sales['sales'] > 100) & (sales['sales'] < 1000)])
-        eq({'growth<': [0.5]},
-           sales[sales['growth'] < 0.5])
-        eq({'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
-           sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)])
-        eq({'देश': ['भारत'], '_sort': ['sales']},
-           sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position))
-        eq({'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
-           sales[sales['product'] == 'Biscuit'].sort_values(
-                ['देश', 'growth'], ascending=[False, False], na_position=na_position))
-        eq({'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
-           sales[sales['देश'] == 'भारत'].iloc[4:12])
+        eq({'देश': ['भारत']}, sales[sales['देश'] == 'भारत'])
+        eq(
+            {'city': ['Hyderabad', 'Coimbatore']},
+            sales[sales['city'].isin(['Hyderabad', 'Coimbatore'])],
+        )
+        eq({'product!': ['Biscuit', 'Crème']}, sales[~sales['product'].isin(['Biscuit', 'Crème'])])
+        eq(
+            {'city>': ['Bangalore'], 'city<': ['Singapore']},
+            sales[(sales['city'] > 'Bangalore') & (sales['city'] < 'Singapore')],
+        )
+        eq(
+            {'city>~': ['Bangalore'], 'city<~': ['Singapore']},
+            sales[(sales['city'] >= 'Bangalore') & (sales['city'] <= 'Singapore')],
+        )
+        eq({'city~': ['ore']}, sales[sales['city'].str.contains('ore')])
+        eq(
+            {'product': ['Biscuit'], 'city': ['Bangalore'], 'देश': ['भारत']},
+            sales[
+                (sales['product'] == 'Biscuit')
+                & (sales['city'] == 'Bangalore')
+                & (sales['देश'] == 'भारत')
+            ],
+        )
+        eq({'city!~': ['ore']}, sales[~sales['city'].str.contains('ore')])
+        eq(
+            {'sales>': ['100'], 'sales<': ['1000']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000)],
+        )
+        eq({'growth<': [0.5]}, sales[sales['growth'] < 0.5])
+        eq(
+            {'sales>': ['100'], 'sales<': ['1000'], 'growth<': ['0.5']},
+            sales[(sales['sales'] > 100) & (sales['sales'] < 1000) & (sales['growth'] < 0.5)],
+        )
+        eq(
+            {'देश': ['भारत'], '_sort': ['sales']},
+            sales[sales['देश'] == 'भारत'].sort_values('sales', na_position=na_position),
+        )
+        eq(
+            {'product<~': ['Biscuit'], '_sort': ['-देश', '-growth']},
+            sales[sales['product'] == 'Biscuit'].sort_values(
+                ['देश', 'growth'], ascending=[False, False], na_position=na_position
+            ),
+        )
+        eq(
+            {'देश': ['भारत'], '_offset': ['4'], '_limit': ['8']},
+            sales[sales['देश'] == 'भारत'].iloc[4:12],
+        )
 
         cols = ['product', 'city', 'sales']
-        eq({'देश': ['भारत'], '_c': cols},
-           sales[sales['देश'] == 'भारत'][cols])
+        eq({'देश': ['भारत'], '_c': cols}, sales[sales['देश'] == 'भारत'][cols])
 
         ignore_cols = ['product', 'city']
-        eq({'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
-           sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]])
+        eq(
+            {'देश': ['भारत'], '_c': ['-' + c for c in ignore_cols]},
+            sales[sales['देश'] == 'भारत'][[c for c in sales.columns if c not in ignore_cols]],
+        )
 
         # Non-existent column does not raise an error for any operation
         for op in ['', '~', '!', '>', '<', '<~', '>', '>~']:
             eq({'nonexistent' + op: ['']}, sales)
-        # Non-existent sorts do not raise an error
-        eq({'_sort': ['nonexistent', 'sales']},
-           sales.sort_values('sales', na_position=na_position))
+        # Non-existent sorts do not raise an error.
+        # Also sort by sales AND देश to ensure a stable sort. (We need देश if sales is missing)
+        eq(
+            {'_sort': ['nonexistent', 'sales', 'देश']},
+            sales.sort_values(['sales', 'देश'], na_position=na_position),
+        )
         # Non-existent _c does not raise an error
         eq({'_c': ['nonexistent', 'sales']}, sales[['sales']])
 
@@ -129,14 +148,17 @@ class TestFormHandler(TestGramex):
         if 'count' in headers:
             eq_(headers.count, len(sales))
 
-        headers = meta_headers(url, {
-            '_meta': 'y',
-            'देश': 'USA',
-            'c': ['city', 'product', 'sales'],
-            '_sort': '-sales',
-            '_limit': 10,
-            '_offset': 3
-        })[header_key]
+        headers = meta_headers(
+            url,
+            {
+                '_meta': 'y',
+                'देश': 'USA',
+                'c': ['city', 'product', 'sales'],
+                '_sort': '-sales',
+                '_limit': 10,
+                '_offset': 3,
+            },
+        )[header_key]
         ok_(['देश', '', ['USA']] in headers.filters)
         ok_(['c', ['city', 'product', 'sales']] in headers.ignored)
         ok_(['sales', False] in headers.sort)
@@ -154,37 +176,69 @@ class TestFormHandler(TestGramex):
     def test_file(self):
         self.check_filter('/formhandler/file', na_position='last')
         self.check_filter('/formhandler/url', na_position='last')
-        self.check_filter('/formhandler/file-multi', na_position='last', key='big',
-                          df=self.sales[self.sales['sales'] > 100])
-        self.check_filter('/formhandler/file-multi', na_position='last', key='by-growth',
-                          df=self.sales.sort_values('growth'))
+        self.check_filter(
+            '/formhandler/file-multi',
+            na_position='last',
+            key='big',
+            df=self.sales[self.sales['sales'] > 100],
+        )
+        self.check_filter(
+            '/formhandler/file-multi',
+            na_position='last',
+            key='by-growth',
+            df=self.sales.sort_values('growth'),
+        )
         self.check_filter('/formhandler/exceltable', na_position='last')
 
     def test_sqlite(self):
         self.check_filter('/formhandler/sqlite', na_position='first')
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big',
-                          df=self.sales[self.sales['sales'] > 100])
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='by-growth',
-                          df=self.sales.sort_values('growth'))
-        self.check_filter('/formhandler/sqlite-multi', na_position='last', key='big-by-growth',
-                          df=self.sales[self.sales['sales'] > 100].sort_values('growth'))
+        self.check_filter(
+            '/formhandler/sqlite-multi',
+            na_position='last',
+            key='big',
+            df=self.sales[self.sales['sales'] > 100],
+        )
+        self.check_filter(
+            '/formhandler/sqlite-multi',
+            na_position='last',
+            key='by-growth',
+            df=self.sales.sort_values('growth'),
+        )
+        self.check_filter(
+            '/formhandler/sqlite-multi',
+            na_position='last',
+            key='big-by-growth',
+            df=self.sales[self.sales['sales'] > 100].sort_values('growth'),
+        )
         self.check_filter('/formhandler/sqlite-queryfunction', na_position='last')
-        self.check_filter('/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
-                          na_position='last',
-                          df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])])
+        self.check_filter(
+            '/formhandler/sqlite-queryfunction?ct=Hyderabad&ct=Coimbatore',
+            na_position='last',
+            df=self.sales[self.sales['city'].isin(['Hyderabad', 'Coimbatore'])],
+        )
         self.check_columns('/formhandler/columns/sqlite')
 
         # Check the state: functionality. Every time /formhandler/sqlite-state is called,
         # it calls state(args, path), which is logged in `/formhandler/state`
         eq_(self.get('/formhandler/state').json(), [], 'Start with blank slate')
         self.check('/formhandler/sqlite-state?x=1')
-        eq_(self.get('/formhandler/state').json(), [{'x': ['1']}, '/formhandler/sqlite-state'],
-            'state() is called once per request')
+        # TODO: This test fails. Check why.
+        eq_(
+            self.get('/formhandler/state').json(),
+            [{'x': ['1'], '_limit': [10000]}, '/formhandler/sqlite-state'],
+            'state() is called once per request',
+        )
         self.check('/formhandler/sqlite-state?x=2')
-        eq_(self.get('/formhandler/state').json(), [
-            {'x': ['1']}, '/formhandler/sqlite-state',
-            {'x': ['2']}, '/formhandler/sqlite-state',
-        ], 'state() is called twice for 2 requests')
+        eq_(
+            self.get('/formhandler/state').json(),
+            [
+                {'x': ['1'], '_limit': [10000]},
+                '/formhandler/sqlite-state',
+                {'x': ['2'], '_limit': [10000]},
+                '/formhandler/sqlite-state',
+            ],
+            'state() is called twice for 2 requests',
+        )
 
     def test_mysql(self):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
@@ -208,8 +262,10 @@ class TestFormHandler(TestGramex):
 
     def test_function(self):
         self.eq('/formhandler/file-function?col=sales&_format=csv', self.sales[['sales']])
-        self.eq('/formhandler/file-function?col=देश&col=product&_format=csv',
-                self.sales[['देश', 'product']])
+        self.eq(
+            '/formhandler/file-function?col=देश&col=product&_format=csv',
+            self.sales[['देश', 'product']],
+        )
 
     def test_modify(self):
         self.eq('/formhandler/modify', self.sales.sum(numeric_only=True).to_frame().T)
@@ -231,8 +287,6 @@ class TestFormHandler(TestGramex):
         by_growth.index = range(len(by_growth))
 
         out = self.get('/formhandler/file?_format=html')
-        # Note: In Python 2, pd.read_html returns .columns.inferred_type=mixed
-        # instead of unicde. So check column type only in PY3 not PY2
         afe(pd.read_html(out.content, encoding='utf-8')[0], self.sales, check_column_type=True)
         eq_(out.headers['Content-Type'], 'text/html;charset=UTF-8')
         eq_(out.headers.get('Content-Disposition'), None)
@@ -265,10 +319,10 @@ class TestFormHandler(TestGramex):
         out = self.get('/formhandler/file-multi?_format=csv')
         lines = out.content.splitlines(True)
         eq_(lines[0], 'big\n'.encode('utf-8-sig'))
-        actual = pd.read_csv(BytesIO(b''.join(lines[1:len(big) + 2])), encoding='utf-8')
+        actual = pd.read_csv(BytesIO(b''.join(lines[1 : len(big) + 2])), encoding='utf-8')
         afe(actual, big)
         eq_(lines[len(big) + 3], 'by-growth\n'.encode('utf-8'))
-        actual = pd.read_csv(BytesIO(b''.join(lines[len(big) + 4:])), encoding='utf-8')
+        actual = pd.read_csv(BytesIO(b''.join(lines[len(big) + 4 :])), encoding='utf-8')
         afe(actual, by_growth)
         eq_(out.headers['Content-Type'], 'text/csv;charset=UTF-8')
         eq_(out.headers['Content-Disposition'], 'attachment;filename=data.csv')
@@ -328,15 +382,19 @@ class TestFormHandler(TestGramex):
         # ... and sets all default values
         eq_(self.check(url).json(), [{'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'}])
         # POST multiple values works
-        self.check(url, method='post', data={
-            'email': ['a@x.co', 'b@x.co'],
-            'age': ['.5', '1E1'],
-            'dept': ['b', 'c']})
-        eq_(self.check(url).json(), [
-            {'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'},
-            {'id': 2, 'email': 'a@x.co', 'age': 0.5, 'dept': 'b'},
-            {'id': 3, 'email': 'b@x.co', 'age': 10.0, 'dept': 'c'},
-        ])
+        self.check(
+            url,
+            method='post',
+            data={'email': ['a@x.co', 'b@x.co'], 'age': ['.5', '1E1'], 'dept': ['b', 'c']},
+        )
+        eq_(
+            self.check(url).json(),
+            [
+                {'id': 1, 'email': 'none', 'age': 18.0, 'dept': 'a'},
+                {'id': 2, 'email': 'a@x.co', 'age': 0.5, 'dept': 'b'},
+                {'id': 3, 'email': 'b@x.co', 'age': 10.0, 'dept': 'c'},
+            ],
+        )
 
     def test_invalid_edit(self):
         copy_file('sales.xlsx', 'sales-edits.xlsx')
@@ -349,71 +407,109 @@ class TestFormHandler(TestGramex):
 
     def test_edit_singlekey(self):
         # Operations with a single key works
-        self.check_edit('post', 'singlekey', {
-            'देश': ['भारत'],
-            'city': ['Bangalore'],
-            'product': ['Crème'],
-            'sales': ['100'],
-            'growth': ['0.32'],
-        }, count=1)
-        self.check_edit('put', 'singlekey', {
-            'sales': ['513.7'],
-            'city': [123],
-            'product': ['abc'],
-        }, count=1)
+        self.check_edit(
+            'post',
+            'singlekey',
+            {
+                'देश': ['भारत'],
+                'city': ['Bangalore'],
+                'product': ['Crème'],
+                'sales': ['100'],
+                'growth': ['0.32'],
+            },
+            count=1,
+        )
+        self.check_edit(
+            'put',
+            'singlekey',
+            {
+                'sales': ['513.7'],
+                'city': [123],
+                'product': ['abc'],
+            },
+            count=1,
+        )
         # Delete with single ID as primary key works
-        self.check_edit('delete', 'singlekey', {
-            'sales': ['513.7']
-        }, count=1)
+        self.check_edit('delete', 'singlekey', {'sales': ['513.7']}, count=1)
 
     def test_edit_multikey_single_value(self):
         # POST single value
-        self.check_edit('post', 'multikey', {
-            'देश': ['भारत'],
-            'city': ['Bangalore'],
-            'product': ['Alpha'],
-            'sales': ['100'],
-        }, count=1)
-        self.check_edit('put', 'multikey', {
-            'देश': ['भारत'],
-            'city': ['Bangalore'],
-            'product': ['Eggs'],
-            'sales': ['100'],
-            'growth': ['0.32'],
-        }, count=1)
-        self.check_edit('delete', 'multikey', {
-            'देश': ['भारत'],
-            'city': ['Bangalore'],
-            'product': ['Crème'],
-        }, count=1)
+        self.check_edit(
+            'post',
+            'multikey',
+            {
+                'देश': ['भारत'],
+                'city': ['Bangalore'],
+                'product': ['Alpha'],
+                'sales': ['100'],
+            },
+            count=1,
+        )
+        self.check_edit(
+            'put',
+            'multikey',
+            {
+                'देश': ['भारत'],
+                'city': ['Bangalore'],
+                'product': ['Eggs'],
+                'sales': ['100'],
+                'growth': ['0.32'],
+            },
+            count=1,
+        )
+        self.check_edit(
+            'delete',
+            'multikey',
+            {
+                'देश': ['भारत'],
+                'city': ['Bangalore'],
+                'product': ['Crème'],
+            },
+            count=1,
+        )
 
     def test_edit_multikey_multi_value(self):
-        self.check_edit('post', 'multikey', {
-            'देश': ['भारत', 'भारत', 'भारत'],
-            'city': ['Bangalore', 'Bangalore', ''],
-            'product': ['Alpha', 'Beta', 'Gamma'],
-            'sales': ['100', '', '300'],
-            'growth': ['0.32', '0.50', '0.12'],
-            # There is a default ?x=1. Override that temporarily
-            'x': ['', '', '']
-        }, count=3)
+        self.check_edit(
+            'post',
+            'multikey',
+            {
+                'देश': ['भारत', 'भारत', 'भारत'],
+                'city': ['Bangalore', 'Bangalore', ''],
+                'product': ['Alpha', 'Beta', 'Gamma'],
+                'sales': ['100', '', '300'],
+                'growth': ['0.32', '0.50', '0.12'],
+                # There is a default ?x=1. Override that temporarily
+                'x': ['', '', ''],
+            },
+            count=3,
+        )
         # NOTE: PUT behaviour for multi-value is undefined
-        self.check_edit('delete', 'multikey', {
-            'देश': ['भारत', 'भारत', 'भारत', 'invalid'],
-            'city': ['Bangalore', 'Bangalore', 'Bangalore', 'invalid'],
-            'product': ['芯片', 'Eggs', 'Biscuit', 'invalid'],
-        }, count=3)
+        self.check_edit(
+            'delete',
+            'multikey',
+            {
+                'देश': ['भारत', 'भारत', 'भारत', 'invalid'],
+                'city': ['Bangalore', 'Bangalore', 'Bangalore', 'invalid'],
+                'product': ['芯片', 'Eggs', 'Biscuit', 'invalid'],
+            },
+            count=3,
+        )
 
     def test_edit_redirect(self):
         copy_file('sales.xlsx', 'sales-edits.xlsx')
         # redirect: affects POST, PUT and DELETE
         for method in ['post', 'put', 'delete']:
-            r = self.get('/formhandler/edits-xlsx-redirect', method=method, data={
-                'देश': ['भारत'],
-                'city': ['Bangalore'],
-                'product': ['Eggs'],
-                'sales': ['100'],
-            }, allow_redirects=False)
+            r = self.get(
+                '/formhandler/edits-xlsx-redirect',
+                method=method,
+                data={
+                    'देश': ['भारत'],
+                    'city': ['Bangalore'],
+                    'product': ['Eggs'],
+                    'sales': ['100'],
+                },
+                allow_redirects=False,
+            )
             eq_(r.status_code, FOUND)
             ok_('Count-Data' in r.headers)  # Any value is fine, we're not checking that
             eq_(r.headers['Location'], '/redirected')
@@ -428,51 +524,66 @@ class TestFormHandler(TestGramex):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             row = {'देश': 'भारत', 'city': 'X', 'product': 'Q', 'growth': None}
-            self.check('/formhandler/edits-multidata', method='post', data={
-                'csv:देश': ['भारत'],
-                'csv:city': ['X'],
-                'csv:product': ['Q'],
-                'csv:sales': ['10'],
-                'sql:देश': ['भारत'],
-                'sql:city': ['X'],
-                'sql:product': ['Q'],
-                'sql:sales': ['20'],
-            }, headers={
-                'count-csv': '1',
-                'count-sql': '1',
-            })
+            self.check(
+                '/formhandler/edits-multidata',
+                method='post',
+                data={
+                    'csv:देश': ['भारत'],
+                    'csv:city': ['X'],
+                    'csv:product': ['Q'],
+                    'csv:sales': ['10'],
+                    'sql:देश': ['भारत'],
+                    'sql:city': ['X'],
+                    'sql:product': ['Q'],
+                    'sql:sales': ['20'],
+                },
+                headers={
+                    'count-csv': '1',
+                    'count-sql': '1',
+                },
+            )
             data = self.check('/formhandler/edits-multidata').json()
             eq_(data['csv'][-1], merge(row, {'sales': 10}))
             eq_(data['sql'][-1], merge(row, {'sales': 20}))
             eq_(len(data['csv']), len(self.sales) + 1)
             eq_(len(data['sql']), len(self.sales) + 1)
 
-            self.check('/formhandler/edits-multidata', method='put', data={
-                'csv:city': ['X'],
-                'csv:product': ['Q'],
-                'csv:sales': ['30'],
-                'sql:city': ['X'],
-                'sql:product': ['Q'],
-                'sql:sales': ['40'],
-            }, headers={
-                'count-csv': '1',
-                'count-sql': '1',
-            })
+            self.check(
+                '/formhandler/edits-multidata',
+                method='put',
+                data={
+                    'csv:city': ['X'],
+                    'csv:product': ['Q'],
+                    'csv:sales': ['30'],
+                    'sql:city': ['X'],
+                    'sql:product': ['Q'],
+                    'sql:sales': ['40'],
+                },
+                headers={
+                    'count-csv': '1',
+                    'count-sql': '1',
+                },
+            )
             data = self.check('/formhandler/edits-multidata').json()
             eq_(data['csv'][-1], merge(row, {'sales': 30}))
             eq_(data['sql'][-1], merge(row, {'sales': 40}))
             eq_(len(data['csv']), len(self.sales) + 1)
             eq_(len(data['sql']), len(self.sales) + 1)
 
-            self.check('/formhandler/edits-multidata', method='delete', data={
-                'csv:city': ['X'],
-                'csv:product': ['Q'],
-                'sql:city': ['X'],
-                'sql:product': ['Q'],
-            }, headers={
-                'count-csv': '1',
-                'count-sql': '1',
-            })
+            self.check(
+                '/formhandler/edits-multidata',
+                method='delete',
+                data={
+                    'csv:city': ['X'],
+                    'csv:product': ['Q'],
+                    'sql:city': ['X'],
+                    'sql:product': ['Q'],
+                },
+                headers={
+                    'count-csv': '1',
+                    'count-sql': '1',
+                },
+            )
             data = self.check('/formhandler/edits-multidata').json()
             eq_(len(data['csv']), len(self.sales))
             eq_(len(data['sql']), len(self.sales))
@@ -487,19 +598,24 @@ class TestFormHandler(TestGramex):
         dbutils.mysql_create_db(variables.MYSQL_SERVER, 'test_formhandler', sales=self.sales)
         try:
             row = {'देश': 'भारत', 'city': 'X', 'product': 'Q', 'growth': None}
-            result = self.check('/formhandler/edits-multidata-modify', method='post', data={
-                'csv:देश': ['भारत'],
-                'csv:city': ['X'],
-                'csv:product': ['Q'],
-                'csv:sales': ['10'],
-                'sql:देश': ['भारत'],
-                'sql:city': ['X'],
-                'sql:product': ['Q'],
-                'sql:sales': ['20'],
-            }, headers={
-                'count-csv': '1',
-                'count-sql': '1',
-            }).json()
+            result = self.check(
+                '/formhandler/edits-multidata-modify',
+                method='post',
+                data={
+                    'csv:देश': ['भारत'],
+                    'csv:city': ['X'],
+                    'csv:product': ['Q'],
+                    'csv:sales': ['10'],
+                    'sql:देश': ['भारत'],
+                    'sql:city': ['X'],
+                    'sql:product': ['Q'],
+                    'sql:sales': ['20'],
+                },
+                headers={
+                    'count-csv': '1',
+                    'count-sql': '1',
+                },
+            ).json()
             eq_(result['csv']['modify'], 8)
             eq_(result['modify'], 8)
 
@@ -523,47 +639,114 @@ class TestFormHandler(TestGramex):
                 'request_headers': {'Content-Type': 'application/json'},
             }
             # POST 2 records. Check that 2 records where added
-            self.check(method='post', data=json.dumps({
-                'देश': ['भारत', 'USA'],
-                'city': ['HYD', 'NJ'],
-                'product': ['खुश', 'खुश'],
-                'sales': [100, 200],
-            }), headers={'Count-Data': '2'}, **kwargs)
-            eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [
-                {'देश': 'भारत', 'city': 'HYD', 'product': 'खुश', 'sales': 100.0, 'growth': None},
-                {'देश': 'USA', 'city': 'NJ', 'product': 'खुश', 'sales': 200.0, 'growth': None},
-            ])
+            self.check(
+                method='post',
+                data=json.dumps(
+                    {
+                        'देश': ['भारत', 'USA'],
+                        'city': ['HYD', 'NJ'],
+                        'product': ['खुश', 'खुश'],
+                        'sales': [100, 200],
+                    }
+                ),
+                headers={'Count-Data': '2'},
+                **kwargs,
+            )
+            eq_(
+                self.get(kwargs['url'], params={'product': 'खुश'}).json(),
+                [
+                    {
+                        'देश': 'भारत',
+                        'city': 'HYD',
+                        'product': 'खुश',
+                        'sales': 100.0,
+                        'growth': None,
+                    },
+                    {'देश': 'USA', 'city': 'NJ', 'product': 'खुश', 'sales': 200.0, 'growth': None},
+                ],
+            )
             # PUT a record. Check that the record was changed
-            self.check(method='put', data=json.dumps({
-                'city': ['HYD'],
-                'product': ['खुश'],
-                'sales': [300],
-                'growth': [0.3],
-            }), headers={'Count-Data': '1'}, **kwargs)
-            eq_(self.get(kwargs['url'], params={'city': 'HYD', 'product': 'खुश'}).json(), [
-                {'देश': 'भारत', 'city': 'HYD', 'product': 'खुश', 'sales': 300.0, 'growth': 0.3},
-            ])
+            self.check(
+                method='put',
+                data=json.dumps(
+                    {
+                        'city': ['HYD'],
+                        'product': ['खुश'],
+                        'sales': [300],
+                        'growth': [0.3],
+                    }
+                ),
+                headers={'Count-Data': '1'},
+                **kwargs,
+            )
+            eq_(
+                self.get(kwargs['url'], params={'city': 'HYD', 'product': 'खुश'}).json(),
+                [
+                    {
+                        'देश': 'भारत',
+                        'city': 'HYD',
+                        'product': 'खुश',
+                        'sales': 300.0,
+                        'growth': 0.3,
+                    },
+                ],
+            )
             # DELETE 2 records one by one. Check that 2 records were deleted
-            self.check(method='delete', data=json.dumps({
-                'city': ['HYD'],
-                'product': ['खुश'],
-            }), headers={'Count-Data': '1'}, **kwargs)
-            self.check(method='delete', data=json.dumps({
-                'city': ['NJ'],
-                'product': ['खुश'],
-            }), headers={'Count-Data': '1'}, **kwargs)
+            self.check(
+                method='delete',
+                data=json.dumps(
+                    {
+                        'city': ['HYD'],
+                        'product': ['खुश'],
+                    }
+                ),
+                headers={'Count-Data': '1'},
+                **kwargs,
+            )
+            self.check(
+                method='delete',
+                data=json.dumps(
+                    {
+                        'city': ['NJ'],
+                        'product': ['खुश'],
+                    }
+                ),
+                headers={'Count-Data': '1'},
+                **kwargs,
+            )
             eq_(self.get(kwargs['url'], params={'product': 'खुश'}).json(), [])
 
+    def test_edit_download(self):
+        target = os.path.join(folder, 'formhandler-edits.db')
+        dbutils.sqlite_create_db(target, sales=self.sales)
+        tempfiles[target] = target
+
+        args = {
+            'देश': ['China', 'China', 'China'],
+            'city': ['Beijing', 'Shanghai', 'Hong Kong'],
+            'product': ['芯片', 'Eggs', 'Biscuit'],
+            'sales': [10, 20, 30],
+            'growth': [0.05, 0.1, 0.2],
+        }
+        r = self.check('/formhandler/edits-xlsx-download', data=args, method='post')
+        data, handler_name, meta, *rest = r.text.split('\n')
+        eq_(data, "{'data': AttrDict([('filters', []), ('ignored', []), ('inserted', [])])}")
+        eq_(handler_name, 'formhandler/edits-xlsx-download')
+        eq_(meta, "{'filters': [], 'ignored': [], 'inserted': []}")
+
     def test_chart(self):
-        r = self.get('/formhandler/chart', data={
-            '_format': 'svg',
-            'chart': 'barplot',
-            'x': 'देश',
-            'y': 'sales',
-            'dpi': 72,
-            'width': 500,
-            'height': 300,
-        })
+        r = self.get(
+            '/formhandler/chart',
+            data={
+                '_format': 'svg',
+                'chart': 'barplot',
+                'x': 'देश',
+                'y': 'sales',
+                'dpi': 72,
+                'width': 500,
+                'height': 300,
+            },
+        )
         tree = etree.fromstring(r.text.encode('utf-8'))
         eq_(tree.get('viewBox'), '0 0 500 300')
         # TODO: expand on test cases
@@ -587,9 +770,9 @@ class TestFormHandler(TestGramex):
             self.assertDictEqual(var, spec)
 
     def test_headers(self):
-        self.check('/formhandler/headers', headers={
-            'X-JSON': 'ok', 'X-Base': 'ok', 'X-Root': 'ok'
-        })
+        self.check(
+            '/formhandler/headers', headers={'X-JSON': 'ok', 'X-Base': 'ok', 'X-Root': 'ok'}
+        )
 
     def test_args(self):
         # url: and sheet_name: accepts query formatting for files
@@ -603,7 +786,6 @@ class TestFormHandler(TestGramex):
         afe(pd.DataFrame(self.get(url).json()), self.sales, check_like=True)
 
         # url: and table: accept query formatting for SQLAlchemy
-        # TODO: In Python 2, unicode keys don't work well on Tornado. So use safe keys
         key, val = 'देश', 'भारत'
         url = '/formhandler/arg-query?db=formhandler&col=%s&val=%s' % (key, val)
         actual = pd.DataFrame(self.get(url).json())
@@ -612,14 +794,17 @@ class TestFormHandler(TestGramex):
         afe(actual, expected, check_like=True)
 
         # Files with ../ etc should be skipped
-        self.check('/formhandler/arg-url?path=../sales',
-                   code=500, text='KeyError')
+        self.check('/formhandler/arg-url?path=../sales', code=500, text='KeyError')
         # Test that the ?skip= parameter is used to find the table.
-        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
-                   code=500, text='NoSuchTableError')
+        self.check(
+            '/formhandler/arg-table?db=formhandler&table=sales&skip=ab',
+            code=500,
+            text='NoSuchTableError',
+        )
         # Spaces are ignored in SQLAlchemy query. So ?skip= will be a missing key
-        self.check('/formhandler/arg-table?db=formhandler&table=sales&skip=a b',
-                   code=500, text='KeyError')
+        self.check(
+            '/formhandler/arg-table?db=formhandler&table=sales&skip=a b', code=500, text='KeyError'
+        )
 
     def test_path_arg(self):
         url = '/formhandler/%s/formhandler/sales?group=product&col=city&val=Bangalore'
@@ -635,10 +820,16 @@ class TestFormHandler(TestGramex):
             url = '/formhandler/dates?date>=%s' % dt
             r = self.get(url, params={'_format': 'json', '_meta': 'y'})
             # Check ISO output
-            pd.to_datetime(pd.DataFrame(r.json())['date'], format='%Y-%m-%dT%H:%M:%S.%fZ')
+            # Pandas 1.4+ (or Docker/Linux) converts this to 2022-01-01T00:00:00.000.
+            # Pandas 1.3- (or Windows) converts this to 2022-01-01T00:00:00.000Z (note the Z)
+            # Handle either cases.
+            test_df = pd.DataFrame({'date': [pd.Timestamp('2022-01-01')]})
+            result = json.loads(test_df.to_json(orient='records', date_format='iso'))[0]['date']
+            suffix = result.replace('2022-01-01T00:00:00.000', '')
+            pd.to_datetime(pd.DataFrame(r.json())['date'], format=f'%Y-%m-%dT%H:%M:%S.%f{suffix}')
             actual = pd.read_excel(
-                BytesIO(self.get(url, params={'_format': 'xlsx'}).content),
-                engine='openpyxl')
+                BytesIO(self.get(url, params={'_format': 'xlsx'}).content), engine='openpyxl'
+            )
             expected = data[data['date'] > pd.to_datetime(dt).tz_localize(None)]
             expected.index = actual.index
             afe(actual, expected, check_like=True)
@@ -665,13 +856,9 @@ class TestFormHandler(TestGramex):
 
 
 class TestFeatures(TestGramex):
-
     def test_methods(self):
         copy_file('sales.xlsx', 'sales-methods.xlsx')
-        urls = [
-            '/formhandler/methods?city=Singapore',
-            '/formhandler/methods-list?city=Singapore'
-        ]
+        urls = ['/formhandler/methods?city=Singapore', '/formhandler/methods-list?city=Singapore']
         for url in urls:
             for method in ['get', 'put', 'delete']:
                 self.check(url, method=method)

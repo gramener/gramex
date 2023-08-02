@@ -19,14 +19,15 @@ def gramexupdate(handler):
     # When a user casually visits the page, render friendly output
     if handler.request.method == 'GET':
         return gramex.cache.open(template, 'template').generate(
-            version=gramex.__version__, handler=handler)
+            version=gramex.__version__, handler=handler
+        )
     # Log all messages
     try:
-        logs = json.loads(handler.request.body, encoding='utf-8')
+        logs = json.loads(handler.request.body)
         if not isinstance(logs, list):
             raise ValueError()
     except (ValueError, AssertionError):
-        raise HTTPError(BAD_REQUEST, reason='Invalid POST data. Expecting JSON array')
+        raise HTTPError(BAD_REQUEST, 'Invalid POST data. Expecting JSON array')
     logger = logging.getLogger('gramexupdate')
     for log in logs:
         log['ip'] = handler.request.remote_ip
@@ -43,12 +44,14 @@ def consolidate():
     # Connect to DB and initialize
     data_url = 'sqlite:///' + data_file
     engine = sa.create_engine(data_url)
-    engine.execute('''CREATE TABLE IF NOT EXISTS logs (
+    engine.execute(
+        '''CREATE TABLE IF NOT EXISTS logs (
         src TEXT, time INT, event TEXT, ip TEXT,
         system TEXT, node TEXT, release TEXT, version TEXT, machine TEXT, processor TEXT,
         pid NUM, args TEXT, cwd TEXT, dir TEXT,
         date TEXT
-    )''')
+    )'''
+    )
 
     merged = set(gramex.data.filter(url=data_url, query='SELECT DISTINCT src FROM logs')['src'])
 
@@ -59,7 +62,7 @@ def consolidate():
         src = os.path.split(path)[-1]
         if src in merged and not force:
             return
-        app_log.info('consolidating %s', src)
+        app_log.info(f'consolidating {src}')
 
         result = []
         for line in io.open(path, 'r', encoding='utf-8'):
@@ -67,11 +70,17 @@ def consolidate():
             row['src'] = src
 
             # uname is a list. Convert into system data
-            (row['system'], row['node'], row['release'], row['version'],
-             row['machine'], row['processor']) = row.pop('uname')
+            (
+                row['system'],
+                row['node'],
+                row['release'],
+                row['version'],
+                row['machine'],
+                row['processor'],
+            ) = row.pop('uname')
 
             row_data = row.pop('data')
-            row_data = json.loads(row_data) if row_data else {}     # parse. Ignore missing data
+            row_data = json.loads(row_data) if row_data else {}  # parse. Ignore missing data
             # If data is double-encoded, decode again. TODO: figure out when & why
             if isinstance(row_data, str):
                 row_data = json.loads(row_data)
@@ -83,7 +92,7 @@ def consolidate():
             result.append(row)
         # Post-process results
         result = pd.DataFrame(result)
-        ns = 1E9        # nanosecond conversion
+        ns = 1e9  # nanosecond conversion
         result['date'] = pd.to_datetime(result['time'] * ns).dt.strftime('%Y-%m-%d')
         result['time'] = result['time'].astype(int)
 
@@ -95,7 +104,8 @@ def consolidate():
 
         # Summarize monthly results into "mau" (Monthly Average Users) table
         engine.execute('DROP TABLE IF EXISTS mau')
-        engine.execute('''
+        engine.execute(
+            '''
             CREATE TABLE mau as
                 SELECT month, COUNT(DISTINCT node) as nodes FROM (
                   SELECT SUBSTR(date, 0, 8) AS month, node, COUNT(node) AS times
@@ -106,7 +116,8 @@ def consolidate():
                   GROUP BY month, node
                 ) WHERE times > 2                     /* CI nodes startup/shutdown only once */
                 GROUP BY month
-        ''')
+        '''
+        )
 
     merge(log_file, force=True)
     for log_file in glob(log_file + '*'):

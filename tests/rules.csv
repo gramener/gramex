@@ -1,0 +1,8 @@
+selector,pattern,field,value
+email,*doe@*,gender,male
+id,[!a]*,gender,female
+nonexistent,hellO?,gender,female
+,None,email,none@none.com
+empty,,email,gamma@null.com
+team,*,team,Gramex
+id,*,cookie_expires,3.14

@@ -22,6 +22,7 @@ class TestEmailer(TestCase):
     def test_recipients(self):
         def msg_eq(src, result):
             eq_(set(src), set(result))
+
         msg_eq(recipients(to='a@z'), ['a@z'])
         msg_eq(recipients(to='a@z,b@z'), ['a@z', 'b@z'])
         msg_eq(recipients(to=['a@z', 'b@z']), ['a@z', 'b@z'])
@@ -74,11 +75,11 @@ class TestEmailer(TestCase):
 
     def test_smtpmailer(self):
         with assert_raises(ValueError):
-            SMTPMailer(type='any')          # unknown type
+            SMTPMailer(type='any')  # unknown type
         with assert_raises(ValueError):
-            SMTPMailer(type='smtp')         # no host
+            SMTPMailer(type='smtp')  # no host
         with assert_raises(ValueError):
-            SMTPMailer(type='smtps')        # no host
+            SMTPMailer(type='smtps')  # no host
         # These do not raise an error
         SMTPMailer(type='gmail', email='', password='')
         SMTPMailer(type='yahoo', email='', password='')

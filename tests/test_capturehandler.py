@@ -7,6 +7,7 @@ import logging
 from PIL import Image
 from pptx import Presentation
 from pptx.util import Pt
+from nose.plugins.skip import SkipTest
 from nose.tools import eq_, ok_
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
@@ -16,12 +17,13 @@ from pdfminer.converter import PDFPageAggregator
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.high_level import extract_text_to_fp
-from shutilwhich import which
+from shutil import which
 from tornado.web import create_signed_value
 import gramex
 from gramex.handlers import Capture
 from . import TestGramex, server
 
+_timeout = 15
 _captures = {}
 paths = {'phantomjs': which('phantomjs'), 'node': which('node')}
 
@@ -70,7 +72,6 @@ def get_layout_elements(content):
 
 
 def test_dependencies():
-    assert paths['phantomjs'], 'phantomjs is not installed'
     assert paths['node'], 'node is not installed'
 
 
@@ -83,6 +84,9 @@ class TestCaptureHandler(TestGramex):
 
     @classmethod
     def setupClass(cls):
+        # If PhantomJS is not installed, skip the entire test class
+        if not paths['phantomjs']:
+            raise SkipTest('phantomjs is not installed')
         cls.capture = get_capture('default', port=9402)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -127,22 +131,27 @@ class TestCaptureHandler(TestGramex):
         self.assertIn('Blueblock', normalize(get_text(result.content)))
 
         # --format and --orientation
-        result = self.fetch(self.src, params={
-            'url': self.url, 'format': 'A3', 'orientation': 'landscape'})
+        result = self.fetch(
+            self.src, params={'url': self.url, 'format': 'A3', 'orientation': 'landscape'}
+        )
         parser = PDFParser(io.BytesIO(result.content))
         page = next(PDFPage.create_pages(PDFDocument(parser)))
-        self.assertIn([round(x) for x in page.attrs['MediaBox']], (
-            [0, 0, 1188, 842],      # noqa: Chrome uses 1188 x 842 for A3
-            [0, 0, 1191, 842],      # noqa: PhantomJS uses 1191 x 842 for A3
-        ))
+        self.assertIn(
+            [round(x) for x in page.attrs['MediaBox']],
+            (
+                [0, 0, 1190, 842],
+                [0, 0, 1191, 842],
+            ),
+        )
 
         # cookie=. The Cookie is printed on the screen via JS
         result = self.fetch(self.src, params={'url': self.url + '?show-cookie', 'cookie': 'a=x'})
         self.assertIn('a=x', normalize(get_text(result.content)))
         # Cookie: header is the same as ?cookie=.
         # Old request cookies vanish. Only new ones remain
-        result = self.fetch(self.src, params={'url': self.url + '?show-cookie'},
-                            headers={'Cookie': 'b=z'})
+        result = self.fetch(
+            self.src, params={'url': self.url + '?show-cookie'}, headers={'Cookie': 'b=z'}
+        )
         result_text = normalize(get_text(result.content))
         self.assertIn('js:cookie=b=z', result_text)
         self.assertIn('server:cookie=b=z', result_text)
@@ -163,14 +172,23 @@ class TestCaptureHandler(TestGramex):
         self.check_img(content, color=(255, 0, 0, 255), min=100, size=self.size)
 
         # Check file=, ext=, width=, height=
-        result = self.fetch(self.src, params={
-            'url': self.url, 'width': 600, 'height': 1200, 'file': 'capture', 'ext': 'png'})
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'width': 600,
+                'height': 1200,
+                'file': 'capture',
+                'ext': 'png',
+            },
+        )
         self.check_filename(result, 'capture.png')
         self.check_img(result.content, size=(600, 1200))
 
         # selector=. has a 100x100 green patch
-        result = self.fetch(self.src, params={
-            'url': self.url, 'selector': '.subset', 'ext': 'png'})
+        result = self.fetch(
+            self.src, params={'url': self.url, 'selector': '.subset', 'ext': 'png'}
+        )
         self.check_img(result.content, color=(0, 128, 0, 255), min=9000, size=(100, 100))
 
     def test_jpg(self):
@@ -179,8 +197,16 @@ class TestCaptureHandler(TestGramex):
         self.check_img(content)
 
         # Check file=, ext=, width=, height=
-        result = self.fetch(self.src, params={
-            'url': self.url, 'width': 800, 'height': 1000, 'file': 'capture', 'ext': 'jpg'})
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'width': 800,
+                'height': 1000,
+                'file': 'capture',
+                'ext': 'jpg',
+            },
+        )
         self.check_filename(result, 'capture.jpg')
         self.check_img(result.content, size=(800, 1000))
 
@@ -190,7 +216,7 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     @classmethod
     def setupClass(cls):
-        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=10)
+        cls.capture = get_capture('chrome', port=9412, engine='chrome', timeout=_timeout)
         cls.folder = os.path.dirname(os.path.abspath(__file__))
 
     @staticmethod
@@ -207,47 +233,71 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.check_img(prs.slides[0].shapes[0].image.blob)
 
         # Non-existent selectors raise a HTTP error
-        self.fetch(self.src, code=500, params={
-            'url': self.url, 'selector': 'nonexistent', 'ext': 'pptx'})
+        self.fetch(
+            self.src, code=500, params={'url': self.url, 'selector': 'nonexistent', 'ext': 'pptx'}
+        )
 
         # Check selector=.subset has a 100x100 green patch
         title = '高=σ'
-        result = self.fetch(self.src, params={
-            'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx'})
+        result = self.fetch(
+            self.src,
+            params={'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx'},
+        )
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 1)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000, size=(100, 100)
+        )
         self.check_text(prs.slides[0].shapes[1], text=title, font_size=18)
 
         # Check title_size
-        result = self.fetch(self.src, params={
-            'url': self.url, 'title': title, 'selector': '.subset', 'ext': 'pptx',
-            'title_size': 24})
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'title': title,
+                'selector': '.subset',
+                'ext': 'pptx',
+                'title_size': 24,
+            },
+        )
         prs = Presentation(io.BytesIO(result.content))
         self.check_text(prs.slides[0].shapes[1], text=title, font_size=24)
 
         # Check multi-slide generation with multi-title and multi-selector
-        result = self.fetch(self.src, params={
-            'url': self.url, 'ext': 'pptx', 'title': ['高', 'σ'], 'selector': ['.subset', 'p']})
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'ext': 'pptx',
+                'title': ['高', 'σ'],
+                'selector': ['.subset', 'p'],
+            },
+        )
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 2)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000, size=(100, 100)
+        )
         para_img = self.check_img(prs.slides[1].shapes[0].image.blob)
         para_size = (prs.slides[1].shapes[0].width, prs.slides[1].shapes[0].height)
         eq_(prs.slides[0].shapes[1].text, '高')
         eq_(prs.slides[1].shapes[1].text, 'σ')
         # Check multi-dpi generation and default dpi as 96
-        result = self.fetch(self.src, params={
-            'url': self.url, 'ext': 'pptx',
-            'selector': ['.subset', 'p'],
-            'dpi': ['96', '192'],               # 2nd image has half the original size
-        })
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'ext': 'pptx',
+                'selector': ['.subset', 'p'],
+                'dpi': ['96', '192'],  # 2nd image has half the original size
+            },
+        )
         prs = Presentation(io.BytesIO(result.content))
         eq_(len(prs.slides), 2)
-        self.check_img(prs.slides[0].shapes[0].image.blob,
-                       color=(0, 128, 0, 255), min=9000, size=(100, 100))
+        self.check_img(
+            prs.slides[0].shapes[0].image.blob, color=(0, 128, 0, 255), min=9000, size=(100, 100)
+        )
         self.check_img(prs.slides[1].shapes[0].image.blob, size=para_img.size)
         # 2nd image with twice the dpi is half the size
         self.assertAlmostEqual(prs.slides[1].shapes[0].width * 2, para_size[0], delta=1)
@@ -255,18 +305,19 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
 
     def test_delay_render(self):
         # delay=. After 1 second, renderComplete is set. Page changes text and color to green
-        result = self.fetch(self.src, params={'url': self.url, 'delay': 'renderComplete',
-                                              'file': 'delay-str'})
+        result = self.fetch(
+            self.src, params={'url': self.url, 'delay': 'renderComplete', 'file': 'delay-str'}
+        )
         self.check_filename(result, 'delay-str.pdf')
         self.assertIn('Greenblock', normalize(get_text(result.content)))
 
     def test_headers(self):
         # Headers are passed through, but cookie overrides it
-        result = self.fetch(self.src, params={'url': '/httpbin', 'cookie': 'right=1'}, headers={
-            'dnt': '1',
-            'user-agent': 'gramex-test',
-            'cookie': 'wrong=1'
-        })
+        result = self.fetch(
+            self.src,
+            params={'url': '/httpbin', 'cookie': 'right=1'},
+            headers={'dnt': '1', 'user-agent': 'gramex-test', 'cookie': 'wrong=1'},
+        )
         text = get_text(result.content)
         ok_(re.search(r'"dnt":\s+"1"', text, re.IGNORECASE))
         ok_(re.search(r'"user\-agent":\s+"gramex-test"', text, re.IGNORECASE))
@@ -277,29 +328,35 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         # Check that the request can mimic a user
         user = {'id': 'login@example.org', 'role': 'manager'}
         secret = gramex.service.app.settings['cookie_secret']
-        result = self.fetch(self.src, params={'url': '/auth/session'}, headers={
-            'x-gramex-user': create_signed_value(secret, 'user', json.dumps(user)),
-        })
+        result = self.fetch(
+            self.src,
+            params={'url': '/auth/session'},
+            headers={
+                'x-gramex-user': create_signed_value(secret, 'user', json.dumps(user)),
+            },
+        )
         text = get_text(result.content)
         ok_(user['id'] in text)
         ok_(user['role'] in text)
 
     def err(self, code, **params):
-        return self.fetch(self.src, code=code, params=params)
+        return self.fetch(self.src, code=code, params=params, timeout=_timeout)
 
     def test_errors(self):
         # nonexistent URLs should capture the 404 page and return a screenshot
         self.err(code=200, url='/nonexistent')
-        self.err(code=500, url='http://nonexistent')
+        # Invalid capture formats report HTTP 400
         self.err(code=400, url=self.url, ext='nonexistent')
+        # Invalid selectors report HTTP 500
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
+        # Invalid domains report HTTP 500
+        self.err(code=500, url='http://nonexistent')
 
     def test_pdf_header_footer(self):
-        result = self.fetch(self.src, params={
-            'url': self.url,
-            'header': '\u00A9|Header|$pageNumber',
-            'footer': '|$title|'
-        })
+        result = self.fetch(
+            self.src,
+            params={'url': self.url, 'header': '\u00A9|Header|$pageNumber', 'footer': '|$title|'},
+        )
         # Check if elements are ordered correctly.
         layout = get_layout_elements(result.content)
         ok_('©' in layout[0])
@@ -307,12 +364,15 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         ok_('1' in layout[2])
         ok_('This is the footer' in layout[-1])
         # Check templates
-        result = self.fetch(self.src, params={
-            'url': self.url,
-            'headerTemplate': '<div><span class="url"></span><h1>Header</h1></div>',
-            'footerTemplate': '''<div style="font-size:5px">
-                <span class="pageNumber"></span>/<span class="totalPages"></span></div>'''
-        })
+        result = self.fetch(
+            self.src,
+            params={
+                'url': self.url,
+                'headerTemplate': '<div><span class="url"></span><h1>Header</h1></div>',
+                'footerTemplate': '''<div style="font-size:5px">
+                <span class="pageNumber"></span>/<span class="totalPages"></span></div>''',
+            },
+        )
         layout = get_layout_elements(result.content)
         ok_(self.url in layout[0])
         # Text elements are grouped differently in PDFs generated by Window and Linux

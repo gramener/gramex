@@ -3,6 +3,7 @@ import tornado.gen
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from typing import Callable
 from gramex.transforms import build_transform
 from gramex.config import app_log
 from gramex.http import MOVED_PERMANENTLY, FOUND
@@ -11,34 +12,55 @@ from gramex.handlers import WebSocketHandler
 
 
 class ProxyHandler(BaseHandler, BaseWebSocketHandler):
-    '''
-    Passes the request to another HTTP REST API endpoint and returns its
-    response. This is useful when:
+    @classmethod
+    def setup(
+        cls,
+        url: str,
+        request_headers: dict = {},
+        default: dict = {},
+        prepare: Callable = None,
+        modify: Callable = None,
+        headers: dict = {},
+        connect_timeout: int = 20,
+        request_timeout: int = 20,
+        **kwargs,
+    ):
+        '''
+        Passes the request to another HTTP REST API endpoint and returns its
+        response. This is useful when:
 
-    - exposing another website but via Gramex authentication (e.g. R-Shiny apps)
-    - a server-side REST API must be accessed via the browser (e.g. Twitter)
-    - passing requests to an API that requires authentication (e.g. Google)
-    - the request or response needs to be transformed (e.g. add sentiment)
-    - caching is required on the API (e.g. cache for 10 min)
+        - exposing another website but via Gramex authentication (e.g. R-Shiny apps)
+        - a server-side REST API must be accessed via the browser (e.g. Twitter)
+        - passing requests to an API that requires authentication (e.g. Google)
+        - the request or response needs to be transformed (e.g. add sentiment)
+        - caching is required on the API (e.g. cache for 10 min)
 
-    :arg string url: URL endpoint to forward to. If the pattern ends with
-        ``(.*)``, that part is added to this url.
-    :arg dict request_headers: HTTP headers to be passed to the url.
-        - ``"*": true`` forwards all HTTP headers from the request as-is.
-        - A value of ``true`` forwards this header from the request as-is.
-        - Any string value is formatted with ``handler`` as a variable.
-    :arg dict default: Default URL query parameters
-    :arg dict headers: HTTP headers to set on the response
-    :arg function prepare: A function that accepts any of ``handler`` and ``request``
-        (a tornado.httpclient.HTTPRequest) and modifies the ``request`` in-place
-    :arg function modify: A function that accepts any of ``handler``, ``request``
-        and ``response`` (tornado.httpclient.HTTPResponse) and modifies the
-        ``response`` in-place
-    :arg int connect_timeout: Timeout for initial connection in seconds (default: 20)
-    :arg int request_timeout: Timeout for entire request in seconds (default: 20)
+        Parameters:
 
-    Example YAML configuration::
+            url: URL endpoint to forward to. If the pattern ends with
+                `(.*)`, that part is added to this url.
+            request_headers: HTTP headers to be passed to the url.
+                - `"*": true` forwards all HTTP headers from the request as-is.
+                - A value of `true` forwards this header from the request as-is.
+                - Any string value is formatted with `handler` as a variable.
+            default: Default URL query parameters
+            headers: HTTP headers to set on the response
+            prepare: A function that accepts any of `handler` and `request`
+                (a tornado.httpclient.HTTPRequest) and modifies the `request` in-place
+            modify: A function that accepts any of `handler`, `request`
+                and `response` (tornado.httpclient.HTTPResponse) and modifies the
+                `response` in-place
+            connect_timeout: Timeout for initial connection in seconds (default: 20)
+            request_timeout: Timeout for entire request in seconds (default: 20)
 
+        The response has the same HTTP headers and body as the proxied request, but:
+
+        - Connection and Transfer-Encoding headers are ignored
+        - `X-Proxy-Url:` header has the final URL that responded (after redirects)
+
+        These headers can be over-ridden by the `headers:` section.
+
+        ```yaml
         pattern: /gmail/(.*)
         handler: ProxyHandler
         kwargs:
@@ -50,17 +72,8 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
                 Authorization: 'Bearer {handler.session[google_access_token]}'
             default:
                 alt: json
-
-    The response has the same HTTP headers and body as the proxied request, but:
-
-    - Connection and Transfer-Encoding headers are ignored
-    - ``X-Proxy-Url:`` header has the final URL that responded (after redirects)
-
-    These headers can be over-ridden by the ``headers:`` section.
-    '''
-    @classmethod
-    def setup(cls, url, request_headers={}, default={}, prepare=None, modify=None,
-              headers={}, connect_timeout=20, request_timeout=20, **kwargs):
+        ```
+        '''
         super(ProxyHandler, cls).setup(**kwargs)
         WebSocketHandler._setup(cls, **kwargs)
         cls.url, cls.request_headers, cls.default = url, request_headers, default
@@ -70,9 +83,13 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         for key, fn in (('prepare', prepare), ('modify', modify)):
             if fn:
                 cls.info[key] = build_transform(
-                    {'function': fn}, filename='url:%s.%s' % (cls.name, key),
-                    vars={'handler': None, 'request': None, 'response': None})
-        cls.post = cls.put = cls.delete = cls.patch = cls.options = cls.get
+                    {'function': fn},
+                    filename=f'url:{cls.name}.{key}',
+                    vars={'handler': None, 'request': None, 'response': None},
+                )
+        cls.post = cls.put = cls.delete = cls.patch = cls.get
+        if not kwargs.get('cors'):
+            cls.options = cls.get
 
     def browser(self):
         # Create the browser when required. Don't create it in setup(), because:
@@ -108,8 +125,11 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         # TODO: use a named capture for path_args? This is not the right method
         parts = urlsplit(self.url.format(*path_args))
         params = {
-            key: ([str(v).format(handler=self) for v in val] if isinstance(val, list)
-                  else str(val).format(handler=self))
+            key: (
+                [str(v).format(handler=self) for v in val]
+                if isinstance(val, list)
+                else str(val).format(handler=self)
+            )
             for key, val in self.default.items()
         }
         params.update(parse_qs(parts.query))
@@ -129,7 +149,7 @@ class ProxyHandler(BaseHandler, BaseWebSocketHandler):
         if 'prepare' in self.info:
             self.info['prepare'](handler=self, request=request, response=None)
 
-        app_log.debug('%s: proxying %s', self.name, url)
+        app_log.debug(f'{self.name}: proxying {url}')
         response = yield self.browser().fetch(request, raise_error=False)
 
         if response.code in (MOVED_PERMANENTLY, FOUND):

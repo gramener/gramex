@@ -4,7 +4,7 @@ Python Node.js bridge
 import os
 import re
 import json
-from shutilwhich import which
+from shutil import which
 from tornado.gen import coroutine, sleep
 from tornado.websocket import websocket_connect, WebSocketClosedError
 from gramex.config import variables
@@ -14,24 +14,28 @@ from gramex.config import app_log
 _info = {}
 
 
-class Node(object):
-    '''
-    Usage::
-
-        node = Node(port=9966, node_path='/tmp/')
-        total = await node.js('return {"total": x + y}', x='a', y=10)['total']
-    '''
+class Node:
     _source = os.path.join(variables['GRAMEXAPPS'], 'pynode')
     _delay = 0.01
 
-    def __init__(self, port=9966, cwd=None, node_path=None, timeout=10):
+    def __init__(
+        self, port: int = 9966, cwd: str = None, node_path: str = None, timeout: int = 10
+    ):
+        '''
+        Example:
+
+            >>> node = Node(port=9966, node_path='/tmp/')
+            >>> total = await node.js('return {"total": x + y}', x='a', y=10)['total']
+        '''
         self.port = port
         # cwd is the directory where node runs. Defaults to $GRAMEXDATA/pynode/
         # node_modules is updated under this.
         self.cwd = os.path.join(variables['GRAMEXDATA'], 'pynode') if cwd is None else cwd
+        if not os.path.exists(self.cwd):
+            os.makedirs(self.cwd)
         # node_path is where the node executable is. Autodetect from PATH by default
         self.node_path = node_path or which('node')
-        self.url = 'ws://127.0.0.1:%s' % port
+        self.url = f'ws://127.0.0.1:{port}'
         self.timeout = timeout
         self.proc, self.conn = None, None
         self.count = 0
@@ -43,23 +47,29 @@ class Node(object):
                 self.conn = yield websocket_connect(self.url, connect_timeout=self.timeout)
             except OSError as exc:
                 import errno
+
                 if exc.errno != errno.ECONNREFUSED:
                     raise
                 self.proc = yield daemon(
                     [
                         self.node_path,
                         os.path.join(self._source, 'index.js'),
-                        '--port=%s' % self.port
+                        f'--port={self.port}',
                     ],
                     first_line=re.compile(r'pynode: 1.\d+.\d+ port: %s' % self.port),
                     cwd=self.cwd,
                     # New node modules will be installed in self.cwd.
                     # But pynode/index.js also uses its own packages.
                     # So set NODE_PATH to both node_modules. Node will require() from both.
-                    env=dict(os.environ, NODE_PATH=os.pathsep.join([
-                        os.path.join(self._source, 'node_modules'),
-                        os.path.join(self.cwd, 'node_modules'),
-                    ]))
+                    env=dict(
+                        os.environ,
+                        NODE_PATH=os.pathsep.join(
+                            [
+                                os.path.join(self._source, 'node_modules'),
+                                os.path.join(self.cwd, 'node_modules'),
+                            ]
+                        ),
+                    ),
                 )
                 self.conn = yield websocket_connect(self.url, connect_timeout=self.timeout)
 

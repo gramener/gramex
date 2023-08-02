@@ -1,0 +1,238 @@
+# Maps Python code to Gramex features
+yaml2feature: true
+
+# Map code to gramex.yaml paths that use it
+# DO NOT SORT BLINDLY! Order matters. ".*" must be as far down as possible
+code2yaml:
+  gramex.cache._delete_temp_files: "*"
+  gramex.cache.open: "*"
+  gramex.cache.stat: "*"
+  gramex.cache.save: url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler
+  gramex.cache.query: url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler
+  gramex.cache.reload_module: "*"
+  gramex.cache.urlfetch: alert
+  gramex.cache.Subprocess.*: url.*.handler=ProcessHandler|Process
+  gramex.cache.daemon:
+    [
+      url.*.handler=ComicHandler|Comic,
+      import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml,
+    ]
+  gramex.cache.get_store: [app.session, url.*.kwargs.store]
+  gramex.cache.KeyStore.*:
+    [app.session.type=memory, url.*.kwargs.store.type=memory]
+  gramex.cache.RedisStore.*:
+    [app.session.type=redis, url.*.kwargs.store.type=redis]
+  gramex.cache.SQLiteStore.*:
+    [app.session.type=sqlite, url.*.kwargs.store.type=sqlite]
+  gramex.cache.HDF5Store.*:
+    [app.session.type=hdf5, url.*.kwargs.store.type=hdf5]
+  gramex.cache.JSONStore.*:
+    [app.session.type=json, url.*.kwargs.store.type=json]
+  # TODO: gramex.cache.* may be too broad?
+  gramex.cache.*: cache
+  gramex.config.*: "*"
+  # TODO: gramex.data.* may be too broad?
+  gramex.data.*: url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler
+  gramex.debug.*: TODO - if any PY code uses gramex.debug
+  gramex.install.*: TODO - Gramex app installation & management
+  gramex.license.*: TODO - Gramex enterprise license management
+  # Migration is mostly for user store locations as of v1.89
+  gramex.migrate.*: url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
+  gramex.ml.Classifier.*: url.*.handler=ModelHandler
+  gramex.ml._conda_r_home: TODO - if any PY code uses gramex.ml.r
+  gramex.ml.r: TODO - if any PY code uses gramex.ml.r
+  gramex.ml.groupmeans: TODO - if any PY code use gramex.ml.groupmeans
+  gramex.ml.weighted_avg: TODO - if any PY code use gramex.ml.groupmeans
+  gramex.ml._google_translate: url.*.kwargs.function=gramex.ml.translater
+  gramex.ml.translate: url.*.kwargs.function=gramex.ml.translater
+  gramex.ml.translater: url.*.kwargs.function=gramex.ml.translater
+  gramex.ml.languagetool: import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml
+  gramex.ml.languagetoolrequest: import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml
+  gramex.ml.languagetool_download: import.*.path=$GRAMEXAPPS/languagetool/gramex.yaml
+  gramex.ml.*: TODO - if any PY code uses topcause
+  gramex.ml_api.*: url.*.handler=MLHandler|ML
+  gramex.pynode.*: url.*.handler=ComicHandler|Comic
+  gramex.scale.*: TODO - if any PY code uses gramex.scale
+  gramex.secrets.commandline: TODO - if deployment uses secrets
+  gramex.sm_api.*: url.*.handler=MLHandler|ML
+  gramex.topcause.*: TODO - if any PY code uses topcause
+  gramex.transformers.*: url.*.handler=MLHandler|ML
+  gramex.winservice.*: TODO - if app is deployed on Windows server
+  gramex.__init__.*: "*"
+  gramex.apps.admin.*: import.*.path=$GRAMEXAPPS/admin/gramex.yaml
+  gramex.apps.admin2.*: import.*.path=$GRAMEXAPPS/admin2/gramex.yaml
+  gramex.apps.filemanager.*: import.*.path=$GRAMEXAPPS/filemanager/gramex.yaml
+  gramex.apps.logviewer.*: import.*.path=$GRAMEXAPPS/logviewer/gramex.yaml
+  gramex.apps.mail.*: import.*.path=$GRAMEXAPPS/mail/gramex.yaml
+  gramex.apps.ui.*: import.*.path=$GRAMEXAPPS/ui/gramex.yaml
+  gramex.apps.uifactory.*: import.*.path=$GRAMEXAPPS/uifactory/gramex.yaml
+  gramex.apps.update.*: import.*.path=$GRAMEXAPPS/update/gramex.yaml
+  gramex.handlers.authhandler.AuthHandler.*: url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
+  gramex.handlers.authhandler.LogoutHandler.*: url.*.handler=LogoutHandler
+  gramex.handlers.authhandler.GoogleAuth.*: url.*.handler=GoogleAuth
+  gramex.handlers.authhandler.SimpleAuth.*: url.*.handler=SimpleAuth
+  # TODO: Also check Python code that uses handler.*()
+  gramex.handlers.basehandler.BaseHandler.argparse: url.*.handler=CaptureHandler|MLHandler|ModelHandler|OpenAPIHandler
+  gramex.handlers.basehandler.BaseHandler.authorize: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseHandler.create_template_loader: url.*.kwargs.template
+  gramex.handlers.basehandler.BaseHandler.get_arg: url
+  gramex.handlers.basehandler.BaseHandler.get_current_user: url
+  gramex.handlers.basehandler.BaseHandler.initialize: url
+  gramex.handlers.basehandler.BaseHandler.log_exception: url
+  gramex.handlers.basehandler.BaseHandler.on_finish: url
+  gramex.handlers.basehandler.BaseHandler.prepare: url
+  gramex.handlers.basehandler.BaseHandler.set_default_headers: url
+  gramex.handlers.basehandler.BaseMixin._cached_get: url
+  gramex.handlers.basehandler.BaseMixin._cors_options: url.*.kwargs.cors
+  gramex.handlers.basehandler.BaseMixin._error_fn: url.*.kwargs.error
+  gramex.handlers.basehandler.BaseMixin._get_store: url.*.kwargs.cache
+  gramex.handlers.basehandler.BaseMixin._purge_keys: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin._set_new_session_id: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin._write_custom_error: url.*.kwargs.error
+  gramex.handlers.basehandler.BaseMixin._write_headers: url.*.kwargs.headers
+  gramex.handlers.basehandler.BaseMixin.apikey: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.authorize: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.check_cors: url.*.kwargs.kwargs
+  gramex.handlers.basehandler.BaseMixin.check_http_method: url.*.kwargs.methods
+  gramex.handlers.basehandler.BaseMixin.check_ratelimit: url.*.kwargs.ratelimit
+  gramex.handlers.basehandler.BaseMixin.clear_special_keys: url
+  gramex.handlers.basehandler.BaseMixin.cors_origin: url.*.kwargs.cors
+  gramex.handlers.basehandler.BaseMixin.debug_exception: url
+  gramex.handlers.basehandler.BaseMixin.get_list: url
+  gramex.handlers.basehandler.BaseMixin.get_otp: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.get_session: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.noop: url
+  gramex.handlers.basehandler.BaseMixin.otp: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.override_user: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.redirect_next: url.*.kwargs.redirect
+  gramex.handlers.basehandler.BaseMixin.reset_ratelimit: url.*.kwargs.ratelimit
+  gramex.handlers.basehandler.BaseMixin.revoke_apikey: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.revoke_otp: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.save_redirect_page: url.*.kwargs.redirect
+  gramex.handlers.basehandler.BaseMixin.save_session: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.session: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.set_last_visited: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.set_ratelimit_headers: url.*.kwargs.ratelimit
+  gramex.handlers.basehandler.BaseMixin.setup: url
+  gramex.handlers.basehandler.BaseMixin.setup_auth: url.*.kwargs.auth
+  gramex.handlers.basehandler.BaseMixin.setup_cors: url.*.kwargs.cors
+  gramex.handlers.basehandler.BaseMixin.setup_default_kwargs: url
+  gramex.handlers.basehandler.BaseMixin.setup_error: url.*.kwargs.error
+  gramex.handlers.basehandler.BaseMixin.setup_httpmethods: url.*.kwargs.methods
+  gramex.handlers.basehandler.BaseMixin.setup_log: url.*.kwargs.log
+  gramex.handlers.basehandler.BaseMixin.setup_ratelimit: url.*.kwargs.ratelimit
+  gramex.handlers.basehandler.BaseMixin.setup_redirect: url.*.kwargs.redirect
+  gramex.handlers.basehandler.BaseMixin.setup_session: url.*.kwargs.session
+  gramex.handlers.basehandler.BaseMixin.setup_transform: url.*.kwargs.session
+  gramex.handlers.basehandler.BaseMixin.setup_xsrf: url.*.kwargs.xsrf
+  gramex.handlers.basehandler.BaseMixin.update_ratelimit: url.*.kwargs.ratelimit
+  gramex.handlers.basehandler.BaseMixin.xsrf_ajax: url
+  gramex.handlers.basehandler.BaseMixin.xsrf_check_required: url
+  gramex.handlers.basehandler.BaseWebSocketHandler.*: url.*.handler=WebSocketHandler|Websocket
+  gramex.handlers.basehandler.SetupFailedHandler.get: url
+  gramex.handlers.basehandler._check_condition: url.*.kwargs.auth.membership
+  gramex.handlers.basehandler.check_membership: url.*.kwargs.auth.membership
+  gramex.handlers.capturehandler.*: url.*.handler=CaptureHandler|Screenshot
+  gramex.handlers.comichandler.*: url.*.handler=ComicHandler|Comic
+  gramex.handlers.drivehandler.*: url.*.handler=DriveHandler|Storage
+  gramex.handlers.filehandler.*: url.*.handler=FileHandler|DirectoryHandler|File
+  gramex.handlers.filterhandler.*: url.*.handler=FilterHandler|Filter
+  gramex.handlers.formhandler.*: url.*.handler=FormHandler|Data
+  gramex.handlers.functionhandler.*: url.*.handler=FunctionHandler|Function
+  gramex.handlers.jsonhandler.*: url.*.handler=JSONHandler|JSON
+  gramex.handlers.mlhandler.get_model: url.*.handler=MLHandler|ML
+  gramex.handlers.mlhandler.MLHandler.*: url.*.handler=MLHandler|ML
+  gramex.handlers.mlhandler.MLPredictor.*: url.*.handler=MLPredictor
+  gramex.handlers.modelhandler.*: url.*.handler=ModelHandler
+  gramex.handlers.openapihandler.*: url.*.handler=OpenAPIHandler|OpenAPI
+  gramex.handlers.pptxhandler.*: url.*.handler=PPTXHandler, Slide
+  gramex.handlers.processhandler.*: url.*.handler=ProcessHandler|Process
+  gramex.handlers.proxyhandler.*: url.*.handler=ProxyHandler|Proxy
+  gramex.handlers.socialhandler.SocialHandler.*: url.*.handler=TwitterRESTHandler|Twitter|FacebookGraphHandler|Facebook
+  gramex.handlers.socialhandler.TwitterRESTHandler.*: url.*.handler=TwitterRESTHandler|Twitter
+  gramex.handlers.socialhandler.FacebookGraphHandler.*: url.*.handler=FacebookGraphHandler|Facebook
+  gramex.handlers.uploadhandler.*: url.*.handler=UploadHandler|Upload
+  gramex.handlers.websockethandler.*: url.*.handler=WebSocketHandler|Websocket
+  # gramex.handlers.__init__.* has a conditional import of GramexEnterprise
+  gramex.handlers.__init__.*: url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
+  gramex.pptgen.*: url.*.handler=PPTXHandler
+  gramex.pptgen2.*: url.*.handler=PPTXHandler
+  gramex.services.emailer.*: email
+  gramex.services.rediscache.*: cache.*.type=redis
+  gramex.services.scheduler.*: schedule
+  gramex.services.sms.*: sms
+  gramex.services.ttlcache.*: cache.*.type=memory
+  gramex.services.urlcache.get_cachefile: cache
+  gramex.services.urlcache.CacheFile.*: cache
+  gramex.services.urlcache.MemoryCacheFile.*:
+    [cache.*.type=memory, cache.*.type=disk]
+  gramex.services.urlcache.RedisCacheFile.*: cache.*.type=redis
+  gramex.services.watcher.*: watch
+  gramex.services.__init__.version: version
+  gramex.services.__init__.log: log
+  gramex.services.__init__.app: app
+  gramex.services.__init__.schedule: schedule
+  gramex.services.__init__.alert: alert
+  gramex.services.__init__.threadpool: threadpool
+  gramex.services.__init__.url: url
+  gramex.services.__init__.mime: mime
+  gramex.services.__init__.watch: watch
+  gramex.services.__init__.cache: cache
+  gramex.services.__init__.eventlog: eventlog
+  gramex.services.__init__.email: email
+  gramex.services.__init__.sms: sms
+  gramex.services.__init__.handlers: handlers
+  gramex.services.__init__.encrypt: encrypt
+  gramex.services.__init__.test: test
+  gramex.services.__init__.gramexlog: gramexlog
+  gramex.services.__init__.storelocations: storelocations
+  gramex.services.__init__._storelocations_purge: storelocations
+  gramex.services.__init__.GramexApp.log_request: log
+  gramex.services.__init__.GramexApp.clear_handlers: app
+  gramex.services.__init__.create_alert: alert
+  gramex.services.__init__._markdown_convert: alert
+  gramex.services.__init__._tmpl: alert
+  gramex.services.__init__._stop_all_tasks: [schedule, alert]
+  gramex.services.__init__._sort_url_patterns: url.*.pattern
+  gramex.services.__init__._url_normalize: url.*.pattern
+  gramex.services.__init__._get_cache_key: url.*.cache
+  gramex.services.__init__._cache_generator: url.*.cache
+  gramex.transforms.auth.ensure_single_session: url.*.handlers.kwargs.action.function:ensure_single_session
+  gramex.transforms.template.template: url.*.kwargs.template
+  gramex.transforms.template.scss: url.*.kwargs.scss
+  gramex.transforms.template.ts: url.*.kwargs.ts
+  gramex.transforms.template.CacheLoader.*: url.*.kwargs.template
+  gramex.transforms.transforms.identity: TODO - if any PY code uses @handler
+  gramex.transforms.transforms._arg_repr: TODO - same as build_transform (maybe always)
+  gramex.transforms.transforms._full_name: TODO - same as build_transform (maybe always)
+  gramex.transforms.transforms.module_names: TODO - same as build_transform (maybe always)
+  gramex.transforms.transforms.build_transform: TODO - same as build_transform (maybe always)
+  gramex.transforms.transforms.build_pipeline: TODO - same as build_transform (maybe always)
+  gramex.transforms.transforms.condition: DEPRECATED
+  gramex.transforms.transforms.flattener: TODO - if any PY code use flatter()
+  gramex.transforms.transforms.once: TODO - if any PY code uses once()
+  gramex.transforms.transforms.typelist: TODO - if any PY code uses @handler
+  gramex.transforms.transforms.convert: TODO - if any PY code uses @handler
+  gramex.transforms.transforms.handler: TODO - if any PY code uses @handler
+  gramex.transforms.transforms.handler_expr:
+    [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
+  gramex.transforms.transforms.build_log_info:
+    [log.handlers.user.keys, log.handlers.requests.keys, gramexlog]
+  gramex.transforms.twitterstream.*: TODO - if any PY code uses TwitterStream
+  gramexenterprise.handlers.authhandler.OAuth2.*: url.*.handler=OAuth2
+  gramexenterprise.handlers.authhandler.FacebookAuth.*: url.*.handler=FacebookAuth
+  gramexenterprise.handlers.authhandler.TwitterAuth.*: url.*.handler=TwitterAuth
+  gramexenterprise.handlers.authhandler.SAMLAuth.*: url.*.handler=SAMLAuth
+  gramexenterprise.handlers.authhandler.SAMLAuth2.*: url.*.handler=SAMLAuth2
+  gramexenterprise.handlers.authhandler.LDAPAuth.*: url.*.handler=LDAPAuth
+  gramexenterprise.handlers.authhandler.DBAuth.*: url.*.handler=DBAuth
+  gramexenterprise.handlers.authhandler.IntegratedAuth.*: url.*.handler=IntegratedAuth
+  gramexenterprise.handlers.authhandler.SMSAuth.*: url.*.handler=SMSAuth
+  gramexenterprise.handlers.authhandler.EmailAuth.*: url.*.handler=EmailAuth
+  gramexenterprise.handlers.authhandler.*: url.*.handler=OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth
+  # These Gramex features shouldn't count towards project complexity/effort
+  build.*: null
+  pkg.*: null
+  pytest.*: null
+  testlib.*: null
+  tests.*: null

@@ -1,7 +1,7 @@
 '''
-pptgen2.pptgen() modifies a ``source`` PPTX using ``rules`` and ``data``.
+pptgen2.pptgen() modifies a `source` PPTX using `rules` and `data`.
 
-The main loop is in :py:func:`pptgen`, which calls other functions as required.
+The main loop is in [pptgen()][gramex.pptgen2.pptgen], which calls other functions as required.
 '''
 
 import copy
@@ -24,31 +24,34 @@ from typing import Union, List, Dict
 from . import commands
 
 
-def pptgen(source: Union[str, pptx.presentation.Presentation],
-           rules: List[dict] = [],
-           data: dict = {},
-           target: str = None,
-           only: Union[int, List[int]] = None,
-           register: Dict[str, str] = {},
-           unit: str = 'Inches',
-           mode: str = 'literal',
-           handler=None,
-           **config) -> pptx.presentation.Presentation:
+def pptgen(
+    source: Union[str, pptx.presentation.Presentation],
+    rules: List[dict] = [],
+    data: dict = {},
+    target: str = None,
+    only: Union[int, List[int]] = None,
+    register: Dict[str, str] = {},
+    unit: str = 'Inches',
+    mode: str = 'literal',
+    handler=None,
+    **config,
+) -> pptx.presentation.Presentation:
     '''
     Process a configuration. This loads a Presentation from source, applies the
-    (optional) configuration changes and (optionally) saves it into target. Returns the modified
+    (optional) configuration changes and (optionally) saves it into target. Returns modified PPTX.
 
-    :arg PPTX source: string or pptx.Presentation object to transform
-    :arg list rules: list of rules to apply to the ``source`` PPTX. Each rule
-    :arg str target: optional path save file
-    :arg int/list only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
-    :arg dict register: new commands to register via :py:func:`register_commands`.
-    :arg str unit: default length unit (Inches, Cm, Centipoints, etc)
-    :arg str mode: default expression mode. Values in Python are treated as 'literals'
-        (e.g. 'red' is the STRING red). But PPTXHandler passes the mode as `expr`. Values are
-        treated as expressions (e.g. 'red' is the VARIABLE red).
-    :arg handler: if PPTXHandler passes a handler, make it available to the commands as a variable
-    :return: target PPTX
+    Parameters:
+
+        source: string or pptx.Presentation object to transform
+        rules: list of rules to apply to the `source` PPTX. Each rule
+        target: optional path save file
+        only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
+        register: new commands to register via [gramex.pptgen2.register_commands][]
+        unit: default length unit (Inches, Cm, Centipoints, etc)
+        mode: default expression mode. Values in Python are treated as 'literals'
+            (e.g. 'red' is the STRING red). But PPTXHandler passes the mode as `expr`. Values are
+            treated as expressions (e.g. 'red' is the VARIABLE red).
+        handler: if PPTXHandler passes a handler, make it available to the commands as a variable
     '''
     # TODO: source can be an expression. PPTXHandler may need to use multiple themes
     prs = source if isinstance(source, pptx.presentation.Presentation) else Presentation(source)
@@ -68,15 +71,17 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
             commands.flatten_group_transforms(shape)
     # copy-slide: can copy any set of slides multiple times. To track of which source slide maps to
     # which target slide, we use `slide_map`. slide_map[target_slide_index] = source_slide_index
-    slide_map = [index for index in range(len(slides))]
+    slide_map = list(range(len(slides)))
 
     # Loop through each rule (copying them to protect from modification)
     for rule in copy.deepcopy(rules):
         slides_in_rule = tuple(slide_filter(slides, rule, data))
         # If no slides matched, warn the user
         if len(slides_in_rule) == 0:
-            app_log.warn('pptgen2: No slide with slide-number: %s, slide-title: %s',
-                         rule.get('slide-number'), rule.get('slide-title'))
+            app_log.warn(
+                f'pptgen2: No slide with slide-number: {rule.get("slide-number")}, '
+                f'slide-title: {rule.get("slide-title")}'
+            )
             continue
         # Copy slides after the last mapped position of the last slide in this rule
         max_index = max(index for index, slide in slides_in_rule)
@@ -98,9 +103,10 @@ def pptgen(source: Union[str, pptx.presentation.Presentation],
         for copy_row in copies:
             # Include rule-level `data:`. Add copy, slide as variables
             slide_data = load_data(
-                rule.get('data', {}), _default_key='function', copy=copy_row, **data)
+                rule.get('data', {}), _default_key='function', copy=copy_row, **data
+            )
             for slide in copy_row.slides:
-                slide_data['slide'] = slide         # Rule can use 'slide' as a variable
+                slide_data['slide'] = slide  # Rule can use 'slide' as a variable
                 transition(slide, rule.get('transition', None), data)
                 apply_commands(rule, slide.shapes, slide_data)
     if target:
@@ -127,10 +133,12 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
     '''
     Apply commands in rule to change shapes using data.
 
-    :arg dict rule: a dict of shape names, and commands to apply on each.
-        e.g. ``{"Oval 1": {"fill": "red"}, "Oval 2": {"text": "OK"}}``
-    :arg Shapes shapes: a slide.shapes or group.shapes object on which the rule should be applied
-    :arg dict data: data context for the commands in the rule
+    Parameters:
+
+        rule: a dict of shape names, and commands to apply on each.
+            e.g. `{"Oval 1": {"fill": "red"}, "Oval 2": {"text": "OK"}}`
+        shapes: a slide.shapes or group.shapes object on which the rule should be applied
+        data: data context for the commands in the rule
     '''
     # Apply every rule to every pattern -- as long as the rule key matches the shape name
     for pattern, spec in rule.items():
@@ -150,55 +158,66 @@ def apply_commands(rule: Dict[str, dict], shapes, data: dict):
                     el = copy.deepcopy(shape.element)
                     shape.element.addnext(el)
                     shape = pptx.shapes.autoshape.Shape(el, shape._parent)
-                clones.append(AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape,
-                                       parent=parent_clone))
+                clones.append(
+                    AttrDict(pos=i, key=clone_key, val=clone_val, shape=shape, parent=parent_clone)
+                )
             # Run commands in the spec on all cloned shapes
             is_group = shape.element.tag.endswith('}grpSp')
             for clone in clones:
                 # Include shape-level `data:`. Add shape, clone as variables
                 shape_data = load_data(
-                    spec.get('data', {}), _default_key='function', shape=shape, clone=clone,
-                    **{k: v for k, v in data.items() if k not in {'shape', 'clone'}})
+                    spec.get('data', {}),
+                    _default_key='function',
+                    shape=shape,
+                    clone=clone,
+                    **{k: v for k, v in data.items() if k not in {'shape', 'clone'}},
+                )
                 for cmd in spec:
                     if cmd in commands.cmdlist:
                         commands.cmdlist[cmd](clone.shape, spec[cmd], shape_data)
                     # Warn on unknown commands. But don't warn on groups -- they have sub-shapes
                     elif cmd not in special_cmdlist and not is_group:
-                        app_log.warn('pptgen2: Unknown command: %s on shape: %s', cmd, pattern)
+                        app_log.warn(f'pptgen2: Unknown command: {cmd} on shape: {pattern}')
                 # If the shape is a group, apply spec to each sub-shape
                 if is_group:
                     apply_commands(spec, SlideShapes(clone.shape.element, shapes), shape_data)
         # Warn if the pattern is neither a shape nor a command
-        if (not matched_shapes and pattern not in special_cmdlist and
-                pattern not in commands.cmdlist):
-            app_log.warn('pptgen2: No shape matches pattern: %s', pattern)
+        if (
+            not matched_shapes
+            and pattern not in special_cmdlist
+            and pattern not in commands.cmdlist
+        ):
+            app_log.warn(f'pptgen2: No shape matches pattern: {pattern}')
 
 
 def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
     '''
     Loads datasets based on configuration and returns a dict of those datasets.
 
-    :arg dataset _conf: The dataset configuration
-    :arg str _default_key: Can be ``function``, ``url`` or ``None`` (default).
-        If specified, it converts string data configurations into ``{_default_key: _conf}``.
-    :return: A dict of datasets loaded based on the configuration.
+    Parameters:
+        _conf: The dataset configuration
+        _default_key: Can be `function`, `url` or `None` (default).
+            If specified, it converts string data configurations into `{_default_key: _conf}`.
 
-    ``_conf`` is processed as follows:
+    Returns:
+        A dict of datasets loaded based on the configuration.
 
-    - String ``'data.xlsx'`` is loaded via :py:func:`gramex.cache.open` into ``{data: ...}`` if
-        ``_default_key == 'url'``
-    - String ``'data[0]'`` is evaluated via :py:func:`gramex.transforms.build_transform` into
-        ``{data: ...}``` if ``_default_key == 'function'``
-    - String ``anything``` raises an Exception if ``_default_key`` is None
-    - Dict ``{url: ...}`` is loaded with :py:func:`gramex.data.filter` into ``{data: ...}``
-    - Dict ``{function: ...}`` is evaluated via :py:func:`gramex.transforms.build_transform`
-        into ``{data: ...}``
-    - Dict ``{x: ..., y: ...}`` loads the respective datasets into ``x`` and ``y`` instead of
-        ``data``. Each dataset is processed using the above rules.
-    - Any other datatype passed is returned as is in ``{data: ...}``
+    `_conf` is processed as follows:
+
+    - String `'data.xlsx'` is loaded via [gramex.cache.open] into `{data: ...}` if
+        `_default_key == 'url'`
+    - String `'data[0]'` is evaluated via [gramex.transforms.build_transform] into
+        `{data: ...}` if `_default_key == 'function'`
+    - String `anything` raises an Exception if `_default_key` is None
+    - Dict `{url: ...}` is loaded with [gramex.data.filter] into `{data: ...}`
+    - Dict `{function: ...}` is evaluated via [gramex.transforms.build_transform]
+        into `{data: ...}`
+    - Dict `{x: ..., y: ...}` loads the respective datasets into `x` and `y` instead of
+        `data`. Each dataset is processed using the above rules.
+    - Any other datatype passed is returned as is in `{data: ...}`
 
     Any keyword arguments passed are also added to the resulting dataset, but overwritten only if
-    ``_conf`` loaded a dataset that's not ``None``.
+    `_conf` loaded a dataset that's not `None`.
     '''
 
     def str2conf(data, key):
@@ -209,7 +228,7 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
         # If data is a string, return {_default_key: data} (or raise a TypeError)
         if _default_key is not None:
             return {_default_key: data}
-        raise TypeError('%s: must be a dict, not %r' % (key, data))
+        raise TypeError(f'{key}: must be a dict, not {data!r}')
 
     data = str2conf(_conf, 'data')
     if not isinstance(data, dict) or 'url' in data or 'function' in data:
@@ -223,7 +242,9 @@ def load_data(_conf, _default_key: str = None, **kwargs) -> dict:
                     conf['transform'] = build_transform(
                         {'function': conf['transform']},
                         vars={'data': None, 'handler': None},
-                        filename='PPTXHandler:data.%s' % key, iter=False)
+                        filename=f'PPTXHandler:data.{key}',
+                        iter=False,
+                    )
                 data[key] = gramex.data.filter(**conf)
             if 'function' in conf:
                 # Let functions use previously defined data variables, including current one
@@ -242,33 +263,39 @@ def register_commands(register: Dict[str, str]) -> None:
     '''
     Register a new command to the command list.
 
-    :arg dict register: keys are the command name. Values are the Python expression to run to apply
-        the command. The expression can use 3 variables: ``shape`` (the Shape object to modify),
-        ``spec`` (the configuration passed to your command) and ``data``.
+    Parameters:
+
+        register: keys are the command name. Values are the Python expression to run to apply
+            the command. The expression can use 3 variables: `shape` (the Shape object to modify),
+            `spec` (the configuration passed to your command) and `data`.
     '''
     if not isinstance(register, dict):
-        raise TypeError('register: must be a dict, not %s' % type(register))
+        raise TypeError(f'register: must be a dict, not {type(register)}')
     for key, conf in register.items():
         commands.cmdlist[key] = build_transform(
-            {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False)
+            {'function': conf}, vars={'shape': None, 'spec': None, 'data': None}, iter=False
+        )
 
 
 def pick_only_slides(prs: Presentation, only: Union[int, List[int]] = None) -> list:
     '''
-    Delete slides except those specified in ``only``.
+    Delete slides except those specified in `only`.
 
-    :arg Presentation prs: presentation to delete slides from
-    :arg int/list only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
-    :return: list of slides to process. These slides are also DELETED in the original prs
+    Parameters:
+        prs: presentation to delete slides from
+        only: slide number(s) to process. 1 is the first slide. [1, 3] is slides 1 & 3
+
+    Returns:
+        list of slides to process. These slides are also DELETED in the original prs
     '''
     if only is None:
         return list(prs.slides)
     if isinstance(only, int):
         only = [only]
     if not isinstance(only, list):
-        raise TypeError('pptgen(only=) takes slide number or list, not %s' % type(only))
+        raise TypeError(f'pptgen(only=) takes slide number or list, not {type(only)}')
     all_slides = set(range(1, 1 + len(prs.slides)))
-    for slide_num in reversed(sorted(all_slides - set(only))):
+    for slide_num in sorted(all_slides - set(only), reverse=True):
         rid = prs.slides._sldIdLst[slide_num - 1].rId
         prs.part.drop_rel(rid)
         del prs.slides._sldIdLst[slide_num - 1]
@@ -279,13 +306,16 @@ def slide_filter(slides, rule: dict, data: dict):
     '''
     Filter slides. Return iterable of (index, slide) for only those slides matching numbers/titles.
 
-    :arg Slides slides: a Slides object (e.g. ``prs.slides``) to select slides from
-    :arg dict rule: a dict that may have a ``slide-number`` or ``slide-title`` key to filter by.
-        These can be expressions. ``slide-number`` is the slide number(s) to filter. 1 is the first
-        slide. ``[1, 3]`` is slides 1 & 3. ``slide-title`` has the slide title pattern(s) to filter
-        e.g. ``*Match*`` matches all slides with "match" anywhere in the title (case-insensitive).
-    :arg dict data: data context for the rule
-    :return: an iterable that yields (index, slide)
+    Parameters:
+        slides: a Slides object (e.g. `prs.slides`) to select slides from
+        rule: a dict that may have a `slide-number` or `slide-title` key to filter by.
+            These can be expressions. `slide-number` is the slide number(s) to filter. 1 is the 1st
+            slide. `[1, 3]` is slides 1 & 3. `slide-title` has the slide title pattern(s) to filter
+            e.g. `*Match*` matches all slides with "match" anywhere in the title (case-insensitive)
+        data: data context for the rule
+
+    Returns:
+        an iterable that yields (index, slide)
     '''
     numbers = commands.expr(rule.get('slide-number', []), data)
     titles = commands.expr(rule.get('slide-title', []), data)
@@ -303,15 +333,16 @@ def slide_filter(slides, rule: dict, data: dict):
         yield index, slide
 
 
-def copy_slide(prs, source, target_index):
+def copy_slide(prs: Presentation, source, target_index: int):
     '''
-    Copy ``source`` slide from presentatation ``prs`` to appear at ``target_index``. python-pptx
+    Copy `source` slide from presentatation `prs` to appear at `target_index`. python-pptx
     does not have this feature, so we tweak XML directly. Does not copy slides with diagrams or
     charts yet.
 
-    :arg Presentation prs: presentation to copy the slide in
-    :arg Slide source: slide to copy
-    :arg target_index: location to copy into. 0 makes it the first slide
+    Parameters:
+        Presentation prs: presentation to copy the slide in
+        Slide source: slide to copy
+        target_index: location to copy into. 0 makes it the first slide
     '''
     # Append slide with source's layout. Then delete shapes to get a blank slide
     dest = prs.slides.add_slide(source.slide_layout)
@@ -338,10 +369,14 @@ def copy_slide(prs, source, target_index):
             partname = target.package.next_partname(pptx.parts.chart.ChartPart.partname_template)
             xlsx_blob = target.chart_workbook.xlsx_part.blob
             target = pptx.parts.chart.ChartPart(
-                partname, target.content_type, copy.deepcopy(target._element),
-                package=target.package)
+                partname,
+                target.content_type,
+                copy.deepcopy(target._element),
+                package=target.package,
+            )
             target.chart_workbook.xlsx_part = pptx.parts.chart.EmbeddedXlsxPart.new(
-                xlsx_blob, target.package)
+                xlsx_blob, target.package
+            )
         # TODO: handle diagrams
         dest.part.rels.add_relationship(val.reltype, target, val.rId, val.is_external)
     # Move appended slide into target_index
@@ -354,11 +389,12 @@ def transition(slide, spec: Union[str, dict], data: dict):
     Apply transition on slide based on spec. python-pptx does not have this feature, so we tweak
     XML directly.
 
-    :arg Slide slide: slide to apply the transition to
-    :arg dict/str spec: type of transition to apply. ``config.yaml`` lists transitions and options.
-        It can also be a dict specifying ``type`` (type of transition), ``duration`` (in seconds)
-        and ``advance`` (auto-advance after seconds)
-    :arg dict data: data context for the ``spec`` expression
+    Parameters:
+        slide: slide to apply the transition to
+        spec: type of transition to apply. `config.yaml` lists transitions and options.
+            It can also be a dict specifying `type` (type of transition), `duration` (in seconds)
+            and `advance` (auto-advance after seconds)
+        data: data context for the `spec` expression
     '''
     if spec is None:
         return
@@ -378,12 +414,12 @@ def transition(slide, spec: Union[str, dict], data: dict):
             attrs.update(conf['transition-alias'][tag])
             tag = attrs.pop('tag')
         if tag not in conf['transition']:
-            raise ValueError('transition.type: %s is an unknown transition' % type)
+            raise ValueError(f'transition.type: {type} is an unknown transition')
         trans = conf['transition'][tag]
         options = trans['default'] if (not options and 'default' in trans) else options
         for option in options:
             if option not in trans:
-                raise ValueError('transition.type: "%s" has invalid option %s' % (type, option))
+                raise ValueError(f'transition.type: "{type}" has invalid option {option}')
             attrs.update(trans[option])
         # Remove existing transition
         el = slide.element.find(qn('mc:AlternateContent'))
@@ -393,7 +429,7 @@ def transition(slide, spec: Union[str, dict], data: dict):
         # TODO: fails on slides with equations, zoom, or any other mc:alternateContent
         if tag != 'none':
             ns = trans.get('ns', 'p')
-            attrs = ' '.join('%s="%s"' % (k, v) for k, v in attrs.items())
+            attrs = ' '.join(f'{k}="{v}"' for k, v in attrs.items())
             xml = conf['transition-tmpl'][ns].format(tag=tag, attrs=attrs)
             el = parse_xml(xml)[0]
             slide.element.append(el)
@@ -403,18 +439,21 @@ def transition(slide, spec: Union[str, dict], data: dict):
         if val is not None:
             trans = slide.element.find('mc:AlternateContent/mc:Choice/p:transition', _nsmap)
             if trans is not None:
-                trans.set(attr, '%s' % int(float(val) * 1000))
+                trans.set(attr, f'{float(val) * 1000:.0f}')
 
 
 def iterate_on(spec, data: dict):
     '''
-    ``clone:`` and ``copy:`` iterate on data to return a (key, val) pair. This method performs the
+    `clone:` and `copy:` iterate on data to return a (key, val) pair. This method performs the
     iteration for different data types and returns (key, val) consistently.
 
-    :arg expr spec: an expression to iterate on. It can be a dict, tuple, list, pd.Index,
-        pd.DataFrame, or pd.DataFrameGroupBy
-    :arg dict data: data context for the ``spec`` expression
-    :return: an iterable that yields (key, val) tuples
+    Parameters:
+        spec: an expression to iterate on. It can be a dict, tuple, list, pd.Index,
+            pd.DataFrame, or pd.DataFrameGroupBy
+        data: data context for the `spec` expression
+
+    Returns:
+        an iterable that yields (key, val) tuples
     '''
     val = commands.expr(spec, data)
     # {x: 1} -> (x, 1)
@@ -425,7 +464,7 @@ def iterate_on(spec, data: dict):
         return enumerate(val)
     # pd.Series({x: 1}) -> (x, 1)
     elif isinstance(val, pd.Series):
-        return val.iteritems()
+        return val.items()
     # pd.DataFrame([{x:1, y:2], {x:3, y:4}]) -> (0, {x: 1, y:2}), ...
     elif isinstance(val, pd.DataFrame):
         return val.iterrows()
@@ -433,14 +472,16 @@ def iterate_on(spec, data: dict):
     elif isinstance(val, pd.core.groupby.generic.DataFrameGroupBy):
         return val
     else:
-        raise ValueError('Cannot iterate over %s: %r' % (type(val), val))
+        raise ValueError(f'Cannot iterate over {type(val)}: {val!r}')
 
 
 def commandline(args=None):
-    '''
-    usage: slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+    '''Generates target PPTX from a source PPTX, applying rules in config file and opens it.
 
-    Generates target PPTX from a source PPTX, applying rules in config file and opens it.
+    Usage
+
+        slidesense [config.yaml] [url-name] [--source=...] [--target=...] [--data=...]
+
     If no config file is specified, uses `gramex.yaml` in the current directory.
 
     The config file can have a pptgen configuration like {source: ..., target: ..., rules: ...}
@@ -463,10 +504,9 @@ def commandline(args=None):
 
     if 'url' in conf:
         for key, spec in conf.url.items():
-            if spec.handler == 'PPTXHandler':
-                if not urls or any(url in key for url in urls):
-                    rules = spec.kwargs
-                    break
+            if spec.handler == 'PPTXHandler' and (not urls or any(url in key for url in urls)):
+                rules = spec.kwargs
+                break
         else:
             return app_log.error(f'No PPTXHandler matched in file: {config_file}')
     elif any(key in conf for key in ('source', 'target', 'data', 'rules')):
@@ -484,5 +524,5 @@ def commandline(args=None):
     # If --no-open is specified, or the OS doesn't have startfile (e.g. Linux), stop here.
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
-        # os.startfile() is safe since the target is an explicit file we've created
-        os.startfile(rules['target'])   # nosec: developer-initiated
+        # B606:start_process_with_no_shell is safe -- it's a file we've explicitly created
+        os.startfile(rules['target'])  # nosec B606

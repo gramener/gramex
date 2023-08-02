@@ -1,13 +1,13 @@
 # Config file for automatic testing at travis-ci.org
 
-# Run in Python 3 only. Drop Python 2 testing
+# Run in Python 3.x only
 language: python
 python: 3.7
 
 # Python 3.7 works only in Xenial with sudo
 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
-dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
-sudo: yes
+dist: xenial # required for Python >= 3.7 (travis-ci/travis-ci#9069)
+sudo: true
 
 jobs:
   include:
@@ -68,11 +68,7 @@ install:
   - conda install line_profiler
   # Why conda install rpy2?
   #   rpy2 v2.9.6 is compatible with pandas 1.0, not available on the default channel
-  # Why conda install r-markdown instead of install.packages("rmarkdown")?
-  #   install.packages("rmarkdown") has installation issues with numpy 1.16.6, 1.17.0, etc but is OK with 1.16.0
-  #   https://bitbucket.org/rpy2/rpy2/issues/572
-  #   Don't ask people to change the critical NumPy for the rarely used RMarkdown. Use the conda installer instead
-  - conda install -c conda-forge rpy2 r-markdown
+  - conda install -c conda-forge rpy2
   # Install a reasonably modern version of node.js for UI components to work
   - nvm install 12
   # Set up variables
@@ -82,10 +78,10 @@ script:
   - make lint
 
   # Install Gramex and accept the license
-  - pip install -e .
+  - pip install -e . --config-settings editable_mode=strict
   - pip install gramexenterprise
   - gramex license accept
-  - gramex setup --all  # ensure sass, puppetter exists
+  - gramex setup --all # ensure sass, puppetter exists
 
   # Run tests, explicitly showing coverage
   - make test-setup
@@ -98,6 +94,5 @@ script:
   # TODO: Incorporate later
   # - gramex --listen.port=1234 > gramex.log 2>&1 &
   # - sleep 10
-  # - pytest tests/gramextest.yaml
   # - cat gramex.log
   # - kill %1

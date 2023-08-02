@@ -6,9 +6,10 @@ import unittest
 from nose.tools import eq_, ok_
 from nose.plugins.skip import SkipTest
 import gramex.cache
-from gramex.cache import JSONStore, SQLiteStore, HDF5Store, RedisStore
+from gramex.cache import JSONStore, SQLiteStore, RedisStore
+
 # It must be possible to import from basehandler for backward-compatibility
-from gramex.handlers.basehandler import JSONStore, SQLiteStore, HDF5Store, RedisStore  # noqa
+from gramex.handlers.basehandler import JSONStore, SQLiteStore, RedisStore  # noqa
 from gramex.handlers.basehandler import BaseMixin
 from gramex.config import variables
 from . import tests_dir
@@ -44,7 +45,7 @@ class TestJSONStore(unittest.TestCase):
     def load(self):
         '''Load all data in the store and return it'''
         if os.path.exists(self.path):
-            with open(self.path, 'r') as handle:    # noqa: no encoding for json
+            with open(self.path, 'r') as handle:
                 data = json.load(handle)
             return data
         return {}
@@ -97,19 +98,20 @@ class TestJSONStore(unittest.TestCase):
         ok_('λ' in result)
 
     def test_store(self):
+        self.store.purge()
         data = self.load()
         expiry = time.time() + 1000
         self.store.dump('►', {'_t': expiry, 'α': True})
         self.store.flush()
         data.update({'►': {'_t': expiry, 'α': True}})
         eq_(self.load(), data)
-        ok_('►' in self.store.keys())
+        ok_('►' in self.store.keys())  # noqa: SIM118 self.store is not iterable
 
         self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
         self.store.purge()
         data.update({'λ': {'α': 1, 'β': None, '_t': expiry}})
         eq_(self.load(), data)
-        ok_('λ' in self.store.keys())
+        ok_('λ' in self.store.keys())  # noqa: SIM118 self.store is not iterable
 
         # Keys must be converted to strings
         for key in (1, 0.0):
@@ -118,7 +120,7 @@ class TestJSONStore(unittest.TestCase):
             self.store.flush()
             data.update({str_key: 1})
             eq_(self.load(), data)
-            ok_(str_key in self.store.keys())
+            ok_(str_key in self.store.keys())  # noqa: SIM118 self.store is not iterable
 
     @classmethod
     def teardownClass(cls):
@@ -133,21 +135,7 @@ class TestSQLiteStore(TestJSONStore):
     store_file = 'data.db'
 
     def load(self):
-        return {
-            self.store._escape(key): val
-            for key, val in self.store.store.items()
-        }
-
-
-class TestHDF5Store(TestJSONStore):
-    store_class = HDF5Store
-    store_file = 'data.h5'
-
-    def load(self):
-        return {
-            key.replace('\t', '/'): json.loads(val[()])
-            for key, val in self.store.store.items()
-        }
+        return {self.store._escape(key): val for key, val in self.store.store.items()}
 
 
 class TestRedisStore(TestJSONStore):
@@ -157,6 +145,7 @@ class TestRedisStore(TestJSONStore):
         host = variables['REDIS_SERVER']
 
         import redis
+
         cls.redis = redis.StrictRedis(host=host, decode_responses=True, encoding='utf-8')
         try:
             # Re-initialize the database by clearing it
@@ -165,14 +154,11 @@ class TestRedisStore(TestJSONStore):
             raise SkipTest('No redis server at %s' % host)
 
         cls.plainstore = RedisStore(path=host, flush=None)
-        cls.store = RedisStore(path='%s:6379' % host, flush=None,
-                               purge_keys=BaseMixin._purge_keys)
-        cls.store2 = RedisStore(path='%s:6379:0' % host, flush=None,
-                                purge_keys=BaseMixin._purge_keys)
+        cls.store = RedisStore(path='%s:6379' % host, flush=None, purge_keys=BaseMixin._purge_keys)
+        cls.store2 = RedisStore(
+            path='%s:6379:0' % host, flush=None, purge_keys=BaseMixin._purge_keys
+        )
 
     def load(self):
         '''Load all data in the store and return it'''
-        return {
-            key: json.loads(self.redis.get(key))
-            for key in self.redis.keys()
-        }
+        return {key: json.loads(self.redis.get(key)) for key in self.redis.keys()}

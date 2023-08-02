@@ -10,7 +10,7 @@ from gramex.cache import SQLiteStore
 # gramex.license.EULA has the wording of the end user license agreement
 EULA = '''
 -------------------------------------------------------------------------
-Read the license agreement at https://learn.gramener.com/guide/license/
+Read the license agreement at https://gramener.com/gramex/guide/license/
 '''
 # All license information is captured in this store.
 store = SQLiteStore(path=os.path.join(variables['GRAMEXDATA'], 'license.db'), table='license')
@@ -37,7 +37,7 @@ def accept(force=False):
     gramex.console(EULA)
     result = 'y' if force or not sys.stdin else ''
     while not result:
-        result = input('Do you accept the license (Y/N): ').strip()     # nosec: safe in PY3
+        result = input('Do you accept the license (Y/N): ').strip()
     if result.lower().startswith('y'):
         store.dump('accepted', time.time())
         store.flush()

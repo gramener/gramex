@@ -1,0 +1,19 @@
+# These are templates that prettier cannot format
+
+gramex/apps/init/default/gramex.template.yaml
+gramex/apps/init/ide/gramex.template.yaml
+gramex/apps/init/minimal/gramex.template.yaml
+gramex/apps/ui/bootstrap-theme.scss
+tests/sass/vars.scss
+
+# These YAML test cases have deliberate errors -- for testing
+
+pytest/complexity_basic/subfolder/js-default/add.mjs
+pytest/complexity_basic/subfolder/js-with-error/withError.js
+pytest/complexity_error/gramex.yaml
+testlib/test_config/config.error.yaml
+testlib/test_config/config.random.yaml
+tests/sass/import.sass
+
+# MKDocs uses custom blocks that prettier does not understand
+mkdocs/docs/handlers.md

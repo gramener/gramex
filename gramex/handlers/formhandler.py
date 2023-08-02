@@ -22,7 +22,7 @@ def namespaced_args(args, namespace):
     result = {}
     for key, val in args.items():
         if key.startswith(namespace):
-            result[key[len(namespace):]] = val
+            result[key[len(namespace) :]] = val
         elif ':' not in key:
             result[key] = val
     return result
@@ -42,14 +42,16 @@ class FormHandler(BaseHandler):
         'queryfunction': {'args': None, 'key': None, 'handler': None},
         'state': {'args': None, 'key': None, 'handler': None},
     }
-    data_filter_method = staticmethod(gramex.data.filter)
+
+    def data_filter_method(self, *args, **kwargs):
+        return gramex.data.filter(*args, **kwargs)
 
     @classmethod
     def setup(cls, **kwargs):
         super(FormHandler, cls).setup(**kwargs)
-        conf_kwargs = merge(AttrDict(kwargs),
-                            objectpath(gramex_conf, 'handlers.FormHandler', {}),
-                            'setdefault')
+        conf_kwargs = merge(
+            AttrDict(kwargs), objectpath(gramex_conf, 'handlers.FormHandler', {}), 'setdefault'
+        )
         cls.headers = conf_kwargs.pop('headers', {})
         # Top level formats: key is special. Don't treat it as data
         cls.formats = conf_kwargs.pop('formats', {})
@@ -62,10 +64,14 @@ class FormHandler(BaseHandler):
             cls.single = True
         else:
             if 'modify' in conf_kwargs:
-                cls.modify_all = staticmethod(build_transform(
-                    conf={'function': conf_kwargs.pop('modify', None)},
-                    vars=cls.function_vars['modify'],
-                    filename='%s.%s' % (cls.name, 'modify'), iter=False))
+                cls.modify_all = staticmethod(
+                    build_transform(
+                        conf={'function': conf_kwargs.pop('modify', None)},
+                        vars=cls.function_vars['modify'],
+                        filename=f'{cls.name}.modify',
+                        iter=False,
+                    )
+                )
             cls.datasets = conf_kwargs
             cls.single = False
         # Apply defaults to each key
@@ -76,10 +82,10 @@ class FormHandler(BaseHandler):
         # Ensure that each dataset is a dict with a url: key at least
         for key, dataset in list(cls.datasets.items()):
             if not isinstance(dataset, dict):
-                app_log.error('%s: %s: must be a dict, not %r' % (cls.name, key, dataset))
+                app_log.error(f'{cls.name}: {key}: must be a dict, not {dataset!r}')
                 del cls.datasets[key]
             elif 'url' not in dataset:
-                app_log.error('%s: %s: does not have a url: key' % (cls.name, key))
+                app_log.error(f'{cls.name}: {key}: does not have a url: key')
                 del cls.datasets[key]
             # Ensure that id: is a list -- if it exists
             if 'id' in dataset and not isinstance(dataset['id'], list):
@@ -88,26 +94,29 @@ class FormHandler(BaseHandler):
             conf = {
                 'function': dataset.pop('function', None),
                 'args': dataset.pop('args', None),
-                'kwargs': dataset.pop('kwargs', None)
+                'kwargs': dataset.pop('kwargs', None),
             }
             if conf['function'] is not None:
-                fn_name = '%s.%s.transform' % (cls.name, key)
+                fn_name = f'{cls.name}.{key}.transform'
                 dataset['transform'] = build_transform(
-                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False)
+                    conf, vars={'data': None, 'handler': None}, filename=fn_name, iter=False
+                )
             # Convert modify: and prepare: into a data = modify(data) function
             for fn, fn_vars in cls.function_vars.items():
                 if fn in dataset:
                     dataset[fn] = build_transform(
                         conf={'function': dataset[fn]},
                         vars=fn_vars,
-                        filename='%s.%s.%s' % (cls.name, key, fn), iter=False)
+                        filename=f'{cls.name}.{key}.{fn}',
+                        iter=False,
+                    )
+
+    def prepare(self):
+        self.update_body_args()
+        super(FormHandler, self).prepare()
 
     def _options(self, dataset, args, path_args, path_kwargs, key):
         """For each dataset, prepare the arguments."""
-        if self.request.body:
-            content_type = self.request.headers.get('Content-Type', '')
-            if content_type == 'application/json':
-                args.update(json.loads(self.request.body))
         filter_kwargs = AttrDict(dataset)
         filter_kwargs.pop('modify', None)
         prepare = filter_kwargs.pop('prepare', None)
@@ -120,7 +129,7 @@ class FormHandler(BaseHandler):
             for k, v in filter_kwargs.pop('default', {}).items()
         }
         # /(.*)/(.*) become 2 path arguments _0 and _1
-        defaults.update({'_%d' % k: [v] for k, v in enumerate(path_args)})
+        defaults.update({f'_{k}': [v] for k, v in enumerate(path_args)})
         # /(?P<x>\d+)/(?P<y>\d+) become 2 keyword arguments x and y
         defaults.update({k: [v] for k, v in path_kwargs.items()})
         args = merge(namespaced_args(args, key), defaults, mode='setdefault')
@@ -146,22 +155,23 @@ class FormHandler(BaseHandler):
         for key, dataset in self.datasets.items():
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
-            opt.filter_kwargs.pop('id', None)
             # Run query in a separate threadthread
             futures[key] = gramex.service.threadpool.submit(
-                self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs)
+                self.data_filter_method, args=opt.args, meta=meta[key], **opt.filter_kwargs
+            )
             # gramex.data.filter() should set the schema only on first load. Pop it once done
             dataset.pop('schema', None)
+        self.pre_modify()
         result = AttrDict()
         for key, val in futures.items():
             try:
                 result[key] = yield val
             except ValueError as e:
-                app_log.exception('%s: filter failed' % self.name)
-                raise HTTPError(BAD_REQUEST, reason=e.args[0])
+                app_log.exception(f'{self.name}: filter failed')
+                raise HTTPError(BAD_REQUEST, e.args[0])
             except Exception as e:
-                app_log.exception('%s: filter failed' % self.name)
-                raise HTTPError(INTERNAL_SERVER_ERROR, reason=repr(e))
+                app_log.exception(f'{self.name}: filter failed')
+                raise HTTPError(INTERNAL_SERVER_ERROR, repr(e))
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
                 result[key] = modify(data=result[key], key=key, handler=self)
@@ -170,6 +180,11 @@ class FormHandler(BaseHandler):
         if hasattr(self, 'modify_all'):
             result = self.modify_all(data=result, key=None, handler=self)
 
+        # Note: Don't redirect GET. They should only be used to get data, not for side-effects.
+        # Allowing redirect has no purpose except for side-effects.
+        self.render_result(opt, meta, result, redirect=False)
+
+    def render_result(self, opt, meta, result, redirect=True):
         format_options = self.set_format(opt.fmt, meta)
         format_options['args'] = opt.args
         params = {k: v[0] for k, v in opt.args.items() if len(v) > 0}
@@ -180,7 +195,7 @@ class FormHandler(BaseHandler):
             elif isinstance(val, bytes):
                 format_options[key] = val.decode('utf-8').format(**params)
         if opt.download:
-            self.set_header('Content-Disposition', 'attachment;filename=%s' % opt.download)
+            self.set_header('Content-Disposition', f'attachment;filename={opt.download}')
         if opt.meta_header:
             self.set_meta_headers(meta)
         result = result['data'] if self.single else result
@@ -189,6 +204,8 @@ class FormHandler(BaseHandler):
             self.write(gramex.data.download(result, **format_options))
         elif result:
             self.write(result)
+        if redirect and self.redirects:
+            self.redirect_next()
 
     @tornado.gen.coroutine
     def update(self, method, *path_args, **path_kwargs):
@@ -200,32 +217,31 @@ class FormHandler(BaseHandler):
             meta[key] = AttrDict()
             opt = self._options(dataset, self.args, path_args, path_kwargs, key)
             if 'id' not in opt.filter_kwargs:
-                raise HTTPError(BAD_REQUEST, reason='%s: need id: kwarg to %s' % (
-                    self.name, self.request.method))
+                raise HTTPError(
+                    BAD_REQUEST, f'{self.name}: need id: in kwargs: to {self.request.method}'
+                )
             missing_args = [col for col in opt.filter_kwargs['id'] if col not in opt.args]
             if method != gramex.data.insert and len(missing_args) > 0:
-                raise HTTPError(BAD_REQUEST, reason='%s: missing column(s) in URL query: %s' % (
-                    self.name, ', '.join(missing_args)))
+                raise HTTPError(
+                    BAD_REQUEST,
+                    f'{self.name}: missing column(s) in URL query: ' + ', '.join(missing_args),
+                )
             # Execute the query. This returns the count of records updated
             result[key] = method(meta=meta[key], args=opt.args, **opt.filter_kwargs)
             # method() should set the schema only on first load. Pop it once done
             dataset.pop('schema', None)
+        self.pre_modify()
         for key, val in result.items():
             modify = self.datasets[key].get('modify', None)
             if callable(modify):
                 meta[key]['modify'] = modify(data=result[key], key=key, handler=self)
-            self.set_header('Count-%s' % key, val)
+            self.set_header(f'Count-{key}', val)
         # modify the result for multiple datasets
         if hasattr(self, 'modify_all'):
             meta['modify'] = self.modify_all(data=result, key=None, handler=self)
-        if opt.meta_header:
-            self.set_meta_headers(meta)
-        if self.redirects:
-            self.redirect_next()
-        else:
-            self.set_format(opt.fmt, meta)
-            self.set_header('Cache-Control', 'no-cache, no-store')
-            self.write(json.dumps(meta, indent=2, cls=CustomJSONEncoder))
+
+        self.set_header('Cache-Control', 'no-cache, no-store')
+        self.render_result(opt, meta, {'data': meta} if self.single else meta, redirect=True)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):
@@ -245,7 +261,7 @@ class FormHandler(BaseHandler):
         if fmt in self.formats:
             fmt = dict(self.formats[fmt])
         else:
-            app_log.error('%s: _format=%s unknown. Using _format=json' % (self.name, fmt))
+            app_log.error(f'{self.name}: _format={fmt} unknown. Using _format=json')
             fmt = dict(self.formats['json'])
 
         # Set up default headers, and over-ride with headers for the format
@@ -266,6 +282,11 @@ class FormHandler(BaseHandler):
         prefix = 'FH-{}-{}'
         for dataset, metadata in meta.items():
             for key, value in metadata.items():
-                string_value = json.dumps(value, separators=(',', ':'),
-                                          ensure_ascii=True, cls=CustomJSONEncoder)
+                string_value = json.dumps(
+                    value, separators=(',', ':'), ensure_ascii=True, cls=CustomJSONEncoder
+                )
                 self.set_header(prefix.format(dataset, key), string_value)
+
+    def pre_modify(self, **kwargs):
+        '''Called after inserting records into DB. Subclasses use it for additional processing'''
+        pass

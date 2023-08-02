@@ -8,8 +8,7 @@ from sklearn.naive_bayes import BernoulliNB
 import gramex.ml
 import gramex.cache
 from nose.tools import eq_, ok_
-from pandas.util.testing import assert_frame_equal as afe
-from . import folder, remove_if_possible
+from . import folder, remove_if_possible, afe
 
 
 class TestClassifier(unittest.TestCase):
@@ -29,26 +28,26 @@ class TestClassifier(unittest.TestCase):
         # Train accepts explicit model_class, model_kwargs, input and output
         inputs = ['petal_length', 'petal_width', 'sepal_length', 'sepal_width']
         model2 = gramex.ml.Classifier(
-            model_class='sklearn.svm.SVC',    # Any sklearn model
+            model_class='sklearn.svm.SVC',  # Any sklearn model
             # Optional model parameters
             model_kwargs={'kernel': 'sigmoid'},
             input=inputs,
-            output='species')
-        model2.train(data)                   # DataFrame with input & output columns
+            output='species',
+        )
+        model2.train(data)  # DataFrame with input & output columns
         eq_(model2.input, inputs)
         eq_(model2.output, model1.output)
         ok_(isinstance(model2.model, SVC))
         eq_(model2.model.kernel, 'sigmoid')
 
         # Test predictions. Note: this is manually crafted. If it fails, change the test case
-        result = model1.predict([
-            {'sepal_length': 5, 'sepal_width': 3,
-                'petal_length': 1.5, 'petal_width': 0},
-            {'sepal_length': 5, 'sepal_width': 2,
-                'petal_length': 5.0, 'petal_width': 1},
-            {'sepal_length': 6, 'sepal_width': 3,
-                'petal_length': 4.8, 'petal_width': 2},
-        ])
+        result = model1.predict(
+            [
+                {'sepal_length': 5, 'sepal_width': 3, 'petal_length': 1.5, 'petal_width': 0},
+                {'sepal_length': 5, 'sepal_width': 2, 'petal_length': 5.0, 'petal_width': 1},
+                {'sepal_length': 6, 'sepal_width': 3, 'petal_length': 4.8, 'petal_width': 2},
+            ]
+        )
         eq_(result.tolist(), ['setosa', 'versicolor', 'virginica'])
 
         # Test saving
@@ -61,12 +60,16 @@ class TestClassifier(unittest.TestCase):
 
     def test_02_load(self):
         model = gramex.ml.load(self.model_path)
-        result = model.predict([{
-            'sepal_length': 5.7,
-            'sepal_width': 4.4,
-            'petal_length': 1.5,
-            'petal_width': 0.4,
-        }])
+        result = model.predict(
+            [
+                {
+                    'sepal_length': 5.7,
+                    'sepal_width': 4.4,
+                    'petal_length': 1.5,
+                    'petal_width': 0.4,
+                }
+            ]
+        )
         eq_(result.tolist(), ['setosa'])
 
     # def test_linear_model_with_controlled_data(self):
@@ -82,8 +85,9 @@ class TestAutolyse(unittest.TestCase):
     path = os.path.join(folder, 'auto_test.csv')
     df = gramex.cache.open(path, encoding='utf-8')
     opener = lambda h: json.load(h, parse_float=lambda x: round(float(x), 4))  # noqa
-    results = gramex.cache.open(os.path.join(folder, 'autolyse.json'),
-                                callback=gramex.cache.opener(opener))
+    results = gramex.cache.open(
+        os.path.join(folder, 'autolyse.json'), callback=gramex.cache.opener(opener)
+    )
 
     def base(self, groups, numbers, key):
         dff = gramex.ml.groupmeans(self.df, groups, numbers)
@@ -99,7 +103,8 @@ class TestAutolyse(unittest.TestCase):
         self.base(
             ['GroupWith1Name'],
             ['Xfloaté', 'Yfloaté', 'Zfloaté', 'Numbérs', '`Numbers'],
-            'non_normal_dist')
+            'non_normal_dist',
+        )
 
 
 # Map (q, source, target) -> (detected source, translation)
@@ -110,7 +115,7 @@ _translate = {
     ('Orange', 'en', 'nl'): ('en', 'Oranje'),
     ('Apple', 'en', 'de'): ('en', 'Apfel'),
     ('Orange', 'en', 'de'): ('en', 'Orange'),
-    ('apfel', '', 'en'): ('de', 'apple'),           # used by tests/test_translater
+    ('apfel', '', 'en'): ('de', 'apple'),  # used by tests/test_translater
 }
 _translate_count = []
 
@@ -137,28 +142,36 @@ class TestTranslate(unittest.TestCase):
         def check(q, result, **kwargs):
             kwargs['api'] = 'mock'
             actual = gramex.ml.translate(*q, **kwargs)
-            expected = pd.DataFrame([
-                {'source': item[0], 'target': item[1], 'q': item[2], 't': item[3]}
-                for item in result
-            ])
+            expected = pd.DataFrame(
+                [
+                    {'source': item[0], 'target': item[1], 'q': item[2], 't': item[3]}
+                    for item in result
+                ]
+            )
             actual.index = expected.index
             afe(actual, expected, check_like=True)
 
-        check(['Apple'], [
-            ['en', 'nl', 'Apple', 'appel']
-        ], target='nl')
-        check(['Apple', 'Orange'], [
-            ['en', 'nl', 'Apple', 'appel'],
-            ['en', 'nl', 'Orange', 'Oranje']
-        ], target='nl')
-        check(['Apple', 'Orange'], [
-            ['en', 'de', 'Apple', 'Apfel'],
-            ['en', 'de', 'Orange', 'Orange']
-        ], source='en', target='de')
-        check(['Orange', 'Apple'], [
-            ['en', 'de', 'Orange', 'Orange'],
-            ['en', 'de', 'Apple', 'Apfel'],
-        ], source='en', target='de')
+        check(['Apple'], [['en', 'nl', 'Apple', 'appel']], target='nl')
+        check(
+            ['Apple', 'Orange'],
+            [['en', 'nl', 'Apple', 'appel'], ['en', 'nl', 'Orange', 'Oranje']],
+            target='nl',
+        )
+        check(
+            ['Apple', 'Orange'],
+            [['en', 'de', 'Apple', 'Apfel'], ['en', 'de', 'Orange', 'Orange']],
+            source='en',
+            target='de',
+        )
+        check(
+            ['Orange', 'Apple'],
+            [
+                ['en', 'de', 'Orange', 'Orange'],
+                ['en', 'de', 'Apple', 'Apfel'],
+            ],
+            source='en',
+            target='de',
+        )
 
         if os.path.exists(self.cache):
             os.remove(self.cache)

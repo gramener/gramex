@@ -6,37 +6,52 @@ import tornado.web
 import tornado.escape
 from .basehandler import BaseHandler
 from gramex.config import app_log
+from gramex.http import BAD_REQUEST
 
 # JSONHandler data is stored in store. Each handler is specified with a path.
 # store[path] holds the full data for that handler. It is saved in path at the
 # end of each request (if the data has changed.) The time data was last synced is
 # stored in _loaded[path].
-store = {}              # Contents of the JSON data stores
-_loaded = {}            # Time when persistent stores were last loaded
-_jsonstores = store     # Internal legacy alias for store
+store = {}  # Contents of the JSON data stores
+_loaded = {}  # Time when persistent stores were last loaded
+_jsonstores = store  # Internal legacy alias for store
 
 
 class JSONHandler(BaseHandler):
-    '''
-    Provides a REST API for managing and persisting JSON data.
+    @classmethod
+    def setup(cls, path: str = None, data: str = None, **kwargs):
+        '''
+        Provides a REST API for managing and persisting JSON data.
 
-    Sample URL configuration::
+        Sample URL configuration
 
+        ```yaml
         pattern: /$YAMLURL/data/(.*)
         handler: JSONHandler
         kwargs:
             path: $YAMLPATH/data.json
+        ```
 
-    :arg string path: optional file where the JSON data is persisted. If not
-        specified, the JSON data is not persisted.
-    :arg string data: optional initial dataset, used only if path is not
-        specified. Defaults to null
-    '''
+        Parameters:
+
+            path: optional file where the JSON data is persisted. If not
+                specified, the JSON data is not persisted.
+            data: optional initial dataset, used only if path is not
+                specified. Defaults to null
+        '''
+        super(JSONHandler, cls).setup(**kwargs)
+        cls.path = path
+        cls.default_data = data
+        cls.json_kwargs = {
+            'ensure_ascii': True,
+            'separators': (',', ':'),
+        }
+
     def parse_body_as_json(self):
         try:
             return tornado.escape.json_decode(self.request.body)
         except ValueError:
-            raise tornado.web.HTTPError(status_code=400, log_message='Bad JSON', reason='Bad JSON')
+            raise tornado.web.HTTPError(BAD_REQUEST, 'Bad JSON')
 
     def jsonwalk(self, jsonpath, create=False):
         '''Return a parent, key, value from the JSON store where parent[key] == value'''
@@ -50,12 +65,12 @@ class JSONHandler(BaseHandler):
                 if _loaded.get(path, 0) <= os.stat(path).st_mtime:
                     # Don't use encoding when reading JSON. We're using ensure_ascii=True
                     # Besides, when handling Py2 & Py3, just ignoring encoding works best
-                    with open(path, mode='r') as handle:     # noqa
+                    with open(path, mode='r') as handle:
                         try:
                             _jsonstores[path] = json.load(handle)
                             _loaded[path] = time.time()
                         except ValueError:
-                            app_log.warning('Invalid JSON in %s', path)
+                            app_log.warning(f'Invalid JSON in {path}')
                             self.changed = True
             else:
                 self.changed = True
@@ -67,7 +82,7 @@ class JSONHandler(BaseHandler):
         parent, key, data = _jsonstores, path, _jsonstores[path]
         if not jsonpath:
             return parent, key, data
-        # Split jsonpath by / -- but escape "\/" as part of the keys
+        # Split jsonpath by / -- but escape "\/" (or "%5C/") as part of the keys
         keys = [p.replace('\udfff', '/') for p in jsonpath.replace(r'\/', '\udfff').split('/')]
         keys.insert(0, path)
         for index, key in enumerate(keys[1:]):
@@ -87,16 +102,6 @@ class JSONHandler(BaseHandler):
                 continue
             return parent, key, None
         return parent, key, data
-
-    @classmethod
-    def setup(cls, path=None, data=None, **kwargs):
-        super(JSONHandler, cls).setup(**kwargs)
-        cls.path = path
-        cls.default_data = data
-        cls.json_kwargs = {
-            'ensure_ascii': True,
-            'separators': (',', ':'),
-        }
 
     def initialize(self, **kwargs):
         super(JSONHandler, self).initialize(**kwargs)
@@ -156,7 +161,7 @@ class JSONHandler(BaseHandler):
                 os.makedirs(folder)
             # Don't use encoding when reading JSON. We use ensure_ascii=True.
             # When handling Py2 & Py3, just ignoring encoding works best.
-            with open(self.path, mode='w') as handle:       # noqa
+            with open(self.path, mode='w') as handle:
                 json.dump(_jsonstores.get(self.path), handle, **self.json_kwargs)
             _loaded[self.path] = time.time()
         super(JSONHandler, self).on_finish()

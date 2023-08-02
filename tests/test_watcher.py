@@ -25,7 +25,7 @@ class TestWatcher(TestGramex):
             if got_event:
                 break
             time.sleep(delay)
-        self.assertTrue(got_event, 'Watch event %s not fired' % event)
+        self.assertTrue(got_event, f'Watch event {event} not fired')
         if url:
             self.check(url, **kwargs)
 
@@ -35,20 +35,20 @@ class TestWatcher(TestGramex):
             if os.path.exists(path):
                 os.unlink(path)
 
-            with self.wait_for('created', url='/' + name, text='created'):
-                with io.open(path, 'w', encoding='utf-8') as handle:
-                    handle.write('created')
-
-            with self.wait_for('modified', url='/' + name, text='modified'):
-                with io.open(path, 'a', encoding='utf-8') as handle:
-                    handle.write('modified')
-
+            with self.wait_for('created', url='/' + name, text='created'), io.open(
+                path, 'w', encoding='utf-8'
+            ) as handle:
+                handle.write('created')
+            with self.wait_for('modified', url='/' + name, text='modified'), io.open(
+                path, 'a', encoding='utf-8'
+            ) as handle:
+                handle.write('modified')
             with self.wait_for('deleted', url='/' + name, code=404):
                 os.unlink(path)
 
     def test_watcher_api(self):
         # TODO: When an event happens, check that the event is captured
-        # watcher.watch('name1', paths, on_modified=init)
+        # TEST watcher.watch('name1', paths, on_modified=init)
         # TODO: Sub folders don't lead to multiple triggers
         # TODO: Refreshing doesn't lead to multiple triggers
-        pass
+        ...

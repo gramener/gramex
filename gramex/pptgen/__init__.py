@@ -1,11 +1,8 @@
 '''PPTGen module.'''
-import io
 import os
 import sys
 import copy
-import json
 import collections
-import six
 from pptx import Presentation
 from pptx.shapes.shapetree import SlideShapes
 from orderedattrdict import AttrDict
@@ -18,12 +15,6 @@ from gramex.transforms import build_transform
 from . import commands
 from .utils import stack_shapes, delete_slide, generate_slide, manage_slides
 from .utils import is_slide_allowed, is_group, add_new_slide, copy_slide_elem
-
-
-_folder = os.path.dirname(os.path.abspath(__file__))
-with io.open(os.path.join(_folder, 'release.json'), encoding='utf-8') as _release_file:
-    _release = json.load(_release_file)
-    __version__ = _release['version']
 
 COMMANDS_LIST = commands.cmdlist
 
@@ -40,9 +31,8 @@ def commandline():
 
 def run_commands(commands, callback):
     '''
-    For example::
-
-        run_commands(['a.yaml', 'b.yaml', '--x=1'], method)
+    Examples:
+        >>> run_commands(['a.yaml', 'b.yaml', '--x=1'], method)
 
     will do the following:
 
@@ -55,7 +45,7 @@ def run_commands(commands, callback):
         - Change to directory where b.yaml is
         - Call method(config)
 
-    Command line arguments are passed as ``commands``.
+    Command line arguments are passed as `commands`.
     Callback is a function that is called for each config file.
     '''
     args = parse_command_line(commands)
@@ -74,12 +64,24 @@ def load_data(data_config, handler=None):
     '''
     Loads data using gramex cache.
     '''
-    if not isinstance(data_config, (dict, AttrDict,)):
+    if not isinstance(
+        data_config,
+        (
+            dict,
+            AttrDict,
+        ),
+    ):
         raise ValueError('Data argument must be a dict like object.')
 
     data = {}
     for key, conf in data_config.items():
-        if isinstance(conf, (dict, AttrDict,)):
+        if isinstance(
+            conf,
+            (
+                dict,
+                AttrDict,
+            ),
+        ):
             if 'function' in conf:
                 data[key] = build_transform(conf, vars={'handler': None})(handler=handler)[0]
             elif conf.get('ext') in {'yaml', 'yml', 'json'}:
@@ -164,7 +166,8 @@ def pptgen(source, target=None, **config):
                     for _slide_data in slide_data:
                         _slide_data = _slide_data[1] if is_grp is True else _slide_data
                         replicate_slides(
-                            _slide_data, prs, change, slide, slides_to_remove, index, handler)
+                            _slide_data, prs, change, slide, slides_to_remove, index, handler
+                        )
                         # Creating dict mapping to order slides.
                         manage_slide_order[index + 1].append(len(prs.slides))
                 else:
@@ -191,12 +194,10 @@ def pptgen(source, target=None, **config):
             for shape in copy_slide.shapes:
                 copy_slide_elem(shape, dest)
             add_new_slide(dest, src)
-    removed_status = 0
-    for sld_idx in set(slides_to_remove):
+    for removed_status, sld_idx in enumerate(set(slides_to_remove)):
         delete_slide(prs, (sld_idx - removed_status))
         for slide_num in manage_slide_order:
             manage_slide_order[slide_num] = [(i - 1) for i in manage_slide_order[slide_num]]
-        removed_status += 1
     if target is None:
         return prs
     else:
@@ -206,9 +207,9 @@ def pptgen(source, target=None, **config):
 def change_shapes(collection, change, data, handler, **kwargs):
     '''
     Apply changes to a collection of shapes in the context of data.
-    ``collection`` is a slide.shapes or group shapes.
-    ``change`` is typically a dict of <shape-name>: commands.
-    ``data`` is a dictionary passed to the template engine.
+    `collection` is a slide.shapes or group shapes.
+    `change` is typically a dict of <shape-name>: commands.
+    `data` is a dictionary passed to the template engine.
     '''
     prs = kwargs.get('prs')
     new_slide = kwargs.get('new_slide')
@@ -228,16 +229,35 @@ def change_shapes(collection, change, data, handler, **kwargs):
 
         if spec.get('data'):
             if not isinstance(spec['data'], (dict,)):
-                spec['data'] = {'function': '{}'.format(spec['data']) if not isinstance(
-                    spec['data'], (str, six.string_types,)) else spec['data']}
-            shape_data = build_transform(
-                spec['data'], vars={'data': None, 'handler': None})(data=data, handler=handler)[0]
+                spec['data'] = {
+                    'function': '{}'.format(spec['data'])
+                    if not isinstance(spec['data'], str)
+                    else spec['data']
+                }
+            shape_data = build_transform(spec['data'], vars={'data': None, 'handler': None})(
+                data=data, handler=handler
+            )[0]
         else:
-            if isinstance(data, (dict, AttrDict,)) and 'handler' in data:
+            if (
+                isinstance(
+                    data,
+                    (
+                        dict,
+                        AttrDict,
+                    ),
+                )
+                and 'handler' in data
+            ):
                 data.pop('handler')
             shape_data = copy.deepcopy(data)
 
-        if isinstance(shape_data, (dict, AttrDict,)):
+        if isinstance(
+            shape_data,
+            (
+                dict,
+                AttrDict,
+            ),
+        ):
             shape_data['handler'] = handler
 
         if spec.get('stack'):

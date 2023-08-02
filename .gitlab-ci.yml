@@ -1,11 +1,3 @@
-# Documentation on starting services:
-#   http://doc.gitlab.com/ce/ci/services/postgres.html
-#   http://doc.gitlab.com/ce/ci/services/mysql.html
-services:
-  - postgres:latest
-  - mysql:latest
-  - redis:latest
-
 variables:
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
@@ -20,54 +12,61 @@ variables:
   MYSQL_SERVER: mysql
   REDIS_SERVER: redis
 
+validate:
+  only: [master, release]
+  image: gramener/builderrors
+  script: builderrors
+
+# Run Gramex test cases
+test:
+  # Run test on master / release, but also on any branch marked tst or test
+  only: [master, release, /t*st/]
+  # We use a special image pkg/docker-gramex-pytest/
+  image: gramener/gramex-pytest:latest
+  # Documentation on starting services:
+  #   http://doc.gitlab.com/ce/ci/services/postgres.html
+  #   http://doc.gitlab.com/ce/ci/services/mysql.html
+  services:
+    - postgres:latest
+    - mysql:latest
+    - redis:latest
+    # TODO: elasticsearch
+    # TODO: mongo
+  script:
+    - pip install -e .[test] --config-settings editable_mode=strict
+    - gramex license accept
+    # TODO: Remove in next release, since this line is moved into gramener/gramex Dockerfile
+    - mkdir /home/gramex/.npm-packages/lib/
+    - sh pytest/run.sh
+
 # Deploy the master / release branches on gramener.com
 deploy-gramener:
   only: [master, release]
   script:
     - 'ssh ubuntu@gramener.com "
-        cd /mnt/gramener/apps/gramex;
-        git checkout -- .;
-        git pull;
-        export PATH=/mnt/gramener/anaconda3/bin/:$PATH;
-        pip install -e .;
-        gramex setup --all;
-        pip install gramexenterprise;
-        gramex license accept;
-        rm -rf /mnt/gramener/apps/v1/gramex-update;
-        cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
+      cd /mnt/gramener/apps/gramex;
+      git checkout -- .;
+      git pull;
+      export PATH=/mnt/gramener/anaconda3/bin/:$PATH;
+      pip install -e . --config-settings editable_mode=strict;
+      gramex setup --all;
+      pip install --upgrade gramexenterprise;
+      gramex license accept;
+      rm -rf /mnt/gramener/apps/v1/gramex-update;
+      cp -R /mnt/gramener/apps/gramex/gramex/apps/update /mnt/gramener/apps/v1/gramex-update;
       "'
 
-# Deploy the release branch additionally on UAT server
+# Deploy the master / release branches on uat.gramener.com
 deploy-uat:
-  only: [release]
+  only: [master, release]
   script:
     - 'ssh ubuntu@uat.gramener.com "
-        cd ~/gramex;
-        git checkout -- .;
-        git pull;
-        export PATH=/home/ubuntu/anaconda3/bin/:$PATH;
-        pip install -e .;
-        gramex setup --all;
-        pip install gramexenterprise;
-        gramex license accept;
+      cd ~/gramex;
+      git checkout -- .;
+      git pull;
+      export PATH=/home/ubuntu/anaconda3/bin/:$PATH;
+      pip install -e . --config-settings editable_mode=strict;
+      gramex setup --all;
+      pip install --upgrade gramexenterprise;
+      gramex license accept;
       "'
-
-
-# On Gitlab Pipeline Schedules at https://code.gramener.com/cto/gramex/-/pipeline_schedules
-# create a new INACTIVE schedule that runs on the "release" branch.
-# When releasing a new branch, run the schedule. It'll build the releases for download.
-build-pypi:
-  only: [release, /^build-.*/]
-  script:
-    - bash pkg/build_pypi.sh
-  artifacts:
-    paths:
-      - "dist/gramex*.tar.gz"
-
-build-conda:
-  only: [release, /^build-.*/]
-  script:
-    - bash pkg/build_conda.sh
-  artifacts:
-    paths:
-      - "pkg/gramex*.tar.bz2"

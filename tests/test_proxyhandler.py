@@ -4,7 +4,6 @@ from .test_websockethandler import TestWebSocketHandler
 
 
 class TestProxyHandler(TestWebSocketHandler):
-
     def test_proxyhandler(self):
         session = requests.Session()
         r = self.check('/auth/session', session=session)
@@ -26,60 +25,78 @@ class TestProxyHandler(TestWebSocketHandler):
                     'X-Modify': method.upper(),
                     # headers: adds a custom HTTP header
                     'X-Proxy-Custom': 'custom-header',
-                })
+                },
+            )
             # ProxyHandler returns the actual URL mapped
             self.assertIn('X-Proxy-Url', r.headers)
             result = r.json()
-            self.assertDictContainsSubset({
-                # request_headers: true translates to the passed value
-                'User-Agent': 'python-requests/' + requests.__version__,
-                # request_headers: value passed to the target
-                'X-From': 'ProxyHandler',
-                # request_headers: value formatted with handler
-                'Session': 'Session ' + session_id,
-                # prepare: adds HTTP headers
-                'X-Prepare': method.upper(),
-            }, result['headers'], )
-            self.assertEquals({
-                # default: keys are passed as args
-                'y': ['1', '2'],
-                # URL arguments are also applied
-                'x': ['1', '2'],
-                # Proxy request args are passed
-                'a': ['1'],
-                # Proxy request args over-rides default: value and URL value
-                'z': ['5'],
-                # prepare: can modify request arguments
-                'b': ['1'],
-            }, result['args'])
+            self.assertDictContainsSubset(
+                {
+                    # request_headers: true translates to the passed value
+                    'User-Agent': 'python-requests/' + requests.__version__,
+                    # request_headers: value passed to the target
+                    'X-From': 'ProxyHandler',
+                    # request_headers: value formatted with handler
+                    'Session': 'Session ' + session_id,
+                    # prepare: adds HTTP headers
+                    'X-Prepare': method.upper(),
+                },
+                result['headers'],
+            )
+            self.assertEquals(
+                {
+                    # default: keys are passed as args
+                    'y': ['1', '2'],
+                    # URL arguments are also applied
+                    'x': ['1', '2'],
+                    # Proxy request args are passed
+                    'a': ['1'],
+                    # Proxy request args over-rides default: value and URL value
+                    'z': ['5'],
+                    # prepare: can modify request arguments
+                    'b': ['1'],
+                },
+                result['args'],
+            )
 
         # PATCH method does not work because /httpbin does not support it
-        r = self.check('/proxy/httpbin/', session=session, method='patch',
-                       request_headers={'X-Xsrftoken': xsrf_token},
-                       code=METHOD_NOT_ALLOWED,
-                       headers={
-                           'X-Proxy-Url': True,
-                           'X-Proxy-Custom': 'custom-header',
-                           'X-Modify': 'PATCH',
-                       })
+        r = self.check(
+            '/proxy/httpbin/',
+            session=session,
+            method='patch',
+            request_headers={'X-Xsrftoken': xsrf_token},
+            code=METHOD_NOT_ALLOWED,
+            headers={
+                'X-Proxy-Url': True,
+                'X-Proxy-Custom': 'custom-header',
+                'X-Modify': 'PATCH',
+            },
+        )
 
         # DELETE method does not work because /proxy/httpbin/ does not support it
-        r = self.check('/proxy/httpbin/', method='delete', session=session,
-                       request_headers={'X-Xsrftoken': xsrf_token},
-                       code=METHOD_NOT_ALLOWED,
-                       headers={
-                           'X-Proxy-Url': False,
-                           'X-Proxy-Custom': False,
-                           'X-Modify': False,
-                       })
+        r = self.check(
+            '/proxy/httpbin/',
+            method='delete',
+            session=session,
+            request_headers={'X-Xsrftoken': xsrf_token},
+            code=METHOD_NOT_ALLOWED,
+            headers={
+                'X-Proxy-Url': False,
+                'X-Proxy-Custom': False,
+                'X-Modify': False,
+            },
+        )
 
         # URL pattern wildcards
         result = self.check('/proxy/httpbinprefix/suffix', session=session).json()
-        self.assertEquals({
-            'pre': ['prefix'],      # path_args from the url requested
-            'post': ['suffix'],     # path_args from the url requested
-            'y': ['1', '2'],        # from default:
-            'x': ['1', '2'],        # from url:
-            'z': ['1'],             # from url:
-            'b': ['1'],             # from prepare:
-        }, result['args'])
+        self.assertEquals(
+            {
+                'pre': ['prefix'],  # path_args from the url requested
+                'post': ['suffix'],  # path_args from the url requested
+                'y': ['1', '2'],  # from default:
+                'x': ['1', '2'],  # from url:
+                'z': ['1'],  # from url:
+                'b': ['1'],  # from prepare:
+            },
+            result['args'],
+        )

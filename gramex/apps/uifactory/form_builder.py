@@ -24,12 +24,10 @@ def modify_columns(handler, data):
         # create dataframe from data, filter responses for the current form
         df = pd.DataFrame(data)
         df = df[df['form_id'].astype('int') == int(handler.get_argument('db'))]
-        if(df.shape[0] > 0):
+        if df.shape[0] > 0:
             response = []
             for _, row in df.iterrows():
-                response.append(
-                    literal_eval(row['response'])
-                )
+                response.append(literal_eval(row['response']))
             return pd.DataFrame(response)
         else:
             return pd.DataFrame.from_dict({"error": ["no entries yet"]})
@@ -44,19 +42,25 @@ def after_publish(handler, data):
         # This makes requests to this SAME server, while this function is running.
         # To avoid deadlock, run it in a thread.
         info.threadpool.submit(
-            screenshots, handler.conf.kwargs, source_url,
-            args={'thumbnail!': [], '_c': [var.FORMS_ID]})
+            screenshots,
+            handler.conf.kwargs,
+            source_url,
+            args={'thumbnail!': [], '_c': [var.FORMS_ID]},
+        )
         return data
     elif handler.request.method == 'PUT':
         info.threadpool.submit(
-            screenshots, handler.conf.kwargs, source_url,
-            args={'_c': [var.FORMS_ID], 'id': [handler.get_argument('id')]})
+            screenshots,
+            handler.conf.kwargs,
+            source_url,
+            args={'_c': [var.FORMS_ID], 'id': [handler.get_argument('id')]},
+        )
     elif handler.request.method == 'GET':
         return data
     elif handler.request.method == 'DELETE':
         _id = handler.get_argument('id')
         gramex.data.delete(url=var.FORMS_URL, table=var.FORMS_TABLE, args=handler.args, id=['id'])
-        if(os.path.exists(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))):
+        if os.path.exists(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db')):
             os.remove(os.path.join(var.GRAMEXDATA, 'uifactory', f'form_{_id}.db'))
 
 
@@ -84,20 +88,24 @@ def screenshots(kwargs, host, args):
     try:
         # Get ID for all entries without a thumbnail
         pending = gramex.data.filter(url=var.FORMS_URL, table=var.FORMS_TABLE, args=args)
-        width, height = 300, 300    # TODO: Change dimensions later
-        for index, row in pending.iterrows():
+        width, height = 300, 300  # TODO: Change dimensions later
+        for _index, row in pending.iterrows():
             id = row[var.FORMS_ID]
             url = f'{host}/form/{id}'
             # TODO: Use delay='renderComplete'
-            content = capture.png(url, selector=".container", width=width, height=height,
-                                  delay=1000)
+            content = capture.png(
+                url, selector=".container", width=width, height=height, delay=1000
+            )
             # Save under GRAMEXDATA/uifactory/thumbnail/<id>.png, cropped to width and height
             target = os.path.join(var.GRAMEXDATA, 'uifactory', 'thumbnail', f'{id}.png')
             Image.open(BytesIO(content)).crop((0, 0, width, height)).save(target)
             # Update the database with the thumbnail filename
             gramex.data.update(
-                url=var.FORMS_URL, table=var.FORMS_TABLE, id=var.FORMS_ID,
-                args={var.FORMS_ID: [id], 'thumbnail': [f'thumbnail/{id}.png']})
+                url=var.FORMS_URL,
+                table=var.FORMS_TABLE,
+                id=var.FORMS_ID,
+                args={var.FORMS_ID: [id], 'thumbnail': [f'thumbnail/{id}.png']},
+            )
     # Exceptions in a thread are not logged by default. Log them explicitly on console.
     # Otherwise, we won't know WHY something failed
     except Exception:

@@ -17,7 +17,11 @@ class ComicHandler(BaseHandler):
             _info['node'] = Node(port=9967, cwd=os.path.join(variables['GRAMEXAPPS'], 'ui'))
         node = _info['node']
         # Take the last argument, i.e. ?name=dee&name=ava => {name: ava}
-        args = {key: vals[-1] for key, vals in self.args.items()}
+
+        if len(self.args.keys()):
+            args = {key: vals[-1] for key, vals in self.args.items()}
+        else:
+            args = {"name": "aryan", "emotion": "angry", "pose": "handsinpocket"}
         # Fetch the results via Comicgen
         result = yield node.js(code='return require("comicgen")(require("fs"))(args)', args=args)
         # If there's no error, set the header and send the result
@@ -28,6 +32,6 @@ class ComicHandler(BaseHandler):
                 self.set_header(key, val)
             self.write(result['result'])
         elif isinstance(result, dict) and 'message' in result['error']:
-            raise HTTPError(BAD_REQUEST, reason=result['error']['message'])
+            raise HTTPError(BAD_REQUEST, result['error']['message'])
         else:
-            raise HTTPError(INTERNAL_SERVER_ERROR, reason=json.dumps(result))
+            raise HTTPError(INTERNAL_SERVER_ERROR, json.dumps(result))

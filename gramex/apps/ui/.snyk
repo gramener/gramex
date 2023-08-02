@@ -2,65 +2,11 @@
 version: v1.19.0
 ignore:
 
-  # @vue/cli@4.5.13 has vulnerabilities that only affects projects using Vue. Known risk.
-  # Since this only impacts developer-controlled code, it's acceptable. Wait for @vue/cli to fix.
-  SNYK-JS-DECOMPRESSTAR-559095:
+  # get-google-fonts impacts only the installation of comicgen. No runtime impact.
+  SNYK-JS-REQUEST-3361831:
     - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-EJS-1049328:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-GLOBPARENT-1016905:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-MERGE-1040469:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-MERGE-1042987:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-CSSWHAT-1298035:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-URLPARSE-1533425:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-ANSIHTML-1296849:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-OBJECTPATH-1569453:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-  SNYK-JS-REQUEST-1314897:
-    - '*':
-        reason: No fix available. Await @vue/cli upgrade
-        expires: 2021-09-30T00:00:00.000Z
-        created: 2021-07-24T00:00:00.000Z
-
-  # Elasticsearch recently (Jun 2021) introduced a regex issue. Reported:
-  # https://github.com/elastic/elasticsearch-py/issues/943#issuecomment-887424042
-  SNYK-PYTHON-URLLIB3-1533435:
-    - '*':
-        reason: No fix available. Await elasticsearch upgrade
-        expires: 2021-09-30T00:00:00.000Z
+        reason: No fix. Await get-google-fonts upgrade
+        expires: 2030-01-01T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
 
   # We need D3 v4 for old projects. Just retain this forever -- but newer projects won't use this

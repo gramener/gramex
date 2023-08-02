@@ -1,8 +1,8 @@
 import:
   alertmail: $GRAMEXDATA/mail/gramexmail.yaml
   ui:
-    path: $GRAMEXAPPS/ui/gramex.yaml    # Import the UI components
-    YAMLURL: $YAMLURL/ui/               # ... at this URL
+    path: $GRAMEXAPPS/ui/gramex.yaml # Import the UI components
+    YAMLURL: $YAMLURL/ui/ # ... at this URL
 
 url:
   mail/home-$*:

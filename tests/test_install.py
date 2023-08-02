@@ -3,8 +3,9 @@ import sys
 import requests
 import unittest
 import subprocess
+from fnmatch import fnmatch
 from pathlib import Path
-from shutilwhich import which
+from shutil import which
 from orderedattrdict import AttrDict
 from urllib.parse import urljoin
 import gramex
@@ -15,7 +16,7 @@ from . import server
 folder = os.path.dirname(os.path.abspath(__file__))
 
 
-class MockGramex(object):
+class MockGramex:
     def __init__(self, target, instance=gramex, method='init'):
         self.instance = instance
         self.method = method
@@ -41,16 +42,21 @@ class TestInstall(unittest.TestCase):
     def appdir(appname):
         return os.path.abspath(os.path.join(variables['GRAMEXDATA'], 'apps', appname))
 
-    def check_files(self, appname, expected_files):
-        '''app/ directory should have expected files'''
+    def check_files(self, appname, expected_files, ignore=()):
+        '''app/ directory should have expected files, excluding any ignore patterns'''
         folder = self.appdir(appname)
         actual = set()
         for root, dirs, files in os.walk(folder):
             for filename in files:
                 if '.git' not in root:
-                    actual.add(os.path.join(root, filename))
-        expected = {os.path.abspath(os.path.join(folder, filename))
-                    for filename in expected_files}
+                    add_path = os.path.join(root, filename)
+                    if not any(fnmatch(add_path, pattern) for pattern in ignore):
+                        actual.add(add_path)
+        expected = {
+            os.path.abspath(os.path.join(folder, filename))
+            for filename in expected_files
+            if not any(fnmatch(filename, pattern) for pattern in ignore)
+        }
         self.assertEqual(actual, expected)
 
         conf = +PathConfig(Path(self.appdir('apps.yaml')))
@@ -80,13 +86,21 @@ class TestInstall(unittest.TestCase):
             self.check_uninstall(subappname)
 
     def test_zip(self):
-        self.check_zip('zip', files={
-            'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
+        self.check_zip(
+            'zip', files={'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'}
+        )
 
     def test_zip_url_contentdir(self):
-        self.check_zip('zip-contentdir', contentdir=False, files={
-            'common-root/dir1/dir1.txt', 'common-root/dir1/file.txt',
-            'common-root/dir2/dir2.txt', 'common-root/dir2/file.txt'})
+        self.check_zip(
+            'zip-contentdir',
+            contentdir=False,
+            files={
+                'common-root/dir1/dir1.txt',
+                'common-root/dir1/file.txt',
+                'common-root/dir2/dir2.txt',
+                'common-root/dir2/file.txt',
+            },
+        )
 
     def test_zip_flat(self):
         # This ZIP file has members directly under the root. Test such cases
@@ -96,8 +110,9 @@ class TestInstall(unittest.TestCase):
 
     def test_url_in_cmd(self):
         install(['url-cmd', self.zip_url], AttrDict())
-        self.check_files('url-cmd', {
-            'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'})
+        self.check_files(
+            'url-cmd', {'dir1/dir1.txt', 'dir1/file.txt', 'dir2/dir2.txt', 'dir2/file.txt'}
+        )
         self.check_uninstall('url-cmd')
 
     def test_run(self):
@@ -179,19 +194,21 @@ class TestInstall(unittest.TestCase):
             result.add('python-setup.txt')
         if which('yarn'):
             result.add('yarn.lock')
-            result.add('node_modules/.yarn-integrity')
+            result.add('node_modules/.package-lock.json')
             result.add('node_modules/gramex-npm-package/package.json')
             result.add('node_modules/gramex-npm-package/npm-setup.js')
         elif which('npm'):
-            # package-lock.json needs node 8.x -- which is required for CaptureHandler anyway
             result.add('package-lock.json')
         if which('bower'):
             result.add('bower_components/gramex-bower-package/bower.json')
             result.add('bower_components/gramex-bower-package/bower-setup.txt')
             result.add('bower_components/gramex-bower-package/.bower.json')
         if which('pip'):
-            import dicttoxml            # type:ignore # noqa
-        self.check_files('setup', result)
+            import dicttoxml  # type:ignore # noqa
+        # Newer versions of npm create a hidden lockfile (.package-lock.json).
+        # To make tests work with older AND newer npms, ignore the hidden lockfile.
+        # https://docs.npmjs.com/cli/v8/configuring-npm/package-lock-json#hidden-lockfiles
+        self.check_files('setup', result, ignore={'**/.package-lock.json'})
         self.check_uninstall('setup')
 
     @classmethod

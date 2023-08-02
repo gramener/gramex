@@ -2,7 +2,7 @@ variables:
   root:
     a: 1
     b: 2
-    c: {d: [3, 4]}
+    c: { d: [3, 4] }
   defaulted:
     default:
       key: value
@@ -17,7 +17,7 @@ test-var:
     a: 1
     z: 9
     b: 2
-    c: {d: [3, 4]}
+    c: { d: [3, 4] }
 
 # import.merge handled variable default values
 test-default:
@@ -39,12 +39,12 @@ test-import:
           VAR1: string
           VAR2:
             key1: val
-            key2: {subkey: val}
+            key2: { subkey: val }
   expected:
     VAR1: string
     VAR2:
       key1: val
-      key2: {subkey: val}
+      key2: { subkey: val }
 
 # any key beginning with import.merge works, and empty values are ignored
 test-empty:
@@ -52,6 +52,6 @@ test-empty:
     import.merge:dict:
       key: value
     import.merge-null: null
-    import.merge-str: ''
+    import.merge-str: ""
   expected:
     key: value

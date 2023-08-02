@@ -1,6 +1,7 @@
 <h1>Auth</h1>
 {% if error %}
   <p>error code: {{ error['code'] }}</p>
+  <p>error msg: {{ error['error'] }}</p>
 {% end %}
 <form method="POST">
   <input type="hidden" name="_xsrf" value="{{ handler.xsrf_token }}">

@@ -102,19 +102,19 @@ class TestPathConfig(unittest.TestCase):
     def test_merge(self):
         # Config files are loaded and merged
         unlink(self.temp)
-        conf = ChainConfig([
-            ('a', PathConfig(self.a)),
-            ('b', PathConfig(self.b))])
+        conf = ChainConfig([('a', PathConfig(self.a)), ('b', PathConfig(self.b))])
         eq_(+conf, PathConfig(self.final))
 
     def test_default(self):
         # Missing, empty or malformed config files return an empty AttrDict
-        conf = ChainConfig([
-            ('missing', PathConfig(self.missing)),
-            ('error', PathConfig(self.error)),
-            ('empty', PathConfig(self.empty)),
-            ('string', PathConfig(self.string)),
-        ])
+        conf = ChainConfig(
+            [
+                ('missing', PathConfig(self.missing)),
+                ('error', PathConfig(self.error)),
+                ('empty', PathConfig(self.empty)),
+                ('string', PathConfig(self.string)),
+            ]
+        )
         eq_(+conf, AttrDict())
 
     def test_update(self):
@@ -184,8 +184,7 @@ class TestPathConfig(unittest.TestCase):
         conf = PathConfig(self.imports)
         ok_(conf)
         for key, result in conf.items():
-            eq_(result.source, result.target,
-                key + ': %r != %r' % (result.source, result.target))
+            eq_(result.source, result.target, key + ': %r != %r' % (result.source, result.target))
 
     def test_add_ns(self):
         # Test _add_ns functionality
@@ -224,6 +223,8 @@ class TestPathConfig(unittest.TestCase):
             eq_(conf['%s_FUNCTION' % key], key)
             # Default functions "underride" values
             eq_(conf['%s_DEFAULT_FUNCTION' % key], 'base')
+            # Invalid functions switch to defaults
+            eq_(conf['%s_INVALID_FUNCTION' % key], 'DEFAULT')
             # Functions can use variables using gramex.config.variables
             eq_(conf['%s_FUNCTION_VAR' % key], conf.base_ROOT + key)
             # Derived variables
@@ -246,12 +247,15 @@ class TestPathConfig(unittest.TestCase):
         eq_(conf['boolean'], True)
         eq_(conf['object'], {'x': 1})
         eq_(conf['list'], [1, 2])
+        # Check if substitutions work inside dicts and lists
+        eq_(conf['object_calc'], {'x': 'base'})
+        eq_(conf['list_calc'], ['base'])
+        eq_(conf['object_default'], {'x': 'base'})
 
         # Check if variables of different types are string substituted
         eq_(conf['numeric_subst'], '/1')
         eq_(conf['boolean_subst'], '/True')
-        # Actually, conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
-        # eq_(conf['object_subst'], "/{'x': 1}")
+        # NOTE: conf['object_subst'] is "/AttrDict([('x', 1)])". Let's not test that.
         eq_(conf['list_subst'], '/[1, 2]')
 
         # Check condition variables
@@ -272,7 +276,8 @@ class TestPathConfig(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     def test_walk_dict(self):
         # Test gramex.config.walk with dicts
-        o = yaml.load('''
+        o = yaml.load(
+            '''
             a:
                 b:
                     c: 1
@@ -284,47 +289,61 @@ class TestConfig(unittest.TestCase):
                         i: 5
                 j: 6
             k: 7
-        ''', Loader=ConfigYAMLLoader)
+        ''',
+            Loader=ConfigYAMLLoader,
+        )
         result = list(walk(o))
-        eq_(
-            [key for key, val, node in result],
-            list('cdbehigfjak'))
+        eq_([key for key, val, node in result], list('cdbehigfjak'))
         eq_(
             [val for key, val, node in result],
-            [o.a.b.c, o.a.b.d, o.a.b, o.a.e, o.a.f.g.h, o.a.f.g.i, o.a.f.g,
-             o.a.f, o.a.j, o.a, o.k])
+            [
+                o.a.b.c,
+                o.a.b.d,
+                o.a.b,
+                o.a.e,
+                o.a.f.g.h,
+                o.a.f.g.i,
+                o.a.f.g,
+                o.a.f,
+                o.a.j,
+                o.a,
+                o.k,
+            ],
+        )
         eq_(
             [node for key, val, node in result],
-            [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f,
-             o.a, o.a, o, o])
+            [o.a.b, o.a.b, o.a, o.a, o.a.f.g, o.a.f.g, o.a.f, o.a, o.a, o, o],
+        )
 
     def test_walk_list(self):
         # Test gramex.config.walk with lists
-        o = yaml.load('''
+        o = yaml.load(
+            '''
             - 1
             - 2
             - 3
-        ''', Loader=ConfigYAMLLoader)
+        ''',
+            Loader=ConfigYAMLLoader,
+        )
         result = list(walk(o))
-        eq_(result, [
-            (0, 1, [1, 2, 3]),
-            (1, 2, [1, 2, 3]),
-            (2, 3, [1, 2, 3])])
+        eq_(result, [(0, 1, [1, 2, 3]), (1, 2, [1, 2, 3]), (2, 3, [1, 2, 3])])
 
-        o = yaml.load('''
+        o = yaml.load(
+            '''
             -
                 x: 1
             -
                 x: 2
             -
                 x: 3
-        ''', Loader=ConfigYAMLLoader)
+        ''',
+            Loader=ConfigYAMLLoader,
+        )
         result = list(walk(o))
         eq_(
-            [('x', 1), (0, {'x': 1}),
-             ('x', 2), (1, {'x': 2}),
-             ('x', 3), (2, {'x': 3})],
-            [(key, val) for key, val, node in result])
+            [('x', 1), (0, {'x': 1}), ('x', 2), (1, {'x': 2}), ('x', 3), (2, {'x': 3})],
+            [(key, val) for key, val, node in result],
+        )
 
     def test_merge(self):
         # Test gramex.config.merge
@@ -333,11 +352,8 @@ class TestConfig(unittest.TestCase):
             old = yaml.load(a, Loader=ConfigYAMLLoader)
             new = yaml.load(b, Loader=ConfigYAMLLoader)
             # merging a + b gives c
-            eq_(
-                yaml.load(c, Loader=ConfigYAMLLoader),
-                merge(old, new, mode))
+            eq_(yaml.load(c, Loader=ConfigYAMLLoader), merge(old, new, mode))
             # new is unchanged
-            # eq_(old, yaml.load(a, Loader=ConfigYAMLLoader))
             eq_(new, yaml.load(b, Loader=ConfigYAMLLoader))
 
         check('x: 1', 'y: 2', 'x: 1\ny: 2')
@@ -364,7 +380,7 @@ class TestConfig(unittest.TestCase):
             a: 1
             a: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': 2})
+        eq_(yaml.safe_load(dup_keys), {'a': 2})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -373,7 +389,7 @@ class TestConfig(unittest.TestCase):
                 b: 1
                 b: 2
         '''
-        eq_(yaml.load(dup_keys), {'a': {'b': 2}})
+        eq_(yaml.safe_load(dup_keys), {'a': {'b': 2}})
         with self.assertRaises(ConstructorError):
             yaml.load(dup_keys, Loader=ConfigYAMLLoader)
 
@@ -389,7 +405,7 @@ class TestConfig(unittest.TestCase):
         for scalar in (None, True, 1, float(1), 'abc', {1, 2}):
             eq_(prune_keys(scalar, 'comment'), scalar)
         with open(info.home / 'config.prune_keys.yaml', encoding='utf-8') as handle:
-            tests = yaml.load(handle, Loader=yaml.SafeLoader)
+            tests = yaml.safe_load(handle)
         for test in tests:
             eq_(prune_keys(test['source'], 'comment'), test['target'])
 
@@ -405,14 +421,10 @@ class TestTimedRotatingCSVHandler(unittest.TestCase):
 
     def test_handler(self):
         csv1 = TimedRotatingCSVHandler(
-            filename=str(self.csv1),
-            keys=['a', 'b', 'c'],
-            encoding='utf-8'
+            filename=str(self.csv1), keys=['a', 'b', 'c'], encoding='utf-8'
         )
         csv2 = TimedRotatingCSVHandler(
-            filename=str(self.csv2),
-            keys=['a', 'b', 'c'],
-            encoding='utf-8'
+            filename=str(self.csv2), keys=['a', 'b', 'c'], encoding='utf-8'
         )
 
         test1 = logging.getLogger('test1')
@@ -424,22 +436,27 @@ class TestTimedRotatingCSVHandler(unittest.TestCase):
         test2.addHandler(csv1)
         test2.addHandler(csv2)
 
-        # Do not test unicode. Python 2.7 csv writer does not support it
-        test1.info({'a': 'a', 'b': 1, 'c': -0.1})       # noqa: 0.1 is not magic
+        test1.info({'a': 'a', 'b': 1, 'c': -0.1})
         test2.info({'a': 'na', 'b': 'na', 'c': 'na'})
         test1.warn({'a': True, 'b': False, 'c': None})
         test2.warn({'b': '\n\na,bt\n'})
 
         with self.csv1.open() as handle:
-            eq_(list(csv.reader(handle)), [
-                ['a', '1', '-0.1'],
-                ['True', 'False', ''],
-                ['', '\n\na,bt\n', ''],
-            ])
+            eq_(
+                list(csv.reader(handle)),
+                [
+                    ['a', '1', '-0.1'],
+                    ['True', 'False', ''],
+                    ['', '\n\na,bt\n', ''],
+                ],
+            )
         with self.csv2.open() as handle:
-            eq_(list(csv.reader(handle)), [
-                ['', '\n\na,bt\n', ''],
-            ])
+            eq_(
+                list(csv.reader(handle)),
+                [
+                    ['', '\n\na,bt\n', ''],
+                ],
+            )
 
     @classmethod
     def tearDown(cls):

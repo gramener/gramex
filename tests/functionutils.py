@@ -12,13 +12,12 @@ from gramex.transforms import handler
 
 @handler
 def yielder(*i):
-    for item in i:
-        yield item
+    yield from i
 
 
 @handler
 def power(x: int, y: float) -> float:
-    return y ** x
+    return y**x
 
 
 @handler
@@ -33,10 +32,7 @@ def multilist(items: List[int], start: float) -> float:
 
 @handler
 def strtotal(*items: str) -> str:
-    s = ''
-    for i in items:
-        s += i
-    return s
+    return ''.join(list(items))
 
 
 @handler
@@ -50,8 +46,9 @@ def hints(name: str, age: int) -> str:
 
 
 @handler
-def nativetypes(a: int, b: float, c: bool, d: str, e: None, f: np.uintc, g: np.double, h: np.str_,
-                i: np.bool8):
+def nativetypes(
+    a: int, b: float, c: bool, d: str, e: None, f: np.uintc, g: np.double, h: np.str_, i: np.bool8
+):
     '''Yield objects of almost all types, plus list and dict'''
     yield a
     yield b

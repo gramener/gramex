@@ -1,0 +1,65 @@
+responses:
+  "200":
+    "description": "Successful Response"
+    "content": { "application/json": {} }
+  "400":
+    "description": "Bad request"
+    "content": { "text/html": { "example": "Bad request" } }
+  "401":
+    "description": "Not authorized"
+    "content": { "text/html": { "example": "Not authorized" } }
+  "403":
+    "description": "Forbidden"
+    "content": { "text/html": { "example": "Forbidden" } }
+  "404":
+    "description": "Not found"
+    "content": { "text/html": { "example": "Not found" } }
+  "500":
+    "description": "Internal server error"
+    "content": { "text/html": { "example": "Internal server error" } }
+
+formhandler:
+  col:
+    in: query
+    name: ""
+    description: "Filter by value"
+    schema:
+      type: string
+      min: 0
+  _offset:
+    in: query
+    name: _offset
+    description: "No. of rows to skip at the start"
+    schema:
+      type: number
+      min: 0
+  _limit:
+    in: query
+    name: _limit
+    description: "Maximum number of rows to return"
+    schema:
+      type: number
+      min: 0
+      default: 10000
+  _sort:
+    in: query
+    name: _sort
+    schema:
+      type: array
+      items:
+        type: string
+        enum: []
+  _c:
+    in: query
+    name: _c
+    schema:
+      type: array
+      items:
+        type: string
+        enum: []
+  _meta:
+    in: query
+    name: _limit
+    description: "Return metadata in headers?"
+    schema:
+      type: boolean

@@ -1,25 +1,29 @@
-from collections import OrderedDict
 from urllib.parse import urlparse
 from gramex.transforms import build_transform
 from .basehandler import BaseWebSocketHandler
 
 
 class WebSocketHandler(BaseWebSocketHandler):
-    '''
-    Handles WebSockets. It accepts these parameters:
+    '''Creates a websocket microservice.
 
-    :arg function open: ``open(handler)`` is called when the connection is opened
-    :arg function on_message: ``on_message(handler, message)`` is called with a
-        string message when the client sends a message.
-    :arg function on_close: ``on_close(handler)`` is called when the websocket is
-        closed.
-    :arg list origins: a domain name or list of domain names. No wildcards
+    - `open`: function. `open(handler)` is called when the connection is opened
+    - `on_message`: function. `on_message(handler, message: str)` is called when client sends a
+        message
+    - `on_close`: function. `on_close(handler)` is called when connection is closed.
+    - `origins`: a domain name or list of domain names. No wildcards
 
-    The handler has a ``.write_message(text)`` method that sends a message back
-    to the client.
+    Functions can use `handler.write_message(msg: str)` to sends a message back to the client.
     '''
+
+    @classmethod
+    def setup(cls, **kwargs):
+        super(WebSocketHandler, cls).setup(**kwargs)
+        cls._setup(cls, **kwargs)
+
     @staticmethod
     def _setup(cls, **kwargs):
+        # ProxyHandler proxies websockets, and needs a setup without subclassing WebSocketHandler.
+        # _setup() can be used both by WebSocketHandler and ProxyHandler.
         override_methods = {
             'open': ['handler'],
             'on_message': ['handler', 'message'],
@@ -30,15 +34,16 @@ class WebSocketHandler(BaseWebSocketHandler):
         }
         for method in override_methods:
             if method in kwargs:
-                setattr(cls, method, build_transform(
-                    kwargs[method],
-                    vars=OrderedDict((arg, None) for arg in override_methods[method]),
-                    filename='url:%s.%s' % (cls.name, method)))
-
-    @classmethod
-    def setup(cls, **kwargs):
-        super(WebSocketHandler, cls).setup(**kwargs)
-        cls._setup(cls, **kwargs)
+                setattr(
+                    cls,
+                    method,
+                    build_transform(
+                        kwargs[method],
+                        vars={arg: None for arg in override_methods[method]},
+                        filename=f'url:{cls.name}.{method}',
+                        iter=False,
+                    ),
+                )
 
     def check_origin(self, origin):
         origins = self.kwargs.get('origins', [])
@@ -47,7 +52,4 @@ class WebSocketHandler(BaseWebSocketHandler):
         if isinstance(origins, (str, bytes)):
             origins = [origins]
         domain = urlparse(origin).netloc
-        for allowed_origin in origins:
-            if domain.endswith(allowed_origin):
-                return True
-        return False
+        return any(domain.endswith(allowed_origin) for allowed_origin in origins)

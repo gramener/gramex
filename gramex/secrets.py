@@ -5,13 +5,16 @@ from fnmatch import fnmatch
 
 
 def commandline():
-    '''
-    Running ``secrets KEY1 KEY_* KEY=VALUE`` saves specified environment variables in a file.
-    Use in CI tools (e.g. Gitlab/Travis) to save env variables in ``.secrets.yaml``.
+    '''Run `secrets` on the command line to save specific environment variables in a file.
 
-    Example::
+    Used in CI tools (e.g. Gitlab/Travis) to save env variables into `.secrets.yaml`. For example,
+    to export `$HOME` and all variables starting with `$HOME` to `.secrets.yaml`, run:
 
-        secrets GOOGLE_* *SECRET* > .secrets.yaml
+    ```shell
+    secrets HOME > .secrets.yaml            # export HOME=... to .secrets.yaml
+    secrets HOME=/tmp > .secrets.yaml       # export $HOME. If $HOME is not defined, use /tmp
+    secrets HOME 'GOOGLE*' > .secrets.yaml  # export $HOME and all vars starting with $GOOGLE
+    ```
     '''
     result = {}
     for pattern in sys.argv[1:]:
@@ -23,4 +26,4 @@ def commandline():
                 if fnmatch(key, pattern):
                     result[key] = val
     if result:
-        print(yaml.dump(result, default_flow_style=False, sort_keys=False).strip())     # noqa
+        print(yaml.dump(result, default_flow_style=False, sort_keys=False).strip())  # noqa
