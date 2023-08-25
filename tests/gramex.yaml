@@ -1446,6 +1446,7 @@ url:
     kwargs:
       engine: chrome
       port: 9411
+      pattern: ^http
   dir/capture:
     pattern: /dir/capture
     handler: FileHandler
