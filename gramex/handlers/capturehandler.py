@@ -293,7 +293,16 @@ class CaptureHandler(BaseHandler):
     captures = {}
 
     @classmethod
-    def setup(cls, port=None, url=None, engine=None, cmd=None, timeout=DEFAULT_TIMEOUT, **kwargs):
+    def setup(
+        cls,
+        port=None,
+        url=None,
+        engine=None,
+        cmd=None,
+        timeout=DEFAULT_TIMEOUT,
+        pattern=None,
+        **kwargs,
+    ):
         super(CaptureHandler, cls).setup(**kwargs)
         # Create a new Capture only if the config has changed.
         config = {'engine': engine, 'port': port, 'url': url, 'cmd': cmd, 'timeout': timeout}
@@ -310,6 +319,7 @@ class CaptureHandler(BaseHandler):
             'gif': {'mime': 'image/gif'},
             'pptx': {'mime': _PPTX_MIME},
         }
+        cls.pattern = pattern
 
     @tornado.gen.coroutine
     def get(self):
@@ -345,6 +355,11 @@ class CaptureHandler(BaseHandler):
 
         # ?url= can be a relative URL. Use the full X-Request URL as the base
         args['url'] = urljoin(self.xrequest_full_url, args['url'])
+
+        if self.pattern and not re.search(self.pattern, args['url']):
+            error = f'{self.name}: {args["url"]} does not match pattern {self.pattern}'
+            raise HTTPError(BAD_REQUEST, error)
+
         # Copy all relevant HTTP headers as-is
         args['headers'] = {
             key: val for key, val in self.request.headers.items() if key not in _IGNORE_HEADERS

@@ -351,6 +351,8 @@ class TestCaptureHandlerChrome(TestCaptureHandler):
         self.err(code=500, url=self.url, selector='nonexistent', ext='png')
         # Invalid domains report HTTP 500
         self.err(code=500, url='http://nonexistent')
+        # File URL reports HTTP 400
+        self.err(code=400, url='file:///etc/passwd')
 
     def test_pdf_header_footer(self):
         result = self.fetch(
