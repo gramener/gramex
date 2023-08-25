@@ -203,7 +203,7 @@ def open(
         except ValueError:
             size = sys.getsizeof(data)
             app_log.exception(
-                f'gramex.cache.open: {type(_cache):s} cannot cache {size} bytes. '
+                f'gramex.cache.open: {type(_cache)} cannot cache {size} bytes. '
                 + 'Increase cache.memory.size in gramex.yaml'
             )
         except Exception:
@@ -975,10 +975,10 @@ class KeyStore:
         '''Return all keys in the store'''
         return self.store.keys()
 
-    def load(self, key, default=None):
+    def load(self, key, default=...):
         '''Same as `store.get(key)`, but it's called `load()` to indicate persistence'''
         key = self._escape(key)
-        return self.store.get(key, {} if default is None else default)
+        return self.store.get(key, {} if default is ... else default)
 
     def dump(self, key, value):
         '''Same as `store[key] = value`'''
