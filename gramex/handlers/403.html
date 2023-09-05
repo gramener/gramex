@@ -33,10 +33,11 @@
       <p>You are logged in, but as a user that cannot access this page.</p>
       {% import yaml %}
       {% try %}
-        <pre>{{ yaml.safe_dump(handler.current_user, default_flow_style=False) }}</pre>
+        {% set user_info = yaml.safe_dump(handler.current_user, default_flow_style=False) %}
       {% except Exception %}
-        <pre>{{ handler.current_user }}</pre>
+        {% set user_info = handler.current_user %}
       {% end %}
+      <pre>{{ user_info }}</pre>
       {% if login_url %}<p><a href="{{ login_url }}">Try logging in again</a>.</p>{% end %}
     {% else %}
       <p>You <strong>are not</strong> logged in.</p>
