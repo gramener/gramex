@@ -919,11 +919,7 @@ def dirstat(url: str, timeout: int = 10, **kwargs: dict) -> pd.DataFrame:
     - `mtime`: last modified time in seconds since epoch
     - `level`: path depth (i.e. the number of paths in dir)
     '''
-    try:
-        url = sa.engine.url.make_url(url)
-        target = url.database
-    except sa.exc.ArgumentError:
-        target = url
+    target = url[7:] if url.startswith('dir:///') else url
     if not os.path.isdir(target):
         raise OSError(f'dirstat: {target} is not a directory')
     target = os.path.normpath(target)
@@ -931,7 +927,7 @@ def dirstat(url: str, timeout: int = 10, **kwargs: dict) -> pd.DataFrame:
     start_time = time.time()
     for dirpath, dirnames, filenames in os.walk(target):
         if timeout and time.time() - start_time > timeout:
-            app_log.debug(f'dirstat: {url} timeout ({timeout:.1f}s)')
+            app_log.debug(f'dirstat: {target} timeout ({timeout:.1f}s)')
             break
         for name in dirnames:
             path = os.path.join(dirpath, name)
