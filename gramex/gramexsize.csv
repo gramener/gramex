@@ -23,7 +23,7 @@ gramex.cache.HDF5Store.*,url.*.kwargs.store.type=hdf5,18
 gramex.cache.JSONStore.*,app.session.type=json,15
 gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
 gramex.config.*,*,158
-gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,348
+gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,346
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
 gramex.install.*,TODO - Gramex app installation & management,164
 gramex.license.*,TODO - Gramex enterprise license management,9
@@ -97,7 +97,7 @@ gramex.handlers.basehandler.BaseMixin._set_new_session_id,url.*.kwargs.auth,4
 gramex.handlers.basehandler.BaseMixin.get_session,url.*.kwargs.auth,6
 gramex.handlers.basehandler.BaseMixin.save_session,url.*.kwargs.auth,2
 gramex.handlers.basehandler.BaseMixin.otp,url.*.kwargs.auth,2
-gramex.handlers.basehandler.BaseMixin.get_otp,url.*.kwargs.auth,5
+gramex.handlers.basehandler.BaseMixin.get_otp,url.*.kwargs.auth,6
 gramex.handlers.basehandler.BaseMixin.revoke_otp,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.apikey,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.revoke_apikey,url.*.kwargs.auth,1

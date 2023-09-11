@@ -9,3 +9,11 @@ ignore:
         reason: No fix available. Await eslint upgrade
         expires: 2023-12-31T00:00:00.000Z
         created: 2023-04-10T00:00:00.000Z
+
+  # An old semver version is used by commitlint.
+  # Since this is not part of Gramex and is only used in the build process, it's acceptable.
+  SNYK-JS-SEMVER-3247795:
+    - '*':
+        reason: No fix available. Await eslint upgrade
+        expires: 2023-12-31T00:00:00.000Z
+        created: 2023-09-11T00:00:00.000Z

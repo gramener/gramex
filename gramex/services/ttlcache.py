@@ -16,7 +16,6 @@ MAXTTL = 60 * 60 * 24 * 365 * 10
 
 
 class _Link:
-
     __slots__ = ('key', 'expire', 'next', 'prev')
 
     def __init__(self, key=None, expire=None):

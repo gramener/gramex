@@ -21,7 +21,7 @@ class TestFunctionHandler(TestGramex):
         self.check(
             '/func/composite',
             text='{"args": [0, "Handler"], "kwargs": {"a": "a", "handler": "Handler"}}',
-            **etag
+            **etag,
         )
 
         text = '{"args": [0, "Handler"], "kwargs": {"a": {"b": 1}, "handler": "Handler"}}'
@@ -40,12 +40,12 @@ class TestFunctionHandler(TestGramex):
         self.check(
             '/func/async/http2',
             text='{"args": [["1"]], "kwargs": {}}{"args": [["2"]], "kwargs": {}}',
-            **etag
+            **etag,
         )
         self.check(
             '/func/async/calc',
             text='[[250,250,250],[250,250,250],[250,250,250],[250,250,250]]',
-            **etag
+            **etag,
         )
 
     def test_json(self):

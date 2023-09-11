@@ -1,22 +1,120 @@
-Run started:2023-07-02 05:09:43.411643
+Working... ---------------------------------------- 100% 0:00:02
+Run started:2023-09-11 06:16:43.191986
 
 Test results:
-	No issues identified.
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\__init__.py:365:8
+364	
+365	    r = requests.post(url, data=json.dumps(logs))
+366	    r.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\cache.py:576:8
+575	            return url
+576	    r = requests.get(url, **kwargs)
+577	    if 'Content-Type' in r.headers:
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\install.py:743:19
+742	        app_log.info(f'Downloading: {url}')
+743	        response = requests.get(url)
+744	        response.raise_for_status()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\ml.py:303:12
+302	    try:
+303	        r = requests.post('https://translation.googleapis.com/language/translate/v2', data=params)
+304	    except requests.RequestException:
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\ml.py:521:24
+520	    app_log.info(f'Downloading languagetools from {src}')
+521	    stream = io.BytesIO(requests.get(src).content)
+522	    app_log.info(f'Unzipping languagetools to {target}')
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\pptgen2\commands.py:555:22
+554	        if urlparse(val).netloc:
+555	            content = requests.get(val).content
+556	        else:
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\pptgen\commands.py:136:12
+135	    if urlparse(image).netloc:
+136	        r = requests.get(image)
+137	        with tempfile.NamedTemporaryFile(delete=False) as handle:
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\services\sms.py:106:12
+105	    def send(self, to, subject, sender=None):
+106	        r = requests.post(
+107	            self.send_url,
+108	            {
+109	                'From': sender or self.sid,
+110	                'To': to,
+111	                'Body': subject,
+112	                'Priority': self.priority,
+113	            },
+114	        )
+115	        return self._handle_response(r)
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Requests call without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.7.5/plugins/b113_request_without_timeout.html
+   Location: gramex\services\sms.py:118:12
+117	    def status(self, result):
+118	        r = requests.get(self.host + result['Uri'])
+119	        return self._handle_response(r)
+
+--------------------------------------------------
 
 Code scanned:
-	Total lines of code: 18443
-	Total lines skipped (#nosec): 13
+	Total lines of code: 18440
+	Total lines skipped (#nosec): 10
 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 47
 
 Run metrics:
 	Total issues (by severity):
 		Undefined: 0
 		Low: 0
-		Medium: 0
+		Medium: 9
 		High: 0
 	Total issues (by confidence):
 		Undefined: 0
-		Low: 0
+		Low: 9
 		Medium: 0
 		High: 0
 Files skipped (0):
