@@ -359,6 +359,9 @@ function main() {
         process.on("SIGUSR1", exit.bind(null, "SIGUSR1"));
         process.on("SIGUSR2", exit.bind(null, "SIGUSR2"));
       });
+    // Override Node.js 2 min timeout: https://github.com/expressjs/express/issues/3330
+    // This process waits 1 day. CaptureHandler implements stricter timeouts developer specifies.
+    server.setTimeout(24 * 60 * 60 * 1000);
   } else {
     render(args)
       .then((info) => {
