@@ -5,6 +5,7 @@ import json
 import time
 import logging
 import mimetypes
+import sentry_sdk
 import traceback
 import tornado.gen
 import gramex
@@ -367,10 +368,10 @@ class BaseMixin:
         # So use cookiepath: instead.
         if 'cookiepath' in session_conf:
             cls._session_cookie['path'] = session_conf['cookiepath']
-        cls._on_init_methods.append(cls.override_user)
-        cls._on_finish_methods.append(cls.set_last_visited)
+        # Ensure that sentry is set up AFTER we override the user
+        cls._on_init_methods += [cls.override_user, cls.setup_sentry]
         # Ensure that session is saved AFTER we set last visited
-        cls._on_finish_methods.append(cls.save_session)
+        cls._on_finish_methods += [cls.set_last_visited, cls.save_session]
 
     @classmethod
     def setup_ratelimit(
@@ -1209,6 +1210,9 @@ class BaseMixin:
                 raise MissingArgumentError(name)
             return default
         return self.args[name][0 if first else -1]
+
+    def setup_sentry(self):
+        sentry_sdk.set_user(self.current_user)
 
 
 class BaseHandler(RequestHandler, BaseMixin):

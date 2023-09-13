@@ -31,6 +31,7 @@ import gramex.cache
 import gramex.license
 import logging.config
 import concurrent.futures
+import sentry_sdk
 from copy import deepcopy
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from tornado.template import Template
@@ -126,6 +127,9 @@ def app(conf: dict) -> None:
             app_log.info(f'Listening on port {conf.listen.port}')
             app_log_extra['port'] = conf.listen.port
             msg = f'Gramex {__version__} listening on http://127.0.0.1:{conf.listen.port}/. '
+            sentry_sdk.set_tag('port', conf.listen.port)
+            sentry_sdk.set_tag('gramex', __version__)
+            sentry_sdk.set_tag('cwd', os.getcwd())
 
             # browser: True opens the application home page on localhost.
             # browser: url opens the application to a specific URL
@@ -838,6 +842,13 @@ def create_alert(name, alert):
         return args
 
     return run_alert
+
+
+def sentry(conf: dict) -> None:
+    '''Set up sentry service'''
+    from sentry_sdk.integrations.tornado import TornadoIntegration
+
+    sentry_sdk.init(**conf, integrations=[TornadoIntegration()])
 
 
 def _markdown_convert(content):
