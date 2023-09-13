@@ -513,7 +513,7 @@ def insert(
     )
     if engine == 'dataframe':
         rows = _pop_columns(rows, url.columns, meta['ignored'])
-        url = url.append(rows, sort=False)
+        url = pd.concat([url, pd.DataFrame.from_records(rows)])
         return len(rows)
     elif engine == 'file':
         try:
@@ -522,7 +522,7 @@ def insert(
             data = rows
         else:
             rows = _pop_columns(rows, data.columns, meta['ignored'])
-            data = data.append(rows, sort=False)
+            data = pd.concat([data, pd.DataFrame.from_records(rows)])
         gramex.cache.save(data, url, ext, index=False, **kwargs)
         return len(rows)
     elif engine.startswith('plugin+'):
