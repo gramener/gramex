@@ -54,6 +54,7 @@ class BaseMixin:
         xsrf_cookies=None,
         cors: Union[None, bool, dict] = None,
         ratelimit: Optional[dict] = None,
+        validate: Optional[Union[dict, list, str]] = None,
         # If you add any explicit kwargs here, add them to special_keys too.
         **kwargs,
     ):
@@ -79,6 +80,7 @@ class BaseMixin:
         cls.setup_log()
         cls.setup_httpmethods(methods)
         cls.setup_cors(cors, auth=auth)
+        cls.setup_validate(validate)
 
         # app.settings.debug enables debugging exceptions using pdb
         if conf.app.settings.get('debug', False):
@@ -1209,6 +1211,33 @@ class BaseMixin:
                 raise MissingArgumentError(name)
             return default
         return self.args[name][0 if first else -1]
+
+    @classmethod
+    def setup_validate(cls, validate: Union[list, dict, str, None]):
+        if validate is None:
+            return
+        cls._validate = []
+        validate = validate if isinstance(validate, (list, tuple)) else [validate]
+        for index, rule in enumerate(validate):
+            rule = dict(rule) if isinstance(rule, dict) else {'function': rule}
+            code = rule.pop('code', BAD_REQUEST)
+            reason = rule.pop('reason', f'{cls.name}: validate: {repr(rule)} failed')
+            fn = build_transform(
+                rule, {'handler': None}, filename=f'{cls.name}.validate[{index}]', iter=False
+            )
+            cls._validate.append({'function': fn, 'code': code, 'reason': reason, 'rule': rule})
+        if len(validate):
+            cls._on_init_methods.append(cls.check_validate)
+
+    def check_validate(self):
+        for rule in self._validate:
+            try:
+                result = rule['function'](self)
+            except Exception:
+                app_log.exception(rule['reason'])
+                raise HTTPError(rule['code'], reason=rule['reason'])
+            if not result:
+                raise HTTPError(rule['code'], reason=rule['reason'])
 
 
 class BaseHandler(RequestHandler, BaseMixin):
