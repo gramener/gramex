@@ -23,6 +23,8 @@ class DriveHandler(FormHandler):
     allow: [.doc, .docx]                # Only allow these files
     ignore: [.pdf]                      # Don't allow these files
     max_file_size: 100000               # Files must be smaller than this
+    url: $GRAMEXDATA/apps/appname/.meta.db  # Optional metadata DB
+    table: drive                            # Optional metadata table
     redirect:                           # After uploading the file,
         query: next                     #   ... redirect to ?next=
         url: /$YAMLURL/                 #   ... else to this directory
@@ -40,6 +42,8 @@ class DriveHandler(FormHandler):
         allow=None,
         ignore=None,
         max_file_size=None,
+        url=None,
+        table=None,
         storage: dict = None,
         **kwargs,
     ):
@@ -53,8 +57,9 @@ class DriveHandler(FormHandler):
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
 
-        # Set up the parent FormHandler with a single SQLite URL and table
-        url, table = 'sqlite:///' + os.path.join(path, '.meta.db'), 'drive'
+        # Set up the parent FormHandler with a single URL and table
+        url = url or 'sqlite:///' + os.path.join(path, '.meta.db')
+        table = table or 'drive'
         kwargs.update(url=url, table=table, id='id')
         cls.special_keys += ['path', 'user_fields', 'tags', 'allow', 'ignore', 'max_file_size']
         super().setup(**kwargs)
