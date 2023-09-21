@@ -22,7 +22,7 @@ def gramex_port():
     # So we wait for 1 second (10 times with a 0.1s delay) until Tornado starts.
     for x in range(10):
         try:
-            r = requests.get(f'http://localhost:{port}')
+            r = requests.get(f'http://localhost:{port}', timeout=(0.1, 2))
             if r.status_code == 200:
                 info['gramex_started'] = True
                 return port

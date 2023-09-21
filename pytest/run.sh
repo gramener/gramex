@@ -10,7 +10,7 @@ gramex --listen.port=$PORT &
 PID=$!
 
 # Run pytest
-GRAMEX_PORT=$PORT pytest
+GRAMEX_PORT=$PORT pytest --capture=no --verbose $@
 PYTEST_EXIT_CODE=$?
 
 # Kill gramex

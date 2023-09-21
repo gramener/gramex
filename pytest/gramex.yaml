@@ -74,3 +74,72 @@ url:
       open: "params['messages'].append({'role': 'user', 'content': 'INIT'})"
       prepare: "'pre:' + message"
       modify: "data['choices'][0]['message']['content'] + ':post'"
+
+  validate/false:
+    pattern: /validate/false
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: false
+  validate/true:
+    pattern: /validate/true
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: true
+  validate/zero:
+    pattern: /validate/zero
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: 0
+  validate/one:
+    pattern: /validate/one
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: 1
+  validate/string:
+    pattern: /validate/string
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: handler.get_arg('x') == '1'
+  validate/list:
+    pattern: /validate/list
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: [handler.get_arg('x'), handler.get_arg('y')]
+  validate/dict:
+    pattern: /validate/dict
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: { function: handler.get_arg('x') }
+  validate/list-dict:
+    pattern: /validate/list-dict
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate:
+        - { function: handler.get_arg('x') }
+        - { function: handler.get_arg('y') }
+  validate/params:
+    pattern: /validate/params
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate:
+        - function: "handler.args.get('x', []) == ['1']"
+          reason: "x is not 1"
+          code: 451
+        - function: handler.get_arg('y')
+          reason: y missing
+          code: 452
+  validate/headers:
+    pattern: /validate/params
+    handler: FunctionHandler
+    kwargs:
+      function: str("OK")
+      validate: handler.request.headers['Origin']
