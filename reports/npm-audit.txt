@@ -1,10 +1,10 @@
-/cygdrive/c/code/cto/gramex/gramex/apps/capture
+/code/cto/gramex/gramex/apps/capture
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/logviewer
+/code/cto/gramex/gramex/apps/logviewer
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/pynode
+/code/cto/gramex/gramex/apps/pynode
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/ui
+/code/cto/gramex/gramex/apps/ui
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/uifactory
+/code/cto/gramex/gramex/apps/uifactory
 found 0 vulnerabilities

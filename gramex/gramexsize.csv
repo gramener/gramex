@@ -119,9 +119,9 @@ gramex.handlers.basehandler.BaseWebSocketHandler.*,url.*.handler=WebSocketHandle
 gramex.handlers.basehandler.SetupFailedHandler.get,url,1
 gramex.handlers.basehandler.check_membership,url.*.kwargs.auth.membership,4
 gramex.handlers.basehandler._check_condition,url.*.kwargs.auth.membership,6
-gramex.handlers.capturehandler.*,url.*.handler=CaptureHandler|Screenshot,46
+gramex.handlers.capturehandler.*,url.*.handler=CaptureHandler|Screenshot,47
 gramex.handlers.comichandler.*,url.*.handler=ComicHandler|Comic,6
-gramex.handlers.drivehandler.*,url.*.handler=DriveHandler|Storage,36
+gramex.handlers.drivehandler.*,url.*.handler=DriveHandler|Storage,49
 gramex.handlers.filehandler.*,url.*.handler=FileHandler|DirectoryHandler|File,59
 gramex.handlers.filterhandler.*,url.*.handler=FilterHandler|Filter,1
 gramex.handlers.formhandler.*,url.*.handler=FormHandler|Data,62

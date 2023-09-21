@@ -54,7 +54,7 @@ gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
 '''
 
-__version__ = '1.93.0'
+__version__ = '1.93.1'
 
 paths = AttrDict()  # Paths where configurations are stored
 conf = AttrDict()  # Final merged configurations

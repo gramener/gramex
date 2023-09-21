@@ -370,13 +370,14 @@ C:\code\cto\gramex\pytest\test_cli.py: OK
 C:\code\cto\gramex\pytest\test_data.py: OK
 C:\code\cto\gramex\pytest\test_json.py: OK
 C:\code\cto\gramex\pytest\test_messagehandler.py: OK
+C:\code\cto\gramex\pytest\test_validate.py: OK
 C:\code\cto\gramex\pytest\utils.py: OK
 C:\code\cto\gramex\README.md: OK
 C:\code\cto\gramex\reports\bandit.txt: OK
 C:\code\cto\gramex\reports\clamav.txt: OK
 C:\code\cto\gramex\reports\loc.csv: OK
 C:\code\cto\gramex\reports\npm-audit.txt: OK
-C:\code\cto\gramex\reports\snyk.txt: Empty file
+C:\code\cto\gramex\reports\snyk.txt: OK
 C:\code\cto\gramex\reports\syft.txt: OK
 C:\code\cto\gramex\reports\trivy.txt: OK
 C:\code\cto\gramex\setup.cfg: OK
@@ -602,13 +603,13 @@ C:\code\cto\gramex\tests\vegam.yaml: OK
 C:\code\cto\gramex\tests\__init__.py: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8672322
+Known viruses: 8672883
 Engine version: 1.2.0
 Scanned directories: 90
-Scanned files: 577
+Scanned files: 579
 Infected files: 0
-Data scanned: 6.88 MB
+Data scanned: 6.90 MB
 Data read: 3.05 MB (ratio 2.26:1)
-Time: 23.057 sec (0 m 23 s)
-Start Date: 2023:09:11 14:16:44
-End Date:   2023:09:11 14:17:07
+Time: 22.225 sec (0 m 22 s)
+Start Date: 2023:09:21 08:17:54
+End Date:   2023:09:21 08:18:16
