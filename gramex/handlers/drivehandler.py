@@ -7,7 +7,7 @@ from string import ascii_lowercase, digits
 from random import choice
 from mimetypes import guess_type
 from tornado.web import HTTPError
-from gramex.config import objectpath, slug
+from gramex.config import objectpath, slug, variables
 from gramex.http import NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE
 from .formhandler import FormHandler
 
@@ -29,14 +29,12 @@ class DriveHandler(FormHandler):
         query: next                     #   ... redirect to ?next=
         url: /$YAMLURL/                 #   ... else to this directory
     ```
-
-    File metadata is stored in <path>/.meta.db as SQLite
     '''
 
     @classmethod
     def setup(
         cls,
-        path,
+        path=None,
         user_fields=None,
         tags=None,
         allow=None,
@@ -47,18 +45,24 @@ class DriveHandler(FormHandler):
         storage: dict = None,
         **kwargs,
     ):
-        cls.path = path
+        if not path:
+            folder = slug['filename'](cls.name)
+            path = os.path.join(variables['GRAMEXDATA'], 'drivehandler', folder)
         cls.user_fields = cls._ensure_type('user_fields', user_fields)
         cls.tags = cls._ensure_type('tags', tags)
         cls.allow = allow or []
         cls.ignore = ignore or []
         cls.max_file_size = max_file_size or 0
-        cls.fs = storages[storage.get('type', 'os') if storage else 'os'](path, **storage)
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
-
+        storage = storage or {'type': 'os'}
+        if storage.get('type') not in storages:
+            raise ValueError(f'{cls.name}: storage.type should be one of {list(storages)}')
+        if storage.get('type') == 'os':
+            storage['path'] = path
+        cls.fs = storages[storage['type']](**storage)
         # Set up the parent FormHandler with a single URL and table
-        url = url or 'sqlite:///' + os.path.join(path, '.meta.db')
+        if not url:
+            url = 'sqlite:///' + os.path.join(path, '.meta.db')
+            os.makedirs(path, exist_ok=True)
         table = table or 'drive'
         kwargs.update(url=url, table=table, id='id')
         cls.special_keys += ['path', 'user_fields', 'tags', 'allow', 'ignore', 'max_file_size']
@@ -208,8 +212,7 @@ class DriveHandler(FormHandler):
 class OSFS(object):
     def __init__(self, path, type='os'):
         self.path = path
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
+        os.makedirs(path, exist_ok=True)
 
     def exists(self, path):
         return os.path.exists(os.path.join(self.path, path))
@@ -225,7 +228,7 @@ class OSFS(object):
 
 
 class S3FS(object):
-    def __init__(self, path, type='s3', bucket='drivehandler') -> None:
+    def __init__(self, type='s3', bucket='drivehandler') -> None:
         import s3fs
 
         self.fs = s3fs.S3FileSystem()
