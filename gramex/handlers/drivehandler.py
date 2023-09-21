@@ -1,4 +1,5 @@
 import os
+import posixpath
 import time
 import tornado.gen
 import gramex.data
@@ -6,7 +7,7 @@ from string import ascii_lowercase, digits
 from random import choice
 from mimetypes import guess_type
 from tornado.web import HTTPError
-from gramex.config import objectpath, slug
+from gramex.config import objectpath, slug, variables
 from gramex.http import NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE
 from .formhandler import FormHandler
 
@@ -22,36 +23,47 @@ class DriveHandler(FormHandler):
     allow: [.doc, .docx]                # Only allow these files
     ignore: [.pdf]                      # Don't allow these files
     max_file_size: 100000               # Files must be smaller than this
+    url: $GRAMEXDATA/apps/appname/.meta.db  # Optional metadata DB
+    table: drive                            # Optional metadata table
     redirect:                           # After uploading the file,
         query: next                     #   ... redirect to ?next=
         url: /$YAMLURL/                 #   ... else to this directory
     ```
-
-    File metadata is stored in <path>/.meta.db as SQLite
     '''
 
     @classmethod
     def setup(
         cls,
-        path,
+        path=None,
         user_fields=None,
         tags=None,
         allow=None,
         ignore=None,
         max_file_size=None,
+        url=None,
+        table=None,
+        storage: dict = None,
         **kwargs,
     ):
-        cls.path = path
+        if not path:
+            folder = slug['filename'](cls.name)
+            path = os.path.join(variables['GRAMEXDATA'], 'drivehandler', folder)
         cls.user_fields = cls._ensure_type('user_fields', user_fields)
         cls.tags = cls._ensure_type('tags', tags)
         cls.allow = allow or []
         cls.ignore = ignore or []
         cls.max_file_size = max_file_size or 0
-        if not os.path.exists(path):
+        storage = storage or {'type': 'os'}
+        if storage.get('type') not in storages:
+            raise ValueError(f'{cls.name}: storage.type should be one of {list(storages)}')
+        if storage.get('type') == 'os':
+            storage['path'] = path
+        cls.fs = storages[storage['type']](**storage)
+        # Set up the parent FormHandler with a single URL and table
+        if not url:
+            url = 'sqlite:///' + os.path.join(path, '.meta.db')
             os.makedirs(path, exist_ok=True)
-
-        # Set up the parent FormHandler with a single SQLite URL and table
-        url, table = 'sqlite:///' + os.path.join(path, '.meta.db'), 'drive'
+        table = table or 'drive'
         kwargs.update(url=url, table=table, id='id')
         cls.special_keys += ['path', 'user_fields', 'tags', 'allow', 'ignore', 'max_file_size']
         super().setup(**kwargs)
@@ -80,13 +92,13 @@ class DriveHandler(FormHandler):
                 return data
             if len(data) == 0:
                 raise HTTPError(NOT_FOUND, f'No file record with id={ids[0]}')
-            path = os.path.join(handler.path, data['path'][0])
-            if not os.path.exists(path):
+            path = data['path'][0]
+            if not cls.fs.exists(path):
                 raise HTTPError(NOT_FOUND, f'Missing file for id={ids[0]}')
             handler.set_header('Content-Type', data['mime'][0])
-            handler.set_header('Content-Length', os.stat(path).st_size)
+            handler.set_header('Content-Length', cls.fs.size(path))
             handler.set_header('Content-Disposition', f'attachment; filename="{data["file"][0]}"')
-            with open(path, 'rb') as handle:
+            with cls.fs.open(path, 'rb') as handle:
                 return handle.read()
 
         original_modify = cls.datasets['data'].get('modify', lambda v, *args: v)
@@ -118,7 +130,7 @@ class DriveHandler(FormHandler):
             ext = os.path.splitext(file)[1]
             path = slug.filename(file)
             # B311:random random() is safe since it's for non-cryptographic use
-            while os.path.exists(os.path.join(self.path, path)):
+            while self.fs.exists(path):
                 randomletter = choice(digits + ascii_lowercase)  # nosec B311
                 path = os.path.splitext(path)[0] + randomletter + ext
             self.args['file'][i] = file
@@ -146,13 +158,12 @@ class DriveHandler(FormHandler):
         if self.request.method in {'POST', 'PUT'}:
             uploads = self.request.files.get('file', [])
             for upload, path in zip(uploads, self.files['path']):
-                with open(os.path.join(self.path, path), 'wb') as handle:
+                with self.fs.open(path, 'wb') as handle:
                     handle.write(upload['body'])
         elif self.request.method == 'DELETE':
-            for relpath in self.files['path']:
-                path = os.path.join(self.path, relpath)
-                if os.path.exists(path):
-                    os.remove(path)
+            for path in self.files['path']:
+                if self.fs.exists(path):
+                    self.fs.remove(path)
 
     @tornado.gen.coroutine
     def delete(self, *path_args, **path_kwargs):
@@ -196,3 +207,48 @@ class DriveHandler(FormHandler):
         if not values:
             return {}
         raise TypeError(f'{cls.name}: {field} should be a dict, not {values}')
+
+
+class OSFS(object):
+    def __init__(self, path, type='os'):
+        self.path = path
+        os.makedirs(path, exist_ok=True)
+
+    def exists(self, path):
+        return os.path.exists(os.path.join(self.path, path))
+
+    def open(self, path, mode):
+        return open(os.path.join(self.path, path), mode)
+
+    def remove(self, path):
+        return os.remove(os.path.join(self.path, path))
+
+    def size(self, path):
+        return os.stat(os.path.join(self.path, path)).st_size
+
+
+class S3FS(object):
+    def __init__(self, type='s3', bucket='drivehandler') -> None:
+        import s3fs
+
+        self.fs = s3fs.S3FileSystem()
+        self.bucket = bucket
+        self.fs.makedirs(bucket, exist_ok=True)
+
+    def exists(self, path):
+        return self.fs.exists(posixpath.join(self.bucket, path))
+
+    def open(self, path, mode):
+        return self.fs.open(posixpath.join(self.bucket, path), mode)
+
+    def remove(self, path):
+        return self.fs.rm_file(posixpath.join(self.bucket, path))
+
+    def size(self, path):
+        return self.fs.size(posixpath.join(self.bucket, path))
+
+
+storages = {
+    'os': OSFS,
+    's3': S3FS,
+}
