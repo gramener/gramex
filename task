@@ -54,9 +54,8 @@ pushpypi () {
   clean
   pip install --upgrade build twine
   python -m build .
-  # twine does not work behind self-signed VPN certificates
-  # Note: if this fails, add '-p PASSWORD'
-  twine upload -u gramener dist/*
+  # Use API token from gramener account
+  twine upload -u __token__ dist/*
 }
 
 pushcoverage () {
