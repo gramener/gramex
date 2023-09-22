@@ -88,6 +88,7 @@ class BaseMixin:
 
     # A list of special keys handled by BaseHandler. Can be extended by other classes.
     special_keys = [
+        'validate',
         'transform',
         'redirect',
         'methods',
