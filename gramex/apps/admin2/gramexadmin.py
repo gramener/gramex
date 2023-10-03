@@ -100,9 +100,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
             if not admin_kwargs:
                 raise ValueError(f'admin_kwargs not found in {cls.name}.')
             cls.signup.update(admin_kwargs.pop('signup', {}))
-            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(
-                kwargs.get('admin_kwargs', {})
-            )
+            cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(admin_kwargs)
             # When this class is set up for rules, and the authhandler has rules...
             if kwargs.get('rules', False) and cls.auth_conf.kwargs.get('rules', False):
                 # Get the rules for formhandler
@@ -117,10 +115,13 @@ class AdminFormHandler(gramex.handlers.FormHandler):
                     gramex.conf['url'].get(url, {}).get('kwargs', {}).get('rules', {}).copy()
                 )
                 data_conf['id'] = ['selector', 'pattern']
+            # Add any auth specified
+            if 'auth' in kwargs:
+                data_conf['auth'] = kwargs['auth']
         except ValueError as e:
             super(gramex.handlers.FormHandler, cls).setup(**kwargs)
             app_log.warning(f'{cls.name}: {e.args[0]}')
-            cls.error = e.args[0]
+            cls.error_message = e.args[0]
             cls.get = cls.post = cls.put = cls.delete = cls.send_response
             return
         # Get the FormHandler configuration from lookup:
@@ -129,7 +130,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
         cls._on_finish_methods.append(cls.send_welcome_email)
 
     def send_response(self, *args, **kwargs):
-        raise HTTPError(INTERNAL_SERVER_ERROR, self.error)
+        raise HTTPError(INTERNAL_SERVER_ERROR, self.error_message)
 
 
 def evaluate(handler, code):
