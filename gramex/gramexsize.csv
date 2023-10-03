@@ -49,7 +49,7 @@ gramex.topcause.*,TODO - if any PY code uses topcause,15
 gramex.transformers.*,url.*.handler=MLHandler|ML,31
 gramex.winservice.*,TODO - if app is deployed on Windows server,22
 gramex.__init__.*,*,49
-gramex.apps.admin2.*,import.*.path=$GRAMEXAPPS/admin2/gramex.yaml,53
+gramex.apps.admin2.*,import.*.path=$GRAMEXAPPS/admin2/gramex.yaml,54
 gramex.apps.filemanager.*,import.*.path=$GRAMEXAPPS/filemanager/gramex.yaml,7
 gramex.apps.logviewer.*,import.*.path=$GRAMEXAPPS/logviewer/gramex.yaml,61
 gramex.apps.mail.*,import.*.path=$GRAMEXAPPS/mail/gramex.yaml,2

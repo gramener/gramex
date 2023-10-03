@@ -603,13 +603,13 @@ C:\code\cto\gramex\tests\vegam.yaml: OK
 C:\code\cto\gramex\tests\__init__.py: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8672883
+Known viruses: 8674047
 Engine version: 1.2.0
 Scanned directories: 90
 Scanned files: 579
 Infected files: 0
 Data scanned: 6.90 MB
 Data read: 3.05 MB (ratio 2.26:1)
-Time: 22.225 sec (0 m 22 s)
-Start Date: 2023:09:21 08:17:54
-End Date:   2023:09:21 08:18:16
+Time: 19.751 sec (0 m 19 s)
+Start Date: 2023:10:03 15:05:49
+End Date:   2023:10:03 15:06:09
