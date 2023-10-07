@@ -295,7 +295,7 @@ def filter(
             #   If query = "SELECT * FROM table WHERE x=:x" and we bind with bindparam('x'),
             #   we can NEVER bind with x as bindparam('x', expanding=True) without restarting.
             #   Therefore, create a new query each time.
-            sql = sa.text(f'{query}; -- {time.time()}')
+            sql = sa.text(f'{query.rstrip().rstrip(";")}; -- {time.time()}')
             all_params = {}
             for key, vals in args.items():
                 conv, expanding = _argstype(argstype, key, str)
