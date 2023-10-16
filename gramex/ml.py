@@ -392,7 +392,7 @@ def translate(
     if len(q):
         new_data = translate_api[api](q, source, target, key)
         if new_data is not None:
-            result = result.append(pd.DataFrame(new_data), sort=False)
+            result = pd.concat([result, pd.DataFrame(new_data)], sort=False)
             if cache:
                 with _translate_cache_lock:
                     gramex.data.insert(id=['source', 'target', 'q'], args=new_data, **cache)
