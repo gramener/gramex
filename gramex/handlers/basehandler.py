@@ -241,7 +241,7 @@ class BaseMixin:
 
         # Check if headers is in cors.headers
         headers = self.request.headers.get('Access-Control-Request-Headers', '')
-        headers = self.get_list(headers, 'headers', '', caps=False)
+        headers = self.get_list(headers, 'headers', '', caps=False))
         allowed_headers = {h.lower() for h in self._cors['headers']}
         diff = set()
         if '*' not in allowed_headers:
@@ -260,7 +260,7 @@ class BaseMixin:
             self._all_methods if '*' in self._cors['methods'] else ', '.join(self._cors['methods'])
         )
         self.set_header('Access-Control-Allow-Methods', methods)
-        headers |= self._cors['headers']
+        headers = set(headers) | set(self._cors['headers'])
         if '*' in headers:
             headers.remove('*')
             headers.update(self._all_headers)
