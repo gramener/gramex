@@ -181,12 +181,13 @@ class BaseMixin:
         if not isinstance(cors, dict):
             app_log.error(f'url:{cls.name}.cors is not a dict/True')
             return
-        cls._cors = cors
         # Set default CORS values as a set
         for key in ('origins', 'methods', 'headers'):
             cors[key] = cls.get_list(cors.get(key, '*'), f'cors.{key}', '"*"', caps=False)
+        cors.setdefault('auth', False)
         cls._on_init_methods.append(cls.check_cors)
         cls.options = cls._cors_options
+        cls._cors = cors
 
     def check_cors(self):
         '''
