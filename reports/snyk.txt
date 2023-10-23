@@ -28,7 +28,7 @@ Open source:       no
 Project path:      C:\code\cto\gramex
 Licenses:          enabled
 
-✔ Tested 187 dependencies for known issues, no vulnerable paths found.
+✔ Tested 192 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -75,12 +75,12 @@ Next steps:
 
 Testing C:\code\cto\gramex...
 
-Tested 227 dependencies for known issues, found 1 issue, 1 vulnerable path.
+Tested 231 dependencies for known issues, found 1 issue, 1 vulnerable path.
 
 
 Issues with no direct upgrade or patch:
   ✗ Heap-based Buffer Overflow [Critical Severity][https://security.snyk.io/vuln/SNYK-JS-SHARP-5922108] in sharp@0.30.7
-    introduced by comicgen@1.9.7 > sharp@0.30.7
+    introduced by comicgen@1.9.8 > sharp@0.30.7
   This issue was fixed in versions: 0.32.6
 
 

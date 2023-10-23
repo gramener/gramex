@@ -552,7 +552,7 @@ def image(shape, spec, data: dict):
     if val is not None:
         # Load image contents as a bytestring
         if urlparse(val).netloc:
-            content = requests.get(val).content
+            content = requests.get(val, timeout=30).content
         else:
             content = gramex.cache.open(val, 'bin')
         # Add the image part

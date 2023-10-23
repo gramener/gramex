@@ -111,11 +111,12 @@ class Exotel(Notifier):
                 'Body': subject,
                 'Priority': self.priority,
             },
+            timeout=30,
         )
         return self._handle_response(r)
 
     def status(self, result):
-        r = requests.get(self.host + result['Uri'])
+        r = requests.get(self.host + result['Uri'], timeout=30)
         return self._handle_response(r)
 
 

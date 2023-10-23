@@ -17,3 +17,10 @@ ignore:
         reason: No fix available. Await eslint upgrade
         expires: 2023-12-31T00:00:00.000Z
         created: 2023-09-11T00:00:00.000Z
+
+  # Upgrade Sharp to 0.32.6 from 0.30.7 in Comicgen
+  SNYK-JS-SHARP-5922108:
+    - '*':
+        reason: Await comicgen upgrade
+        expires: 2023-12-31T00:00:00.000Z
+        created: 2023-10-24T00:00:00.000Z

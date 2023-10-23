@@ -740,7 +740,7 @@ def run_install(config):
     else:
         # Otherwise, assume that it's a URL containing a ZIP file
         app_log.info(f'Downloading: {url}')
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
         handle = io.BytesIO(response.content)
 

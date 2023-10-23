@@ -300,7 +300,9 @@ def _google_translate(q, source, target, key):
     if source:
         params['source'] = source
     try:
-        r = requests.post('https://translation.googleapis.com/language/translate/v2', data=params)
+        r = requests.post(
+            'https://translation.googleapis.com/language/translate/v2', data=params, timeout=30
+        )
     except requests.RequestException:
         return app_log.exception('Cannot connect to Google Translate')
     response = r.json()
@@ -518,7 +520,7 @@ def languagetool_download():
         os.makedirs(target)
     src = _languagetool['defaults']['LT_SRC'].format(**_languagetool['defaults'])
     app_log.info(f'Downloading languagetools from {src}')
-    stream = io.BytesIO(requests.get(src).content)
+    stream = io.BytesIO(requests.get(src, timeout=600).content)
     app_log.info(f'Unzipping languagetools to {target}')
     zipfile.ZipFile(stream).extractall(target)
     _languagetool['installed'] = True

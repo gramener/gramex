@@ -54,7 +54,7 @@ gramex run                    Run an installed app
 gramex uninstall              Uninstall an app
 '''
 
-__version__ = '1.93.2'
+__version__ = '1.93.3'
 
 paths = AttrDict()  # Paths where configurations are stored
 conf = AttrDict()  # Final merged configurations
@@ -362,7 +362,7 @@ def gramex_update(url: str):
         events = query('SELECT * FROM events')
     logs = [dict(log, **meta) for log in events]
 
-    r = requests.post(url, data=json.dumps(logs))
+    r = requests.post(url, data=json.dumps(logs), timeout=30)
     r.raise_for_status()
     update = r.json()
     server_version = update['version']

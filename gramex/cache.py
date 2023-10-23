@@ -573,7 +573,7 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
             return {'name': url, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
         else:
             return url
-    r = requests.get(url, **kwargs)
+    r = requests.get(url, **kwargs)  # nosec B113 - timeout is controlled by kwargs
     if 'Content-Type' in r.headers:
         content_type = r.headers['Content-Type'].split(';')[0]
         ext = mimetypes.guess_extension(content_type, strict=False)

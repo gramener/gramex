@@ -133,7 +133,7 @@ def image(shape, spec, data):
     image = template(spec['image'], data)
     # If it's a URL, use the requests library's raw stream as a file-like object
     if urlparse(image).netloc:
-        r = requests.get(image)
+        r = requests.get(image, timeout=30)
         with tempfile.NamedTemporaryFile(delete=False) as handle:
             handle.write(r.content)
         new_img_part, new_rid = shape.part.get_or_add_image_part(handle.name)
