@@ -923,6 +923,7 @@ class BaseMixin:
         user: Union[str, dict] = None,
         size: int = None,
         type: str = 'OTP',
+        reset: bool = False,
         **kwargs: Dict[str, Any],
     ) -> str:
         '''Return one-time password valid for `expire` seconds.
@@ -937,6 +938,7 @@ class BaseMixin:
             size: Length of the OTP in characters. `None` means a full hash string
             type: Identifier for type of OTP. `OTP` for OTPs. Use `Key` for API keys. Auth handlers
                 use their class names, e.g. `DBAuth`, `SMSAuth`, `EMailAuth`.
+            reset: True to delete all previous OTPs for the user
             kwargs: Additional columns to add (if they exist)
 
         Returns:
@@ -955,12 +957,16 @@ class BaseMixin:
             raise HTTPError(UNAUTHORIZED)
         from uuid import uuid4
 
+        user_obj = json.dumps(user)
+        if reset:
+            gramex.data.delete(**gramex.service.storelocations.otp, args={'user': [user_obj]})
+
         otp = uuid4().hex[:size]
         gramex.data.insert(
             **gramex.service.storelocations.otp,
             args={
                 'token': [otp],
-                'user': [json.dumps(user)],
+                'user': [user_obj],
                 'type': [type],
                 'expire': [time.time() + expire],
                 **{key: [val] for key, val in kwargs.items()},
