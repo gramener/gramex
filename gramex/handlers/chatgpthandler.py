@@ -139,20 +139,27 @@ class ChatGPTHandler(BaseWebSocketHandler):
             self.write_message('')
 
     def on_chunk(self, chunk: bytes):
-        self.chunks.append(chunk)
+        self.chunks.append(chunk.decode('utf-8'))
+        content = ''.join(self.chunks)
+        if '\n\n' not in content:
+            return
+        complete_message, remaining = content.split('\n\n', 1)
+        self.chunks = [remaining]  # Assign the remaining part as a list
+
         # Each chunk has a data: ... but the last chunk has an additional line with
         # data: [DONE]. We ignore that. Just take the first line with data:
-        for text in chunk.decode('utf-8').strip().split('\n'):
+        for line in complete_message.strip().split('\n'):
             # Ignore empty lines
-            if not text.startswith('data: '):
+            if not line.startswith('data: '):
                 continue
             # When the last chunk is received, send the entire message
-            if text.startswith('data: [DONE]'):
+            if line.startswith('data: [DONE]'):
                 content = ''.join(self.tokens)
                 self.params['messages'].append({'role': 'assistant', 'content': content})
                 self.write_message('')
+                self.tokens = []
                 continue
-            data = json.loads(text[6:])
+            data = json.loads(line[6:])
             # TODO: Handle multiple responses in data['choices'], i.e. n > 1, properly
             delta = data['choices'][0]['delta']
             # Not all deltas have content. Starting and ending deltas don't. Skip them
