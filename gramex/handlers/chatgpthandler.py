@@ -140,15 +140,11 @@ class ChatGPTHandler(BaseWebSocketHandler):
 
     def on_chunk(self, chunk: bytes):
         self.chunks.append(chunk.decode('utf-8'))
-        content = ''.join(self.chunks)
-        if '\n\n' not in content:
-            return
-        complete_message, remaining = content.split('\n\n', 1)
-        self.chunks = [remaining]  # Assign the remaining part as a list
-
+        [*lines, remaining] = ''.join(self.chunks).split('\n\n')
+        self.chunks = [remaining]
         # Each chunk has a data: ... but the last chunk has an additional line with
         # data: [DONE]. We ignore that. Just take the first line with data:
-        for line in complete_message.strip().split('\n'):
+        for line in lines:
             # Ignore empty lines
             if not line.startswith('data: '):
                 continue
