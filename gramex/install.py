@@ -16,6 +16,7 @@ from pathlib import Path
 from collections import Counter
 
 from orderedattrdict import AttrDict
+from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 # B404:import_subprocess only developers can access this, not users
 from subprocess import Popen, check_output, CalledProcessError  # nosec B404
@@ -75,7 +76,7 @@ def install(args, kwargs):
 
     # Post-installation
     app_config.target = run_setup(app_config.target)
-    app_config['installed'] = {'time': datetime.datetime.utcnow()}
+    app_config['installed'] = {'time': datetime.datetime.now(datetime.timezone.utc).isoformat()}
     save_user_config(appname, app_config)
     app_log.info(f'Installed. Run `gramex run {appname}`')
 
@@ -93,7 +94,7 @@ def setup(args, kwargs):
 
     - make
     - powershell -File setup.ps1
-    - bash setup.sh
+    - bash setup.sh (or sh setup.sh or ash setup.sh)
     - pip install --upgrade -r requirements.txt
     - python setup.py
     - bower --allow-root install
@@ -796,7 +797,7 @@ def run_command(config):
 setup_paths = [
     [{'file': 'Makefile', 'exe': 'make', 'cmd': '"{exe}"'}],
     [{'file': 'setup.ps1', 'exe': 'powershell', 'cmd': '"{exe}" -File "{file}"'}],
-    [{'file': 'setup.sh', 'exe': 'bash', 'cmd': '"{exe}" "{file}"'}],
+    [{'file': 'setup.sh', 'exe': ['bash', 'sh', 'ash'], 'cmd': '"{exe}" "{file}"'}],
     [{'file': 'requirements.txt', 'exe': 'pip', 'cmd': '"{exe}" install -r "{file}"'}],
     [{'file': 'setup.py', 'exe': 'python', 'cmd': '"{exe}" "{file}"'}],
     [{'file': 'bower.json', 'exe': 'bower', 'cmd': '"{exe}" --allow-root install'}],
@@ -830,7 +831,8 @@ def run_setup(target):
         config_match, ran_cmd = None, False
         for config in configs:
             setup_file = os.path.join(target, config['file'])
-            exe_path = which(config['exe'])
+            exes = config['exe'] if isinstance(config['exe'], list) else [config['exe']]
+            exe_path = next((which(exe) for exe in exes if which(exe)), None)
             if os.path.exists(setup_file):
                 config_match = config
             if config_match and exe_path is not None:
@@ -868,7 +870,8 @@ def save_user_config(appname, value):
     user_config = AttrDict()
     if user_conf_file.exists():
         with user_conf_file.open(encoding='utf-8') as handle:
-            user_config = yaml.safe_load(handle)
+            # If app.yaml is empty, yaml.safe_load returns None. Use the AttrDict() instead
+            user_config = yaml.load(handle, Loader=AttrDictYAMLLoader) or user_config
     if value is None:
         if appname in user_config:
             del user_config[appname]
@@ -877,7 +880,7 @@ def save_user_config(appname, value):
         app_config.update({key: value[key] for key in app_keys if key in value})
 
     with user_conf_file.open(mode='w', encoding='utf-8') as handle:
-        yaml.safe_dump(user_config, handle, indent=4, default_flow_style=False)
+        yaml.dump(user_config, handle, indent=4, default_flow_style=False)
 
 
 def get_app_config(appname, kwargs):
