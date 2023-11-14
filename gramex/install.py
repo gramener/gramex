@@ -871,7 +871,8 @@ def save_user_config(appname, value):
     if user_conf_file.exists():
         with user_conf_file.open(encoding='utf-8') as handle:
             # If app.yaml is empty, yaml.safe_load returns None. Use the AttrDict() instead
-            user_config = yaml.load(handle, Loader=AttrDictYAMLLoader) or user_config
+            # B506:yaml_load is safe since this object is internally created
+            user_config = yaml.load(handle, Loader=AttrDictYAMLLoader) or user_config  # nosec
     if value is None:
         if appname in user_config:
             del user_config[appname]
@@ -880,7 +881,9 @@ def save_user_config(appname, value):
         app_config.update({key: value[key] for key in app_keys if key in value})
 
     with user_conf_file.open(mode='w', encoding='utf-8') as handle:
-        yaml.dump(user_config, handle, indent=4, default_flow_style=False)
+        # Use yaml.dump (not .safe_dump) to serialize the AttrDicts
+        # B506:yaml_load is safe since this object is internally created
+        yaml.dump(user_config, handle, indent=4, default_flow_style=False)  # nosec
 
 
 def get_app_config(appname, kwargs):

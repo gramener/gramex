@@ -16,6 +16,7 @@ C:\code\cto\gramex\.snyk: OK
 C:\code\cto\gramex\.stylelintignore: OK
 C:\code\cto\gramex\.stylelintrc.yml: OK
 C:\code\cto\gramex\.travis.yml: OK
+C:\code\cto\gramex\.vscode\settings.json: OK
 C:\code\cto\gramex\commitlint.config.js: OK
 C:\code\cto\gramex\gramex\apps\admin\.gitignore: OK
 C:\code\cto\gramex\gramex\apps\admin\gramex.yaml: OK
@@ -461,6 +462,7 @@ C:\code\cto\gramex\tests\403-template.html: OK
 C:\code\cto\gramex\tests\actors.csv: OK
 C:\code\cto\gramex\tests\auth.html: OK
 C:\code\cto\gramex\tests\auth2.html: OK
+C:\code\cto\gramex\tests\circles.csv: OK
 C:\code\cto\gramex\tests\dbutils.py: OK
 C:\code\cto\gramex\tests\dir\.allow: Empty file
 C:\code\cto\gramex\tests\dir\.hidden: Empty file
@@ -511,14 +513,28 @@ C:\code\cto\gramex\tests\dir\template-handler.txt: OK
 C:\code\cto\gramex\tests\dir\template.sub.txt: OK
 C:\code\cto\gramex\tests\dir\template.txt: OK
 C:\code\cto\gramex\tests\dir\text.txt: OK
+C:\code\cto\gramex\tests\drive\.meta.db: OK
 C:\code\cto\gramex\tests\error-404.json: OK
+C:\code\cto\gramex\tests\events.db: OK
 C:\code\cto\gramex\tests\filemanager\.gitignore: OK
 C:\code\cto\gramex\tests\filemanager\default-drive.csv: OK
+C:\code\cto\gramex\tests\filemanager\drive-empty\.meta.db: OK
+C:\code\cto\gramex\tests\filemanager\drive1\.meta.db: OK
+C:\code\cto\gramex\tests\filemanager\drive1\drive1a.txt: OK
+C:\code\cto\gramex\tests\filemanager\drive1\drive1b.txt: OK
+C:\code\cto\gramex\tests\filemanager\drive1\drive1c.txt: OK
+C:\code\cto\gramex\tests\filemanager\drive2\.meta.db: OK
+C:\code\cto\gramex\tests\filemanager\drive2\drive2a.txt: OK
+C:\code\cto\gramex\tests\filemanager\drive2\drive2b.txt: OK
+C:\code\cto\gramex\tests\filemanager\drive2\drive2c.txt: OK
+C:\code\cto\gramex\tests\filemanager\gramex.log: OK
 C:\code\cto\gramex\tests\filemanager\gramex.yaml: OK
+C:\code\cto\gramex\tests\filemanager\node_modules: Excluded
 C:\code\cto\gramex\tests\filemanager\package-lock.json: OK
 C:\code\cto\gramex\tests\filemanager\package.json: OK
 C:\code\cto\gramex\tests\filemanager\puppet.js: OK
 C:\code\cto\gramex\tests\filemanager\tape-stream.js: OK
+C:\code\cto\gramex\tests\filemanager\tape.js: OK
 C:\code\cto\gramex\tests\filemanager\test-filemanager.html: OK
 C:\code\cto\gramex\tests\filemanager\test.sh: OK
 C:\code\cto\gramex\tests\filetest.template.html: OK
@@ -532,6 +548,7 @@ C:\code\cto\gramex\tests\install-test-flat.zip: OK
 C:\code\cto\gramex\tests\install-test.zip: OK
 C:\code\cto\gramex\tests\lookup.xlsx: OK
 C:\code\cto\gramex\tests\openapiresponse.yaml: OK
+C:\code\cto\gramex\tests\otp.db: OK
 C:\code\cto\gramex\tests\processtest.py: OK
 C:\code\cto\gramex\tests\README.md: OK
 C:\code\cto\gramex\tests\remote-secrets.yaml: OK
@@ -557,6 +574,7 @@ C:\code\cto\gramex\tests\test_admin.py: OK
 C:\code\cto\gramex\tests\test_alerts.py: OK
 C:\code\cto\gramex\tests\test_args.py: OK
 C:\code\cto\gramex\tests\test_auth.py: OK
+C:\code\cto\gramex\tests\test_cache.db: OK
 C:\code\cto\gramex\tests\test_cache.py: OK
 C:\code\cto\gramex\tests\test_capturehandler.py: OK
 C:\code\cto\gramex\tests\test_comichandler.py: OK
@@ -592,6 +610,9 @@ C:\code\cto\gramex\tests\test_uploadhandler.py: OK
 C:\code\cto\gramex\tests\test_watcher.py: OK
 C:\code\cto\gramex\tests\test_websockethandler.py: OK
 C:\code\cto\gramex\tests\throwerror.py: OK
+C:\code\cto\gramex\tests\titanic\config.json: OK
+C:\code\cto\gramex\tests\titanic\data.h5: OK
+C:\code\cto\gramex\tests\titanic\model.pkl: OK
 C:\code\cto\gramex\tests\titanic.csv: OK
 C:\code\cto\gramex\tests\ts\a.ts: OK
 C:\code\cto\gramex\tests\ts\b.ts: OK
@@ -603,13 +624,13 @@ C:\code\cto\gramex\tests\vegam.yaml: OK
 C:\code\cto\gramex\tests\__init__.py: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8676590
-Engine version: 1.2.0
-Scanned directories: 90
-Scanned files: 579
+Known viruses: 8678116
+Engine version: 0.105.1
+Scanned directories: 97
+Scanned files: 599
 Infected files: 0
-Data scanned: 6.90 MB
-Data read: 3.05 MB (ratio 2.26:1)
-Time: 17.396 sec (0 m 17 s)
-Start Date: 2023:10:24 06:10:25
-End Date:   2023:10:24 06:10:42
+Data scanned: 8.58 MB
+Data read: 4.13 MB (ratio 2.08:1)
+Time: 30.837 sec (0 m 30 s)
+Start Date: 2023:11:14 12:24:21
+End Date:   2023:11:14 12:24:52

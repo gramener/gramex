@@ -96,7 +96,7 @@ gramex.handlers.basehandler.BaseMixin.session,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin._set_new_session_id,url.*.kwargs.auth,4
 gramex.handlers.basehandler.BaseMixin.get_session,url.*.kwargs.auth,6
 gramex.handlers.basehandler.BaseMixin.save_session,url.*.kwargs.auth,2
-gramex.handlers.basehandler.BaseMixin.otp,url.*.kwargs.auth,2
+gramex.handlers.basehandler.BaseMixin.otp,url.*.kwargs.auth,3
 gramex.handlers.basehandler.BaseMixin.get_otp,url.*.kwargs.auth,6
 gramex.handlers.basehandler.BaseMixin.revoke_otp,url.*.kwargs.auth,1
 gramex.handlers.basehandler.BaseMixin.apikey,url.*.kwargs.auth,1

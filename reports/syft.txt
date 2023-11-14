@@ -30,9 +30,9 @@ NAME                                VERSION      TYPE
 @puppeteer/browsers                 0.5.0        npm   
 @swc/helpers                        0.4.14       npm   
 @swc/helpers                        0.4.36       npm   
-@types/node                         20.8.7       npm   
-@types/triple-beam                  1.3.4        npm   
-@types/yauzl                        2.10.2       npm   
+@types/node                         20.9.0       npm   
+@types/triple-beam                  1.3.5        npm   
+@types/yauzl                        2.10.3       npm   
 accepts                             1.3.8        npm   
 agent-base                          6.0.2        npm   
 almost-equal                        1.1.0        npm   
@@ -45,7 +45,7 @@ archiver-utils                      2.1.0        npm
 archiver-utils                      3.0.4        npm   
 argparse                            2.0.1        npm   
 array-flatten                       1.1.1        npm   
-async                               3.2.4        npm   
+async                               3.2.5        npm   
 balanced-match                      1.0.2        npm   
 base64-js                           1.5.1        npm   
 binary-extensions                   2.2.0        npm   
@@ -281,7 +281,7 @@ safe-buffer                         5.1.2        npm
 safe-buffer                         5.2.1        npm   
 safe-stable-stringify               2.4.3        npm   
 safer-buffer                        2.1.2        npm   
-sass                                1.69.4       npm   
+sass                                1.69.5       npm   
 select                              1.1.2        npm   
 semver                              7.5.4        npm   
 send                                0.18.0       npm   
@@ -320,7 +320,7 @@ type-is                             1.6.18       npm
 uifactory                                        npm   
 uifactory                           0.0.4        npm   
 unbzip2-stream                      1.4.3        npm   
-undici-types                        5.25.3       npm   
+undici-types                        5.26.5       npm   
 unicode-properties                  1.4.1        npm   
 unicode-trie                        2.0.0        npm   
 unpipe                              1.0.0        npm   

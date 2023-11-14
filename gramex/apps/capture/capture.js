@@ -190,10 +190,10 @@ function webapp(request, response) {
     request.postRaw
       ? "/?" + request.postRaw
       : request.post
-      ? "/?" + request.post
-      : phantom_version >= "2.0.1"
-      ? decodeURIComponent(request.url)
-      : request.url,
+        ? "/?" + request.post
+        : phantom_version >= "2.0.1"
+          ? decodeURIComponent(request.url)
+          : request.url,
   ).queryKey;
   /* eslint-enable indent */
   if (!q.url) {
@@ -277,12 +277,12 @@ function mime(file) {
   return file.match(/\.pdf$/i)
     ? "application/pdf"
     : file.match(/\.png$/i)
-    ? "image/png"
-    : file.match(/\.gif$/i)
-    ? "image/gif"
-    : file.match(/\.jpg$/i)
-    ? "image/jpeg"
-    : "application/octet-stream";
+      ? "image/png"
+      : file.match(/\.gif$/i)
+        ? "image/gif"
+        : file.match(/\.jpg$/i)
+          ? "image/jpeg"
+          : "application/octet-stream";
   /* eslint-enable indent */
 }
 
