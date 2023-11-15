@@ -51,7 +51,7 @@ url:
     pattern: /$YAMLURL/query/(?P<table>\w+)/(?P<query>[\w-]+)/
     handler: FormHandler
     kwargs:
-      url: sqlite:///$GRAMEXDATA/logs/logviewer.db
+      import.merge.url: $LOGVIEWER_DB
       execution_options:
         sqlite_raw_colnames: True
       queryfunction: logviewer.query(handler, args)
