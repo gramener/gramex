@@ -83,6 +83,7 @@ Stackoverflow = "https://stackoverflow.com/questions/tagged/gramex"
 
 [project.scripts]
 gramex = "gramex:commandline"
+gramextask = "gramex.task:commandline"
 secrets = "gramex.secrets:commandline"
 slidesense = "gramex.pptgen2:commandline"
 

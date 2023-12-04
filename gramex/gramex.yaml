@@ -361,6 +361,20 @@ storelocations:
       start: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       end: TEXT # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
       error: TEXT # Error stage + traceback
+  task:
+    url: sqlite:///$GRAMEXDATA/task.db
+    table: task
+    columns:
+      # ID as Time of submission
+      timestamp:
+        type: TEXT  # ISO8601 encoded (YYYY-MM-DD HH:MM:SS.SSS UTC)
+        primary_key: true
+      queue: TEXT  # name of task queue
+      type: TEXT  # shell|... (default: shell)
+      task: TEXT  # JSON configuration for the task
+      status: TEXT  # pending|running|done|error (default: pending)
+      info: TEXT  # JSON that holds server & process info
+      output: TEXT  # output of the process
 
 # The `schedule:` section defines when specific code is to run.
 schedule:

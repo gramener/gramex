@@ -154,6 +154,7 @@ def commandline(args: List[str] = None):
             'license',
             'features',
             'complexity',
+            'task',
         }:
             import gramex.install
 
