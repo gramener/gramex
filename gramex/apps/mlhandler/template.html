@@ -278,30 +278,28 @@ body {
     }
     const get_score = function() {
       let url = g1.url.parse(window.location)
-      $.ajax({
-        url: url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()),
-        method: 'POST',
-        success: function(resp) {
-          let score = Number.parseFloat(JSON.parse(resp).score * 100).toPrecision(4)
-          score = Number.parseFloat(score)
-          $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
-          $('tspan').html(`${score}%`)
-          $('.donut-segment').attr('stroke', get_score_color(score))
-          $('#resultcnt').show()
-          let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
-          $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
-        }
+      fetch(url + '?_action=score&_metric=' + encodeURIComponent($('#metric').val()), {
+        method: 'POST'
+      }).then(function(resp) {
+        return resp.json()
+      }).then(function(resp) {
+        let score = Number.parseFloat(resp.score * 100).toPrecision(4)
+        score = Number.parseFloat(score)
+        $('.donut-segment').attr('stroke-dasharray', `${score} ${100 - score}`)
+        $('tspan').html(`${score}%`)
+        $('.donut-segment').attr('stroke', get_score_color(score))
+        $('#resultcnt').show()
+        let inputcols = fh_meta.meta.columns.filter((col) => !$('#exclude').val().concat($('#targetcol').val()).includes(col.name))
+        $('#predicttabtemplate').template({COLS: inputcols.map(e => ({name: e.name, type: e.type})), row: fh_meta.formdata[0]})
       })
     }
     const post_train = function (target_col) {
       $('#resultcnt').hide()
       let url = g1.url.parse(window.location)
       url.hash = ''
-      $.ajax({
-        url: url + '?_action=retrain&target_col=' + encodeURIComponent(target_col) + '&_metric=' + encodeURIComponent($('#metric').val()),
-        method: 'POST',
-        success: get_score
-      })
+      fetch(url + '?_action=retrain&target_col=' + encodeURIComponent(target_col) + '&_metric=' + encodeURIComponent($('#metric').val()), {
+        method: 'POST'
+      }).then(get_score);
     }
     $(document).ready(function() {
       $('#downloadbtn').hide()
@@ -338,19 +336,14 @@ body {
         trainUrl.update({class: fd.get('class')})
         trainUrl.update({exclude: fd.getAll('exclude')})
         trainUrl.update({cats: fd.getAll('cats')})
-        $.ajax({
-          url: trainUrl.toString(),
-          method: 'PUT',
-          success: function() {
-            post_train(fd.get('target_col'))
-          }
-        })
+        fetch(trainUrl.toString(), { method: 'PUT' })
+          .then(()  => post_train(fd.get('target_col')))
       })
       $('#predictform').submit(function(e) {
         e.preventDefault()
         url = g1.url.parse(window.location)
         url.search = $(this).serialize()
-        $.getJSON(url.toString()).done(function(pred) {
+        fetch(url.toString()).then(r => r.json()).then(function(pred) {
           let tcol = $('#targetcol').val()
           $('#predResult').text(`${tcol}: ${pred[0][tcol]}`)
         })
