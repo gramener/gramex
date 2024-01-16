@@ -1258,9 +1258,14 @@ def alter(
     return engine
 
 
+_transform_cache = {}
+
+
 def _transform_fn(transform, transform_kwargs):
     if callable(transform) and transform_kwargs is not None:
-        return lambda v: transform(v, **transform_kwargs)
+        if transform not in _transform_cache:
+            _transform_cache[transform] = lambda v: transform(v, **transform_kwargs)
+        return _transform_cache[transform]
     return transform
 
 
