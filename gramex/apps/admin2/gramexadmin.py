@@ -101,6 +101,7 @@ class AdminFormHandler(gramex.handlers.FormHandler):
                 raise ValueError(f'admin_kwargs not found in {cls.name}.')
             cls.signup.update(admin_kwargs.pop('signup', {}))
             cls.authhandler, cls.auth_conf, data_conf = get_auth_conf(admin_kwargs)
+            gramex.config.merge(data_conf, admin_kwargs.pop('userdata', {}), mode='setdefault')
             # When this class is set up for rules, and the authhandler has rules...
             if kwargs.get('rules', False) and cls.auth_conf.kwargs.get('rules', False):
                 # Get the rules for formhandler
