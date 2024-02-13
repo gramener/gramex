@@ -1,4 +1,5 @@
 '''PPTGen module.'''
+
 import os
 import sys
 import copy
@@ -230,9 +231,11 @@ def change_shapes(collection, change, data, handler, **kwargs):
         if spec.get('data'):
             if not isinstance(spec['data'], (dict,)):
                 spec['data'] = {
-                    'function': '{}'.format(spec['data'])
-                    if not isinstance(spec['data'], str)
-                    else spec['data']
+                    'function': (
+                        '{}'.format(spec['data'])
+                        if not isinstance(spec['data'], str)
+                        else spec['data']
+                    )
                 }
             shape_data = build_transform(spec['data'], vars={'data': None, 'handler': None})(
                 data=data, handler=handler

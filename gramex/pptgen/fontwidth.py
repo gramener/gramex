@@ -1,4 +1,5 @@
 """Module to get fontwidth."""
+
 import os
 import json
 import numpy as np

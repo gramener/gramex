@@ -292,9 +292,11 @@ def build_transform(
         f'\tresult = {expr}\n',
         # If the result is a generator object, return it. Else, create a list and
         # return that. This ensures that the returned value is always an iterable
-        '\treturn result if isinstance(result, GeneratorType) else [result,]'
-        if iter
-        else '\treturn result',
+        (
+            '\treturn result if isinstance(result, GeneratorType) else [result,]'
+            if iter
+            else '\treturn result'
+        ),
     ]
 
     # Compile the function with context variables

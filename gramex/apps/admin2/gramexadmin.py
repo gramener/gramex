@@ -1,4 +1,5 @@
 """Auth module role settings."""
+
 import gramex
 import gramex.handlers
 import json

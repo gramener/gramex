@@ -398,9 +398,11 @@ def baseline(run, val, data):
         val = (
             0.3
             if val.startswith('sup')
-            else -0.25
-            if val.startswith('sub')
-            else ST_Percentage._convert_from_percent_literal(val)
+            else (
+                -0.25
+                if val.startswith('sub')
+                else ST_Percentage._convert_from_percent_literal(val)
+            )
         )
     run.font._rPr.set('baseline', ST_Percentage.convert_to_xml(val))
 
@@ -409,11 +411,7 @@ def strike(run, val, data):
     val = (
         'sngStrike'
         if val.startswith('s')
-        else 'dblStrike'
-        if val.startswith('d')
-        else 'noStrike'
-        if val.startswith('n')
-        else val
+        else 'dblStrike' if val.startswith('d') else 'noStrike' if val.startswith('n') else val
     )
     run.font._rPr.set('strike', val)
 

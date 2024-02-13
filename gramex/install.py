@@ -1,4 +1,5 @@
 '''Defines command line services to install, setup and run apps.'''
+
 import contextlib
 import io
 import os

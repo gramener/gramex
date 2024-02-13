@@ -1,4 +1,5 @@
 '''Saves cyclomatic complexity of Gramex code and corresponding YAML config.'''
+
 import ast
 import logging
 import mccabe

@@ -1049,19 +1049,23 @@ class TestPPTGen(TestCase):
                     eq_(paras[0].alignment, PP_ALIGN.LEFT if i % 2 else PP_ALIGN.RIGHT)
                     eq_(
                         cell.vertical_anchor,
-                        MVA.MIDDLE
-                        if column == 'देश'
-                        else (MVA.TOP if i % 2 else MVA.BOTTOM)
-                        if column == 'city'
-                        else None,
+                        (
+                            MVA.MIDDLE
+                            if column == 'देश'
+                            else (MVA.TOP if i % 2 else MVA.BOTTOM) if column == 'city' else None
+                        ),
                     )
                     eq_(
                         cell.margin_left,
-                        pptx.util.Inches(0.05)
-                        if column == 'देश'
-                        else pptx.util.Inches(0 if j % 2 else 0.1)
-                        if column == 'city'
-                        else pptx.util.Inches(0.1),
+                        (
+                            pptx.util.Inches(0.05)
+                            if column == 'देश'
+                            else (
+                                pptx.util.Inches(0 if j % 2 else 0.1)
+                                if column == 'city'
+                                else pptx.util.Inches(0.1)
+                            )
+                        ),
                     )
                     eq_(cell.margin_right, pptx.util.Pt(1))
                     eq_(cell.margin_top, pptx.util.Inches(0 if j % 2 else 0.1))

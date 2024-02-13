@@ -10,6 +10,7 @@ etc.) The parent CacheFile implements the no-caching behaviour.
 
 See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
+
 # B403:import_public we only pickle Gramex internal objects
 import pickle  # nosec B403
 from diskcache import Cache as DiskCache

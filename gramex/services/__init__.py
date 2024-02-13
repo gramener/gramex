@@ -10,6 +10,7 @@ log:
 ... calls [gramex.service.log()][gramex.services.log] as `log({"version": 1})`.
 If no such function exists, a warning is raised.
 '''
+
 import io
 import re
 import os

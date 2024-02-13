@@ -169,9 +169,7 @@ class TopCause(BaseEstimator):
                                 diff = subseries - submean
                                 vn1 = (diff**2 * sample_weight[subset]).sum() / subn
                                 vn2 = var / n
-                                df = (vn1 + vn2) ** 2 / (
-                                    vn1**2 / (subn - 1) + vn2**2 / (n - 1)
-                                )
+                                df = (vn1 + vn2) ** 2 / (vn1**2 / (subn - 1) + vn2**2 / (n - 1))
                             df = 1 if np.isnan(df) else df
                             with np.errstate(divide='ignore', invalid='ignore'):
                                 t = gain / (vn1 + vn2) ** 0.5

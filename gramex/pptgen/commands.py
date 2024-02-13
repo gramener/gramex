@@ -1,4 +1,5 @@
 '''Python-PPTX customized module.'''
+
 import os
 import copy
 import logging
@@ -635,9 +636,11 @@ def calendarmap(shape, spec, data):
     gradient = matplotlib.cm.get_cmap(spec.get('gradient', 'RdYlGn'))
     color = style.get(
         'fill',
-        lambda v: matplotlib.colors.to_hex(gradient((float(v) - lo_data) / range_data))
-        if not pd.isnull(v)
-        else default_color,
+        lambda v: (
+            matplotlib.colors.to_hex(gradient((float(v) - lo_data) / range_data))
+            if not pd.isnull(v)
+            else default_color
+        ),
     )
 
     startweekday = (startdate.weekday() - spec.get('weekstart', 0)) % 7
@@ -674,9 +677,11 @@ def calendarmap(shape, spec, data):
         rectstyle = {'fill': fill, 'stroke': stroke(val) if callable(stroke) else stroke}
         rect_css(shp, **rectstyle)
         text_style = {
-            'color': style.get('color')(val)
-            if callable(style.get('color'))
-            else spec.get('color', _color.contrast(fill)),
+            'color': (
+                style.get('color')(val)
+                if callable(style.get('color'))
+                else spec.get('color', _color.contrast(fill))
+            ),
             'font-size': font_size(val) if callable(font_size) else font_size,
         }
         for k in ['bold', 'italic', 'underline', 'font-family']:
@@ -1017,9 +1022,11 @@ def css(shape, spec, data):
         if setprop:
             if not isinstance(style[prop], (dict,)):
                 style[prop] = {
-                    'function': '{}'.format(style[prop])
-                    if not isinstance(style[prop], str)
-                    else style[prop]
+                    'function': (
+                        '{}'.format(style[prop])
+                        if not isinstance(style[prop], str)
+                        else style[prop]
+                    )
                 }
             setprop = compile_function(style, prop, data, handler)
             setprop = setprop * pxl_to_inch

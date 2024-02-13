@@ -908,9 +908,7 @@ def setup_secrets(path, max_age_days=1000000, clear=True):
         imports = (
             list(secrets_import.values())
             if isinstance(secrets_import, dict)
-            else secrets_import
-            if isinstance(secrets_import, (list, tuple))
-            else [secrets_import]
+            else secrets_import if isinstance(secrets_import, (list, tuple)) else [secrets_import]
         )
         for pattern in imports:
             for import_path in path.parent.glob(pattern):
