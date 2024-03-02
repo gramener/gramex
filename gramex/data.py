@@ -607,11 +607,11 @@ def insert(
             engine,
             if_exists='append',
             index=False,
-            schema=kwargs.get('schema', None),
-            index_label=kwargs.get('index_label', None),
-            chunksize=kwargs.get('chunksize', None),
-            dtype=kwargs.get('dtype', None),
-            method=kwargs.get('method', None),
+            schema=kwargs.get('schema'),
+            index_label=kwargs.get('index_label'),
+            chunksize=kwargs.get('chunksize'),
+            dtype=kwargs.get('dtype'),
+            method=kwargs.get('method'),
         )
 
         return len(rows)
@@ -1628,7 +1628,7 @@ def _filter_frame(
             by = _filter_groupby_columns(controls['_by'], data.columns, meta)
             # If ?_c is not specified, use 'col|sum' for all numeric columns
             # TODO: This does not support ?_c=-<col> to hide a column
-            col_list = controls.get('_c', None)
+            col_list = controls.get('_c')
             if col_list is None:
                 col_list = [
                     col + _agg_sep + 'sum'
@@ -1753,7 +1753,7 @@ def _filter_db(
             query = query.group_by(*by)
             # If ?_c is not specified, use 'col|sum' for all numeric columns
             # TODO: This does not support ?_c=-<col> to hide a column
-            col_list = controls.get('_c', None)
+            col_list = controls.get('_c')
             if col_list is None:
                 col_list = [
                     col + _agg_sep + 'sum'
@@ -2076,7 +2076,7 @@ def _insert_mongodb(
 ):
     table = _mongodb_collection(url, database, collection, **kwargs)
     result = table.insert_many([_mongodb_json(row) for row in rows.to_dict(orient='records')])
-    meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]
+    meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]  # noqa: B035
     return len(result.inserted_ids)
 
 

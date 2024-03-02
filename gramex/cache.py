@@ -175,7 +175,7 @@ def open(
         hashfn(transform),
         frozenset(((k, hashed(v)) for k, v in kwargs.items())),
     )
-    cached = _cache.get(key, _FALLBACK_MEMORY_CACHE.get(key, None))
+    cached = _cache.get(key, _FALLBACK_MEMORY_CACHE.get(key))
     fstat = stat(path)
     if cached is None or fstat != cached.get('stat'):
         reloaded = True
@@ -469,7 +469,7 @@ def _json_dump(obj: Any) -> str:
     )
 
 
-def cache_key(*args: List[Any]) -> str:
+def cache_key(*args: Any) -> str:
     '''Converts arguments into a stable string suitable for use as a cache key.
 
     Examples:
@@ -1132,7 +1132,7 @@ class HDF5Store(KeyStore):
     def load(self, key, default=None):
         # Keys cannot contain / in HDF5 store. Escape it
         key = self._escape(key).replace('/', '\t')
-        result = self.store.get(key, None)
+        result = self.store.get(key)
         if result is None:
             return default
         result = result[()]
@@ -1436,7 +1436,7 @@ def _table_status(engine, tables):
     dialect = engine.dialect.name
     key = (engine.url, tuple(tables))
     db = engine.url.database
-    if _STATUS_METHODS.get(key, None) is None:
+    if _STATUS_METHODS.get(key) is None:
         if len(tables) == 0:
             raise ValueError(f'gramex.cache.query table list is empty: {tables!r}')
         for name in tables:

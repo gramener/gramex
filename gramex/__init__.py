@@ -391,7 +391,7 @@ def log(*args, **kwargs):
 
     # gramexlog() positional arguments may have a handler and app (in any order)
     # The app defaults to the first gramexlog:
-    handler, app = None, services.info.gramexlog.get('defaultapp', None)
+    handler, app = None, services.info.gramexlog.get('defaultapp')
     for arg in args:
         # Pretend that anything that has a .args is a handler
         if hasattr(getattr(arg, 'args', None), 'items'):
