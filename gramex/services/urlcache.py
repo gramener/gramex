@@ -12,7 +12,7 @@ See gramex.handlers.BaseHandler for examples on how to use these objects.
 '''
 
 # B403:import_public we only pickle Gramex internal objects
-import pickle  # nosec B403
+import pickle  # noqa S403
 from diskcache import Cache as DiskCache
 from .ttlcache import TTLCache as MemoryCache
 from .rediscache import RedisCache
@@ -68,7 +68,7 @@ class MemoryCacheFile(CacheFile):
     def get(self):
         result = self.store.get(self.key)
         # B301:pickle key is an internal state string and safe to pickle
-        return None if result is None else pickle.loads(result)  # nosec B301
+        return None if result is None else pickle.loads(result)  # noqa S301
 
     def wrap(self, handler):
         self._finish = handler.finish

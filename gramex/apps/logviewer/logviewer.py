@@ -4,8 +4,8 @@ import os.path
 from glob import glob
 
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
-from lxml.etree import Element  # nosec B410
-from lxml.html import fromstring, tostring  # nosec B410
+from lxml.etree import Element  # noqa S410
+from lxml.html import fromstring, tostring  # noqa S410
 import numpy as np
 import pandas as pd
 import gramex.data

@@ -14,7 +14,7 @@ import requests
 import sqlalchemy as sa
 
 # B404:import_subprocess only developers can access this, not users
-import subprocess  # nosec B404
+import subprocess  # noqa B404
 import sys
 import tempfile
 import time
@@ -574,7 +574,7 @@ def urlfetch(url: str, info: bool = False, **kwargs: dict) -> Union[str, Dict]:
             return {'name': url, 'r': None, 'url': None, 'ext': ext, 'content_type': content_type}
         else:
             return url
-    r = requests.get(url, **kwargs)  # nosec B113 - timeout is controlled by kwargs
+    r = requests.get(url, **kwargs)  # noqa S113 - timeout is controlled by kwargs
     if 'Content-Type' in r.headers:
         content_type = r.headers['Content-Type'].split(';')[0]
         ext = mimetypes.guess_extension(content_type, strict=False)
@@ -688,7 +688,7 @@ class Subprocess:
         kwargs['close_fds'] = 'posix' in sys.builtin_module_names
 
         # B603:subprocess_without_shell_equals_true: only developers can access this, not users
-        self.proc = subprocess.Popen(args, **kwargs)  # nosec B603
+        self.proc = subprocess.Popen(args, **kwargs)  # noqa S603
         self.thread = {}  # Has the running threads
         self.future = {}  # Stores the futures indicating stream close
         self.loop = _get_current_ioloop()
@@ -872,7 +872,7 @@ def daemon(
     # If process was never started, start it
     if key not in _daemons:
         # B404:import_subprocess only developers can access this, not users
-        started = _daemons[key] = Subprocess(args, **kwargs)  # nosec B404
+        started = _daemons[key] = Subprocess(args, **kwargs)  # noqa S404
 
     # Ensure that process is running. Restart if required
     proc = _daemons[key]
@@ -880,7 +880,7 @@ def daemon(
     while proc.proc.returncode is not None and restart > 0:
         restart -= 1
         # B404:import_subprocess only developers can access this, not users
-        proc = started = _daemons[key] = Subprocess(args, **kwargs)  # nosec B404
+        proc = started = _daemons[key] = Subprocess(args, **kwargs)  # noqa S404
     if proc.proc.returncode is not None:
         raise RuntimeError(f'Error {proc.proc.returncode} starting {arg_str}')
     if started:
@@ -1332,7 +1332,7 @@ def _yaml(handle, **kwargs):
 
     kwargs.setdefault('Loader', yaml.SafeLoader)
     # B506:yaml_load we load safely using SafeLoader
-    return yaml.load(handle.read(), **kwargs)  # nosec B506
+    return yaml.load(handle.read(), **kwargs)  # noqa S506
 
 
 def _template(path, **kwargs):
@@ -1449,20 +1449,20 @@ def _table_status(engine, tables):
             # Works only on MySQL 5.7 and above
             # B608:hardcoded_sql_expressions only used internally
             w = _wheres('table_schema', 'table_name', db, tables)
-            q = 'SELECT update_time FROM information_schema.tables WHERE ' + w  # nosec B608
+            q = 'SELECT update_time FROM information_schema.tables WHERE ' + w  # noqa S608
         elif dialect == 'snowflake':
             # https://docs.snowflake.com/en/sql-reference/info-schema/tables.html
             w = _wheres('table_schema', 'table_name', db, tables)
-            q = 'SELECT last_altered FROM information_schema.tables WHERE ' + w  # nosec B608
+            q = 'SELECT last_altered FROM information_schema.tables WHERE ' + w  # noqa S608
         elif dialect == 'mssql':
             # https://goo.gl/b4aL9m
             w = _wheres('database_id', 'object_id', db, tables, fn=['DB_ID', 'OBJECT_ID'])
-            q = 'SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' + w  # nosec B608
+            q = 'SELECT last_user_update FROM sys.dm_db_index_usage_stats WHERE ' + w  # noqa S608
         elif dialect == 'postgresql':
             # https://www.postgresql.org/docs/9.6/static/monitoring-stats.html
             w = _wheres('schemaname', 'relname', 'public', tables)
             q = (
-                'SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables '  # nosec B608
+                'SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables '  # noqa S608
                 + 'WHERE '
                 + w
             )

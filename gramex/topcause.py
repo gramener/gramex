@@ -53,7 +53,7 @@ class TopCause(BaseEstimator):
             Returns the instance itself.
         '''
         if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)  # noqa: N806 X can be in uppercase
+            X = pd.DataFrame(X)  # noqa N806 X can be in uppercase
         if not isinstance(y, pd.Series):
             y = pd.Series(y)
         if X.shape[0] != y.shape[0]:

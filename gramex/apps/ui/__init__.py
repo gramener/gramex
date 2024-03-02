@@ -8,7 +8,7 @@ import gramex.cache
 import gramex.handlers
 
 # B404:import_subprocess only for JS compilation
-import subprocess  # nosec B404
+import subprocess  # noqa S404
 from hashlib import md5
 from tornado.gen import coroutine, Return
 from functools import partial
@@ -63,7 +63,7 @@ def _get_cache_key(state):
     '''Return short string capturing state of object. Used to create unique filenames for state'''
     cache_key = gramex.cache.cache_key(state).encode('utf-8')
     # B303, B324:md5 is safe here - it's not for cryptographic use
-    return md5(cache_key).hexdigest()[:5]  # nosec B303, B324
+    return md5(cache_key).hexdigest()[:5]  # noqa S113
 
 
 @coroutine

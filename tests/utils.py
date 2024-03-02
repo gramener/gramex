@@ -514,7 +514,7 @@ def get_state_info():
 
 
 def make_circles():
-    X, y = sk_make_circles(noise=0.05, factor=0.4)  # NOQA: N806
+    X, y = sk_make_circles(noise=0.05, factor=0.4)  # noqa N806
     out = os.path.join(os.path.dirname(__file__), 'circles.csv')
     pd.DataFrame(np.c_[X, y], columns=['X1', 'X2', 'y']).to_csv(out, encoding='utf-8', index=False)
 

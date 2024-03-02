@@ -93,6 +93,28 @@ include = ["gramex*"]
 # pytest/complexity_error/invalid.py has non-parseable Python code
 force-exclude = "complexity_error"
 
+[tool.ruff]
+exclude = ["build", "dist", "docs", ".eggs", "node_modules", ".vscode"]
+line-length = 99
+# E203 allows whitespace before :. Black needs this
+# E911 allows use of str(). Required for pathlib.Path to string conversions
+# N802 ignores "function name should be in lowercase". Required for
+#   tearDownModule(), extendMarkdown, etc where function name is pre-defined
+# B902 ignores "blind except Exception:". We trap broad errors often
+lint.ignore = ["E203", "N802", "B006", "B007", "B008", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# ML libraries use capital "X" as a function argument or a variable. That's OK
+"gramex/ml_api.py" = ["N803", "N806"]
+"gramex/sm_api.py" = ["N803", "N806"]
+"gramex/transformers.py" = ["N803", "N806"]
+# requests.post infers filename from open(...) handle, so avoid context handler (flake8-simplify)
+"tests/test_uploadhandler.py" = ["SIM115"]
+# Ignore bandit checks for test cases
+"pytest/**/*.py" = ["S"]
+"testlib/**/*.py" = ["S"]
+"tests/**/*.py" = ["S"]
+
 [tool.pytest.ini_options]
 testpaths = "pytest"
 

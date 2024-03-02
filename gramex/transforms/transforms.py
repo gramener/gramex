@@ -312,7 +312,7 @@ def build_transform(
     )
     code = compile(''.join(body), filename=filename, mode='exec')
     # B102:exec_used is safe since the code is written by app developer
-    exec(code, context)  # nosec B102
+    exec(code, context)  # noqa S102
 
     # Return the transformed function
     result = context['transform']
@@ -498,7 +498,7 @@ def condition(*args):
     for cond, val in pairs:
         if isinstance(cond, str):
             # B307:eval is safe here since `cond` is written by app developer
-            if eval(Template(cond).substitute(var_defaults)):  # nosec B307
+            if eval(Template(cond).substitute(var_defaults)):  # noqa S307
                 return val
         elif cond:
             return val
@@ -568,7 +568,7 @@ def flattener(fields: dict, default: Any = None, filename: str = 'flatten'):
     code = compile(''.join(body), filename=f'flattener:{filename}', mode='exec')
     context = {'AttrDict': AttrDict, 'default': default}
     # B307:eval is safe here since the code is constructed entirely in this function
-    eval(code, context)  # nosec B307
+    eval(code, context)  # noqa S307
     return context[filename]
 
 
@@ -847,7 +847,7 @@ def build_log_info(keys: List, *vars: List):
     )
     context = {'os': os, 'time': time, 'datetime': datetime, 'conf': conf, 'AttrDict': AttrDict}
     # B102:exec_used is safe here since the code is constructed entirely in this function
-    exec(code, context)  # nosec B102
+    exec(code, context)  # noqa S102
     return context['fn']
 
 

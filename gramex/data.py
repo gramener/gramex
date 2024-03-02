@@ -1207,7 +1207,7 @@ def alter(
                 # Use eval() to handle direct types like INTEGER *and* expressions like VARCHAR(3)
                 # eval() is safe here since `col_type` is written by app developer
                 # B307:eval is safe here since `col_type` is written by app developer
-                row['type'] = eval(col_type.upper(), vars(sa.types))  # nosec B307
+                row['type'] = eval(col_type.upper(), vars(sa.types))  # noqa S307
             row['type_'] = row.pop('type')
             if 'default' in row:
                 from inspect import isclass
@@ -2076,7 +2076,7 @@ def _insert_mongodb(
 ):
     table = _mongodb_collection(url, database, collection, **kwargs)
     result = table.insert_many([_mongodb_json(row) for row in rows.to_dict(orient='records')])
-    meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]  # noqa: B035
+    meta['inserted'] = [{'id': str(id) for id in result.inserted_ids}]  # noqa B035
     return len(result.inserted_ids)
 
 

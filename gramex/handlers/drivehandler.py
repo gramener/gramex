@@ -131,7 +131,7 @@ class DriveHandler(FormHandler):
             path = slug.filename(file)
             # B311:random random() is safe since it's for non-cryptographic use
             while self.fs.exists(path):
-                randomletter = choice(digits + ascii_lowercase)  # nosec B311
+                randomletter = choice(digits + ascii_lowercase)  # noqa S311
                 path = os.path.splitext(path)[0] + randomletter + ext
             self.args['file'][i] = file
             self.args['ext'][i] = ext.lower()

@@ -28,7 +28,7 @@ except ImportError:
     STATSMODELS_INSTALLED = False
 try:
     logging.getLogger("tensorflow").disabled = True
-    import transformers as trf  # NOQA: F401
+    import transformers as trf  # noqa F401
 
     TRANSFORMERS_INSTALLED = True
 except ImportError:
@@ -551,7 +551,7 @@ class TestSklearn(TestGramex):
             self.assertEqual(r.status_code, OK)
             self.assertFalse(op.exists(self.model_path))
             # recreate the model
-            X, y = make_classification()  # NOQA: N806
+            X, y = make_classification()  # noqa N806
             xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
             df = pd.DataFrame(xtrain)
             df["target"] = ytrain
@@ -577,7 +577,7 @@ class TestSklearn(TestGramex):
             self.assertEqual(r.status_code, OK)
             self.assertFalse(op.exists(self.model_path))
             # recreate the model
-            X, y = make_classification()  # NOQA: N806
+            X, y = make_classification()  # noqa N806
             xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
             df = pd.DataFrame(xtrain)
             df["target"] = ytrain
@@ -671,7 +671,7 @@ class TestSklearn(TestGramex):
     def test_train(self):
         # backup the original model
         clf = joblib.load(self.model_path)
-        X, y = make_classification()  # NOQA: N806
+        X, y = make_classification()  # noqa N806
         xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify=y, test_size=0.25)
         df = pd.DataFrame(xtrain)
         df["target"] = ytrain

@@ -247,7 +247,7 @@ class StreamWriter:
             folder = os.path.dirname(os.path.abspath(path))
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            self.stream = open(path, 'ab')  # noqa: SIM115
+            self.stream = open(path, 'ab')  # noqa SIM115
             app_log.debug(f'StreamWriter writing to {path}')
 
         # Schedule the next call after a minute

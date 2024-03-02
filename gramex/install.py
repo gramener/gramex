@@ -20,7 +20,7 @@ from orderedattrdict import AttrDict
 from orderedattrdict.yamlutils import AttrDictYAMLLoader
 
 # B404:import_subprocess only developers can access this, not users
-from subprocess import Popen, check_output, CalledProcessError  # nosec B404
+from subprocess import Popen, check_output, CalledProcessError  # noqa S404
 from textwrap import dedent
 from tornado.template import Template
 from zipfile import ZipFile
@@ -531,7 +531,7 @@ def complexity(args, kwargs) -> dict:
     import re
 
     # B404:import_subprocess only used for internal Gramex scripts
-    from subprocess import check_output  # nosec B404
+    from subprocess import check_output  # noqa S404
 
     project_path = os.getcwd() if len(args) == 0 else args[0]
     project_yaml = _gramex_yaml_path(project_path, kwargs)
@@ -572,7 +572,7 @@ def complexity(args, kwargs) -> dict:
     try:
         app = gramex.config.PathConfig(project_yaml)
         conf = +gramex.config.ChainConfig([('base', base), ('app', app)])
-    except Exception as e:  # noqa: B902 capture load errors as a "feature"
+    except Exception as e:  # noqa B902 capture load errors as a "feature"
         app_log.exception(str(e))
         return
     yamlpaths = {'.'.join(key): val for key, val in walk(conf)}
@@ -594,7 +594,9 @@ def complexity(args, kwargs) -> dict:
     # Calculate JS complexity
     # B602:subprocess_popen_with_shell_equals_true and
     # B607:start_process_with_partial_path are safe to skip since this is a Gramex internal cmd
-    output = check_output('npx --yes @gramex/escomplexity', cwd=project_path, shell=True)  # nosec
+    output = check_output(
+        'npx --yes @gramex/escomplexity', cwd=project_path, shell=True  # noqa S607
+    )  # noqa S602
     es_complexity = int(output.decode('utf-8').split('\n')[-2].strip())
     return pd.DataFrame(
         {
@@ -774,11 +776,10 @@ def run_command(config):
     cygwin, cygpath, kwargs = which('cygcheck'), which('cygpath'), {'universal_newlines': True}
     if cygwin is not None and cygpath is not None:
         # subprocess.check_output is safe here since these are developer-initiated
-        # B404:import_subprocess check_output is safe here since these are developer-initiated
-        path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()  # nosec 404
-        is_cygwin_app = check_output([cygwin, '-f', path], **kwargs).strip()  # nosec 404
+        path = check_output([cygpath, '-au', which(appcmd[0])], **kwargs).strip()  # noqa S603
+        is_cygwin_app = check_output([cygwin, '-f', path], **kwargs).strip()  # noqa S603
         if is_cygwin_app:
-            target = check_output([cygpath, '-au', target], **kwargs).strip()  # nosec 404
+            target = check_output([cygpath, '-au', target], **kwargs).strip()  # noqa S603
     # Replace TARGET with the actual target
     if 'TARGET' in appcmd:
         appcmd = [target if arg == 'TARGET' else arg for arg in appcmd]
@@ -789,7 +790,7 @@ def run_command(config):
         app_log.error(f'Cannot delete target {config.target}. Aborting installation')
         return
     # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-    proc = Popen(appcmd, bufsize=-1, **kwargs)  # nosec 603
+    proc = Popen(appcmd, bufsize=-1, **kwargs)  # noqa S603
     proc.communicate()
     return proc.returncode
 
@@ -873,7 +874,7 @@ def save_user_config(appname, value):
         with user_conf_file.open(encoding='utf-8') as handle:
             # If app.yaml is empty, yaml.safe_load returns None. Use the AttrDict() instead
             # B506:yaml_load is safe since this object is internally created
-            user_config = yaml.load(handle, Loader=AttrDictYAMLLoader) or user_config  # nosec
+            user_config = yaml.load(handle, Loader=AttrDictYAMLLoader) or user_config  # noqa S506
     if value is None:
         if appname in user_config:
             del user_config[appname]
@@ -884,7 +885,7 @@ def save_user_config(appname, value):
     with user_conf_file.open(mode='w', encoding='utf-8') as handle:
         # Use yaml.dump (not .safe_dump) to serialize the AttrDicts
         # B506:yaml_load is safe since this object is internally created
-        yaml.dump(user_config, handle, indent=4, default_flow_style=False)  # nosec
+        yaml.dump(user_config, handle, indent=4, default_flow_style=False)  # noqa S506
 
 
 def get_app_config(appname, kwargs):
@@ -918,7 +919,7 @@ def _check_output(cmd, default=b'', **kwargs):
     '''Run cmd and return output. Return default in case the command fails'''
     try:
         # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-        return check_output(shlex.split(cmd), **kwargs).strip()  # nosec B603
+        return check_output(shlex.split(cmd), **kwargs).strip()  # noqa S603
     # OSError is raised if the cmd is not found.
     # CalledProcessError is raised if the cmd returns an error.
     except (OSError, CalledProcessError):
@@ -930,7 +931,7 @@ def _run_console(cmd, **kwargs):
     cmd = shlex.split(cmd)
     try:
         # B603:subprocess_without_shell_equals_true is safe since this is developer-initiated
-        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)  # nosec B603
+        proc = Popen(cmd, bufsize=-1, universal_newlines=True, **kwargs)  # noqa S603
     except OSError:
         app_log.error(f'Cannot find command: {cmd[0]}')
         raise

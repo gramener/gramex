@@ -721,7 +721,7 @@ class TestPPTGen(TestCase):
                 {
                     'size': grpobj[grp].count(),
                     # B307:eval is safe here since we've constructed `grp_order`
-                    'seq': eval(grp_order)(grpobj),  # nosec B307
+                    'seq': eval(grp_order)(grpobj),  # noqa S307
                 }
             )
             frame['width'] = frame['size'] / float(frame['size'].sum()) * width

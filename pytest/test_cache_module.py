@@ -195,7 +195,7 @@ class TestOpen:
         with io.open(path, encoding='utf-8') as handle:
             # B506:yaml_load is safe to use here since we're loading from a known safe file.
             # Specifically, we're testing whether Loader= is passed to gramex.cache.open.
-            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)  # nosec B506
+            expected = yaml.load(handle, Loader=AttrDictYAMLLoader)  # noqa S506
 
         def check(reload):
             result, reloaded = gramex.cache.open(

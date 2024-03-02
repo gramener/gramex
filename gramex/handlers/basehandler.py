@@ -787,7 +787,7 @@ class BaseMixin:
 
     def debug_exception(self, typ, value, tb):
         super(BaseHandler, self).log_exception(typ, value, tb)
-        import pdb  # noqa: T100
+        import pdb  # noqa T100
 
         pdb.post_mortem(tb)
 

@@ -1,20 +1,56 @@
 
-gramener/gramex:1.93.2 (alpine 3.17.5)
+gramener/gramex:1.94.1 (alpine 3.17.5)
 ======================================
-Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+Total: 10 (UNKNOWN: 0, LOW: 0, MEDIUM: 8, HIGH: 2, CRITICAL: 0)
 
+┌────────────┬───────────────┬──────────┬────────┬───────────────────┬───────────────┬───────────────────────────────────────────────────────────┐
+│  Library   │ Vulnerability │ Severity │ Status │ Installed Version │ Fixed Version │                           Title                           │
+├────────────┼───────────────┼──────────┼────────┼───────────────────┼───────────────┼───────────────────────────────────────────────────────────┤
+│ libcrypto3 │ CVE-2023-5363 │ HIGH     │ fixed  │ 3.0.10-r0         │ 3.0.12-r0     │ openssl: Incorrect cipher key and IV length processing    │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-5363                 │
+│            ├───────────────┼──────────┤        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-5678 │ MEDIUM   │        │                   │ 3.0.12-r1     │ openssl: Generating excessively long X9.42 DH keys or     │
+│            │               │          │        │                   │               │ checking excessively long X9.42...                        │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-5678                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-6129 │          │        │                   │ 3.0.12-r2     │ openssl: POLY1305 MAC implementation corrupts vector      │
+│            │               │          │        │                   │               │ registers on PowerPC                                      │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-6129                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-6237 │          │        │                   │ 3.0.12-r3     │ openssl: Excessive time spent checking invalid RSA public │
+│            │               │          │        │                   │               │ keys                                                      │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-6237                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2024-0727 │          │        │                   │ 3.0.12-r4     │ openssl: denial of service via null dereference           │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-0727                 │
+├────────────┼───────────────┼──────────┤        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│ libssl3    │ CVE-2023-5363 │ HIGH     │        │                   │ 3.0.12-r0     │ openssl: Incorrect cipher key and IV length processing    │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-5363                 │
+│            ├───────────────┼──────────┤        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-5678 │ MEDIUM   │        │                   │ 3.0.12-r1     │ openssl: Generating excessively long X9.42 DH keys or     │
+│            │               │          │        │                   │               │ checking excessively long X9.42...                        │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-5678                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-6129 │          │        │                   │ 3.0.12-r2     │ openssl: POLY1305 MAC implementation corrupts vector      │
+│            │               │          │        │                   │               │ registers on PowerPC                                      │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-6129                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2023-6237 │          │        │                   │ 3.0.12-r3     │ openssl: Excessive time spent checking invalid RSA public │
+│            │               │          │        │                   │               │ keys                                                      │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2023-6237                 │
+│            ├───────────────┤          │        │                   ├───────────────┼───────────────────────────────────────────────────────────┤
+│            │ CVE-2024-0727 │          │        │                   │ 3.0.12-r4     │ openssl: denial of service via null dereference           │
+│            │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-0727                 │
+└────────────┴───────────────┴──────────┴────────┴───────────────────┴───────────────┴───────────────────────────────────────────────────────────┘
 
 Python (python-pkg)
 ===================
-Total: 2 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 0, CRITICAL: 0)
+Total: 1 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 1, CRITICAL: 0)
 
-┌─────────────────────────┬─────────────────────┬──────────┬────────┬───────────────────┬────────────────┬─────────────────────────────────────────────────────┐
-│         Library         │    Vulnerability    │ Severity │ Status │ Installed Version │ Fixed Version  │                        Title                        │
-├─────────────────────────┼─────────────────────┼──────────┼────────┼───────────────────┼────────────────┼─────────────────────────────────────────────────────┤
-│ cryptography (METADATA) │ GHSA-v8gr-m533-ghj9 │ LOW      │ fixed  │ 41.0.3            │ 41.0.4         │ Vulnerable OpenSSL included in cryptography wheels  │
-│                         │                     │          │        │                   │                │ https://github.com/advisories/GHSA-v8gr-m533-ghj9   │
-├─────────────────────────┼─────────────────────┼──────────┤        ├───────────────────┼────────────────┼─────────────────────────────────────────────────────┤
-│ urllib3 (METADATA)      │ CVE-2023-43804      │ MEDIUM   │        │ 1.26.16           │ 2.0.6, 1.26.17 │ `Cookie` HTTP header isn't stripped on cross-origin │
-│                         │                     │          │        │                   │                │ redirects                                           │
-│                         │                     │          │        │                   │                │ https://avd.aquasec.com/nvd/cve-2023-43804          │
-└─────────────────────────┴─────────────────────┴──────────┴────────┴───────────────────┴────────────────┴─────────────────────────────────────────────────────┘
+┌─────────────────────────┬────────────────┬──────────┬────────┬───────────────────┬───────────────┬────────────────────────────────────────────────────────────┐
+│         Library         │ Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                           Title                            │
+├─────────────────────────┼────────────────┼──────────┼────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────────────┤
+│ cryptography (METADATA) │ CVE-2024-26130 │ HIGH     │ fixed  │ 42.0.2            │ 42.0.4        │ cryptography is a package designed to expose cryptographic │
+│                         │                │          │        │                   │               │ primitives ...                                             │
+│                         │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-26130                 │
+└─────────────────────────┴────────────────┴──────────┴────────┴───────────────────┴───────────────┴────────────────────────────────────────────────────────────┘

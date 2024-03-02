@@ -114,7 +114,7 @@ class ProcessHandler(BaseHandler):
             self.cmdargs,
             # NOTE: developer should sanitize args if shell=True
             # B604 any_other_function_with_shell_equals_true
-            shell=self.shell,  # nosec B604
+            shell=self.shell,  # noqa S604
             cwd=self.cwd,
             stream_stdout=self.stream_stdout,
             stream_stderr=self.stream_stderr,

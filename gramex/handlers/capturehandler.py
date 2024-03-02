@@ -10,7 +10,7 @@ from orderedattrdict import AttrDict
 from threading import Thread, Lock
 
 # B404:import_subprocess only for JS compilation
-from subprocess import Popen, PIPE, STDOUT  # nosec B404
+from subprocess import Popen, PIPE, STDOUT  # noqa S404
 from urllib.parse import urlencode, urljoin
 from tornado.web import HTTPError
 from tornado.httpclient import AsyncHTTPClient
@@ -135,7 +135,7 @@ class Capture:
             self.close()
             # B603:subprocess_without_shell_equals_true is safe since self.cmd is taken from
             # the YAML configuration (from developers)
-            self.proc = Popen(shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)  # nosec B603
+            self.proc = Popen(shlex.split(self.cmd), stdout=PIPE, stderr=STDOUT)  # noqa S603
             self.proc.poll()
             atexit.register(self.close)
             # TODO: what if readline() does not return quickly?

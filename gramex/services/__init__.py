@@ -164,7 +164,7 @@ def app(conf: dict) -> None:
                     # If Ctrl-D is pressed, run the Python debugger
                     char = debug.getch()
                     if char == b'\x04':
-                        breakpoint()  # noqa: T100
+                        breakpoint()  # noqa T100
                     # If Ctrl-B is pressed, start the browser
                     if char == b'\x02':
                         browser = webbrowser.get()
@@ -962,7 +962,7 @@ def _get_cache_key(conf, name):
         'argsep': ', ',  # join args using comma
     }
     # B102:exec_used is safe since the code is constructed entirely in this function
-    exec(method, context)  # nosec B102
+    exec(method, context)  # noqa S102
     return context['cache_key']
 
 

@@ -161,9 +161,9 @@ def evaluate(handler, code):
         context['handler'] = handler
         # B307:eval B102:exec_used is safe since only admin can run this
         if mode == 'eval':
-            result = eval(co, context)  # nosec B307
+            result = eval(co, context)  # noqa S307
         else:
-            exec(co, context)  # nosec B102
+            exec(co, context)  # noqa S102
             result = None
     except Exception as e:
         result = e
@@ -217,10 +217,10 @@ def system_information(handler):
     apps = {
         # B602:any_other_function_with_shell_equals_true is safe here since the code is
         # constructed entirely in this function. We use shell to pick up the commands' paths.
-        ('node', 'version'): Subprocess('node --version', shell=True),  # nosec 602
-        ('npm', 'version'): Subprocess('npm --version', shell=True),  # nosec 602
-        ('yarn', 'version'): Subprocess('yarn --version', shell=True),  # nosec 602
-        ('git', 'version'): Subprocess('git --version', shell=True),  # nosec 602
+        ('node', 'version'): Subprocess('node --version', shell=True),  # noqa S604
+        ('npm', 'version'): Subprocess('npm --version', shell=True),  # noqa S604
+        ('yarn', 'version'): Subprocess('yarn --version', shell=True),  # noqa S604
+        ('git', 'version'): Subprocess('git --version', shell=True),  # noqa S604
     }
     for key, proc in apps.items():
         stdout, stderr = yield proc.wait_for_exit()

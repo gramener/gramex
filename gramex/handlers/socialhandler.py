@@ -116,7 +116,7 @@ class SocialHandler(BaseHandler):
         token = self.kwargs.get(key, None)  # Get from config
         session_token = fetch(info, key, None)
         # B105:hardcoded_password_string: 'persist' is not a password
-        if token == 'persist':  # nosec B105
+        if token == 'persist':  # noqa S105
             token = self.read_store().get(key, None)  # If persist, use store
             if token is None and session_token:  # Or persist from session
                 self.write_store(info)

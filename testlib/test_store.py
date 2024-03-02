@@ -105,13 +105,13 @@ class TestJSONStore(unittest.TestCase):
         self.store.flush()
         data.update({'►': {'_t': expiry, 'α': True}})
         eq_(self.load(), data)
-        ok_('►' in self.store.keys())  # noqa: SIM118 self.store is not iterable
+        ok_('►' in self.store.keys())  # noqa SIM118 self.store is not iterable
 
         self.store.dump('λ', {'α': 1, 'β': None, '_t': expiry})
         self.store.purge()
         data.update({'λ': {'α': 1, 'β': None, '_t': expiry}})
         eq_(self.load(), data)
-        ok_('λ' in self.store.keys())  # noqa: SIM118 self.store is not iterable
+        ok_('λ' in self.store.keys())  # noqa SIM118 self.store is not iterable
 
         # Keys must be converted to strings
         for key in (1, 0.0):
@@ -120,7 +120,7 @@ class TestJSONStore(unittest.TestCase):
             self.store.flush()
             data.update({str_key: 1})
             eq_(self.load(), data)
-            ok_(str_key in self.store.keys())  # noqa: SIM118 self.store is not iterable
+            ok_(str_key in self.store.keys())  # noqa SIM118 self.store is not iterable
 
     @classmethod
     def teardownClass(cls):

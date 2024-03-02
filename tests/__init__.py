@@ -6,11 +6,11 @@ import unittest
 
 # B410:import_lxml lxml.etree is safe on https://github.com/tiran/defusedxml/tree/main/xmltestdata
 # F401: we import here since other modules use this
-from lxml import etree  # noqa: F401    # nosec B410
+from lxml import etree  # noqa F401    # noqa S410
 from . import server
 from nose.tools import eq_, ok_
 from orderedattrdict import AttrDict
-from pandas.testing import assert_frame_equal as afe  # noqa: F401 - other modules use this
+from pandas.testing import assert_frame_equal as afe  # noqa F401 - other modules use this
 
 tempfiles = AttrDict()
 folder = os.path.dirname(os.path.abspath(__file__))

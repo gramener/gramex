@@ -525,4 +525,4 @@ def commandline(args=None):
     # Otherwise, open the output PPTX created
     if not rules.get('no-open', False) and hasattr(os, 'startfile'):
         # B606:start_process_with_no_shell is safe -- it's a file we've explicitly created
-        os.startfile(rules['target'])  # nosec B606
+        os.startfile(rules['target'])  # noqa S606

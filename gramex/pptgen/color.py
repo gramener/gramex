@@ -105,7 +105,7 @@ class _MSO:
         self.values = values
 
     def __getitem__(self, key):
-        if isinstance(key, slice) or type(key) is int:
+        if isinstance(key, (slice, int)):
             return self.values.__getitem__(key)
         elif key in self._lookup:
             return self.values[self._lookup[key]]

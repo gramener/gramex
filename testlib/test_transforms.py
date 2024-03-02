@@ -145,7 +145,7 @@ class BuildTransform(unittest.TestCase):
         self.check_transform(transform, fn, vars={'s': None})
 
         def transform(_val):
-            result = condition(1, 0, -1)  # noqa: this is in gramex.transforms
+            result = condition(1, 0, -1)  # noqa this is in gramex.transforms
             return (
                 result
                 if isinstance(result, GeneratorType)
