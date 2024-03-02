@@ -111,7 +111,8 @@ url:
         Content-Type: application/json # Display as JSON
 
   apps/admin2/home-static-$*:
-    pattern: /$YAMLURL/(.+)
+    pattern: /$YAMLURL/(.*\.css|.*\.js)
     handler: FileHandler
     kwargs:
       path: $YAMLPATH/
+      auth: $ADMIN_AUTH
