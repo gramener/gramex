@@ -16,4 +16,11 @@ ignore:
         expires: 2030-01-01T00:00:00.000Z
         created: 2021-07-24T00:00:00.000Z
 
+
+  SNYK-JS-INFLIGHT-6095116:
+    - '*':
+        reason: No fix available. Await comicgen > glob upgrade
+        expires: 2024-12-31T00:00:00.000Z
+        created: 2024-03-02T00:00:00.000Z
+
 patch: {}

@@ -7,9 +7,3 @@ ignore:
         reason: No fix available. Await comicgen > glob upgrade
         expires: 2024-12-31T00:00:00.000Z
         created: 2024-03-02T00:00:00.000Z
-
-  SNYK-JS-BROWSERIFYSIGN-6037026:
-    - '*':
-        reason: Vulnerability in third party package. Await fix
-        expires: 2024-12-31T00:00:00.000Z
-        created: 2023-11-14T00:00:00.000Z
