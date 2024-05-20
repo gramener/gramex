@@ -1,4 +1,3 @@
-C:\code\cto\gramex\.bandit: OK
 C:\code\cto\gramex\.eslintrc.yml: OK
 C:\code\cto\gramex\.git: Excluded
 C:\code\cto\gramex\.github: Excluded
@@ -24,6 +23,7 @@ C:\code\cto\gramex\gramex\apps\admin2\gramex.yaml: OK
 C:\code\cto\gramex\gramex\apps\admin2\gramexadmin.py: OK
 C:\code\cto\gramex\gramex\apps\admin2\index.html: OK
 C:\code\cto\gramex\gramex\apps\admin2\schedule.js: OK
+C:\code\cto\gramex\gramex\apps\capture\.snyk: OK
 C:\code\cto\gramex\gramex\apps\capture\capture.js: OK
 C:\code\cto\gramex\gramex\apps\capture\chromecapture.js: OK
 C:\code\cto\gramex\gramex\apps\capture\index.html: OK
@@ -41,7 +41,6 @@ C:\code\cto\gramex\gramex\apps\filemanager\index.html: OK
 C:\code\cto\gramex\gramex\apps\filemanager\navbar.html: OK
 C:\code\cto\gramex\gramex\apps\filemanager\README.html: OK
 C:\code\cto\gramex\gramex\apps\init\default\.eslintrc.yml: OK
-C:\code\cto\gramex\gramex\apps\init\default\.flake8: OK
 C:\code\cto\gramex\gramex\apps\init\default\.gitlab-ci.yml: OK
 C:\code\cto\gramex\gramex\apps\init\default\.secrets.yaml: OK
 C:\code\cto\gramex\gramex\apps\init\default\.template.gitignore: OK
@@ -176,59 +175,6 @@ C:\code\cto\gramex\gramex\apps\ui\theme\themes-guide\tequila.png: OK
 C:\code\cto\gramex\gramex\apps\ui\theme\themes-guide\tequila.scss: OK
 C:\code\cto\gramex\gramex\apps\ui\theme\themes.json: OK
 C:\code\cto\gramex\gramex\apps\ui\__init__.py: OK
-C:\code\cto\gramex\gramex\apps\uifactory\.eslintrc.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\.gitattributes: OK
-C:\code\cto\gramex\gramex\apps\uifactory\.gitignore: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\data\input.json: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\img\arrows-move.svg: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\img\clipboard.svg: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\img\gramener-favicon-blue.png: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\img\trash.svg: OK
-C:\code\cto\gramex\gramex\apps\uifactory\assets\README.md: OK
-C:\code\cto\gramex\gramex\apps\uifactory\create.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\edit.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\field-actions.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\form_builder.py: OK
-C:\code\cto\gramex\gramex\apps\uifactory\gramex.yaml: OK
-C:\code\cto\gramex\gramex\apps\uifactory\index.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\embed.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\fields.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\fork-form.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\index.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\README.md: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\script.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\utils.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\js\viewform.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\modals\add-field.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\modals\embed.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\modals\remove.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\modals\rename.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\modals\themes.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\node_modules: Excluded
-C:\code\cto\gramex\gramex\apps\uifactory\package-lock.json: OK
-C:\code\cto\gramex\gramex\apps\uifactory\package.json: OK
-C:\code\cto\gramex\gramex\apps\uifactory\popover-form.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\sample.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\button\bs4-button.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\checkbox\bs4-checkbox.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\email\bs4-email.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\hidden\bs4-hidden.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\html\bs4-html.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\multiselect\bs4-multiselect.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\number\bs4-number.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\password\bs4-password.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\radio\bs4-radio.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\range\bs4-range.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\select\bs4-select.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\setup.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\snippets.json: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\text\bs4-text.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\snippets\textarea\bs4-textarea.js: OK
-C:\code\cto\gramex\gramex\apps\uifactory\style.scss: OK
-C:\code\cto\gramex\gramex\apps\uifactory\template-navbar-view-form.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\template-navbar.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\toast.html: OK
-C:\code\cto\gramex\gramex\apps\uifactory\viewform.html: OK
 C:\code\cto\gramex\gramex\apps\update\gramex.yaml: OK
 C:\code\cto\gramex\gramex\apps\update\gramexupdate.py: OK
 C:\code\cto\gramex\gramex\apps\update\index.html: OK
@@ -600,13 +546,13 @@ C:\code\cto\gramex\tests\vegam.yaml: OK
 C:\code\cto\gramex\tests\__init__.py: OK
 
 ----------- SCAN SUMMARY -----------
-Known viruses: 8685941
+Known viruses: 8693250
 Engine version: 1.2.0
-Scanned directories: 90
-Scanned files: 575
+Scanned directories: 70
+Scanned files: 522
 Infected files: 0
-Data scanned: 6.88 MB
-Data read: 3.04 MB (ratio 2.26:1)
-Time: 20.143 sec (0 m 20 s)
-Start Date: 2024:03:02 13:50:43
-End Date:   2024:03:02 13:51:03
+Data scanned: 6.86 MB
+Data read: 3.03 MB (ratio 2.26:1)
+Time: 19.374 sec (0 m 19 s)
+Start Date: 2024:05:20 18:30:27
+End Date:   2024:05:20 18:30:46

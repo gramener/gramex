@@ -23,7 +23,7 @@ gramex.cache.HDF5Store.*,url.*.kwargs.store.type=hdf5,18
 gramex.cache.JSONStore.*,app.session.type=json,15
 gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
 gramex.config.*,*,158
-gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,347
+gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,348
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
 gramex.install.*,TODO - Gramex app installation & management,164
 gramex.license.*,TODO - Gramex enterprise license management,9
@@ -54,7 +54,6 @@ gramex.apps.filemanager.*,import.*.path=$GRAMEXAPPS/filemanager/gramex.yaml,7
 gramex.apps.logviewer.*,import.*.path=$GRAMEXAPPS/logviewer/gramex.yaml,61
 gramex.apps.mail.*,import.*.path=$GRAMEXAPPS/mail/gramex.yaml,2
 gramex.apps.ui.*,import.*.path=$GRAMEXAPPS/ui/gramex.yaml,32
-gramex.apps.uifactory.*,import.*.path=$GRAMEXAPPS/uifactory/gramex.yaml,21
 gramex.apps.update.*,import.*.path=$GRAMEXAPPS/update/gramex.yaml,14
 gramex.handlers.authhandler.AuthHandler.*,url.*.handler=GoogleAuth|SimpleAuth|OAuth2|FacebookAuth|TwitterAuth|SAMLAuth|SAMLAuth2|LDAPAuth|DBAuth|IntegratedAuth|SMSAuth|EmailAuth,35
 gramex.handlers.authhandler.LogoutHandler.*,url.*.handler=LogoutHandler,4

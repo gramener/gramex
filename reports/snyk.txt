@@ -29,7 +29,7 @@ Project path:      C:\code\cto\gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 191 dependencies for known issues, no vulnerable paths found.
+✔ Tested 193 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -84,25 +84,7 @@ Project path:      C:\code\cto\gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 225 dependencies for known issues, no vulnerable paths found.
-
-Next steps:
-- Run `snyk monitor` to be notified about new related vulnerabilities.
-- Run `snyk test` as part of your CI/test.
-
--------------------------------------------------------
-
-Testing C:\code\cto\gramex...
-
-Organization:      sanand0
-Package manager:   npm
-Target file:       gramex\apps\uifactory\package-lock.json
-Project name:      package.json
-Open source:       no
-Project path:      C:\code\cto\gramex
-Licenses:          enabled
-
-✔ Tested 9 dependencies for known issues, no vulnerable paths found.
+✔ Tested 223 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -164,4 +146,7 @@ Next steps:
 - Run `snyk test` as part of your CI/test.
 
 
-Tested 9 projects, no vulnerable paths were found.
+Tested 8 projects, no vulnerable paths were found.
+
+
+

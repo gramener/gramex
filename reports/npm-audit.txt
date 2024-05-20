@@ -6,5 +6,3 @@ found 0 vulnerabilities
 found 0 vulnerabilities
 /cygdrive/c/code/cto/gramex/gramex/apps/ui
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/uifactory
-found 0 vulnerabilities

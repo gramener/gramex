@@ -23,4 +23,10 @@ ignore:
         expires: 2024-12-31T00:00:00.000Z
         created: 2024-03-02T00:00:00.000Z
 
+  SNYK-JS-BRACES-6838727:
+    - '*':
+        reason: No fix available. Await sass/chokidar/braces upgrade
+        expires: 2024-12-31T00:00:00.000Z
+        created: 2024-05-20T00:00:00.000Z
+
 patch: {}

@@ -1200,6 +1200,7 @@ def alter(
     except sa.exc.NoSuchTableError:
         # If the table's not in the DB, create it
         cols = []
+        table_kwargs = {"extend_existing": True}
         for name, row in columns.items():
             row = dict({'type': row} if isinstance(row, str) else row, name=name)
             col_type = row.get('type', 'text')
@@ -1225,8 +1226,10 @@ def alter(
                 # default can also be a static value, e.g. `0`
                 else:
                     row['server_default'] = str(default)
+            if scheme in {'sqlite'} and row.get('autoincrement'):
+                table_kwargs['sqlite_autoincrement'] = True
             cols.append(sa.Column(**row))
-        sa.Table(table, _METADATA_CACHE[engine], *cols, extend_existing=True).create(engine)
+        sa.Table(table, _METADATA_CACHE[engine], *cols, **table_kwargs).create(engine)
     else:
         quote = engine.dialect.identifier_preparer.quote_identifier
         # If the table's already in the DB, add new columns. We can't change column types

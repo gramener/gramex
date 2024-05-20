@@ -27,7 +27,7 @@ from queue import Queue
 from threading import Thread
 from tornado.concurrent import Future
 from types import ModuleType
-from typing import Any, List, Tuple, Union, Dict, Callable, BinaryIO
+from typing import Optional, Any, List, Tuple, Union, Dict, Callable, BinaryIO
 from typing_extensions import Literal
 from urllib.parse import urlparse
 
@@ -70,10 +70,10 @@ atexit.register(_delete_temp_files)
 
 def open(
     path: str,
-    callback: Union[str, Callable] = None,
-    transform: Callable = None,
+    callback: Optional[Union[str, Callable]] = None,
+    transform: Optional[Callable] = None,
     rel: bool = False,
-    **kwargs: dict,
+    **kwargs,
 ) -> Any:
     '''Reads a file, processes it via a callback, caches the result and returns it.
 
@@ -217,12 +217,12 @@ def open(
 def read_excel(
     io: Union[str, BinaryIO],
     sheet_name: Union[str, int] = 0,
-    table: str = None,
-    name: str = None,
-    range: str = None,
-    links: Union[Dict[str, str], bool] = None,
+    table: Optional[str] = None,
+    name: Optional[str] = None,
+    range: Optional[str] = None,
+    links: Optional[Union[Dict[str, str], bool]] = None,
     header: Union[None, int, List[int]] = ...,
-    **kwargs: dict,
+    **kwargs,
 ) -> pd.DataFrame:
     '''Read data from an XLSX as a DataFrame using `openpyxl`.
 

@@ -13,7 +13,7 @@ clean () {
 
 reformat () {
   git ls-files | grep -E '\.py$' | grep -v pytest.complexity_error.invalid.py | xargs black --skip-string-normalization --line-length=99
-  git ls-files | grep -E '\.(js|jsx|ts|css|scss|sass|yaml|yml|md)$' | xargs -n100 npx prettier --write
+  git ls-files | grep -E '\.(js|jsx|ts|css|scss|sass|yaml|yml|md)$' | xargs -n100 npx prettier@3.2 --write
 }
 
 lint () {
