@@ -92,6 +92,7 @@ async function render(q) {
     scale: parseFloat(q.scale || 1), // scale must be a double, not int
     margin: {},
     printBackground: true,
+    timeout: (q.timeout || 30) * 1000,
   };
   // If margins are specified, use them
   let margin_keys = ["top", "right", "bottom", "left"];

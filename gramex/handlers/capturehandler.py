@@ -356,6 +356,9 @@ class CaptureHandler(BaseHandler):
         # ?url= can be a relative URL. Use the full X-Request URL as the base
         args['url'] = urljoin(self.xrequest_full_url, args['url'])
 
+        # Pass configured timeout to capture.js to await PDF generation
+        args['timeout'] = self.capture.timeout
+
         if self.pattern and not re.search(self.pattern, args['url']):
             error = f'{self.name}: {args["url"]} does not match pattern {self.pattern}'
             raise HTTPError(BAD_REQUEST, error)
