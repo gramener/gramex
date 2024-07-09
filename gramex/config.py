@@ -33,6 +33,7 @@ import re
 import csv
 import sys
 import yaml
+import base64
 import string
 import socket
 import inspect
@@ -196,6 +197,8 @@ class CustomJSONEncoder(JSONEncoder):
             return bool(obj)
         elif isinstance(obj, np.bytes_):
             return obj.decode('utf-8')
+        elif isinstance(obj, bytes):
+            return base64.b64encode(obj).decode('utf-8')
         return super(CustomJSONEncoder, self).default(obj)
 
 
