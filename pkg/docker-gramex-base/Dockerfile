@@ -1,6 +1,6 @@
 # Pick a secure Linux image that we can run Miniconda on. Just "FROM alpine" doesn't run Miniconda
 # Don't use frolvlad/alpine-miniconda3 since we want a non-root user
-FROM frolvlad/alpine-glibc:alpine-3.17
+FROM frolvlad/alpine-glibc:alpine-3.20
 
 # Install as non-root user "gramex"
 ARG USER=gramex
@@ -31,7 +31,7 @@ WORKDIR "$HOME_DIR"
 # Via https://github.com/Docker-Hub-frolvlad/docker-alpine-miniconda3/blob/master/Dockerfile
 RUN \
     # Install the latest supported Miniconda for Linux.
-    wget https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh -O miniconda.sh && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-py39_24.5.0-0-Linux-x86_64.sh -O miniconda.sh && \
     sh miniconda.sh -f -b -p "$CONDA_DIR" && \
     rm miniconda.sh && \
     # To run `conda`, `pip`, etc, initialize conda and add it to PATH

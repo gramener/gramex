@@ -22,7 +22,7 @@ gramex.cache.HDF5Store.*,app.session.type=hdf5,18
 gramex.cache.HDF5Store.*,url.*.kwargs.store.type=hdf5,18
 gramex.cache.JSONStore.*,app.session.type=json,15
 gramex.cache.JSONStore.*,url.*.kwargs.store.type=json,15
-gramex.config.*,*,158
+gramex.config.*,*,159
 gramex.data.*,url.*.handler=FormHandler|FilterHandler|MLHandler|DriverHandler,348
 gramex.debug.*,TODO - if any PY code uses gramex.debug,32
 gramex.install.*,TODO - Gramex app installation & management,164

@@ -27,7 +27,7 @@
     "browserify": "14",
     "g1": "0.17",
     "glob": "^7.2.0",
-    "puppeteer": "3",
+    "puppeteer": "^22.12.1",
     "tap-merge": "0.3",
     "tape": "^4.15.1"
   }
