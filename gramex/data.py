@@ -598,7 +598,7 @@ def insert(
         # because, if the column is an INT/FLOAT, type conversion int('') / float('') will fail.
         for col in rows.columns:
             if rows[col].dtype == object:
-                rows[col].replace({'': None}, inplace=True)
+                rows.replace({col: {'': None}}, inplace=True)
 
         # kwargs might contain additonal unexpected values, pass expected arguments explicitly
         pd.io.sql.to_sql(

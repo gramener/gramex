@@ -94,7 +94,7 @@ include = ["gramex*"]
 force-exclude = "complexity_error"
 
 [tool.ruff]
-exclude = ["build", "dist", "docs", ".eggs", "node_modules", ".vscode"]
+exclude = ["build", "dist", "docs", ".eggs", "node_modules", ".vscode", "pytest/complexity_error/invalid.py"]
 line-length = 99
 # E203 allows whitespace before :. Black needs this
 # E911 allows use of str(). Required for pathlib.Path to string conversions
@@ -114,6 +114,7 @@ lint.ignore = ["E203", "N802", "B006", "B007", "B008", "S101"]
 "pytest/**/*.py" = ["S"]
 "testlib/**/*.py" = ["S"]
 "tests/**/*.py" = ["S"]
+
 
 [tool.pytest.ini_options]
 testpaths = "pytest"
