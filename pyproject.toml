@@ -146,16 +146,6 @@ servicenow = [
 win32 = [
     "pywin32",
 ]
-lint = [
-    "bandit",
-    "black",
-    "flake8",
-    "flake8-2020",
-    "flake8-blind-except",
-    "flake8-debugger",
-    "flake8-print",
-    "pep8-naming",
-]
 doc = [
     "mkdocs",
     "mkdocstrings",

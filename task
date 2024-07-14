@@ -17,13 +17,7 @@ reformat () {
 }
 
 lint () {
-  # Python lint with flake8
-  command -v flake8 2>/dev/null 2>&1 || pip install flake8 pep8-naming flake8-blind-except flake8-print flake8-debugger
-  flake8 gramex testlib tests pytest
-
-  # Python security check with bandit
-  command -v bandit 2>/dev/null 2>&1 || pip install bandit
-  bandit . --recursive --quiet
+  ruff check
 }
 
 test () {
