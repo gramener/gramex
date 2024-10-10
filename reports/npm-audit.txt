@@ -1,8 +1,31 @@
-/cygdrive/c/code/cto/gramex/gramex/apps/capture
+/github/gramener/gramex/gramex/apps/capture
+# npm audit report
+
+cookie  <0.7.0
+cookie accepts cookie name, path, and domain with out of bounds characters - https://github.com/advisories/GHSA-pxg6-pf52-xh8x
+fix available via `npm audit fix --force`
+Will install cookie@1.0.0, which is a breaking change
+node_modules/cookie
+
+1 low severity vulnerability
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+/github/gramener/gramex/gramex/apps/logviewer
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/logviewer
+/github/gramener/gramex/gramex/apps/pynode
 found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/pynode
-found 0 vulnerabilities
-/cygdrive/c/code/cto/gramex/gramex/apps/ui
-found 0 vulnerabilities
+/github/gramener/gramex/gramex/apps/ui
+# npm audit report
+
+bootstrap  4.0.0 - 4.6.2
+Severity: moderate
+Bootstrap Cross-Site Scripting (XSS) vulnerability - https://github.com/advisories/GHSA-vc8w-jr9v-vj7f
+fix available via `npm audit fix --force`
+Will install bootstrap@5.3.3, which is a breaking change
+node_modules/bootstrap
+
+1 moderate severity vulnerability
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

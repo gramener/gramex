@@ -1,16 +1,16 @@
 
-Testing C:\code\cto\gramex...
+Testing C:\github\gramener\gramex...
 
 Organization:      sanand0
 Package manager:   npm
 Target file:       package-lock.json
 Project name:      package.json
 Open source:       no
-Project path:      C:\code\cto\gramex
+Project path:      C:\github\gramener\gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 281 dependencies for known issues, no vulnerable paths found.
+✔ Tested 280 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -18,14 +18,38 @@ Next steps:
 
 -------------------------------------------------------
 
-Testing C:\code\cto\gramex...
+Testing C:\github\gramener\gramex...
+
+Tested 228 dependencies for known issues, found 1 issue, 1 vulnerable path.
+
+
+Issues to fix by upgrading:
+
+  Upgrade cookie@0.5.0 to cookie@0.7.0 to fix
+  ✗ Cross-site Scripting (XSS) (new) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-COOKIE-8163060] in cookie@0.5.0
+    introduced by cookie@0.5.0
+
+
 
 Organization:      sanand0
 Package manager:   npm
-Target file:       tests\dir\install\package-lock.json
-Project name:      gramex-npm-install
+Target file:       gramex\apps\capture\package-lock.json
+Project name:      capture
 Open source:       no
-Project path:      C:\code\cto\gramex
+Project path:      C:\github\gramener\gramex
+Local Snyk policy: found
+Licenses:          enabled
+
+-------------------------------------------------------
+
+Testing C:\github\gramener\gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\logviewer\package-lock.json
+Project name:      logviewer
+Open source:       no
+Project path:      C:\github\gramener\gramex
 Licenses:          enabled
 
 ✔ Tested 1 dependencies for known issues, no vulnerable paths found.
@@ -36,17 +60,17 @@ Next steps:
 
 -------------------------------------------------------
 
-Testing C:\code\cto\gramex...
+Testing C:\github\gramener\gramex...
 
 Organization:      sanand0
-Package manager:   pip
-Target file:       tests\dir\install\requirements.txt
-Project name:      install
+Package manager:   npm
+Target file:       gramex\apps\pynode\package-lock.json
+Project name:      pynode
 Open source:       no
-Project path:      C:\code\cto\gramex
+Project path:      C:\github\gramener\gramex
 Licenses:          enabled
 
-✔ Tested C:\code\cto\gramex for known issues, no vulnerable paths found.
+✔ Tested 4 dependencies for known issues, no vulnerable paths found.
 
 Next steps:
 - Run `snyk monitor` to be notified about new related vulnerabilities.
@@ -54,25 +78,97 @@ Next steps:
 
 -------------------------------------------------------
 
-Testing C:\code\cto\gramex...
+Testing C:\github\gramener\gramex...
+
+Tested 217 dependencies for known issues, found 2 issues, 2 vulnerable paths.
+
+
+Issues to fix by upgrading:
+
+  Upgrade bootstrap@4.6.2 to bootstrap@5.0.0 to fix
+  ✗ Cross-site Scripting (XSS) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-BOOTSTRAP-7444580] in bootstrap@4.6.2
+    introduced by bootstrap@4.6.2
+  ✗ Cross-site Scripting (XSS) [Medium Severity][https://security.snyk.io/vuln/SNYK-JS-BOOTSTRAP-7444593] in bootstrap@4.6.2
+    introduced by bootstrap@4.6.2
+
+
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       gramex\apps\ui\package-lock.json
+Project name:      gramex-apps-ui
+Open source:       no
+Project path:      C:\github\gramener\gramex
+Local Snyk policy: found
+Licenses:          enabled
+
+-------------------------------------------------------
+
+Testing C:\github\gramener\gramex...
+
+Organization:      sanand0
+Package manager:   npm
+Target file:       tests\dir\install\package-lock.json
+Project name:      gramex-npm-install
+Open source:       no
+Project path:      C:\github\gramener\gramex
+Licenses:          enabled
+
+✔ Tested 1 dependencies for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing C:\github\gramener\gramex...
+
+Organization:      sanand0
+Package manager:   pip
+Target file:       tests\dir\install\requirements.txt
+Project name:      install
+Open source:       no
+Project path:      C:\github\gramener\gramex
+Licenses:          enabled
+
+✔ Tested C:\github\gramener\gramex for known issues, no vulnerable paths found.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+-------------------------------------------------------
+
+Testing C:\github\gramener\gramex...
+
+Tested 306 dependencies for known issues, found 3 issues, 6 vulnerable paths.
+
+
+Issues with no direct upgrade or patch:
+  ✗ Improper Verification of Cryptographic Signature [Critical Severity][https://security.snyk.io/vuln/SNYK-JS-ELLIPTIC-7577916] in elliptic@6.5.5
+    introduced by browserify@14.5.0 > crypto-browserify@3.12.0 > browserify-sign@4.2.3 > elliptic@6.5.5 and 1 other path(s)
+  This issue was fixed in versions: 6.5.7
+  ✗ Improper Verification of Cryptographic Signature [Critical Severity][https://security.snyk.io/vuln/SNYK-JS-ELLIPTIC-7577917] in elliptic@6.5.5
+    introduced by browserify@14.5.0 > crypto-browserify@3.12.0 > browserify-sign@4.2.3 > elliptic@6.5.5 and 1 other path(s)
+  This issue was fixed in versions: 6.5.7
+  ✗ Improper Verification of Cryptographic Signature [Critical Severity][https://security.snyk.io/vuln/SNYK-JS-ELLIPTIC-7577918] in elliptic@6.5.5
+    introduced by browserify@14.5.0 > crypto-browserify@3.12.0 > browserify-sign@4.2.3 > elliptic@6.5.5 and 1 other path(s)
+  This issue was fixed in versions: 6.5.7
+
+
 
 Organization:      sanand0
 Package manager:   npm
 Target file:       tests\filemanager\package-lock.json
 Project name:      filemanager
 Open source:       no
-Project path:      C:\code\cto\gramex
+Project path:      C:\github\gramener\gramex
 Local Snyk policy: found
 Licenses:          enabled
 
-✔ Tested 307 dependencies for known issues, no vulnerable paths found.
 
-Next steps:
-- Run `snyk monitor` to be notified about new related vulnerabilities.
-- Run `snyk test` as part of your CI/test.
-
-
-Tested 4 projects, no vulnerable paths were found.
+Tested 8 projects, 3 contained vulnerable paths.
 
 
 
