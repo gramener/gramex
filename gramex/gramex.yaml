@@ -36,6 +36,7 @@ mime:
   #   Exceptions: underscore-min.map, rx.lite.map, axios.map
   #   Non-maps: nltk_data/taggers/universal_tagset/ja-verbmobil.map
   .map: application/json
+  .webp: image/webp
 
 # Configure the thread pool that's shared across Gramex to run parallel threads.
 threadpool:
