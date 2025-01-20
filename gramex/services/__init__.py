@@ -120,7 +120,7 @@ def app(conf: dict) -> None:
             try:
                 import gramexenterprise  # noqa
 
-                gramex.license.accept()
+                gramex.license.accept(force=gramex.conf.app.get("license") == "accept")
             except ImportError:
                 pass
 
