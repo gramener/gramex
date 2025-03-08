@@ -11,6 +11,7 @@ import os
 import pandas as pd
 import pptx
 import sys
+import subprocess
 from fnmatch import fnmatchcase
 from gramex.config import app_log
 from gramex.transforms import build_transform
@@ -109,8 +110,33 @@ def pptgen(
                 slide_data['slide'] = slide  # Rule can use 'slide' as a variable
                 transition(slide, rule.get('transition', None), data)
                 apply_commands(rule, slide.shapes, slide_data)
+
+    #  requirements: install LibreOffice, ImageMagick
+    #  (https://learn.gramener.com/guide/pptxhandler/#pptx-to-images)
+
+    #  Ensure both LibreOffice, ImageMagick are updated in the environment variables
+    #  C:\Program Files\LibreOffice\program, C:\Program Files\ImageMagick-7.0.11-Q16-HDRI
+    #  Add fonts to LiberOffice if they are not available by default
+
+    #  Get filename, extension, save the file as pptx first
+    pres_name, pdf_name, file_ext = None, None, None
     if target:
-        prs.save(target)
+        file_name, file_ext = os.path.splitext(target)
+        pres_name = f'{file_name}.pptx'
+        prs.save(pres_name)
+
+    #  if output is a pdf, use soffice to convert pptx to pdf, remove pptx file
+    if file_ext in ['.pdf', '.png'] and pres_name:
+        abs_path = os.path.split(os.path.abspath(target))[0]
+        subprocess.call(['soffice', '--headless', '--convert-to', 'pdf', f'{pres_name}',
+            '--outdir', f'{abs_path}'])
+        pdf_name = file_name + '.pdf'
+        os.remove(pres_name)
+
+    #  if output is a png, use the image magick with pdf generated in previous step to convert to png, remove pdf file
+    if file_ext == '.png' and pdf_name:
+        subprocess.call(['magick', 'convert', f'{pdf_name}', f'{file_name}-%d.png'])
+        os.remove(pdf_name)
     return prs
 
 
